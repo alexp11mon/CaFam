@@ -34,6 +34,8 @@ CalendarioFamilia necesita unos cimientos antes de construir calendarios, evento
 - RF-2: SI el email del registro ya pertenece a una cuenta (comparación sin distinguir mayúsculas y sin espacios exteriores), ENTONCES EL SISTEMA no creará la cuenta y mostrará "Ya existe una cuenta con este email.".
 - RF-3: SI algún campo del registro está vacío, el email no tiene formato válido o la contraseña tiene menos de 8 caracteres, ENTONCES EL SISTEMA no enviará el formulario y mostrará el error en español junto al campo afectado.
 - RF-4: CUANDO se crea una cuenta, EL SISTEMA creará un calendario llamado "Mi calendario" cuyo propietario es el nuevo usuario.
+- RF-26: CUANDO se crea una cuenta, EL SISTEMA guardará en el perfil la zona horaria detectada en el navegador del visitante; SI no se puede detectar o no es una zona horaria IANA válida, ENTONCES guardará "Europe/Madrid".
+- RF-27: EL SISTEMA permitirá registrarse a cualquier visitante que tenga la URL, sin lista de emails autorizados.
 
 ### Inicio y cierre de sesión
 
@@ -64,8 +66,8 @@ CalendarioFamilia necesita unos cimientos antes de construir calendarios, evento
 
 ### PWA y plataformas
 
-- RF-21: DONDE el navegador ofrezca instalación de aplicaciones web (Chrome o Edge en Android, Windows y macOS), EL SISTEMA será instalable y se abrirá en ventana propia con el nombre y el icono de CalendarioFamilia.
-- RF-22: CUANDO un usuario añade la app a la pantalla de inicio desde Safari en iOS/iPadOS, EL SISTEMA se abrirá a pantalla completa sin barra del navegador, con su icono y su nombre.
+- RF-21: DONDE el navegador ofrezca instalación de aplicaciones web (Chrome o Edge en Android, Windows y macOS), EL SISTEMA será instalable y se abrirá en ventana propia con el nombre "CalenderFam" y su icono.
+- RF-22: CUANDO un usuario añade la app a la pantalla de inicio desde Safari en iOS/iPadOS, EL SISTEMA se abrirá a pantalla completa sin barra del navegador, con su icono y el nombre corto "CaFam".
 - RF-23: SI la app se abre o se navega sin conexión a una página no disponible, ENTONCES EL SISTEMA mostrará una pantalla "Sin conexión" en español con un botón "Reintentar".
 - RF-24: EL SISTEMA mostrará todas sus pantallas sin scroll horizontal y con todos los controles accesibles en anchos de 360 px a 1920 px.
 
@@ -83,6 +85,7 @@ CalendarioFamilia necesita unos cimientos antes de construir calendarios, evento
 - RNF-6 Rendimiento: la pantalla de login carga en menos de 3 s en un móvil con conexión 4G simulada (Chrome DevTools, perfil "Fast 4G") en el despliegue de producción.
 - RNF-7 Accesibilidad: todos los campos de formulario tienen etiqueta visible, los errores se anuncian al lector de pantalla y todo el flujo de registro, login y logout se puede completar solo con teclado.
 - RNF-8 Comunicaciones: toda la comunicación usa HTTPS.
+- RNF-9 Identidad visual: nombre de la app "CalenderFam" y nombre corto "CaFam" (título de las pestañas, manifest e instalación). Color principal #2563EB (botones de acción, enlaces, barra de la app instalada y color por defecto de los calendarios); colores secundarios #A6E1FA (fondos y resaltados suaves) y #0D160B (texto principal). Toda combinación de texto y fondo cumple un contraste mínimo de 4,5:1 (WCAG AA).
 
 ## Casos límite
 
@@ -95,6 +98,9 @@ CalendarioFamilia necesita unos cimientos antes de construir calendarios, evento
 - Sesión cerrada en una pestaña con otra pestaña abierta: la otra pestaña lleva al login en su siguiente navegación.
 - Usuario que acaba de registrarse y no tiene más calendarios: el panel muestra solo "Mi calendario" con rol "Propietario".
 - Usuario sin ningún calendario (borró el suyo en una spec futura): el panel muestra "Todavía no tienes calendarios.".
+- Navegador que no expone la zona horaria, o valor manipulado que no es una zona IANA válida (p. ej. llamando directamente al servicio de autenticación): el perfil queda con "Europe/Madrid" y el registro no falla (RF-26).
+- Usuario que se registra estando de viaje: se guarda la zona horaria del dispositivo en ese momento; cambiarla será posible con la edición de perfil (spec 005).
+- Modificación del perfil con una zona horaria no válida: se rechaza en la capa de datos.
 - Evento con fecha de fin anterior a la de inicio: se rechaza en la capa de datos.
 - Usuario borrado: se borran en cascada su perfil, sus calendarios (con sus eventos) y sus membresías.
 - iOS: no existe aviso automático de instalación; la instalación es manual desde "Compartir > Añadir a pantalla de inicio" (RF-22).
@@ -114,7 +120,7 @@ CalendarioFamilia necesita unos cimientos antes de construir calendarios, evento
 
 ## Criterios de finalización
 
-- RF-1 a RF-25 con al menos un test automático o una prueba manual documentada que lo cubra (tabla de trazabilidad en `tasks.md`).
+- RF-1 a RF-27 con al menos un test automático o una prueba manual documentada que lo cubra (tabla de trazabilidad en `tasks.md`).
 - Checklist de "Verificación obligatoria" de la constitución completo: `typecheck`, `lint`, `format:check`, `test`, `test:db` y `build` en verde.
 - Demo manual en el despliegue de producción: registro → panel con "Mi calendario" → cerrar sesión → login con contraseña errónea → login correcto → recarga con sesión conservada.
 - App instalada y abierta en un móvil Android o iOS real y en un escritorio.
@@ -123,12 +129,13 @@ CalendarioFamilia necesita unos cimientos antes de construir calendarios, evento
 
 ## Dudas abiertas
 
-- [NECESITA ACLARACIÓN: ¿El registro queda abierto a cualquiera que tenga la URL o solo a emails que tú autorices?] Recomendación aplicada por defecto: registro abierto; los datos siguen siendo privados por P3 y, si aparece abuso, se restringe en una spec posterior.
-- [NECESITA ACLARACIÓN: ¿Nombre que se muestra al instalar la app y color principal?] Recomendación aplicada por defecto: nombre "Calendario Familia", nombre corto "Calendario", color principal azul (#2563EB).
-- [NECESITA ACLARACIÓN: ¿Zona horaria por defecto de los nuevos usuarios?] Recomendación aplicada por defecto: Europe/Madrid.
+- Ninguna pendiente.
 
 ### Decisiones ya confirmadas por el usuario
 
 - Stack Next.js + Supabase: confirmado.
 - Tailwind CSS para estilos: confirmado.
 - Alojamiento en Vercel: confirmado.
+- Registro abierto a cualquiera que tenga la URL; los datos siguen siendo privados por P3 y, si aparece abuso, se restringe en una spec posterior (RF-27).
+- Nombre de la app "CalenderFam", nombre corto "CaFam"; color principal #2563EB y secundarios #A6E1FA y #0D160B (RNF-9, RF-21, RF-22).
+- Zona horaria de los nuevos usuarios detectada del navegador, con "Europe/Madrid" como respaldo (RF-26).

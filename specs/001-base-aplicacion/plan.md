@@ -16,7 +16,7 @@ Vercel ── src/proxy.ts ─────────── refresca sesión, r
   │       Server Actions ───────── signUp / signIn / signOut (RF-1..RF-12)
   │       /api/cron/keep-alive ─── llamado 1 vez al día por Vercel Cron (RF-25)
   ▼
-Supabase ── Auth (auth.users) ── trigger handle_new_user → profile + "Mi calendario" (RF-4)
+Supabase ── Auth (auth.users) ── trigger handle_new_user → profile (+ zona horaria) + "Mi calendario" (RF-4, RF-26)
           └ Postgres public.* con RLS + funciones de permiso (RF-15..RF-20)
 ```
 
@@ -24,16 +24,16 @@ Supabase ── Auth (auth.users) ── trigger handle_new_user → profile + "
 
 | Módulo | Ubicación | Qué hace | Qué no hace | Cubre |
 |--------|-----------|----------|-------------|-------|
-| `database` | `supabase/migrations/` | Tablas, enum, índices, restricciones, triggers y funciones de Postgres | No define políticas de acceso | RF-4, casos límite de datos |
+| `database` | `supabase/migrations/` | Tablas, enum, índices, restricciones, triggers y funciones de Postgres | No define políticas de acceso | RF-4, RF-26, casos límite de datos |
 | `access-policies` | `supabase/migrations/` | Políticas RLS y funciones `is_calendar_member` / `calendar_role_for` | No contiene lógica de interfaz | RF-15..RF-20 |
 | `supabase-clients` | `src/lib/supabase/` (`server.ts`, `client.ts`, `proxy.ts`) | Crea clientes de Supabase (servidor con cookies, navegador, proxy) y expone tipos generados | No valida formularios ni decide redirecciones | RF-10 |
 | `route-guard` | `src/proxy.ts`, `src/lib/auth/route-access.ts` | Decide, con una función pura, si una ruta exige sesión o debe redirigir; refresca la sesión | No consulta datos de negocio | RF-8, RF-9, RF-10 |
-| `auth-validation` | `src/lib/auth/schemas.ts` | Esquemas `zod` de registro y login con normalización de email y mensajes en español | No llama a Supabase | RF-3, casos límite |
+| `auth-validation` | `src/lib/auth/schemas.ts` | Esquemas `zod` de registro y login con normalización de email, filtrado de la zona horaria y mensajes en español | No llama a Supabase | RF-3, RF-26, casos límite |
 | `auth-errors` | `src/lib/auth/error-messages.ts` | Traduce códigos de error de Supabase Auth a mensajes en español | No muestra UI | RF-2, RF-6, RF-11, RF-12 |
-| `auth` | `src/app/(auth)/login`, `src/app/(auth)/signup`, `src/app/(auth)/actions.ts`, `src/components/auth/` | Pantallas, formularios y Server Actions de registro, login y logout | No protege rutas | RF-1, RF-2, RF-5, RF-6, RF-7, RF-11, RF-12 |
+| `auth` | `src/app/(auth)/login`, `src/app/(auth)/signup`, `src/app/(auth)/actions.ts`, `src/components/auth/` | Pantallas, formularios y Server Actions de registro (abierto, con zona horaria detectada en el navegador), login y logout | No protege rutas | RF-1, RF-2, RF-5, RF-6, RF-7, RF-11, RF-12, RF-26, RF-27 |
 | `dashboard` | `src/app/dashboard/`, `src/components/dashboard/` | Panel con nombre visible, lista de calendarios con color y rol, y botón de logout | No crea ni edita calendarios | RF-13, RF-14 |
-| `ui-shell` | `src/app/layout.tsx`, `src/app/page.tsx`, `src/components/ui/` | Layout raíz, `viewport`, portada pública, componentes base (botón, campo, alerta) responsive | No contiene lógica de negocio | RF-24, RNF-7 |
-| `pwa` | `src/app/manifest.ts`, `public/sw.js`, `public/icons/`, `src/components/pwa/service-worker-register.tsx`, `src/app/offline/` | Manifest, iconos, metadatos Apple, registro del service worker y pantalla offline | No cachea páginas con sesión | RF-21, RF-22, RF-23 |
+| `ui-shell` | `src/app/layout.tsx`, `src/app/globals.css`, `src/app/page.tsx`, `src/components/ui/` | Layout raíz, `viewport`, título "CalenderFam", colores de marca como tokens de Tailwind, portada pública, componentes base (botón, campo, alerta) responsive | No contiene lógica de negocio | RF-24, RNF-7, RNF-9 |
+| `pwa` | `src/app/manifest.ts`, `public/sw.js`, `public/icons/`, `src/components/pwa/service-worker-register.tsx`, `src/app/offline/` | Manifest ("CalenderFam"/"CaFam", `theme_color` #2563EB), iconos con los colores de marca, metadatos Apple, registro del service worker y pantalla offline | No cachea páginas con sesión | RF-21, RF-22, RF-23, RNF-9 |
 | `keep-alive` | `src/app/api/cron/keep-alive/route.ts`, `vercel.json` | Consulta mínima diaria a Supabase protegida por `CRON_SECRET` | No modifica datos | RF-25 |
 
 ## Modelo de datos
@@ -52,7 +52,7 @@ Todo en el esquema `public`, con RLS activado en todas las tablas (P3). Las fech
 |---------|------|---------------|
 | `id` | uuid | PK, FK → `auth.users(id)` ON DELETE CASCADE |
 | `display_name` | text | NOT NULL, `char_length(trim(display_name)) between 1 and 50` |
-| `time_zone` | text | NOT NULL, DEFAULT `'Europe/Madrid'` |
+| `time_zone` | text | NOT NULL, DEFAULT `'Europe/Madrid'` (respaldo); valor validado contra `pg_timezone_names` por el trigger `validate_time_zone` |
 | `created_at` | timestamptz | NOT NULL, DEFAULT `now()` |
 | `updated_at` | timestamptz | NOT NULL, DEFAULT `now()` |
 
@@ -100,7 +100,8 @@ Convención de eventos de día completo (la usará la spec 002): `all_day = true
 ### Funciones y triggers
 
 - `set_updated_at()`: trigger BEFORE UPDATE en `profiles`, `calendars` y `events`.
-- `handle_new_user()`: trigger AFTER INSERT en `auth.users`, `SECURITY DEFINER`, `search_path = ''`. Crea el perfil con `display_name` tomado de `raw_user_meta_data->>'display_name'` y el calendario "Mi calendario" (RF-4).
+- `handle_new_user()`: trigger AFTER INSERT en `auth.users`, `SECURITY DEFINER`, `search_path = ''`. Crea el perfil con `display_name` tomado de `raw_user_meta_data->>'display_name'` y `time_zone` tomado de `raw_user_meta_data->>'time_zone'`, y el calendario "Mi calendario" (RF-4, RF-26).
+- `validate_time_zone()`: trigger BEFORE INSERT OR UPDATE OF `time_zone` en `profiles`. En INSERT, si el valor es nulo o no existe en `pg_catalog.pg_timezone_names`, lo sustituye por `'Europe/Madrid'` (el registro nunca falla por esto, RF-26). En UPDATE, si no existe, lanza excepción (caso límite de la spec). Los metadatos de registro los envía el navegador y se pueden manipular, así que la base de datos es la que garantiza el valor.
 - `add_owner_membership()`: trigger AFTER INSERT en `calendars`, `SECURITY DEFINER`. Inserta la fila `(calendar_id, owner_id, 'owner')` en `calendar_members`.
 - `is_calendar_member(p_calendar_id uuid) returns boolean` y `calendar_role_for(p_calendar_id uuid) returns calendar_role`: `SECURITY DEFINER`, `STABLE`, `search_path = ''`, basadas en `auth.uid()`. Evitan la recursión de políticas sobre `calendar_members`.
 
@@ -127,7 +128,7 @@ En las políticas se usa `(select auth.uid())` para que Postgres lo evalúe una 
 | Ruta | Acceso | Contenido |
 |------|--------|-----------|
 | `/` | pública | Portada con botones "Crear cuenta" e "Iniciar sesión" (con sesión → `/dashboard`) |
-| `/signup` | solo sin sesión (RF-9) | Formulario: nombre visible, email, contraseña |
+| `/signup` | solo sin sesión (RF-9); abierto a cualquiera (RF-27) | Formulario: nombre visible, email, contraseña y campo oculto `timeZone` |
 | `/login` | solo sin sesión (RF-9) | Formulario: email, contraseña |
 | `/dashboard` y subrutas | solo con sesión (RF-8) | Panel (RF-13, RF-14) |
 | `/offline` | pública, precacheada | Pantalla "Sin conexión" con "Reintentar" (RF-23) |
@@ -139,17 +140,18 @@ En las políticas se usa `(select auth.uid())` para que Postgres lo evalúe una 
 
 | Acción | Entrada (FormData) | Resultado |
 |--------|--------------------|-----------|
-| `signUp` | `displayName`, `email`, `password` | Éxito: `redirect('/dashboard')`. Error: `{ fieldErrors?: Record<campo, string>, formError?: string, values: { displayName, email } }` |
+| `signUp` | `displayName`, `email`, `password`, `timeZone` (oculto, opcional) | Éxito: `redirect('/dashboard')`. Error: `{ fieldErrors?: Record<campo, string>, formError?: string, values: { displayName, email } }` |
 | `signIn` | `email`, `password` | Éxito: `redirect('/dashboard')`. Error: `{ formError: string, values: { email } }` |
 | `signOut` | — | `redirect('/login')` |
 
-Los formularios usan `useActionState` y deshabilitan el botón mientras la acción está pendiente (caso límite de doble clic).
+Los formularios usan `useActionState` y deshabilitan el botón mientras la acción está pendiente (caso límite de doble clic). El formulario de registro rellena `timeZone` en el cliente con `Intl.DateTimeFormat().resolvedOptions().timeZone` al montarse.
 
 ### Validación (`auth-validation`)
 
 - `email`: `trim().toLowerCase()`, formato email → "Introduce un email válido.".
 - `password`: 8–72 caracteres → "La contraseña debe tener al menos 8 caracteres." / "La contraseña no puede superar los 72 caracteres.".
 - `displayName`: `trim()`, 1–50 caracteres → "Introduce tu nombre." / "El nombre no puede superar los 50 caracteres.".
+- `timeZone`: opcional y nunca produce error visible; si falta, supera 64 caracteres o `new Intl.DateTimeFormat('en', { timeZone })` lanza excepción, se descarta (`undefined`) y la base de datos aplica `'Europe/Madrid'`.
 
 ### Traducción de errores (`auth-errors`)
 
@@ -174,14 +176,21 @@ Los formularios usan `useActionState` y deshabilitan el botón mientras la acci�
 
 `dev`, `build`, `start`, `lint` (`eslint .`), `typecheck` (`tsc --noEmit`), `format` (`prettier --write .`), `format:check` (`prettier --check .`), `test` (`vitest run --project unit`), `test:db` (`vitest run --project db`), `db:push` (`supabase db push`), `db:types` (`supabase gen types typescript --linked > src/types/database.ts`).
 
+### Identidad visual (RNF-9)
+
+- Tokens en `src/app/globals.css` con `@theme` de Tailwind 4: `--color-brand: #2563EB`, `--color-brand-soft: #A6E1FA`, `--color-ink: #0D160B`; fondo de página blanco.
+- Uso: botones y enlaces en `brand` con texto blanco (5,2:1); texto principal en `ink` sobre blanco o sobre `brand-soft`; `brand-soft` solo como fondo, nunca como color de texto sobre blanco (contraste insuficiente).
+- `metadata.title` en `layout.tsx`: plantilla `"%s · CalenderFam"` con valor por defecto `"CalenderFam"`; `appleWebApp.title`: `"CaFam"`.
+- `manifest.ts`: `name: "CalenderFam"`, `short_name: "CaFam"`, `theme_color: "#2563EB"`, `background_color: "#FFFFFF"`, `lang: "es"`.
+
 ### Configuración de Supabase Auth (panel)
 
-- Proveedor Email activo; **"Confirm email" desactivado** (ver D6); longitud mínima de contraseña 8.
+- Proveedor Email activo; **"Allow new users to sign up" activado** (registro abierto, RF-27); **"Confirm email" desactivado** (ver D6); longitud mínima de contraseña 8.
 - Site URL y Redirect URLs: URL de Vercel y `http://localhost:3000`.
 
 ## Flujo principal paso a paso
 
-1. **Registro (RF-1..RF-4):** el visitante abre `/signup` → `route-guard` confirma que no hay sesión (RF-9) → envía el formulario → `signUp` valida con `auth-validation` (RF-3) → `supabase.auth.signUp({ email, password, options: { data: { display_name } } })` → en Postgres, `handle_new_user` crea `profiles` y "Mi calendario", y `add_owner_membership` crea la membresía `owner` (RF-4) → como no hay confirmación de email, Supabase devuelve sesión y `@supabase/ssr` la guarda en cookies → `redirect('/dashboard')`. Si falla, `auth-errors` devuelve el mensaje (RF-2, RF-11, RF-12).
+1. **Registro (RF-1..RF-4, RF-26, RF-27):** el visitante abre `/signup` → `route-guard` confirma que no hay sesión (RF-9) → el formulario rellena `timeZone` desde el navegador → envía el formulario → `signUp` valida con `auth-validation` (RF-3) y descarta una zona horaria no válida → `supabase.auth.signUp({ email, password, options: { data: { display_name, time_zone } } })` → en Postgres, `handle_new_user` crea `profiles` (con `validate_time_zone` aplicando el respaldo `'Europe/Madrid'` si hace falta) y "Mi calendario", y `add_owner_membership` crea la membresía `owner` (RF-4) → como no hay confirmación de email, Supabase devuelve sesión y `@supabase/ssr` la guarda en cookies → `redirect('/dashboard')`. Si falla, `auth-errors` devuelve el mensaje (RF-2, RF-11, RF-12).
 2. **Panel (RF-13, RF-14):** `src/proxy.ts` refresca la sesión con `supabase.auth.getClaims()` y deja pasar (RF-8, RF-10) → el Server Component consulta `calendar_members` con `calendars(name, color)` y el perfil propio; RLS solo devuelve filas permitidas (RF-15, RF-20) → renderiza la lista con el rol traducido.
 3. **Logout (RF-7):** `signOut` → `supabase.auth.signOut({ scope: 'local' })` → cookies borradas → `redirect('/login')`.
 4. **Login (RF-5, RF-6):** `/login` → `signIn` → `supabase.auth.signInWithPassword` → éxito: `/dashboard`; error: mensaje traducido.
@@ -203,6 +212,9 @@ Los formularios usan `useActionState` y deshabilitan el botón mientras la acci�
 - D10: Keep-alive con Vercel Cron diario. Descartado GitHub Actions programado porque añade otro servicio y otro secreto que mantener. Motivo: Vercel Hobby incluye cron diario y Supabase Free pausa proyectos tras 7 días sin actividad. Cubre: RF-25.
 - D11: `zod` para validar formularios en servidor (y reutilizable en cliente). Descartada validación manual porque se repetirá en las specs 002 y 003 (eventos, PIN). Motivo: un único esquema tipado por formulario. Cubre: RF-3.
 - D12: Rutas en inglés (`/signup`, `/login`). Descartado `/registro` porque rompe la regla de nombres de carpetas en inglés de la constitución. Motivo: coherencia carpeta = URL. Cubre: RF-1, RF-5.
+- D13: Zona horaria detectada con `Intl` en el navegador y enviada en un campo oculto del registro, validada dos veces (zod en servidor y trigger en Postgres) con respaldo `'Europe/Madrid'`. Descartado deducirla en servidor por IP (requiere servicio externo de geolocalización y falla con VPN) y preguntarla en el formulario (paso extra que casi nadie necesita cambiar). Motivo: decisión del usuario, cero dependencias y el valor queda garantizado aunque se llame a Supabase Auth directamente. Cubre: RF-26.
+- D14: Colores de marca como tokens `@theme` de Tailwind 4 en `globals.css` y no como clases con valores arbitrarios (`bg-[#2563EB]`) repartidas por los componentes. Motivo: un único punto de cambio y nombres con significado (`bg-brand`, `text-ink`). Cubre: RNF-9.
+- D15: Registro abierto sin lista de emails permitidos ni CAPTCHA. Descartada una tabla de emails autorizados porque exige mantenerla a mano y no aporta privacidad adicional (los datos ya son privados por RLS). Motivo: decisión del usuario; los límites de tasa de Supabase Auth cubren el abuso básico (R9). Cubre: RF-27.
 
 ## Trazabilidad RF -> módulo
 
@@ -233,6 +245,9 @@ Los formularios usan `useActionState` y deshabilitan el botón mientras la acci�
 | RF-23 | pwa |
 | RF-24 | ui-shell |
 | RF-25 | keep-alive |
+| RF-26 | auth, auth-validation, database |
+| RF-27 | auth |
+| RNF-9 | ui-shell, pwa |
 
 ## Riesgos y mitigaciones
 
@@ -244,13 +259,14 @@ Los formularios usan `useActionState` y deshabilitan el botón mientras la acci�
 - R6: Datos de un usuario visibles offline para otro usuario del mismo dispositivo → el service worker no cachea HTML ni respuestas de API (caso límite de la spec).
 - R7: iOS no muestra aviso de instalación → texto de ayuda en la portada solo en Safari iOS ("Compartir > Añadir a pantalla de inicio"); metadatos `apple-touch-icon` y `appleWebApp` en `layout.tsx`.
 - R8: Sin recuperación de contraseña en esta spec → el administrador restablece contraseñas desde el panel de Supabase hasta la spec 005.
-- R9: Registro abierto expuesto a bots → los límites de tasa de Supabase Auth (RF-11); si hay abuso, se añade CAPTCHA o lista de emails permitidos en una spec posterior.
+- R9: Registro abierto (RF-27, confirmado por el usuario) expuesto a bots → los límites de tasa de Supabase Auth (RF-11); si hay abuso, se añade CAPTCHA o lista de emails permitidos en una spec posterior.
+- R12: El nombre de zona horaria de `Intl` en el navegador no existe en `pg_timezone_names` de Postgres (versiones distintas de la base de datos de zonas) → el trigger aplica `'Europe/Madrid'` en lugar de fallar el registro (D13).
 - R10: `create-next-app` se niega a ejecutarse en una carpeta con archivos existentes (`specs/`, `package.json`...) → se genera en una carpeta temporal y se mueve (ver Anexo B).
 - R11: Los tests `test:db` dependen de red y del proyecto `dev` → se ejecutan aparte de `npm test` y solo son obligatorios en tareas que tocan datos (constitución).
 
 ## Dudas abiertas
 
-- Ninguna técnica. Las dudas de producto (registro abierto, nombre/color de la app, zona horaria) están en la spec con su recomendación aplicada por defecto; si cambian, solo afectan a textos, `manifest.ts` y al valor por defecto de `time_zone`.
+- Ninguna. Las dudas de producto de la spec están resueltas: registro abierto (D15), nombre "CalenderFam"/"CaFam" y colores (D14, "Identidad visual") y zona horaria detectada del navegador (D13).
 
 ---
 
