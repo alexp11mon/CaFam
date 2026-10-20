@@ -26,7 +26,7 @@
   Pasos: test primero en `tests/integration/rls.test.ts` con 4 usuarios de prueba (propietario, editor, lector, ajeno; editor y lector insertados con la clave secreta) que cubra la tabla de políticas del plan: ajeno no ve calendario/miembros/eventos; lector ve pero no crea, modifica ni borra eventos; editor crea, modifica y borra eventos; solo el propietario modifica o borra el calendario; nadie inserta ni modifica `calendar_members`; cada usuario ve y edita solo su perfil; `anon` no ve nada; consulta a `pg_tables` confirma `rowsecurity = true` en todas las tablas de `public`; migración `<timestamp>_rls_policies.sql`.
   Hecho cuando: `npm run test:db -- rls` en verde con todos los casos de la matriz. Cubre: RF-15, RF-16, RF-17, RF-18, RF-19, RF-20 | Módulo: access-policies
 
-- [ ] T6 Implementar los clientes de Supabase y el proxy de protección de rutas
+- [x] T6 Implementar los clientes de Supabase y el proxy de protección de rutas
   Pasos: test primero en `tests/unit/route-access.test.ts` para `getRouteAccess(pathname, hasSession)` (sin sesión: `/dashboard` y `/dashboard/x` → `/login`; con sesión: `/login` y `/signup` → `/dashboard`; `/`, `/offline`, `/sw.js`, `/manifest.webmanifest` y estáticos → `allow`); `src/lib/supabase/{server,client,proxy}.ts`; `src/proxy.ts` usando `getClaims()` y matcher que excluye estáticos.
   Hecho cuando: `npm test -- route-access` en verde y, con `npm run dev`, abrir `/dashboard` sin sesión redirige a `/login`. Cubre: RF-8, RF-9, RF-10 | Módulo: route-guard, supabase-clients
 
