@@ -14,7 +14,7 @@
   Pasos: instalar dependencias de desarrollo del Anexo B paso 3; `vitest.config.ts` con proyectos `unit` (jsdom, `tests/unit/`) y `db` (node, `tests/integration/`); scripts `typecheck`, `format`, `format:check`, `test`, `test:db`; test de humo en `tests/unit/smoke.test.ts`; test `tests/unit/no-secrets.test.ts` que falla si algún archivo de `src/` contiene `SUPABASE_SECRET_KEY` o `service_role` (P4).
   Hecho cuando: `npm run typecheck`, `npm run lint`, `npm run format:check` y `npm test` terminan en verde. Cubre: base (P4, P8) | Módulo: validación
 
-- [ ] T3 Crear los proyectos Supabase `dev` y `prod`, configurar Auth y las variables de entorno
+- [x] T3 Crear los proyectos Supabase `dev` y `prod`, configurar Auth y las variables de entorno
   Pasos: crear `calendario-dev` y `calendario-prod` (región UE, plan Free); en ambos, dejar activado "Allow new users to sign up" (registro abierto), desactivar "Confirm email" y fijar contraseña mínima de 8; Anexo B pasos 4–5; crear `.env.example` con las 4 variables del plan; `.env.local` y `.env.test.local` con valores de `dev`; añadir scripts `db:push` y `db:types`.
   Hecho cuando: `npx supabase link` enlaza con `calendario-dev` sin error, `git check-ignore .env.local .env.test.local` devuelve ambos archivos y `.env.example` está versionado sin valores reales. Cubre: RF-1 (D6), RF-27 (D15), RNF-4 | Módulo: supabase-clients
 
