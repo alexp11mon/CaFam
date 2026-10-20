@@ -6,11 +6,11 @@
 
 ## Tareas
 
-- [ ] T1 Inicializar git y el proyecto Next.js 16 con TypeScript estricto, Tailwind y estructura de carpetas
+- [x] T1 Inicializar git y el proyecto Next.js 16 con TypeScript estricto, Tailwind y estructura de carpetas
   Pasos: Anexo B del plan, pasos 1–2; crear `src/components/`, `src/lib/`, `src/types/`, `tests/unit/`, `tests/integration/`; activar regla ESLint `@typescript-eslint/no-explicit-any` en error.
   Hecho cuando: `npm run build` termina sin errores, `npm run dev` sirve `http://localhost:3000` y `git status` muestra el repositorio en la rama `main` sin `node_modules/` ni `.next/`. Cubre: base (RNF-5) | Módulo: ui-shell
 
-- [ ] T2 Configurar Prettier, Vitest (proyectos `unit` y `db`) y todos los scripts de verificación
+- [x] T2 Configurar Prettier, Vitest (proyectos `unit` y `db`) y todos los scripts de verificación
   Pasos: instalar dependencias de desarrollo del Anexo B paso 3; `vitest.config.ts` con proyectos `unit` (jsdom, `tests/unit/`) y `db` (node, `tests/integration/`); scripts `typecheck`, `format`, `format:check`, `test`, `test:db`; test de humo en `tests/unit/smoke.test.ts`; test `tests/unit/no-secrets.test.ts` que falla si algún archivo de `src/` contiene `SUPABASE_SECRET_KEY` o `service_role` (P4).
   Hecho cuando: `npm run typecheck`, `npm run lint`, `npm run format:check` y `npm test` terminan en verde. Cubre: base (P4, P8) | Módulo: validación
 

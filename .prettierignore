@@ -1,0 +1,10 @@
+.next/
+node_modules/
+package-lock.json
+next-env.d.ts
+src/types/database.ts
+# Documentación SDD redactada a mano: no se reformatea
+docs/
+specs/
+.opencode/
+AGENTS.md
