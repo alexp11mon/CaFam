@@ -18,7 +18,7 @@
   Pasos: crear `calendario-dev` y `calendario-prod` (región UE, plan Free); en ambos, dejar activado "Allow new users to sign up" (registro abierto), desactivar "Confirm email" y fijar contraseña mínima de 8; Anexo B pasos 4–5; crear `.env.example` con las 4 variables del plan; `.env.local` y `.env.test.local` con valores de `dev`; añadir scripts `db:push` y `db:types`.
   Hecho cuando: `npx supabase link` enlaza con `calendario-dev` sin error, `git check-ignore .env.local .env.test.local` devuelve ambos archivos y `.env.example` está versionado sin valores reales. Cubre: RF-1 (D6), RF-27 (D15), RNF-4 | Módulo: supabase-clients
 
-- [ ] T4 Crear la migración del esquema base (enum, tablas, índices, restricciones y triggers) con su test
+- [x] T4 Crear la migración del esquema base (enum, tablas, índices, restricciones y triggers) con su test
   Pasos: test primero en `tests/integration/schema.test.ts` (crear usuario con la clave secreta → existe perfil con `display_name`, "Mi calendario" y membresía `owner`; con metadato `time_zone: "America/Bogota"` el perfil guarda esa zona; sin metadato o con `"Marte/Olympus"` guarda `Europe/Madrid` y el usuario se crea igualmente; actualizar `time_zone` a un valor no válido falla; evento con `ends_at < starts_at` falla; borrar usuario borra en cascada perfil, calendarios, eventos y membresías); migración `supabase/migrations/<timestamp>_base_schema.sql` según "Modelo de datos" del plan; `npm run db:push`; `npm run db:types`.
   Hecho cuando: `npm run test:db -- schema` en verde y `src/types/database.ts` generado contiene las tablas `profiles`, `calendars`, `calendar_members` y `events`. Cubre: RF-4, RF-26, casos límite de datos | Módulo: database
 
