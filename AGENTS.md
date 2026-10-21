@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-21, tras implementar la spec 002 (T1–T11; T12 pendiente de la validación en producción y de la aprobación del usuario).
+> Última actualización: 2026-10-21, al cerrar la spec 002.
 
 ## 1. Qué es
 
@@ -28,7 +28,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | Spec | Alcance | Estado |
 |------|---------|--------|
 | 001-base-aplicacion | Proyecto base, auth email/contraseña, esquema con RLS, panel esqueleto, PWA, despliegue | **Cerrada** (2026-10-21), T1–T12 hechas |
-| 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Implementada** (T1–T11, rama `002-calendarios-y-eventos`). Falta T12: migraciones en prod, demo en producción y aprobación del usuario para cerrarla |
+| 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor | Pendiente |
 | 004-suscripciones-ical | Suscripción de solo lectura a `.ics` (Google, iCloud, Outlook) | Pendiente |
 | 005-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
@@ -227,6 +227,7 @@ Tokens en `src/app/globals.css` (`@theme`): `brand` `#2563EB` (botones y enlaces
 | dev | `calendario-dev` (ref `uthubyzhonrtrmbcqcjh`, eu-west-1) | `npm run dev` y `npm run test:db`. **El link local de la CLI debe apuntar siempre aquí** |
 | prod | `calendario-prod` (ref `yznbdoskvtxeasujtirk`, eu-west-1) | Vercel. Site URL = URL de Vercel |
 
+- Las funciones de Vercel corren en **Dublín (`dub1`)**, fijado en `vercel.json`, para estar junto a Supabase `eu-west-1`; en Washington cada consulta cruzaba el Atlántico y las páginas tardaban segundos. La mejora aún no está medida: si vuelve la lentitud, mira los logs de Vercel (duración y arranque en frío) antes de tocar código.
 - Vercel despliega a producción cada push a **`main`** y hace previews de las demás ramas. Se trabaja en una rama por spec (`001-base-aplicacion`) y se integra en `main` con `git merge --ff-only`. `main` debe estar siempre desplegable.
 - Para aplicar migraciones a prod (lo ejecuta el usuario):
   ```
@@ -307,9 +308,7 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 ## 12. Cómo empezar la siguiente spec
 
-La 002 está implementada pero **no cerrada**: antes de abrir la 003, el usuario aplica las migraciones en prod (comandos de la sección 7), valida la demo en producción y aprueba el cierre (T12), y se integra la rama con `git merge --ff-only` en `main`.
-
-Después, para la 003 (compartición):
+La 002 está cerrada y desplegada en producción. Para la 003 (compartición):
 
 1. Crea la rama `003-comparticion` desde `main`.
 2. Redacta `specs/003-comparticion/spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. Resuelve ahí RF-55 de la 002: qué pasa con los miembros al juntar calendarios compartidos.

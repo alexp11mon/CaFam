@@ -1,6 +1,6 @@
 # Tasks 002 - Calendarios y eventos
 
-> Estado: **Borrador pendiente de aprobación**.
+> Estado: **Completadas T1–T12**; spec 002 aprobada y cerrada por el usuario el 2026-10-21.
 > Spec: `specs/002-calendarios-y-eventos/spec.md`. Plan: `specs/002-calendarios-y-eventos/plan.md`.
 > Reglas: una tarea cada vez, test primero, y al cerrar cada tarea se ejecuta y reporta el checklist de "Verificación obligatoria" de la constitución (P7, P8): `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, más `npm run test:db` si toca esquema, RLS o acceso a datos, y prueba manual en móvil (≤ 768 px) y escritorio si toca interfaz. Antes de escribir la primera página nueva (T6), leer la guía correspondiente de `node_modules/next/dist/docs/` (plan R2). Un commit por tarea citándola, en la rama `002-calendarios-y-eventos`.
 
@@ -56,7 +56,7 @@
   Pasos: tests primero en `tests/unit/merge-form.test.tsx` (solo lista calendarios propios; exige ≥ 2; elegir uno existente como resultado o uno nuevo con nombre y color; la confirmación muestra los calendarios afectados, cuáles desaparecen, el número de eventos que se mueven y el aviso de que no se puede deshacer; error de permisos en español) y `tests/unit/merge-action.test.ts` (llamada a `rpc('merge_calendars')` con los argumentos del formulario y traducción de errores); Server Action `mergeCalendars`, componente `merge-form`, página `/dashboard/calendars/merge` y consulta de recuento de eventos.
   Hecho cuando: `npm test -- merge-form merge-action` en verde y demo manual: juntar "Clases Uni" y "Examenes Uni" en "Universidad" (nuevo y existente) comprobando que eventos y categorías pasan al resultado y los otros desaparecen del panel. Cubre: RF-49, RF-50, RF-51, RF-52, RF-53, RF-54 | Módulo: merge-form, calendars/actions
 
-- [ ] T12 Validar la spec en producción, cobertura RF por RF y fuera de alcance
+- [x] T12 Validar la spec en producción, cobertura RF por RF y fuera de alcance
   Pasos: comprobar que `public/sw.js` no cachea rutas de datos ni de `/dashboard` (test `tests/unit/sw-no-data.test.ts`), el test de 500 eventos en el mes (`tests/integration/range-performance.test.ts`, consulta de rango < 3 s), checklist de la tabla de trazabilidad RF → tarea → test con evidencia en este archivo, comprobar que no hay nada de "Fuera de alcance" (sin recurrencia, arrastrar y soltar, búsqueda, papelera ni dependencias nuevas en `package.json`), actualizar `AGENTS.md` (estado, rutas, esquema, estructura) y preparar al usuario los comandos para aplicar las migraciones a prod y volver a enlazar dev (los ejecuta él, con `!`).
   Hecho cuando: `npm run typecheck && npm run lint && npm run format:check && npm test && npm run test:db && npm run build` en verde con la salida reportada, migraciones aplicadas por el usuario en prod, demo manual en producción en móvil y escritorio del flujo crear calendario → categoría → eventos (con hora, día completo y varios días) → vistas → filtros → editar → juntar → borrar, y aprobación explícita del usuario para cerrar la spec. Cubre: todos | Módulo: validación
 
@@ -159,7 +159,9 @@ Demos manuales hechas en local (`next start`, navegador real, contra `dev`) a 37
 | RNF PWA | `sw-no-data` |
 | RNF rendimiento | `range-performance` (500 eventos, < 3 s) |
 
-Pendiente para cerrar T12: aplicar las migraciones en prod, demo manual en producción y aprobación del usuario.
+Cierre en producción (2026-10-21): el usuario aplicó las dos migraciones en `calendario-prod`, se desplegó `main` en Vercel y el usuario recorrió el flujo completo en móvil y escritorio (calendarios, categorías, eventos de los tres tipos, vistas, filtros, edición, cambio de calendario, borrado y juntar) con resultado correcto. Después aprobó el cierre.
+
+Punto abierto que no bloquea el cierre: el usuario notó cargas lentas en producción. Las funciones de Vercel corrían en Washington (`iad1`) y Supabase está en Irlanda; se movieron a Dublín (`dub1`) en `vercel.json` (commit `759a85b`). La mejora de velocidad aún no se ha confirmado con mediciones. Además, el requisito de rendimiento de 3 s se validó solo contra la consulta a la base de datos, no contra el tiempo real de carga en Vercel.
 
 ## Dudas abiertas
 

@@ -1,6 +1,6 @@
 # Spec 002 — Calendarios y eventos
 
-> Estado: **Borrador pendiente de aprobación**. Constitución: `docs/constitution.md`. Parte de la spec 001 (cerrada).
+> Estado: **Cerrada** (aprobada por el usuario el 2026-10-21 tras la validación en producción, T1–T12). Constitución: `docs/constitution.md`. Parte de la spec 001 (cerrada).
 
 ## Contexto y objetivo
 

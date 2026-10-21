@@ -1,6 +1,6 @@
 # Plan 002 — Calendarios y eventos
 
-> Spec de origen: `specs/002-calendarios-y-eventos/spec.md` (aprobada). Constitución: `docs/constitution.md`. Estado: **Borrador pendiente de aprobación**.
+> Spec de origen: `specs/002-calendarios-y-eventos/spec.md` (aprobada). Constitución: `docs/constitution.md`. Estado: **Aprobado** y cerrado con la spec (2026-10-21).
 
 ## Resumen de arquitectura
 
