@@ -1,6 +1,6 @@
 # Plan 001 - Base de la aplicación
 
-> Estado: **Borrador, pendiente de aprobación** (requiere spec aprobada).
+> Estado: **Implementado** (spec 001 cerrada el 2026-10-21).
 > Spec de origen: `specs/001-base-aplicacion/spec.md`. Constitución: `docs/constitution.md`.
 
 ## Resumen de arquitectura

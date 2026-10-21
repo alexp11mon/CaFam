@@ -1,6 +1,6 @@
 # Spec 001 — Base de la aplicación
 
-> Estado: **Borrador, pendiente de aprobación**. Constitución: `docs/constitution.md`.
+> Estado: **Cerrada** (aprobada por el usuario el 2026-10-21 tras la validación de T12). Constitución: `docs/constitution.md`.
 
 ## Contexto y objetivo
 

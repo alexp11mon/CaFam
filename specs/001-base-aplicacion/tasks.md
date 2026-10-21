@@ -1,6 +1,6 @@
 # Tasks 001 - Base de la aplicación
 
-> Estado: **Borrador, pendiente de aprobación** (requiere plan aprobado).
+> Estado: **Completadas T1–T12**; spec 001 aprobada y cerrada por el usuario el 2026-10-21.
 > Spec: `specs/001-base-aplicacion/spec.md`. Plan: `specs/001-base-aplicacion/plan.md`.
 > Reglas: una tarea cada vez, test primero, y al cerrar cada tarea se ejecuta y reporta el checklist de "Verificación obligatoria" de la constitución (P7, P8).
 
@@ -50,7 +50,7 @@
   Pasos: test primero en `tests/unit/keep-alive-route.test.ts` (sin cabecera o con secreto erróneo → 401; con `Bearer ${CRON_SECRET}` → 200); `src/app/api/cron/keep-alive/route.ts`; `vercel.json` con cron diario `0 6 * * *`; aplicar migraciones a `prod` (`npx supabase link` a prod + `npm run db:push`); repositorio privado en GitHub; proyecto en Vercel Hobby con `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `CRON_SECRET` (sin `SUPABASE_SECRET_KEY`); Site URL de Supabase `prod` apuntando a la URL de Vercel.
   Hecho cuando: `npm test -- keep-alive` en verde, la URL de producción carga `/login` por HTTPS y el panel de Vercel muestra el cron con una ejecución manual terminada en 200. Cubre: RF-25, RNF-4, RNF-8 | Módulo: keep-alive
 
-- [ ] T12 Validar la spec completa RF por RF en producción y comprobar el fuera de alcance
+- [x] T12 Validar la spec completa RF por RF en producción y comprobar el fuera de alcance
   Pasos: ejecutar el checklist completo de la constitución; demo del flujo de "Criterios de finalización" en la URL de producción; instalar la app en un móvil real (Android o iOS) y en un escritorio; medir la carga de `/login` con perfil "Fast 4G" (RNF-6); recorrer el flujo solo con teclado (RNF-7); revisar que nada de "Fuera de alcance" está en el código; marcar cada fila de la trazabilidad con su evidencia.
   Hecho cuando: `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`, `npm run test:db` y `npm run build` en verde, las 28 filas de la trazabilidad tienen evidencia y el usuario aprueba explícitamente el cierre de la spec 001. Cubre: todos | Módulo: validación
 
