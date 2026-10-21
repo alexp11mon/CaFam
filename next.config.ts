@@ -4,6 +4,13 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    serverActions: {
+      // A 2 MB .ics plus the multipart overhead (spec 004 RF-26, plan D7); the
+      // action itself answers with the clear message for 2 to 3 MB.
+      bodySizeLimit: "3mb",
+    },
+  },
   async headers() {
     return [
       {

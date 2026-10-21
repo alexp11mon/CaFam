@@ -21,3 +21,9 @@ describe("next.config headers (plan D12)", () => {
     expect(rules.some((rule) => rule.source === "/sw.js")).toBe(true);
   });
 });
+
+describe("next.config Server Actions body limit (plan D7)", () => {
+  it("allows a 2 MB file plus the multipart overhead", () => {
+    expect(nextConfig.experimental?.serverActions?.bodySizeLimit).toBe("3mb");
+  });
+});
