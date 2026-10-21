@@ -12,11 +12,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-22, al cerrar la spec 003.
+> Última actualización: 2026-10-22, con la spec 004 implementada (T1–T10) y T11 preparada; falta aplicar su migración en prod, validarla allí y que el usuario la cierre.
 
 ## 1. Qué es
 
-**CalenderFam** (nombre corto **CaFam**) es una PWA de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso **estrictamente personal** entre familia y amigos. Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comparte con roles Lector/Editor (por enlace o por ID y PIN) y (en specs futuras) se suscribe a calendarios externos `.ics`.
+**CalenderFam** (nombre corto **CaFam**) es una PWA de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso **estrictamente personal** entre familia y amigos. Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comparte con roles Lector/Editor (por enlace o por ID y PIN) e importa calendarios externos (Google, iCloud, Outlook) desde un enlace o archivo `.ics`.
 
 - Sin ánimo de lucro, sin publicidad ni analítica, y **coste cero**: solo capas gratuitas (Supabase Free, Vercel Hobby, GitHub Free).
 - Producción: <https://calendario-familia-five.vercel.app>
@@ -30,7 +30,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 001-base-aplicacion | Proyecto base, auth email/contraseña, esquema con RLS, panel esqueleto, PWA, despliegue | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
-| 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | Spec aprobada (2026-10-22); plan en curso |
+| 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Implementada** (T1–T10 hechas en `dev`); T11 pendiente de prod y cierre |
 | 005-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
 | 006-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
 
@@ -49,7 +49,13 @@ Añadido por la spec 003:
 - Lista de miembros (`/members`, solo nombre y rol, nunca email): el propietario cambia roles y expulsa; los demás pueden salir. El propietario no puede salir ni ser expulsado.
 - Al juntar calendarios, la confirmación nombra a quien pierde el acceso y a quien pasa a ver eventos de otros calendarios.
 
-**No hay** `.ics` (004), gestión de cuenta (005) ni eventos recurrentes (spec futura sin número).
+Añadido por la spec 004 (`/dashboard/import`):
+
+- Importar un `.ics` **una sola vez**, desde un enlace (`https://` o `webcal://`) o un archivo, y crear un calendario **nuevo** del usuario, editable y compartible. No se guarda el enlace ni el archivo y no se vuelve a sincronizar.
+- Cada repetición de un evento repetido se crea como evento suelto (la app no tiene recurrentes propios): las series sin fin llegan hasta 1 año desde el día de la importación, y se respetan `EXDATE` y las repeticiones modificadas (`RECURRENCE-ID`). Los eventos cancelados no se importan.
+- Límite de **2 MB y 2.000 eventos**. Los eventos con zona horaria no reconocida (típicamente los nombres de Windows de Outlook) o con fin anterior al inicio se omiten y se cuentan en el resumen.
+
+**No hay** gestión de cuenta (005), eventos recurrentes propios (spec futura sin número), sincronización ni actualización de lo importado.
 
 ## 3. Reglas de trabajo (obligatorias)
 
@@ -85,7 +91,7 @@ La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen d
 | Calidad | ESLint 9 (`eslint-config-next` + `eslint-config-prettier`), Prettier 3 |
 | BD | Supabase CLI (`supabase` como devDependency) para migraciones y tipos |
 
-Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`. El `package.json` no debe crecer sin aprobación.
+Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod` y `ical.js` (2.2.1, MPL-2.0, aprobada en la spec 004; solo se importa en `src/lib/ics/parse-ics.ts`). El `package.json` no debe crecer sin aprobación.
 
 ## 5. Estructura del repositorio
 
@@ -111,6 +117,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   │   ├── calendars/     # new, [id]/edit, [id]/categories, merge + actions.ts (calendarios y juntar)
 │   │   │   └── events/        # new, [id] (detalle + edición + borrado) + actions.ts
 │   │   ├── dashboard/join/    # "Unirme con código" (ID y PIN) + actions.ts
+│   │   ├── dashboard/import/  # "Importar calendario" (.ics) + actions.ts (`maxDuration` 60)
 │   │   ├── dashboard/calendars/[id]/share/    # invitaciones y ID/PIN (solo propietario) + actions.ts
 │   │   ├── dashboard/calendars/[id]/members/  # lista de miembros (cualquier miembro) + actions.ts
 │   │   ├── invite/[token]/    # vista previa y "Unirme" (ruta pública a nivel de proxy) + actions.ts
@@ -122,11 +129,13 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── dashboard/         # calendar-list
 │   │   ├── calendar/          # formularios, vistas (month/week/day, time-grid), filtros, workspace, merge-form, confirm-dialog…
 │   │   ├── sharing/           # invite-form, copy-button, invite-list, access-code-panel, member-list, join-code-form, invite-join-card
+│   │   ├── import/            # import-form, import-summary
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
 │   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts, next-path.ts (destino tras login: solo /invite/<token>)
 │   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, grouping, format, schemas, error-messages; queries.ts (lecturas con RLS)
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
+│   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
 │   │   └── supabase/          # env.ts, server.ts, client.ts, proxy.ts
 │   └── types/database.ts      # GENERADO con `npm run db:types`; no editar a mano
@@ -135,9 +144,10 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon-192, icon-512, icon-512-maskable, apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar
 ├── tests/
 │   ├── setup-unit.ts
+│   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
 │   ├── unit/                  # *.test.ts(x): lógica pura, formularios, vistas, filtros, sw-no-data, no-secrets…
 │   └── integration/           # schema, rls, signup, login, calendars-events, merge-calendars, preferences, range-performance contra Supabase dev + helpers.ts
 ├── vercel.json                # cron "0 6 * * *" → /api/cron/keep-alive
@@ -175,6 +185,7 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/dashboard/calendars/[id]/share` | solo propietario (otros → 404) | Invitaciones por enlace e ID y PIN |
 | `/dashboard/calendars/[id]/members` | cualquier miembro (ajeno → 404) | Lista de miembros; controles según el rol |
 | `/dashboard/join` | con sesión | Unirme con ID y PIN |
+| `/dashboard/import` | con sesión | Importar un `.ics` (enlace o archivo) a un calendario nuevo |
 | `/invite/[token]` | sin sesión → `/login?next=/invite/<token>`; con sesión, vista previa | Cabeceras `Referrer-Policy: no-referrer` y `X-Robots-Tag: noindex` |
 | `/offline` | pública | Pantalla sin conexión |
 | `/manifest.webmanifest`, `/sw.js`, `/icons/*` | pública | PWA |
@@ -223,6 +234,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `calendar_members`: `UPDATE` solo de la columna `role` y solo del propietario sobre filas no `owner`; `DELETE` por el propietario sobre otros o por cualquiera sobre su propia fila si no es `owner`. El `INSERT` directo sigue prohibido. Un trigger borra las preferencias de quien sale (los eventos y categorías que creó se quedan).
   - Funciones `SECURITY DEFINER` con `search_path = ''`: `create_invite`, `revoke_invite`, `get_invite_preview`, `accept_invite` (bloquea la fila: la carrera por el último uso da un éxito y un `CF404`), `set_access_code`, `disable_access_code`, `join_with_code` (devuelve `status` `ok | member | invalid | limited` en vez de lanzar, para que el fallo quede registrado) y `calendar_members_with_names(uuid[])` (única vía para ver nombres ajenos: nombre y rol, sin email ni zona horaria). `CF404` es el SQLSTATE propio de "invitación no válida".
   - `merge_calendars` no cambia: los miembros de los calendarios que desaparecen caen en cascada.
+- Añadido por la spec 004: `import_calendar(p_name, p_color, p_events jsonb)` (`SECURITY INVOKER`, una transacción): crea el calendario del llamante y sus eventos desde un array de 1 a 2.000 elementos (`22023` si no) y, si un evento viola una restricción, no deja nada. No hay tablas ni columnas nuevas: el calendario importado no guarda nada de su origen.
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, …) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
@@ -323,6 +335,12 @@ npm run db:types       # regenera src/types/database.ts
 - **`useActionState` pasa `(prevState, formData)` a la acción**, también a las que se enlazan con `bind`; las de confirmar (`revokeInvite(id)`, `expelMember(calendarId, userId)`…) ignoran esos argumentos. En los tests mira `mock.calls[0][0]`, no `toHaveBeenCalledWith(id)`.
 - **El PIN nunca vuelve al formulario:** las acciones que lo reciben devuelven `values.pin = ""`.
 - **Al escribir ficheros con heredocs en Bash**, un apóstrofo o una comilla rara puede romper el comando entero; usa la herramienta Write o un script en un fichero.
+- **`ical.js` deja los eventos con `TZID` como hora "de pared" sin zona** (aunque el archivo traiga `VTIMEZONE`): `parse-ics.ts` lee el `TZID` del parámetro y `convert-events.ts` lo convierte con `zonedLocalToUtc`, una vez por ocurrencia. Un `TZID` que `Intl` no reconoce se omite.
+- **La descarga del enlace usa `node:https` con un `lookup` propio** que valida la IP al conectar (anti-SSRF, anti DNS rebinding). No la cambies por `fetch`.
+- **PostgREST devuelve como mucho 1.000 filas por consulta**: en tests con más, cuenta con `{ count: "exact", head: true }`.
+- **`user.upload` de user-event no llega al `FormData` de jsdom** (sustituye `input.files`): un test de un formulario con archivo no puede comprobar el archivo recibido; se comprueba en el navegador.
+- **El cuerpo de las Server Actions está limitado** (`serverActions.bodySizeLimit` en `next.config.ts`, 3 MB por la importación); más que eso lo rechaza Next antes de la acción.
+- **Un script de verificación no debe seguir tras un fallo:** comprueba la salida de `typecheck` antes de hacer commit.
 - **Probar en un navegador real:** `playwright-cli` está instalado globalmente. Arranca la app compilada con `npx next start -p 3100`, crea el usuario de prueba por `/signup` y bórralo de `dev` al terminar. Un `check()` sobre un radio `sr-only` falla: haz clic en el círculo (`label span[aria-hidden]`).
 - **jsdom no implementa `<dialog>.showModal()`:** los tests de diálogos lo simulan en un `beforeAll`.
 - **Tras usar el link de prod**, vuelve a enlazar dev; si no, `db:types` o `db:push` irían contra producción.
@@ -332,14 +350,14 @@ npm run db:types       # regenera src/types/database.ts
 
 ## 11. Fuera de alcance hasta su spec
 
-Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), arrastrar y soltar eventos, búsqueda y vista de agenda, papelera o deshacer, zona horaria por evento, juntar calendarios ajenos o importados, compartición e invitaciones (003), `.ics` (004), recuperación de contraseña, verificación y cambio de email, borrado de cuenta y edición de perfil (005), login social y OAuth (006), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
+Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), arrastrar y soltar eventos, búsqueda y vista de agenda, papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, recuperación de contraseña, verificación y cambio de email, borrado de cuenta y edición de perfil (005), login social y OAuth (006), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
 
 ## 12. Cómo continuar
 
-La 003 está cerrada y desplegada en producción (migraciones aplicadas y demo validada). Siguiente spec (004, importación de `.ics`):
+La 004 está implementada y probada contra `dev` (T1–T10). Para cerrarla (T11) el usuario debe aplicar la migración a prod, desplegar, medir la importación de un `.ics` de 2.000 eventos en Vercel, hacer la demo con `.ics` reales y aprobar el cierre; después se marca T11 `[x]` y se actualiza el estado de este archivo. La siguiente spec es la 005 (gestión de cuenta, requiere SMTP gratuito):
 
-1. La rama es `004-importacion-ics` (desde `main`, con la 003 ya integrada).
-2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. La librería de parseo `.ics` exige aprobación explícita (P6).
+1. Crea la rama `005-gestion-de-cuenta` desde `main` (con la 004 ya integrada).
+2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación.
 3. Haz lo mismo con `plan.md` (`plan-generator`) y `tasks.md` (`tasks-generator`).
 4. Implementa tarea a tarea con el test primero, el checklist de verificación y un commit por tarea.
 5. Valida en producción y pide al usuario la aprobación para cerrar.

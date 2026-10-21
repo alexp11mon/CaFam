@@ -1,6 +1,6 @@
 # Tasks 004 - Importación de calendarios .ics
 
-> Estado: **Aprobadas** por el usuario (2026-10-22). Ninguna tarea empezada.
+> Estado: **Aprobadas** por el usuario (2026-10-22). T1–T10 hechas; T11 preparada (queda lo que solo puede hacer el usuario: migración en prod, medición en Vercel, demo con `.ics` reales y aprobación de cierre).
 > Spec: `specs/004-importacion-ics/spec.md`. Plan: `specs/004-importacion-ics/plan.md`.
 > Reglas: una tarea cada vez, test primero (rojo → verde), y al cerrar cada tarea se ejecuta y reporta el checklist de "Verificación obligatoria" de la constitución (P7, P8): `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, más `npm run test:db` si toca esquema, RLS o acceso a datos, y prueba manual en móvil (≤ 768 px) y escritorio si toca interfaz. Un commit por tarea citándola, en la rama `004-importacion-ics`.
 > La única dependencia nueva es `ical.js` 2.2.1 (aprobada en el plan, D1) y se instala en T4; ninguna otra tarea toca `package.json`. Las páginas siguen el patrón de las specs 002 y 003 (`page.tsx` síncrono, `revalidatePath("/dashboard", "layout")` tras escribir, campos no controlados con `useId()`). Para las demos manuales se usa `playwright-cli` contra `dev` (ver `AGENTS.md`, sección 10) y los usuarios de prueba se borran al terminar. Los `.ics` de prueba son ficheros sintéticos en `tests/fixtures/ics/`, nunca calendarios reales de nadie.
@@ -47,7 +47,7 @@
   Pasos: añadir `tests/fixtures/ics/` con tres `.ics` sintéticos al estilo de Google (UTC y `TZID` IANA, series con `EXDATE` y `RECURRENCE-ID`), iCloud (días completos y series anuales) y Outlook (zonas de Windows y eventos cancelados), y un `.ics` generado en el test con 2.000 eventos de título, descripción y lugar de tamaño máximo. Test primero en `tests/integration/import-fixtures.test.ts` contra `dev`: cada fichero pasa por `runImport` y por `import_calendar` con un usuario de prueba, y los eventos guardados coinciden con lo esperado (instantes, día completo, repeticiones, omitidos de Outlook); el calendario resultante es editable (el propietario actualiza y borra un evento importado y un Editor añadido con la spec 003 puede crear otro); importar dos veces da dos calendarios; el de 2.000 eventos máximos se guarda entero y el de 2.001 se rechaza sin crear nada; la importación del de 2.000 eventos (sin contar la descarga) termina en menos de 30 segundos.
   Hecho cuando: `npm run test:db -- import-fixtures import-calendar` en verde con el tiempo del caso máximo reportado en la salida. Cubre: RF-12, RF-13, RF-16, RF-27, requisito de rendimiento | Módulo: validación (ics/*, import_calendar)
 
-- [ ] T11 Validar la spec en producción, cobertura RF por RF y fuera de alcance
+- [ ] T11 (preparada; faltan prod, medición en Vercel, demo con .ics reales y aprobación del usuario) Validar la spec en producción, cobertura RF por RF y fuera de alcance
   Pasos: completar la tabla RF → tarea → test con evidencia en este archivo; comprobar que no hay nada de "Fuera de alcance" (sin sincronización ni botón "Actualizar", sin guardar el enlace ni el archivo, sin importar a un calendario existente, sin exportar, sin dependencias nuevas aparte de `ical.js`); medir en el despliegue (Vercel) la importación de un `.ics` de 2.000 eventos y comprobar que cabe en 30 s (si no cabe, bajar el límite y avisar al usuario); actualizar `AGENTS.md` (estado, rutas, esquema, estructura y trampas aprendidas, incluida la dependencia `ical.js` en la sección 4) y preparar al usuario los comandos para aplicar la migración a prod y volver a enlazar `dev` (los ejecuta él, con `!`).
   Hecho cuando: `npm run typecheck && npm run lint && npm run format:check && npm test && npm run test:db && npm run build` en verde con la salida reportada, migración aplicada por el usuario en prod, demo manual en producción con un `.ics` real de Google, otro de iCloud y otro de Outlook por enlace y por archivo (ver el calendario, editar un evento y compartirlo con otra cuenta), los errores (enlace no válido, archivo que no es `.ics`, archivo por encima de los límites) y aprobación explícita del usuario para cerrar la spec. Cubre: todos | Módulo: validación
 
@@ -88,6 +88,53 @@
 - RF-33 -> T9
 - RF-34 -> T9
 - RNF (privacidad, seguridad, rendimiento, coste cero, mobile-first, accesibilidad) -> T3, T9, T10, T11
+
+## Trazabilidad RF → tarea → test (T11)
+
+Los tests están en `tests/unit/` (prefijo `ics-` salvo los de la acción y los componentes) y `tests/integration/` (base de datos). Las demos manuales se hicieron con `playwright-cli` contra `dev` (T9): importar un calendario público real de Google por enlace `webcal://` (386 eventos), un archivo con series y zona de Windows, los errores y los tamaños de pantalla.
+
+| RF | Tareas | Evidencia |
+|----|--------|-----------|
+| RF-1 | T3, T8, T9 | `ics-fetch`, `import-action`, `import-form`; demo con enlace de Google |
+| RF-2 | T6, T8, T9 | `ics-read-source`, `import-action`, `import-form`; demo con archivo |
+| RF-3 | T2 | `ics-source-url` (`webcal://` = `https://`) |
+| RF-4 | T2, T3, T6 | `ics-source-url`, `ics-ip-guard`, `ics-fetch` (redirecciones y `lookup`), `ics-error-messages`; demo con `http://10.0.0.1` |
+| RF-5 | T2, T3, T6 | `ics-fetch` (404, 500, red, 15 s), `ics-error-messages` |
+| RF-6 | T3, T8 | `ics-fetch` y `import-action` ("nunca el enlace"), `ics-error-messages` |
+| RF-7 | T1, T8 | `import-calendar` (BD), `import-action` |
+| RF-8 | T6, T8, T9 | `ics-schemas`, `import-action`, `import-form` |
+| RF-9 | T4, T7 | `ics-parse` (nombre), `ics-import-calendar`; demo ("Festivos en España") |
+| RF-10 | T6, T9 | `ics-schemas`, `import-form` |
+| RF-11 | T1, T10 | `import-calendar` (columnas), `import-fixtures` (editar, borrar y Editor) |
+| RF-12 | T1, T10 | `import-calendar`, `import-fixtures` (importar dos veces) |
+| RF-13 | T4, T5, T10 | `ics-parse`, `ics-convert`, `import-fixtures` |
+| RF-14 | T5 | `ics-convert` |
+| RF-15 | T5 | `ics-convert` (100, 2000, 200 caracteres) |
+| RF-16 | T5, T10 | `ics-convert` (zona de cada evento y cambio de hora), `import-fixtures` |
+| RF-17 | T5, T10 | `ics-convert`, `import-fixtures` (iCloud) |
+| RF-18 | T5 | `ics-convert` |
+| RF-19 | T5, T10 | `ics-convert`, `import-fixtures` (boda sin fin) |
+| RF-20 | T4, T10 | `ics-parse` (cancelados), `import-fixtures` (Outlook) |
+| RF-21 | T5, T10 | `ics-convert` (zona desconocida), `import-fixtures` (Outlook); demo |
+| RF-22 | T4 | `ics-parse` |
+| RF-23 | T2, T4, T10 | `ics-source-url` (límites), `ics-parse` (horizonte), `import-fixtures` (38 cumpleaños) |
+| RF-24 | T4, T10 | `ics-parse`, `import-fixtures` (Google) |
+| RF-25 | T4, T10 | `ics-parse`, `import-fixtures` (Google) |
+| RF-26 | T2, T3, T6, T8, T9 | `ics-fetch` (2 MB), `ics-read-source`, `import-action`, `next-config-headers`, `import-form`; demo con archivo de 2,2 MB |
+| RF-27 | T1, T6, T7, T10 | `import-calendar` (BD, 2001), `ics-error-messages`, `ics-import-calendar` (2000, 2001, tope), `import-fixtures` |
+| RF-28 | T4, T6, T7 | `ics-parse`, `ics-error-messages`, `ics-import-calendar`; demo con una página web |
+| RF-29 | T5, T7 | `ics-convert` (fin anterior), `ics-import-calendar` |
+| RF-30 | T1, T8 | `import-calendar` (atomicidad en BD), `import-action` |
+| RF-31 | T8, T9 | `import-action`, `import-summary`, `import-form`; demo |
+| RF-32 | T9 | `import-form` ("Importando…" y botón deshabilitado) |
+| RF-33 | T9 | demo (botón "Importar calendario" en el panel) |
+| RF-34 | T9 | demo (`/dashboard/import` sin sesión → `/login`), `route-access` (spec 001) |
+
+Rendimiento medido en `dev` (T10, sin contar la descarga): 2.000 eventos de un archivo de 1,6 MB en 0,97 s y 2.000 eventos con todos los textos al máximo (4,9 MB de carga) en 1,2 s. La medición en Vercel queda para la demo de producción.
+
+## Fuera de alcance (T11)
+
+Comprobado en el código: sin sincronización ni botón "Actualizar", sin guardar el enlace ni el archivo (ninguna tabla ni columna nueva), sin importar a un calendario existente, sin exportar, sin vista previa y sin otras dependencias que `ical.js` (`git diff main -- package.json` solo añade esa línea). Ninguna pantalla nueva desborda entre 360 y 1920 px (`/dashboard/import` y las vistas con lo importado).
 
 ## Dudas abiertas
 
