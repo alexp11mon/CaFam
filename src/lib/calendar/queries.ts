@@ -309,3 +309,21 @@ export async function getPreferences(
     })),
   };
 }
+
+/** Number of events of each calendar, for the merge summary (RF-52). */
+export async function getEventCounts(
+  supabase: Client,
+  calendarIds: string[],
+): Promise<Record<string, number>> {
+  const entries = await Promise.all(
+    calendarIds.map(async (id) => {
+      const { count, error } = await supabase
+        .from("events")
+        .select("id", { count: "exact", head: true })
+        .eq("calendar_id", id);
+      if (error) throw error;
+      return [id, count ?? 0] as const;
+    }),
+  );
+  return Object.fromEntries(entries);
+}

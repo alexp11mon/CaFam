@@ -1,0 +1,67 @@
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { MergeForm } from "@/components/calendar/merge-form";
+import { PageShell } from "@/components/calendar/page-shell";
+import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
+import {
+  getEventCounts,
+  getMyCalendars,
+  requireUser,
+} from "@/lib/calendar/queries";
+import { mergeCalendars } from "../actions";
+
+export const metadata: Metadata = { title: "Juntar calendarios" };
+
+// Reads the session, so it streams behind <Suspense> (cacheComponents).
+async function Merge() {
+  const { supabase, userId } = await requireUser();
+  // Only calendars the user owns can be merged (RF-53); the database enforces it too.
+  const owned = (await getMyCalendars(supabase, userId)).filter(
+    (calendar) => calendar.role === "owner",
+  );
+
+  if (owned.length < 2) {
+    return (
+      <p className="rounded-lg bg-brand-soft/40 px-4 py-6 text-center text-ink">
+        Necesitas al menos dos calendarios propios para poder juntarlos.
+      </p>
+    );
+  }
+
+  const counts = await getEventCounts(
+    supabase,
+    owned.map((calendar) => calendar.id),
+  );
+
+  return (
+    <MergeForm
+      action={mergeCalendars}
+      calendars={owned.map(({ id, name, color }) => ({
+        id,
+        name,
+        color,
+        eventCount: counts[id] ?? 0,
+      }))}
+      initial={{
+        sourceIds: "",
+        targetId: "",
+        newName: "",
+        newColor: DEFAULT_CALENDAR_COLOR,
+      }}
+    />
+  );
+}
+
+export default function MergePage() {
+  return (
+    <PageShell title="Juntar calendarios">
+      <p className="text-ink">
+        Los eventos y las categorías de los calendarios elegidos pasan a uno
+        solo y los demás desaparecen. No se puede deshacer.
+      </p>
+      <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
+        <Merge />
+      </Suspense>
+    </PageShell>
+  );
+}
