@@ -89,7 +89,8 @@ describe("CategoryManager (RF-9..RF-14)", () => {
     await user.type(screen.getByLabelText("Nueva categoría"), "exámenes");
     await user.click(screen.getByRole("button", { name: "Añadir categoría" }));
 
-    const field = await screen.findByLabelText("Nueva categoría");
+    await screen.findByText("Ya existe una categoría con ese nombre.");
+    const field = screen.getByLabelText("Nueva categoría");
     expect(field).toHaveAccessibleDescription(
       "Ya existe una categoría con ese nombre.",
     );

@@ -128,3 +128,99 @@ export async function getCategories(
   if (error) throw error;
   return data ?? [];
 }
+
+const DEFAULT_TIME_ZONE = "Europe/Madrid";
+
+/** The user's profile zone, in which events are typed and shown (RF-34). */
+export async function getProfileTimeZone(
+  supabase: Client,
+  userId: string,
+): Promise<string> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("time_zone")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.time_zone ?? DEFAULT_TIME_ZONE;
+}
+
+export interface CategoryOptionRecord {
+  id: string;
+  name: string;
+  calendarId: string;
+}
+
+/** Categories of several calendars at once, for the event form. */
+export async function getCategoriesForCalendars(
+  supabase: Client,
+  calendarIds: string[],
+): Promise<CategoryOptionRecord[]> {
+  if (calendarIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from("event_categories")
+    .select("id, name, calendar_id")
+    .in("calendar_id", calendarIds)
+    .order("name");
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    calendarId: row.calendar_id,
+  }));
+}
+
+export interface EventRecord {
+  id: string;
+  calendarId: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: string;
+  endsAt: string;
+  allDay: boolean;
+  color: string | null;
+  categoryId: string | null;
+}
+
+/** One event, or null if it does not exist, is not visible to the user or the id is malformed. */
+export async function getEvent(
+  supabase: Client,
+  id: string,
+): Promise<EventRecord | null> {
+  if (!z.uuid().safeParse(id).success) return null;
+  const { data, error } = await supabase
+    .from("events")
+    .select(
+      "id, calendar_id, title, description, location, starts_at, ends_at, all_day, color, category_id",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    id: data.id,
+    calendarId: data.calendar_id,
+    title: data.title,
+    description: data.description,
+    location: data.location,
+    startsAt: data.starts_at,
+    endsAt: data.ends_at,
+    allDay: data.all_day,
+    color: data.color,
+    categoryId: data.category_id,
+  };
+}
+
+/** Whether RLS lets the user see the event: tells "gone" apart from "not yours". */
+export async function canSeeEvent(
+  supabase: Client,
+  id: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("events")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+  return Boolean(data);
+}

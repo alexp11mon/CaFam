@@ -43,7 +43,8 @@ describe("CalendarForm (RF-1, RF-2, RF-4)", () => {
 
     await user.click(screen.getByRole("button", { name: "Crear calendario" }));
 
-    const name = await screen.findByLabelText("Nombre");
+    await screen.findByText("Escribe un nombre de 1 a 50 caracteres.");
+    const name = screen.getByLabelText("Nombre");
     expect(name).toHaveAccessibleDescription(
       "Escribe un nombre de 1 a 50 caracteres.",
     );

@@ -1,0 +1,108 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { EventDetail } from "@/components/calendar/event-detail";
+import { EventForm } from "@/components/calendar/event-form";
+import { PageShell } from "@/components/calendar/page-shell";
+import { eventToFormDates } from "@/lib/calendar/format";
+import {
+  getCalendar,
+  getCategoriesForCalendars,
+  getEvent,
+  getMyCalendars,
+  getProfileTimeZone,
+  requireUser,
+} from "@/lib/calendar/queries";
+import { deleteEvent, updateEvent } from "../actions";
+
+export const metadata: Metadata = { title: "Evento" };
+
+// Reads the session and the route param, so it streams behind <Suspense> (cacheComponents).
+async function Event({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { supabase, userId } = await requireUser();
+  const event = await getEvent(supabase, id);
+  const calendar = event
+    ? await getCalendar(supabase, userId, event.calendarId)
+    : null;
+  if (!event || !calendar) notFound();
+
+  const canEdit = calendar.role !== "viewer"; // RF-26
+  const timeZone = await getProfileTimeZone(supabase, userId);
+  const myCalendars = canEdit ? await getMyCalendars(supabase, userId) : [];
+  const editable = myCalendars.filter((c) => c.role !== "viewer");
+  const categories = await getCategoriesForCalendars(
+    supabase,
+    canEdit ? editable.map((c) => c.id) : [event.calendarId],
+  );
+  const category = categories.find((c) => c.id === event.categoryId);
+
+  return (
+    <>
+      <EventDetail
+        event={{
+          id: event.id,
+          title: event.title,
+          startsAt: event.startsAt,
+          endsAt: event.endsAt,
+          allDay: event.allDay,
+          description: event.description,
+          location: event.location,
+          color: event.color,
+          calendarName: calendar.name,
+          calendarColor: calendar.color,
+          categoryName: category?.name ?? null,
+        }}
+        timeZone={timeZone}
+        canEdit={canEdit}
+        deleteAction={deleteEvent.bind(null, id)}
+      />
+      {canEdit ? (
+        <section
+          aria-labelledby="edit-heading"
+          className="flex flex-col gap-4 border-t border-ink/10 pt-6"
+        >
+          <h2 id="edit-heading" className="text-lg font-semibold text-ink">
+            Editar evento
+          </h2>
+          <EventForm
+            action={updateEvent.bind(null, id)}
+            initial={{
+              title: event.title,
+              calendarId: event.calendarId,
+              allDay: event.allDay ? "on" : "",
+              ...eventToFormDates(event, timeZone),
+              description: event.description ?? "",
+              location: event.location ?? "",
+              color: event.color ?? "",
+              categoryId: event.categoryId ?? "",
+            }}
+            calendars={editable.map(({ id, name, color }) => ({
+              id,
+              name,
+              color,
+            }))}
+            categories={categories}
+            submitLabel="Guardar cambios"
+            pendingLabel="Guardando…"
+            cancelHref="/dashboard"
+          />
+        </section>
+      ) : null}
+    </>
+  );
+}
+
+export default function EventPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <PageShell title="Evento">
+      <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
+        <Event params={params} />
+      </Suspense>
+    </PageShell>
+  );
+}

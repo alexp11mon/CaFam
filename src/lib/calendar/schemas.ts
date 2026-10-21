@@ -61,6 +61,10 @@ export type EventField =
   | "color"
   | "categoryId";
 
+/** Every field of the event form; `allDay` is "on" or empty because it is a checkbox. */
+export type EventFormField = EventField | "allDay";
+export type EventFormValues = Record<EventFormField, string>;
+
 /** Raw form values; dates are YYYY-MM-DD and times HH:mm in the profile's zone. */
 export interface EventFormInput {
   title: string;
