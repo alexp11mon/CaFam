@@ -78,8 +78,8 @@
 | RF-18 | T5 | `rls.test.ts` | ✅ `npm run test:db` en verde |
 | RF-19 | T5 | `rls.test.ts` | ✅ `npm run test:db` en verde |
 | RF-20 | T5 | `rls.test.ts` | ✅ `npm run test:db` en verde |
-| RF-21 | T10, T12 | DevTools Application + instalación en escritorio/Android | ⏳ Manifest sin errores y service worker activo (T10, CDP); **pendiente: instalación real en escritorio y Android por el usuario** |
-| RF-22 | T10, T12 | Instalación en iOS (si se dispone de dispositivo) | ⏳ Metadatos `appleWebApp` y ayuda de instalación en Safari iOS (T10); **pendiente: instalación en iPhone/iPad por el usuario, o "no verificado" si no hay dispositivo** |
+| RF-21 | T10, T12 | DevTools Application + instalación en escritorio/Android | ✅ Manifest sin errores y service worker activo (T10, CDP); el usuario instaló la app en su ordenador y funciona correctamente |
+| RF-22 | T10, T12 | Instalación en iOS (si se dispone de dispositivo) | ✅ Metadatos `appleWebApp` y ayuda de instalación en Safari iOS (T10); el usuario instaló la app en un iPhone real y funciona correctamente |
 | RF-23 | T10 | Modo Offline en DevTools | ✅ Navegación sin red a `/dashboard` muestra "Sin conexión" con "Reintentar" (T10) |
 | RF-24 | T9, T12 | Revisión a 360/768/1920 px | ✅ Prod: `/`, `/login`, `/signup`, `/dashboard` y `/offline` sin scroll horizontal a 360, 768 y 1920 px |
 | RF-25 | T11 | Ejecución del cron en 200 | ✅ Ejecución manual del cron en Vercel → 200; sin secreto o con secreto erróneo → 401 |
@@ -93,7 +93,8 @@
 - RNF-6: Lighthouse móvil sobre `/login` en producción con su perfil por defecto (150 ms RTT, 1,6 Mbps, CPU ×4; más exigente que "Fast 4G"), 3 pasadas: LCP 1,9–2,0 s, interactiva en ≤ 2,1 s (< 3 s).
 - RNF-7: demo de producción completa (registro, logout, login erróneo y correcto) hecha solo con teclado: el orden de tabulación es nombre → email → contraseña → botón, y "Cerrar sesión" es el primer elemento enfocable del panel.
 - Fuera de alcance: sin rastro en `src/` de CRUD de calendarios o eventos, invitaciones/PIN, `.ics`, recuperación de contraseña, OAuth, notificaciones, tema oscuro ni i18n.
-- P1/P6: dependencias de producción exactamente las permitidas y sin SDK de analítica. Desviación: `@tailwindcss/turbopack` (desarrollo, desde T1) no figura en "Stack permitido"; **requiere aprobación del usuario o cambio a `@tailwindcss/postcss`**.
+- P1/P6: dependencias de producción exactamente las permitidas y sin SDK de analítica. `@tailwindcss/turbopack` (introducida en T1, no listada en "Stack permitido") se sustituyó por `@tailwindcss/postcss` con `postcss.config.mjs`, por decisión del usuario; el CSS generado es idéntico.
+- Instalación en dispositivos reales: ordenador e iPhone, confirmada por el usuario.
 
 Módulos del plan cubiertos: database (T4), access-policies (T5), supabase-clients (T3, T6), route-guard (T6), auth-validation (T7), auth-errors (T7), auth (T7, T8), dashboard (T9), ui-shell (T1, T9), pwa (T10), keep-alive (T11), validación (T2, T12).
 
