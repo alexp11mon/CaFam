@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import type { MergeField } from "@/lib/calendar/schemas";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
+import { getMergeAccess, type MergeMember } from "@/lib/sharing/merge-access";
 import { ColorPicker } from "./color-picker";
 
 type MergeFormState = FormState<MergeField>;
@@ -39,11 +40,14 @@ export function MergeForm({
   action,
   calendars,
   initial,
+  members = [],
 }: {
   action: FormAction<MergeFormState>;
   /** Only calendars the user owns. */
   calendars: MergeCalendar[];
   initial: MergeFormValues;
+  /** Members of the owned calendars, to warn who is affected (RF-36, RF-37). */
+  members?: MergeMember[];
 }) {
   const [state, formAction, pending] = useActionState(action, {
     values: initial,
@@ -77,6 +81,11 @@ export function MergeForm({
     ? (chosen.find((calendar) => calendar.id === targetId)?.name ?? "")
     : newName.trim() || "el calendario nuevo";
   const canContinue = chosen.length >= 2;
+  const access = getMergeAccess({
+    sourceIds: chosen.map((calendar) => calendar.id),
+    targetId: targetId || null,
+    members,
+  });
 
   function toggle(id: string) {
     setSelected((current) =>
@@ -206,6 +215,15 @@ export function MergeForm({
               ? "No hay eventos que mover."
               : `${moved === 1 ? "Se moverá" : "Se moverán"} ${eventsLabel(moved)} a «${targetName}».`}
           </p>
+          {access.losing.length > 0 ? (
+            <p>Perderán el acceso: {listNames(access.losing)}.</p>
+          ) : null}
+          {access.gaining.length > 0 ? (
+            <p>
+              Pasarán a ver los eventos de los otros calendarios:{" "}
+              {listNames(access.gaining)}.
+            </p>
+          ) : null}
           <p className="font-semibold">No se puede deshacer.</p>
           <div className="flex flex-wrap justify-end gap-3">
             <Button variant="secondary" onClick={() => dialog.current?.close()}>

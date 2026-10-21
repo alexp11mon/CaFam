@@ -8,6 +8,7 @@ import {
   getMyCalendars,
   requireUser,
 } from "@/lib/calendar/queries";
+import { getMembers } from "@/lib/sharing/queries";
 import { mergeCalendars } from "../actions";
 
 export const metadata: Metadata = { title: "Juntar calendarios" };
@@ -28,10 +29,11 @@ async function Merge() {
     );
   }
 
-  const counts = await getEventCounts(
-    supabase,
-    owned.map((calendar) => calendar.id),
-  );
+  const ids = owned.map((calendar) => calendar.id);
+  const [counts, members] = await Promise.all([
+    getEventCounts(supabase, ids),
+    getMembers(supabase, ids),
+  ]);
 
   return (
     <MergeForm
@@ -42,6 +44,7 @@ async function Merge() {
         color,
         eventCount: counts[id] ?? 0,
       }))}
+      members={members}
       initial={{
         sourceIds: "",
         targetId: "",

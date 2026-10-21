@@ -6,6 +6,7 @@ import {
   type MergeFormValues,
 } from "@/components/calendar/merge-form";
 import type { MergeField } from "@/lib/calendar/schemas";
+import type { MergeMember } from "@/lib/sharing/merge-access";
 import type { FormState } from "@/lib/forms/form-state";
 
 type State = FormState<MergeField>;
@@ -35,11 +36,19 @@ const EMPTY: MergeFormValues = {
 
 function setup(
   implementation?: (prev: State, formData: FormData) => Promise<State>,
+  members: MergeMember[] = [],
 ) {
   const action = vi.fn<(prev: State, formData: FormData) => Promise<State>>(
     implementation ?? (async () => ({ values: EMPTY })),
   );
-  render(<MergeForm action={action} calendars={CALENDARS} initial={EMPTY} />);
+  render(
+    <MergeForm
+      action={action}
+      calendars={CALENDARS}
+      initial={EMPTY}
+      members={members}
+    />,
+  );
   return action;
 }
 
@@ -251,5 +260,71 @@ describe("MergeForm (RF-49..RF-52)", () => {
     expect(
       screen.getByLabelText("Nombre del calendario nuevo"),
     ).toHaveAccessibleDescription("Escribe un nombre de 1 a 50 caracteres.");
+  });
+});
+
+describe("MergeForm members notice (RF-36, RF-37)", () => {
+  const member = (
+    calendarId: string,
+    userId: string,
+    name: string,
+    role: MergeMember["role"] = "viewer",
+  ): MergeMember => ({ calendarId, userId, name, role });
+
+  const MEMBERS = [
+    member("a", "owner", "Marta", "owner"),
+    member("b", "owner", "Marta", "owner"),
+    member("a", "luis", "Luis", "editor"),
+    member("b", "ana", "Ana"),
+    member("c", "zoe", "Zoe"),
+  ];
+
+  async function openDialog(target: string) {
+    const user = userEvent.setup();
+    await choose(user, "Clases Uni", "Examenes Uni");
+    await user.selectOptions(screen.getByLabelText("Resultado"), target);
+    if (target === "") {
+      await user.type(
+        screen.getByLabelText("Nombre del calendario nuevo"),
+        "Uni",
+      );
+    }
+    await user.click(
+      screen.getByRole("button", { name: "Juntar calendarios" }),
+    );
+    return screen.getByRole("dialog");
+  }
+
+  it("names who loses access and who starts seeing other events", async () => {
+    setup(undefined, MEMBERS);
+
+    const dialog = await openDialog("a");
+
+    expect(dialog).toHaveTextContent("Perderán el acceso: Ana.");
+    expect(dialog).toHaveTextContent(
+      "Pasarán a ver los eventos de los otros calendarios: Luis.",
+    );
+    expect(dialog).not.toHaveTextContent("Marta");
+    expect(dialog).not.toHaveTextContent("Zoe");
+    expect(dialog).toHaveTextContent("No se puede deshacer");
+  });
+
+  it("with a new calendar nobody gains and every member loses access", async () => {
+    setup(undefined, MEMBERS);
+
+    const dialog = await openDialog("");
+
+    expect(dialog).toHaveTextContent("Perderán el acceso: Ana y Luis.");
+    expect(dialog).not.toHaveTextContent("Pasarán a ver");
+  });
+
+  it("says nothing when there are no other members", async () => {
+    setup(undefined, [member("a", "owner", "Marta", "owner")]);
+
+    const dialog = await openDialog("a");
+
+    expect(dialog).not.toHaveTextContent("Perderán el acceso");
+    expect(dialog).not.toHaveTextContent("Pasarán a ver");
+    expect(dialog).toHaveTextContent("No se puede deshacer");
   });
 });
