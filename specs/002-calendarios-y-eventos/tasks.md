@@ -24,7 +24,7 @@
   Pasos: tests primero en `tests/unit/palette.test.ts` (≥ 12 colores únicos, incluye `#2563EB`, `readableTextColor` da ≥ 4,5:1 para cada color de la paleta), `tests/unit/time-zone.test.ts` (ida y vuelta local↔UTC en Europe/Madrid y America/New_York, días de cambio de hora, hora inexistente → la siguiente válida y hora ambigua → la primera, medianoche, día completo como fecha UTC) y `tests/unit/ranges.test.ts` (semana desde lunes, rejilla de mes con semanas completas, rango de semana y de día, anterior/siguiente/hoy, parseo de `?view=&date=` con valores inválidos → mes actual); módulos `src/lib/calendar/palette.ts`, `time-zone.ts`, `ranges.ts` (solo `Intl`, sin dependencias, D2).
   Hecho cuando: `npm test -- palette time-zone ranges` en verde y `package.json` sin dependencias nuevas. Cubre: RF-2, RF-17, RF-20, RF-29, RF-30, RF-34 | Módulo: palette, time-zone, ranges
 
-- [ ] T4 Implementar la disposición de eventos y la agrupación por persona como lógica pura
+- [x] T4 Implementar la disposición de eventos y la agrupación por persona como lógica pura
   Pasos: tests primero en `tests/unit/layout.test.ts` (evento que cruza medianoche aparece en ambos días, varios días aparece en cada día, día completo/varios días separado de los que tienen hora, solape en cadena y bordes iguales sin taparse, duración cero, "+N más" cuando no caben) y `tests/unit/grouping.test.ts` (yo primero, orden manual de personas y de calendarios, sin posición → al final por fecha de creación, sin preferencia → visible, calendario nuevo al final de su propietario); módulos `src/lib/calendar/layout.ts` y `src/lib/calendar/grouping.ts`.
   Hecho cuando: `npm test -- layout grouping` en verde. Cubre: RF-20, RF-21, RF-35, RF-39, RF-40, RF-42, RF-45, RF-47 | Módulo: layout, grouping
 
