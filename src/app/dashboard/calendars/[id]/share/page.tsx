@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PageShell } from "@/components/calendar/page-shell";
@@ -40,6 +41,12 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
           {calendar.name}
         </span>
       </p>
+      <Link
+        href={`/dashboard/calendars/${id}/members`}
+        className="inline-flex min-h-11 items-center text-sm font-semibold text-brand underline"
+      >
+        Ver miembros
+      </Link>
       <section aria-labelledby="invite-heading" className="flex flex-col gap-4">
         <h2 id="invite-heading" className="text-lg font-bold text-ink">
           Invitar con un enlace

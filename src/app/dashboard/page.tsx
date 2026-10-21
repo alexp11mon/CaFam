@@ -11,6 +11,7 @@ import {
   requireUser,
 } from "@/lib/calendar/queries";
 import { signOut } from "../(auth)/actions";
+import { leaveCalendar } from "./calendars/[id]/members/actions";
 
 export const metadata: Metadata = { title: "Panel" };
 
@@ -58,7 +59,7 @@ async function Calendars() {
           </LinkButton>
         ) : null}
       </div>
-      <CalendarList calendars={calendars} />
+      <CalendarList calendars={calendars} leaveAction={leaveCalendar} />
     </>
   );
 }

@@ -69,6 +69,31 @@ export async function getAccessCode(
   };
 }
 
+export interface MemberRecord {
+  calendarId: string;
+  userId: string;
+  name: string;
+  role: "owner" | "editor" | "viewer";
+}
+
+/** Name and role of every member of the given calendars, never emails (RF-24). */
+export async function getMembers(
+  supabase: Client,
+  calendarIds: string[],
+): Promise<MemberRecord[]> {
+  if (calendarIds.length === 0) return [];
+  const { data, error } = await supabase.rpc("calendar_members_with_names", {
+    p_calendar_ids: calendarIds,
+  });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    calendarId: row.calendar_id,
+    userId: row.user_id,
+    name: row.display_name,
+    role: row.role,
+  }));
+}
+
 export interface InvitePreview {
   calendarName: string;
   ownerName: string;

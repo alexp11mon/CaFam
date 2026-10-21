@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
 import { LinkButton } from "@/components/ui/link-button";
+import type { ConfirmState } from "@/lib/forms/form-state";
 import type { Database } from "@/types/database";
 
 type CalendarRole = Database["public"]["Enums"]["calendar_role"];
@@ -21,7 +23,14 @@ const ACTION_LINK =
   "inline-flex min-h-11 items-center text-sm font-semibold text-brand underline";
 
 /** Calendars the user belongs to, in the order received (RF-13, RF-41, RF-45). */
-export function CalendarList({ calendars }: { calendars: CalendarListItem[] }) {
+export function CalendarList({
+  calendars,
+  leaveAction,
+}: {
+  calendars: CalendarListItem[];
+  /** Leaves a calendar that belongs to someone else (RF-27, RF-34). */
+  leaveAction: (calendarId: string) => Promise<ConfirmState>;
+}) {
   if (calendars.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-lg bg-brand-soft/40 px-4 py-6 text-center text-ink">
@@ -57,17 +66,17 @@ export function CalendarList({ calendars }: { calendars: CalendarListItem[] }) {
               {ROLE_LABELS[calendar.role]}
             </span>
           </div>
-          {calendar.role !== "viewer" ? (
-            <div className="flex flex-wrap gap-x-4">
-              {calendar.role === "owner" ? (
-                <Link
-                  href={`/dashboard/calendars/${calendar.id}/edit`}
-                  aria-label={`Editar ${calendar.name}`}
-                  className={ACTION_LINK}
-                >
-                  Editar
-                </Link>
-              ) : null}
+          <div className="flex flex-wrap items-center gap-x-4">
+            {calendar.role === "owner" ? (
+              <Link
+                href={`/dashboard/calendars/${calendar.id}/edit`}
+                aria-label={`Editar ${calendar.name}`}
+                className={ACTION_LINK}
+              >
+                Editar
+              </Link>
+            ) : null}
+            {calendar.role !== "viewer" ? (
               <Link
                 href={`/dashboard/calendars/${calendar.id}/categories`}
                 aria-label={`Categorías de ${calendar.name}`}
@@ -75,8 +84,35 @@ export function CalendarList({ calendars }: { calendars: CalendarListItem[] }) {
               >
                 Categorías
               </Link>
-            </div>
-          ) : null}
+            ) : null}
+            {calendar.role === "owner" ? (
+              <Link
+                href={`/dashboard/calendars/${calendar.id}/share`}
+                aria-label={`Compartir y miembros de ${calendar.name}`}
+                className={ACTION_LINK}
+              >
+                Compartir y miembros
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href={`/dashboard/calendars/${calendar.id}/members`}
+                  aria-label={`Miembros de ${calendar.name}`}
+                  className={ACTION_LINK}
+                >
+                  Miembros
+                </Link>
+                <ConfirmDialog
+                  triggerLabel="Salir"
+                  triggerAriaLabel={`Salir de ${calendar.name}`}
+                  title={`¿Salir de «${calendar.name}»?`}
+                  description="Dejarás de verlo. Los eventos que creaste se quedan, y solo podrás volver con una invitación nueva."
+                  confirmLabel="Sí, salir"
+                  action={leaveAction.bind(null, calendar.id)}
+                />
+              </>
+            )}
+          </div>
         </li>
       ))}
     </ul>
