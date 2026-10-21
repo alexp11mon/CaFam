@@ -38,7 +38,7 @@ vi.mock("@/lib/calendar/queries", () => ({
   }),
 }));
 
-const { createInvite, revokeInvite } =
+const { createInvite, revokeInvite, saveAccessCode, disableAccessCode } =
   await import("@/app/dashboard/calendars/[id]/share/actions");
 
 function form(fields: Record<string, string>) {
@@ -150,5 +150,75 @@ describe("revokeInvite action (RF-12)", () => {
       formError: "Este elemento ya no existe.",
     });
     expect(state.rpcCalls).toEqual([]);
+  });
+});
+
+describe("saveAccessCode action (RF-14, RF-15, RF-17)", () => {
+  const INITIAL_CODE = { values: { role: "viewer", pin: "" } };
+
+  it("calls set_access_code with role and PIN and does not keep the PIN", async () => {
+    state.rpcResult = { data: "ABCD2345", error: null };
+
+    const result = await saveAccessCode(
+      CALENDAR,
+      INITIAL_CODE,
+      form({ role: "editor", pin: "482915" }),
+    );
+
+    expect(state.rpcCalls).toEqual([
+      {
+        name: "set_access_code",
+        args: { p_calendar_id: CALENDAR, p_role: "editor", p_pin: "482915" },
+      },
+    ]);
+    expect(result).toEqual({ values: { role: "editor", pin: "" } });
+    expect(state.revalidated).toEqual([["/dashboard", "layout"]]);
+  });
+
+  it("reports a bad PIN next to the field without calling the database", async () => {
+    const result = await saveAccessCode(
+      CALENDAR,
+      INITIAL_CODE,
+      form({ role: "viewer", pin: "12345" }),
+    );
+
+    expect(result.fieldErrors?.pin).toBe(
+      "El PIN debe tener entre 6 y 10 dígitos.",
+    );
+    expect(result.values.pin).toBe("");
+    expect(state.rpcCalls).toEqual([]);
+  });
+
+  it("maps database errors", async () => {
+    state.rpcResult = { data: null, error: { code: "42501" } };
+
+    const result = await saveAccessCode(
+      CALENDAR,
+      INITIAL_CODE,
+      form({ role: "viewer", pin: "482915" }),
+    );
+
+    expect(result.formError).toBe("No tienes permiso para hacer esto.");
+    expect(result.values.pin).toBe("");
+  });
+});
+
+describe("disableAccessCode action (RF-18)", () => {
+  it("calls disable_access_code", async () => {
+    state.rpcResult = { data: null, error: null };
+
+    expect(await disableAccessCode(CALENDAR)).toEqual({});
+    expect(state.rpcCalls).toEqual([
+      { name: "disable_access_code", args: { p_calendar_id: CALENDAR } },
+    ]);
+    expect(state.revalidated).toEqual([["/dashboard", "layout"]]);
+  });
+
+  it("maps a permission error", async () => {
+    state.rpcResult = { data: null, error: { code: "42501" } };
+
+    expect(await disableAccessCode(CALENDAR)).toEqual({
+      formError: "No tienes permiso para hacer esto.",
+    });
   });
 });

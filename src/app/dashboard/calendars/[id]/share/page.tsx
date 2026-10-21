@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PageShell } from "@/components/calendar/page-shell";
+import { AccessCodePanel } from "@/components/sharing/access-code-panel";
 import { InviteForm } from "@/components/sharing/invite-form";
 import { InviteList } from "@/components/sharing/invite-list";
 import { getCalendar, requireUser } from "@/lib/calendar/queries";
-import { getInvites } from "@/lib/sharing/queries";
-import { createInvite, revokeInvite } from "./actions";
+import { getAccessCode, getInvites } from "@/lib/sharing/queries";
+import {
+  createInvite,
+  disableAccessCode,
+  revokeInvite,
+  saveAccessCode,
+} from "./actions";
 
 export const metadata: Metadata = { title: "Compartir" };
 
@@ -17,7 +23,10 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
   const calendar = await getCalendar(supabase, userId, id);
   // Only the owner shares (RF-29): everyone else gets a 404 like a stranger.
   if (!calendar || calendar.role !== "owner") notFound();
-  const invites = await getInvites(supabase, id);
+  const [invites, accessCode] = await Promise.all([
+    getInvites(supabase, id),
+    getAccessCode(supabase, id),
+  ]);
 
   return (
     <>
@@ -45,6 +54,16 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
           invites={invites}
           now={new Date().toISOString()}
           revokeAction={revokeInvite}
+        />
+      </section>
+      <section aria-labelledby="code-heading" className="flex flex-col gap-4">
+        <h2 id="code-heading" className="text-lg font-bold text-ink">
+          Invitar con ID y PIN
+        </h2>
+        <AccessCodePanel
+          code={accessCode}
+          saveAction={saveAccessCode.bind(null, id)}
+          disableAction={disableAccessCode.bind(null, id)}
         />
       </section>
     </>

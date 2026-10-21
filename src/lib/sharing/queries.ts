@@ -42,3 +42,28 @@ export async function getInvites(
         ],
   );
 }
+
+export interface AccessCodeRecord {
+  publicCode: string;
+  role: "editor" | "viewer";
+  enabled: boolean;
+}
+
+/** ID, role and state of the calendar code, never the PIN hash (RF-16). Owner only. */
+export async function getAccessCode(
+  supabase: Client,
+  calendarId: string,
+): Promise<AccessCodeRecord | null> {
+  const { data, error } = await supabase
+    .from("calendar_access_codes")
+    .select("public_code, role, enabled")
+    .eq("calendar_id", calendarId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data || data.role === "owner") return null;
+  return {
+    publicCode: data.public_code,
+    role: data.role,
+    enabled: data.enabled,
+  };
+}
