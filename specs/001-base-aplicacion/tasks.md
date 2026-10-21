@@ -56,36 +56,44 @@
 
 ## Trazabilidad RF -> Tareas
 
-| RF | Tareas | Evidencia esperada |
-|----|--------|--------------------|
-| RF-1 | T7, T3 | Registro en dev y prod lleva al panel |
-| RF-2 | T7 | `signup.test.ts`, `auth-error-messages.test.ts` |
-| RF-3 | T7 | `auth-schemas.test.ts`, `signup-form.test.tsx` |
-| RF-4 | T4 | `schema.test.ts` |
-| RF-5 | T8 | `login.test.ts` + demo |
-| RF-6 | T8 | `login-form.test.tsx`, `auth-error-messages.test.ts` |
-| RF-7 | T8 | Demo de logout |
-| RF-8 | T6 | `route-access.test.ts` + demo |
-| RF-9 | T6 | `route-access.test.ts` |
-| RF-10 | T6, T8 | Demo: recarga y reapertura conservan sesión |
-| RF-11 | T7, T8 | `auth-error-messages.test.ts` |
-| RF-12 | T7, T8 | `auth-error-messages.test.ts`, `signup-form.test.tsx` |
-| RF-13 | T9 | `calendar-list.test.tsx` + demo |
-| RF-14 | T9 | Revisión a 360 px y 1920 px |
-| RF-15 | T5 | `rls.test.ts` |
-| RF-16 | T5 | `rls.test.ts` |
-| RF-17 | T5 | `rls.test.ts` |
-| RF-18 | T5 | `rls.test.ts` |
-| RF-19 | T5 | `rls.test.ts` |
-| RF-20 | T5 | `rls.test.ts` |
-| RF-21 | T10, T12 | DevTools Application + instalación en escritorio/Android |
-| RF-22 | T10, T12 | Instalación en iOS (si se dispone de dispositivo) |
-| RF-23 | T10 | Modo Offline en DevTools |
-| RF-24 | T9, T12 | Revisión a 360/768/1920 px |
-| RF-25 | T11 | Ejecución del cron en 200 |
-| RF-26 | T4, T7 | `schema.test.ts`, `auth-schemas.test.ts`, `signup-form.test.tsx` |
-| RF-27 | T3, T12 | Ajuste "Allow new users to sign up" activo en `prod` + registro de un email nuevo en la demo |
-| RNF-9 | T9, T10 | Título de pestaña, `manifest.test.ts`, Lighthouse sin errores de contraste |
+| RF | Tareas | Evidencia esperada | Evidencia obtenida (T12, 2026-10-21) |
+|----|--------|--------------------|--------------------------------------|
+| RF-1 | T7, T3 | Registro en dev y prod lleva al panel | ✅ Registro en dev (T9) y en prod (demo, solo teclado) → `/dashboard` en 0,8 s |
+| RF-2 | T7 | `signup.test.ts`, `auth-error-messages.test.ts` | ✅ Tests en verde + demo prod: email repetido → "Ya existe una cuenta con este email." |
+| RF-3 | T7 | `auth-schemas.test.ts`, `signup-form.test.tsx` | ✅ Tests en verde |
+| RF-4 | T4 | `schema.test.ts` | ✅ Test en verde + demo prod: panel muestra "Mi calendario" |
+| RF-5 | T8 | `login.test.ts` + demo | ✅ Test en verde + demo prod: login correcto → `/dashboard` |
+| RF-6 | T8 | `login-form.test.tsx`, `auth-error-messages.test.ts` | ✅ Tests en verde + demo prod: "Email o contraseña incorrectos." y email conservado |
+| RF-7 | T8 | Demo de logout | ✅ Demo prod: "Cerrar sesión" → `/login`; volver atrás y recargar sigue en `/login` |
+| RF-8 | T6 | `route-access.test.ts` + demo | ✅ Test en verde + prod: `/dashboard` sin sesión → 307 a `/login` |
+| RF-9 | T6 | `route-access.test.ts` | ✅ Test en verde + demo prod: `/login` y `/signup` con sesión → `/dashboard` |
+| RF-10 | T6, T8 | Demo: recarga y reapertura conservan sesión | ✅ Demo prod: recarga conserva sesión; cookies `sb-…-auth-token` persistentes (caducan 2027-11-25), sobreviven al cierre del navegador |
+| RF-11 | T7, T8 | `auth-error-messages.test.ts` | ✅ Test en verde |
+| RF-12 | T7, T8 | `auth-error-messages.test.ts`, `signup-form.test.tsx` | ✅ Tests en verde |
+| RF-13 | T9 | `calendar-list.test.tsx` + demo | ✅ Test en verde + demo prod: "Hola, Demo T12" y "Mi calendario · Propietario" |
+| RF-14 | T9 | Revisión a 360 px y 1920 px | ✅ "Cerrar sesión" dentro del primer viewport a 360, 768 y 1920 px (T9) |
+| RF-15 | T5 | `rls.test.ts` | ✅ `npm run test:db` en verde (30 tests) |
+| RF-16 | T5 | `rls.test.ts` | ✅ `npm run test:db` en verde |
+| RF-17 | T5 | `rls.test.ts` | ✅ `npm run test:db` en verde |
+| RF-18 | T5 | `rls.test.ts` | ✅ `npm run test:db` en verde |
+| RF-19 | T5 | `rls.test.ts` | ✅ `npm run test:db` en verde |
+| RF-20 | T5 | `rls.test.ts` | ✅ `npm run test:db` en verde |
+| RF-21 | T10, T12 | DevTools Application + instalación en escritorio/Android | ⏳ Manifest sin errores y service worker activo (T10, CDP); **pendiente: instalación real en escritorio y Android por el usuario** |
+| RF-22 | T10, T12 | Instalación en iOS (si se dispone de dispositivo) | ⏳ Metadatos `appleWebApp` y ayuda de instalación en Safari iOS (T10); **pendiente: instalación en iPhone/iPad por el usuario, o "no verificado" si no hay dispositivo** |
+| RF-23 | T10 | Modo Offline en DevTools | ✅ Navegación sin red a `/dashboard` muestra "Sin conexión" con "Reintentar" (T10) |
+| RF-24 | T9, T12 | Revisión a 360/768/1920 px | ✅ Prod: `/`, `/login`, `/signup`, `/dashboard` y `/offline` sin scroll horizontal a 360, 768 y 1920 px |
+| RF-25 | T11 | Ejecución del cron en 200 | ✅ Ejecución manual del cron en Vercel → 200; sin secreto o con secreto erróneo → 401 |
+| RF-26 | T4, T7 | `schema.test.ts`, `auth-schemas.test.ts`, `signup-form.test.tsx` | ✅ Tests en verde |
+| RF-27 | T3, T12 | Ajuste "Allow new users to sign up" activo en `prod` + registro de un email nuevo en la demo | ✅ Demo prod: dos emails nuevos registrados sin lista de autorizados |
+| RNF-9 | T9, T10 | Título de pestaña, `manifest.test.ts`, Lighthouse sin errores de contraste | ✅ Título "CalenderFam", `manifest.test.ts` en verde, Lighthouse sin errores de contraste en las 4 páginas (T9) |
+
+### Otras comprobaciones de T12
+
+- Checklist de la constitución (2026-10-21): `typecheck`, `lint`, `format:check`, `test` (71 tests), `test:db` (30 tests) y `build` en verde.
+- RNF-6: Lighthouse móvil sobre `/login` en producción con su perfil por defecto (150 ms RTT, 1,6 Mbps, CPU ×4; más exigente que "Fast 4G"), 3 pasadas: LCP 1,9–2,0 s, interactiva en ≤ 2,1 s (< 3 s).
+- RNF-7: demo de producción completa (registro, logout, login erróneo y correcto) hecha solo con teclado: el orden de tabulación es nombre → email → contraseña → botón, y "Cerrar sesión" es el primer elemento enfocable del panel.
+- Fuera de alcance: sin rastro en `src/` de CRUD de calendarios o eventos, invitaciones/PIN, `.ics`, recuperación de contraseña, OAuth, notificaciones, tema oscuro ni i18n.
+- P1/P6: dependencias de producción exactamente las permitidas y sin SDK de analítica. Desviación: `@tailwindcss/turbopack` (desarrollo, desde T1) no figura en "Stack permitido"; **requiere aprobación del usuario o cambio a `@tailwindcss/postcss`**.
 
 Módulos del plan cubiertos: database (T4), access-policies (T5), supabase-clients (T3, T6), route-guard (T6), auth-validation (T7), auth-errors (T7), auth (T7, T8), dashboard (T9), ui-shell (T1, T9), pwa (T10), keep-alive (T11), validación (T2, T12).
 
