@@ -6,7 +6,7 @@
 
 ## Tareas
 
-- [ ] T1 Crear la migración de categorías, preferencias, columnas de evento, límites y `visible_people` con sus tests de base de datos
+- [x] T1 Crear la migración de categorías, preferencias, columnas de evento, límites y `visible_people` con sus tests de base de datos
   Pasos: test primero en `tests/integration/calendars-events.test.ts`:
   - categorías: miembro lee, lector no escribe, owner y editor sí, ajeno no ve nada; nombre duplicado ignorando mayúsculas y espacios falla con `23505`; borrar una categoría deja el evento con `category_id` nulo;
   - eventos: una categoría de otro calendario falla; mover un evento a otro calendario con categoría la deja nula; mover exige ser owner/editor en origen y destino; un lector no mueve ni crea;

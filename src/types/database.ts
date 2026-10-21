@@ -75,6 +75,48 @@ export type Database = {
           },
         ]
       }
+      calendar_preferences: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          position: number | null
+          updated_at: string
+          user_id: string
+          visible: boolean
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          position?: number | null
+          updated_at?: string
+          user_id: string
+          visible?: boolean
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          position?: number | null
+          updated_at?: string
+          user_id?: string
+          visible?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_preferences_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendars: {
         Row: {
           color: string
@@ -113,10 +155,44 @@ export type Database = {
           },
         ]
       }
+      event_categories: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_categories_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           all_day: boolean
           calendar_id: string
+          category_id: string | null
+          color: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -130,6 +206,8 @@ export type Database = {
         Insert: {
           all_day?: boolean
           calendar_id: string
+          category_id?: string | null
+          color?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -143,6 +221,8 @@ export type Database = {
         Update: {
           all_day?: boolean
           calendar_id?: string
+          category_id?: string | null
+          color?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -162,8 +242,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "events_category_fkey"
+            columns: ["category_id", "calendar_id"]
+            isOneToOne: false
+            referencedRelation: "event_categories"
+            referencedColumns: ["id", "calendar_id"]
+          },
+          {
             foreignKeyName: "events_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_preferences: {
+        Row: {
+          created_at: string
+          person_id: string
+          position: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          person_id: string
+          position?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          person_id?: string
+          position?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_preferences_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_preferences_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -205,6 +331,13 @@ export type Database = {
       }
       is_calendar_member: { Args: { p_calendar_id: string }; Returns: boolean }
       list_tables_without_rls: { Args: never; Returns: string[] }
+      visible_people: {
+        Args: never
+        Returns: {
+          display_name: string
+          id: string
+        }[]
+      }
     }
     Enums: {
       calendar_role: "owner" | "editor" | "viewer"
