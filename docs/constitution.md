@@ -2,7 +2,7 @@
 
 ## Contexto y objetivo
 
-CalendarioFamilia es una aplicación web progresiva (PWA) de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso estrictamente personal entre familia y amigos. Cada usuario se registra, gestiona sus calendarios desde un panel, crea eventos y los comparte con otras personas asignándoles un rol (Lector o Editor). También puede suscribirse en solo lectura a calendarios externos (Google, iCloud, Outlook) mediante enlaces iCal/.ics para verlos en la misma interfaz.
+CalendarioFamilia es una aplicación web progresiva (PWA) de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso estrictamente personal entre familia y amigos. Cada usuario se registra, gestiona sus calendarios desde un panel, crea eventos y los comparte con otras personas asignándoles un rol (Lector o Editor). También puede importar calendarios externos (Google, iCloud, Outlook) desde un enlace o un archivo iCal/.ics, que se convierten en calendarios propios editables y compartibles.
 
 Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, analítica de terceros, multi-organización o funcionalidades de equipo/empresa, y cualquier servicio que tenga coste económico.
 
@@ -13,7 +13,7 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 001-base-aplicacion | Proyecto base, autenticación email/contraseña, esquema de datos base con permisos, panel esqueleto, PWA instalable, despliegue |
 | 002-calendarios-y-eventos | CRUD de calendarios y eventos, vistas mensual, semanal y diaria |
 | 003-comparticion | Enlace de invitación único, ID de calendario + PIN, gestión de roles Lector/Editor |
-| 004-suscripciones-ical | Fase 1 de integración: suscripción de solo lectura a enlaces .ics de Google, iCloud y Outlook |
+| 004-importacion-ics | Fase 1 de integración: importación única de un .ics (enlace o archivo) de Google, iCloud u Outlook a un calendario propio editable |
 | 005-gestion-de-cuenta | Recuperación de contraseña, cambio de email, borrado de cuenta (requiere SMTP gratuito) |
 | 006-sincronizacion-oauth | Fase 2 (futura): sincronización bidireccional con APIs vía OAuth 2.0 |
 

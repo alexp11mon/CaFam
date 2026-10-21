@@ -30,7 +30,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 001-base-aplicacion | Proyecto base, auth email/contraseña, esquema con RLS, panel esqueleto, PWA, despliegue | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
-| 004-suscripciones-ical | Suscripción de solo lectura a `.ics` (Google, iCloud, Outlook) | Pendiente |
+| 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | Spec aprobada (2026-10-22); plan en curso |
 | 005-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
 | 006-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
 
@@ -224,7 +224,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - Funciones `SECURITY DEFINER` con `search_path = ''`: `create_invite`, `revoke_invite`, `get_invite_preview`, `accept_invite` (bloquea la fila: la carrera por el último uso da un éxito y un `CF404`), `set_access_code`, `disable_access_code`, `join_with_code` (devuelve `status` `ok | member | invalid | limited` en vez de lanzar, para que el fallo quede registrado) y `calendar_members_with_names(uuid[])` (única vía para ver nombres ajenos: nombre y rol, sin email ni zona horaria). `CF404` es el SQLSTATE propio de "invitación no válida".
   - `merge_calendars` no cambia: los miembros de los calendarios que desaparecen caen en cascada.
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.
-- La evolución prevista (`calendar_invites`, `calendar_access_codes`, `ics_subscriptions`…) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
+- La evolución prevista (`calendar_invites`, `calendar_access_codes`, …) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
 ### PWA
 
@@ -336,9 +336,9 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 ## 12. Cómo continuar
 
-La 003 está cerrada y desplegada en producción (migraciones aplicadas y demo validada). Para la siguiente spec (004, suscripciones iCal):
+La 003 está cerrada y desplegada en producción (migraciones aplicadas y demo validada). Siguiente spec (004, importación de `.ics`):
 
-1. Crea la rama `004-suscripciones-ical` desde `main` (con la 003 ya integrada).
+1. La rama es `004-importacion-ics` (desde `main`, con la 003 ya integrada).
 2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. La librería de parseo `.ics` exige aprobación explícita (P6).
 3. Haz lo mismo con `plan.md` (`plan-generator`) y `tasks.md` (`tasks-generator`).
 4. Implementa tarea a tarea con el test primero, el checklist de verificación y un commit por tarea.
