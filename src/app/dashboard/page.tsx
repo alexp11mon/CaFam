@@ -3,7 +3,13 @@ import { Suspense } from "react";
 import { CalendarList } from "@/components/dashboard/calendar-list";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/ui/link-button";
-import { getMyCalendars, requireUser } from "@/lib/calendar/queries";
+import { groupByPerson } from "@/lib/calendar/grouping";
+import {
+  getMyCalendars,
+  getPeople,
+  getPreferences,
+  requireUser,
+} from "@/lib/calendar/queries";
 import { signOut } from "../(auth)/actions";
 
 export const metadata: Metadata = { title: "Panel" };
@@ -22,7 +28,18 @@ async function Greeting() {
 
 async function Calendars() {
   const { supabase, userId } = await requireUser();
-  const calendars = await getMyCalendars(supabase, userId);
+  const [records, people, preferences] = await Promise.all([
+    getMyCalendars(supabase, userId),
+    getPeople(supabase),
+    getPreferences(supabase, userId),
+  ]);
+  // Same order as the filter panel: people, then calendars within each (RF-45).
+  const calendars = groupByPerson({
+    currentUserId: userId,
+    people,
+    calendars: records,
+    ...preferences,
+  }).flatMap((group) => group.calendars);
   const ownedCount = calendars.filter((c) => c.role === "owner").length;
 
   return (

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import type { CalendarPreference, Person, PersonPreference } from "./grouping";
 import type { Database } from "@/types/database";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
@@ -264,4 +265,47 @@ export async function getEventsInRange(
     color: row.color,
     categoryId: row.category_id,
   }));
+}
+
+/** People whose calendars the user shares, plus the user (RF-42). Names only, no time zone. */
+export async function getPeople(supabase: Client): Promise<Person[]> {
+  const { data, error } = await supabase.rpc("visible_people");
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    displayName: row.display_name,
+  }));
+}
+
+/** The user's saved visibility and order (RF-46); RLS limits both tables to their own rows. */
+export async function getPreferences(
+  supabase: Client,
+  userId: string,
+): Promise<{
+  calendarPreferences: CalendarPreference[];
+  personPreferences: PersonPreference[];
+}> {
+  const [calendars, people] = await Promise.all([
+    supabase
+      .from("calendar_preferences")
+      .select("calendar_id, visible, position")
+      .eq("user_id", userId),
+    supabase
+      .from("person_preferences")
+      .select("person_id, position")
+      .eq("user_id", userId),
+  ]);
+  if (calendars.error) throw calendars.error;
+  if (people.error) throw people.error;
+  return {
+    calendarPreferences: (calendars.data ?? []).map((row) => ({
+      calendarId: row.calendar_id,
+      visible: row.visible,
+      position: row.position,
+    })),
+    personPreferences: (people.data ?? []).map((row) => ({
+      personId: row.person_id,
+      position: row.position,
+    })),
+  };
 }

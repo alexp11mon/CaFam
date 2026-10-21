@@ -1,21 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { DayView } from "@/components/calendar/day-view";
-import { MonthView } from "@/components/calendar/month-view";
+import { CalendarWorkspace } from "@/components/calendar/calendar-workspace";
 import { ViewToolbar } from "@/components/calendar/view-toolbar";
-import { WeekView } from "@/components/calendar/week-view";
 import { LinkButton } from "@/components/ui/link-button";
 import { todayKey } from "@/lib/calendar/format";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
+import { groupByPerson } from "@/lib/calendar/grouping";
 import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
 import {
+  getCategoriesForCalendars,
   getEventsInRange,
   getMyCalendars,
+  getPeople,
+  getPreferences,
   getProfileTimeZone,
   requireUser,
 } from "@/lib/calendar/queries";
 import { getVisibleRange, parseViewParams } from "@/lib/calendar/ranges";
+import {
+  saveOrder,
+  setCalendarVisibility,
+  setPersonVisibility,
+} from "./preferences-actions";
 
 export const metadata: Metadata = { title: "Calendario" };
 
@@ -34,9 +41,11 @@ async function CalendarContent({
   const { view, date } = parseViewParams(query, today);
   const range = getVisibleRange(view, date, timeZone);
 
-  const [calendars, records] = await Promise.all([
+  const [calendars, records, people, preferences] = await Promise.all([
     getMyCalendars(supabase, userId),
     getEventsInRange(supabase, range.from, range.to),
+    getPeople(supabase),
+    getPreferences(supabase, userId),
   ]);
 
   if (calendars.length === 0) {
@@ -64,6 +73,24 @@ async function CalendarContent({
       record.color ?? colors.get(record.calendarId) ?? DEFAULT_CALENDAR_COLOR,
   }));
 
+  const categories = await getCategoriesForCalendars(
+    supabase,
+    calendars.map((calendar) => calendar.id),
+  );
+  // People, calendars and their saved order and visibility (RF-42, RF-45, RF-46).
+  const groups = groupByPerson({
+    currentUserId: userId,
+    people,
+    calendars: calendars.map(({ id, name, ownerId, createdAt, color }) => ({
+      id,
+      name,
+      ownerId,
+      createdAt,
+      color,
+    })),
+    ...preferences,
+  });
+
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -72,24 +99,19 @@ async function CalendarContent({
           Nuevo evento
         </LinkButton>
       </div>
-      {view === "month" ? (
-        <MonthView
-          date={date}
-          days={range.days}
-          events={events}
-          timeZone={timeZone}
-          today={today}
-        />
-      ) : view === "week" ? (
-        <WeekView
-          days={range.days}
-          events={events}
-          timeZone={timeZone}
-          today={today}
-        />
-      ) : (
-        <DayView day={date} events={events} timeZone={timeZone} today={today} />
-      )}
+      <CalendarWorkspace
+        view={view}
+        date={date}
+        days={range.days}
+        today={today}
+        timeZone={timeZone}
+        events={events}
+        groups={groups}
+        categories={categories}
+        setCalendarVisibility={setCalendarVisibility}
+        setPersonVisibility={setPersonVisibility}
+        saveOrder={saveOrder}
+      />
     </>
   );
 }
