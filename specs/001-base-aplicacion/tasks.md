@@ -34,7 +34,7 @@
   Pasos: tests primero en `tests/unit/auth-schemas.test.ts` (email normalizado, límites 7/8/72/73 de contraseña, nombre vacío y de 51 caracteres, `timeZone` válido se conserva y ausente o no válido se descarta sin error), `tests/unit/auth-error-messages.test.ts` (tabla de códigos del plan) y `tests/unit/signup-form.test.tsx` (errores junto al campo, botón deshabilitado mientras está pendiente, email conservado tras error, campo oculto `timeZone` relleno con el valor de `Intl` simulado); `src/lib/auth/schemas.ts`, `src/lib/auth/error-messages.ts`, Server Action `signUp`, página `/signup` y `src/components/auth/signup-form.tsx`; test `tests/integration/signup.test.ts` para email duplicado.
   Hecho cuando: `npm test -- auth signup` y `npm run test:db -- signup` en verde, y en `npm run dev` un registro nuevo lleva a `/dashboard` y su perfil en Supabase `dev` tiene la zona horaria del equipo. Cubre: RF-1, RF-2, RF-3, RF-11, RF-12, RF-26, RF-27 | Módulo: auth, auth-validation, auth-errors
 
-- [ ] T8 Implementar el inicio y el cierre de sesión
+- [x] T8 Implementar el inicio y el cierre de sesión
   Pasos: tests primero en `tests/unit/login-form.test.tsx` (mensaje "Email o contraseña incorrectos.", botón deshabilitado mientras está pendiente) y `tests/integration/login.test.ts` (credenciales correctas devuelven sesión, incorrectas devuelven `invalid_credentials`); Server Actions `signIn` y `signOut`, página `/login`, `src/components/auth/login-form.tsx`.
   Hecho cuando: `npm test -- login` y `npm run test:db -- login` en verde, y en `npm run dev` se verifica login correcto → `/dashboard`, recarga conserva la sesión, logout → `/login` y volver atrás no muestra el panel. Cubre: RF-5, RF-6, RF-7, RF-10, RF-11, RF-12 | Módulo: auth
 
