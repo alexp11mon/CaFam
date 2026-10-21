@@ -77,6 +77,8 @@ describe("service worker keeps no calendar data", () => {
       "/dashboard/events/123",
       "/dashboard/calendars/1/edit",
       "/dashboard/calendars/merge",
+      "/dashboard/calendars/1/share",
+      "/invite/abc",
     ]) {
       await request(path, "navigate");
     }

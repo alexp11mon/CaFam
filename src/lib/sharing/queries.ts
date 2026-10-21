@@ -1,5 +1,6 @@
 // Read access for the spec 003 pages. Everything goes through RLS and column
 // privileges: the owner reads invites without the token hash (P3, RF-11).
+import { isInviteToken } from "@/lib/auth/next-path";
 import type { createClient } from "@/lib/supabase/server";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
@@ -65,5 +66,32 @@ export async function getAccessCode(
     publicCode: data.public_code,
     role: data.role,
     enabled: data.enabled,
+  };
+}
+
+export interface InvitePreview {
+  calendarName: string;
+  ownerName: string;
+  role: "editor" | "viewer";
+  alreadyMember: boolean;
+}
+
+/** What an invite grants, without joining (RF-5). Null for any invalid invite (RF-8). */
+export async function getInvitePreview(
+  supabase: Client,
+  token: string,
+): Promise<InvitePreview | null> {
+  if (!isInviteToken(token)) return null;
+  const { data, error } = await supabase.rpc("get_invite_preview", {
+    p_token: token,
+  });
+  if (error) throw error;
+  const row = data?.[0];
+  if (!row || row.role === "owner") return null;
+  return {
+    calendarName: row.calendar_name,
+    ownerName: row.owner_name,
+    role: row.role,
+    alreadyMember: row.already_member,
   };
 }

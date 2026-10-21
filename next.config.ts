@@ -7,6 +7,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // The invite token is in the URL: keep it out of the Referer and out of
+        // search engines (plan D12).
+        source: "/invite/:path*",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex" },
+        ],
+      },
+      {
         // The browser must always fetch the latest service worker (plan R5).
         source: "/sw.js",
         headers: [
