@@ -331,6 +331,15 @@ export type Database = {
       }
       is_calendar_member: { Args: { p_calendar_id: string }; Returns: boolean }
       list_tables_without_rls: { Args: never; Returns: string[] }
+      merge_calendars: {
+        Args: {
+          p_color?: string
+          p_name?: string
+          p_source_ids: string[]
+          p_target_id?: string
+        }
+        Returns: string
+      }
       visible_people: {
         Args: never
         Returns: {
