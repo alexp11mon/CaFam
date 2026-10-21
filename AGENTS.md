@@ -12,11 +12,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-21, al cerrar la spec 002.
+> Última actualización: 2026-10-22, con la spec 003 implementada (T1–T11) y T12 preparada; falta aplicar sus migraciones en prod, validarla allí y que el usuario la cierre.
 
 ## 1. Qué es
 
-**CalenderFam** (nombre corto **CaFam**) es una PWA de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso **estrictamente personal** entre familia y amigos. Cada usuario se registra, ve sus calendarios en un panel y (en specs futuras) crea eventos, los comparte con roles Lector/Editor y se suscribe a calendarios externos `.ics`.
+**CalenderFam** (nombre corto **CaFam**) es una PWA de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso **estrictamente personal** entre familia y amigos. Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comparte con roles Lector/Editor (por enlace o por ID y PIN) y (en specs futuras) se suscribe a calendarios externos `.ics`.
 
 - Sin ánimo de lucro, sin publicidad ni analítica, y **coste cero**: solo capas gratuitas (Supabase Free, Vercel Hobby, GitHub Free).
 - Producción: <https://calendario-familia-five.vercel.app>
@@ -29,7 +29,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 |------|---------|--------|
 | 001-base-aplicacion | Proyecto base, auth email/contraseña, esquema con RLS, panel esqueleto, PWA, despliegue | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Cerrada** (2026-10-21), T1–T12 hechas |
-| 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor | Pendiente |
+| 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Implementada** (T1–T11 hechas en `dev`); T12 pendiente de prod y cierre |
 | 004-suscripciones-ical | Suscripción de solo lectura a `.ics` (Google, iCloud, Outlook) | Pendiente |
 | 005-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
 | 006-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
@@ -42,7 +42,14 @@ Lo que hay hoy: registro, login, logout, protección de rutas, portada, pantalla
 - Vistas mensual, semanal y diaria que mezclan todos los calendarios, con panel de filtros por persona → calendario → categoría. La visibilidad y el orden se guardan por usuario.
 - Juntar calendarios propios en uno (fusión real, irreversible, con confirmación).
 
-**No hay** compartición (spec 003, así que en la práctica el único "persona" del panel es el propio usuario), `.ics` (004), gestión de cuenta (005) ni eventos recurrentes (spec futura sin número).
+Añadido por la spec 003:
+
+- Compartir por **enlace** (`/dashboard/calendars/[id]/share`): rol Lector o Editor, 1 a 20 usos, caduca a los 7 días, se muestra una sola vez y se puede revocar. La ruta pública `/invite/[token]` enseña una vista previa y solo se une al pulsar "Unirme".
+- Compartir por **ID y PIN**: ID de 8 caracteres y PIN de 6 a 10 dígitos que elige el propietario (nadie puede volver a verlo), con límite de 5 fallos por persona y 20 por ID cada 15 minutos. Se usa en `/dashboard/join`.
+- Lista de miembros (`/members`, solo nombre y rol, nunca email): el propietario cambia roles y expulsa; los demás pueden salir. El propietario no puede salir ni ser expulsado.
+- Al juntar calendarios, la confirmación nombra a quien pierde el acceso y a quien pasa a ver eventos de otros calendarios.
+
+**No hay** `.ics` (004), gestión de cuenta (005) ni eventos recurrentes (spec futura sin número).
 
 ## 3. Reglas de trabajo (obligatorias)
 
@@ -86,7 +93,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 .
 ├── AGENTS.md                  # este archivo (CLAUDE.md lo importa)
 ├── docs/constitution.md       # principios, stack permitido/prohibido, convenciones, verificación
-├── specs/001-base-aplicacion/ # spec.md, plan.md, tasks.md (con trazabilidad RF → tareas → evidencia)
+├── specs/NNN-nombre/          # spec.md, plan.md, tasks.md de cada spec (con trazabilidad RF → tareas → evidencia)
 ├── src/
 │   ├── proxy.ts               # "middleware" de Next 16: refresca sesión y aplica getRouteAccess
 │   ├── app/
@@ -103,6 +110,10 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   │   ├── calendar/      # vistas mes/semana/día (?view=&date=) + preferences-actions.ts
 │   │   │   ├── calendars/     # new, [id]/edit, [id]/categories, merge + actions.ts (calendarios y juntar)
 │   │   │   └── events/        # new, [id] (detalle + edición + borrado) + actions.ts
+│   │   ├── dashboard/join/    # "Unirme con código" (ID y PIN) + actions.ts
+│   │   ├── dashboard/calendars/[id]/share/    # invitaciones y ID/PIN (solo propietario) + actions.ts
+│   │   ├── dashboard/calendars/[id]/members/  # lista de miembros (cualquier miembro) + actions.ts
+│   │   ├── invite/[token]/    # vista previa y "Unirme" (ruta pública a nivel de proxy) + actions.ts
 │   │   ├── offline/page.tsx   # "Sin conexión" + "Reintentar" (estática, la precachea el SW)
 │   │   └── api/cron/keep-alive/route.ts  # GET protegido por CRON_SECRET
 │   ├── components/
@@ -110,10 +121,12 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── auth/              # auth-card, login-form, signup-form (Client Components con useActionState)
 │   │   ├── dashboard/         # calendar-list
 │   │   ├── calendar/          # formularios, vistas (month/week/day, time-grid), filtros, workspace, merge-form, confirm-dialog…
+│   │   ├── sharing/           # invite-form, copy-button, invite-list, access-code-panel, member-list, join-code-form, invite-join-card
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
-│   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts
+│   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts, next-path.ts (destino tras login: solo /invite/<token>)
 │   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, grouping, format, schemas, error-messages; queries.ts (lecturas con RLS)
+│   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
 │   │   └── supabase/          # env.ts, server.ts, client.ts, proxy.ts
 │   └── types/database.ts      # GENERADO con `npm run db:types`; no editar a mano
@@ -122,7 +135,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon-192, icon-512, icon-512-maskable, apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── unit/                  # *.test.ts(x): lógica pura, formularios, vistas, filtros, sw-no-data, no-secrets…
@@ -154,11 +167,15 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | Ruta | Acceso | Contenido |
 |------|--------|-----------|
 | `/` | pública | Portada; con sesión redirige a `/dashboard` (lo hace la página, no el proxy) |
-| `/signup`, `/login` | solo sin sesión (con sesión → `/dashboard`) | Formularios |
+| `/signup`, `/login` | solo sin sesión (con sesión → `/dashboard`) | Formularios; aceptan `?next=`, que solo se sigue si es `/invite/<token>` (campo oculto leído en el cliente) |
 | `/dashboard` y subrutas | solo con sesión (sin sesión → `/login`) | Panel |
 | `/dashboard/calendar` | con sesión | Vistas `?view=month\|week\|day&date=YYYY-MM-DD` (valores inválidos → mes de hoy) |
 | `/dashboard/calendars/new`, `/[id]/edit`, `/[id]/categories`, `/merge` | con sesión | Calendarios, categorías y juntar. `edit` solo propietario, `categories` propietario o editor; otros → 404 |
 | `/dashboard/events/new`, `/dashboard/events/[id]` | con sesión | Alta (`?calendar=&date=`) y detalle con edición y borrado |
+| `/dashboard/calendars/[id]/share` | solo propietario (otros → 404) | Invitaciones por enlace e ID y PIN |
+| `/dashboard/calendars/[id]/members` | cualquier miembro (ajeno → 404) | Lista de miembros; controles según el rol |
+| `/dashboard/join` | con sesión | Unirme con ID y PIN |
+| `/invite/[token]` | sin sesión → `/login?next=/invite/<token>`; con sesión, vista previa | Cabeceras `Referrer-Policy: no-referrer` y `X-Robots-Tag: noindex` |
 | `/offline` | pública | Pantalla sin conexión |
 | `/manifest.webmanifest`, `/sw.js`, `/icons/*` | pública | PWA |
 | `/api/cron/keep-alive` | `Authorization: Bearer ${CRON_SECRET}` | `200 {"ok":true}` / `401` / `500` |
@@ -201,6 +218,11 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `visible_people()` (`SECURITY DEFINER`): `id` y `display_name` del usuario y de los propietarios de calendarios que comparte, sin zona horaria. La política de `profiles` sigue siendo "solo el propio".
   - `merge_calendars(p_source_ids, p_target_id, p_name, p_color)` (`SECURITY INVOKER`, una transacción): solo propietario de todos; unifica categorías con el mismo nombre; los miembros de los calendarios que desaparecen se pierden (ver Dudas de la spec 003).
   - Límites: calendario 50, categoría 40, título 100, descripción de evento 2000, lugar 200. La paleta de colores NO se impone en SQL, solo en `zod` (`lib/calendar/palette.ts`).
+- Añadido por la spec 003:
+  - `calendar_invites` (solo guarda `token_hash` = SHA-256 del token de 43 caracteres), `calendar_access_codes` (`public_code` de 8 caracteres de un alfabeto de 31 sin `I L O 0 1`; `pin_hash` con bcrypt de `pgcrypto`) y `join_attempts` (solo fallos). Los hashes se ocultan con **permiso por columna**: pedir `*` o `token_hash`/`pin_hash` da `42501`. Nadie escribe en estas tablas directamente.
+  - `calendar_members`: `UPDATE` solo de la columna `role` y solo del propietario sobre filas no `owner`; `DELETE` por el propietario sobre otros o por cualquiera sobre su propia fila si no es `owner`. El `INSERT` directo sigue prohibido. Un trigger borra las preferencias de quien sale (los eventos y categorías que creó se quedan).
+  - Funciones `SECURITY DEFINER` con `search_path = ''`: `create_invite`, `revoke_invite`, `get_invite_preview`, `accept_invite` (bloquea la fila: la carrera por el último uso da un éxito y un `CF404`), `set_access_code`, `disable_access_code`, `join_with_code` (devuelve `status` `ok | member | invalid | limited` en vez de lanzar, para que el fallo quede registrado) y `calendar_members_with_names(uuid[])` (única vía para ver nombres ajenos: nombre y rol, sin email ni zona horaria). `CF404` es el SQLSTATE propio de "invitación no válida".
+  - `merge_calendars` no cambia: los miembros de los calendarios que desaparecen caen en cascada.
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, `ics_subscriptions`…) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
@@ -295,6 +317,12 @@ npm run db:types       # regenera src/types/database.ts
 - **Finales de línea:** la máquina tiene `core.autocrlf=true`. `.gitattributes` fuerza LF, y si `format:check` falla en masa por CRLF, `npx prettier --write .` lo arregla sin cambiar contenido. `docs/`, `specs/` y `AGENTS.md` están en `.prettierignore` (se redactan a mano).
 - **`test:db` es intermitente:** a veces una llamada a Supabase dev se cuelga y un test da timeout (30 s). Es un problema conocido y no siempre cae en el mismo test: repite la ejecución antes de investigar el código. Mejora pendiente: añadir timeout o reintento en los helpers.
 - **Con `cacheComponents`, Next conserva la página anterior oculta en el DOM** (Activity). Hay dos formularios a la vez tras navegar, así que los `id` fijos se duplican y `getByLabel` de Playwright da "strict mode violation": filtra con `.locator('visible=true')`. En producción no se nota para el usuario.
+- **El reloj local va por delante del de la base de datos** (segundos): en los tests de integración, para "caducar" algo retrasa una hora, no un segundo.
+- **En plpgsql `PERFORM` reinicia `FOUND`:** guarda `found` en una variable justo después del `SELECT INTO` (el fallo que corrigió `fix_join_with_code`).
+- **Una migración aplicada no se edita:** la corrección va en otra (por eso hay `..._fix_join_with_code.sql`).
+- **`useActionState` pasa `(prevState, formData)` a la acción**, también a las que se enlazan con `bind`; las de confirmar (`revokeInvite(id)`, `expelMember(calendarId, userId)`…) ignoran esos argumentos. En los tests mira `mock.calls[0][0]`, no `toHaveBeenCalledWith(id)`.
+- **El PIN nunca vuelve al formulario:** las acciones que lo reciben devuelven `values.pin = ""`.
+- **Al escribir ficheros con heredocs en Bash**, un apóstrofo o una comilla rara puede romper el comando entero; usa la herramienta Write o un script en un fichero.
 - **Probar en un navegador real:** `playwright-cli` está instalado globalmente. Arranca la app compilada con `npx next start -p 3100`, crea el usuario de prueba por `/signup` y bórralo de `dev` al terminar. Un `check()` sobre un radio `sr-only` falla: haz clic en el círculo (`label span[aria-hidden]`).
 - **jsdom no implementa `<dialog>.showModal()`:** los tests de diálogos lo simulan en un `beforeAll`.
 - **Tras usar el link de prod**, vuelve a enlazar dev; si no, `db:types` o `db:push` irían contra producción.
@@ -306,12 +334,12 @@ npm run db:types       # regenera src/types/database.ts
 
 Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), arrastrar y soltar eventos, búsqueda y vista de agenda, papelera o deshacer, zona horaria por evento, juntar calendarios ajenos o importados, compartición e invitaciones (003), `.ics` (004), recuperación de contraseña, verificación y cambio de email, borrado de cuenta y edición de perfil (005), login social y OAuth (006), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
 
-## 12. Cómo empezar la siguiente spec
+## 12. Cómo continuar
 
-La 002 está cerrada y desplegada en producción. Para la 003 (compartición):
+La 003 está implementada y probada contra `dev` (T1–T11). Para cerrarla (T12) el usuario debe aplicar las migraciones a prod, hacer la demo en producción con dos cuentas y aprobar el cierre; después se marca T12 `[x]` y se actualiza el estado de este archivo. Para la siguiente spec (004, suscripciones iCal):
 
-1. Crea la rama `003-comparticion` desde `main`.
-2. Redacta `specs/003-comparticion/spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. Resuelve ahí RF-55 de la 002: qué pasa con los miembros al juntar calendarios compartidos.
-3. Haz lo mismo con `plan.md` (`plan-generator`) y `tasks.md` (`tasks-generator`). La 003 añadirá las RPC controladas sobre `calendar_members` y una política para que `visible_people()` siga siendo la única vía de ver nombres ajenos.
+1. Crea la rama `004-suscripciones-ical` desde `main` (con la 003 ya integrada).
+2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. La librería de parseo `.ics` exige aprobación explícita (P6).
+3. Haz lo mismo con `plan.md` (`plan-generator`) y `tasks.md` (`tasks-generator`).
 4. Implementa tarea a tarea con el test primero, el checklist de verificación y un commit por tarea.
 5. Valida en producción y pide al usuario la aprobación para cerrar.

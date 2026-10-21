@@ -68,9 +68,15 @@ export async function createTestUser(
   return { id: data.user.id, email, client };
 }
 
+// Deleting users in parallel can deadlock on the cascades (members, preferences):
+// Supabase answers "Database error deleting user", so retry a few times.
 export async function deleteTestUser(id: string): Promise<void> {
-  const { error } = await admin.auth.admin.deleteUser(id);
-  if (error) throw error;
+  for (let attempt = 1; ; attempt++) {
+    const { error } = await admin.auth.admin.deleteUser(id);
+    if (!error) return;
+    if (attempt === 4) throw error;
+    await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+  }
 }
 
 export async function getOwnCalendarId(userId: string): Promise<string> {

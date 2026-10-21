@@ -302,6 +302,27 @@ describe("join_with_code (RF-19..RF-23)", () => {
     expect(await join(guest, code, PIN)).toMatchObject({ status: "ok" });
   });
 
+  it("a blocked person can still use an invite link (spec edge case)", async () => {
+    const calendarId = await newCalendar();
+    const code = await setCode(calendarId);
+    const guest = await freshUser();
+    for (let i = 0; i < 5; i++) await join(guest, code, WRONG_PIN);
+    expect(await join(guest, code, PIN)).toMatchObject({ status: "limited" });
+
+    const { data: token } = await owner.client.rpc("create_invite", {
+      p_calendar_id: calendarId,
+      p_role: "viewer",
+      p_max_uses: 1,
+    });
+    const { data, error } = await guest.client.rpc("accept_invite", {
+      p_token: token!,
+    });
+
+    expect(error).toBeNull();
+    expect(data).toBe(calendarId);
+    expect(await roleOf(calendarId, guest.id)).toBe("viewer");
+  });
+
   it("does not count successful joins as failures", async () => {
     const calendarId = await newCalendar();
     const code = await setCode(calendarId);

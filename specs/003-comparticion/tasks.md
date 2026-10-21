@@ -1,6 +1,6 @@
 # Tasks 003 - Compartición de calendarios
 
-> Estado: **Aprobadas** por el usuario (2026-10-21). Ninguna tarea empezada.
+> Estado: **Aprobadas** por el usuario (2026-10-21). T1–T11 hechas; T12 preparada (queda lo que solo puede hacer el usuario: migraciones en prod, demo en producción y aprobación de cierre).
 > Spec: `specs/003-comparticion/spec.md`. Plan: `specs/003-comparticion/plan.md`.
 > Reglas: una tarea cada vez, test primero (rojo → verde), y al cerrar cada tarea se ejecuta y reporta el checklist de "Verificación obligatoria" de la constitución (P7, P8): `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, más `npm run test:db` si toca esquema, RLS o acceso a datos, y prueba manual en móvil (≤ 768 px) y escritorio si toca interfaz. Un commit por tarea citándola, en la rama `003-comparticion`.
 > Para las demos manuales hacen falta **dos cuentas**: se prueba con `playwright-cli` y dos sesiones (`-s=`) contra `dev` (ver `AGENTS.md`, sección 10) y los usuarios de prueba se borran al terminar. Las páginas siguen el patrón de la spec 002: `page.tsx` síncrono, `params` y `searchParams` esperados en un componente `async` bajo `<Suspense>`, `revalidatePath("/dashboard", "layout")` antes de cada `redirect()` y campos no controlados con `useId()`.
@@ -56,7 +56,7 @@
   Pasos: tests primero ampliando `tests/unit/merge-form.test.tsx` (la confirmación lista por nombre a quienes perderán el acceso y a quienes pasarán a ver eventos de otros calendarios, no los lista si no hay otros miembros, con destino nuevo nadie gana, el propietario no aparece y el aviso de que no se puede deshacer se mantiene); ampliar `merge-form` para recibir los miembros por calendario y usar `merge-access`; la página `/dashboard/calendars/merge` carga los miembros con `calendar_members_with_names` sobre los calendarios propios.
   Hecho cuando: `npm test -- merge-form` en verde y demo manual con dos cuentas: juntar un calendario compartido con otro y ver los nombres correctos en la confirmación y que, tras confirmar, los miembros del que desaparece pierden el acceso y los del resultante lo conservan. Cubre: RF-36, RF-37, RF-38 | Módulo: merge-form, /dashboard/calendars/merge
 
-- [ ] T12 Validar la spec en producción, cobertura RF por RF y fuera de alcance
+- [ ] T12 (preparada; faltan prod, demo en producción y aprobación del usuario) Validar la spec en producción, cobertura RF por RF y fuera de alcance
   Pasos: añadir la matriz final de permisos y completar los tests que falten para que `npm run test:db` cubra Propietario, Editor, Lector, invitado y ajeno sobre invitaciones, ID y PIN y miembros; completar la tabla RF → tarea → test con evidencia en este archivo; comprobar que no hay nada de "Fuera de alcance" (sin transferir propiedad, sin envío de correos ni notificaciones, sin enlaces públicos sin cuenta, sin roles nuevos, sin dependencias nuevas en `package.json`) y que ninguna pantalla nueva desborda entre 360 y 1920 px; actualizar `AGENTS.md` (estado, rutas, esquema, funciones, estructura y trampas aprendidas) y preparar al usuario los comandos para aplicar las migraciones a prod y volver a enlazar `dev` (los ejecuta él, con `!`).
   Hecho cuando: `npm run typecheck && npm run lint && npm run format:check && npm test && npm run test:db && npm run build` en verde con la salida reportada, migraciones aplicadas por el usuario en prod, demo manual en producción con dos cuentas en móvil y escritorio (compartir por enlace y por ID y PIN, unirse, ver la lista de miembros, cambiar un rol, expulsar, abandonar, revocar y juntar calendarios con miembros) y aprobación explícita del usuario para cerrar la spec. Cubre: todos | Módulo: validación
 
@@ -101,6 +101,74 @@
 - RF-37 -> T4, T11
 - RF-38 -> T1, T11
 - RNF (privacidad, secretos, coste cero, mobile-first, accesibilidad) -> T1, T2, T3, T8, T12
+
+## Matriz de permisos (T12)
+
+Cubierta por `npm run test:db` (`sharing-tables`, `invites`, `access-codes`, `rls`, `merge-calendars`). ✔ = permitido, ✘ = rechazado (42501, o 0 filas por RLS), — = no aplica.
+
+| Operación | Propietario | Editor | Lector | Invitado (aún no miembro) | Ajeno | anon |
+|-----------|:-:|:-:|:-:|:-:|:-:|:-:|
+| Leer invitaciones y código (sin hashes) | ✔ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| Escribir en `calendar_invites`, `calendar_access_codes` y `join_attempts` directamente | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| `create_invite`, `revoke_invite` | ✔ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| `set_access_code`, `disable_access_code` | ✔ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| `get_invite_preview`, `accept_invite` (invitación válida) | ✔ (ya miembro, sin gasto) | ✔ (ya miembro) | ✔ (ya miembro) | ✔ | ✔ | ✘ |
+| `join_with_code` (ID y PIN correctos) | `member` | `member` | `member` | `ok` | `ok` | ✘ |
+| Cambiar rol de otro miembro | ✔ | ✘ | ✘ | — | ✘ | ✘ |
+| Poner a alguien como `owner` / cambiar la fila del propietario / cambiar `user_id` o `calendar_id` | ✘ | ✘ | ✘ | — | ✘ | ✘ |
+| Expulsar a otro miembro | ✔ | ✘ | ✘ | — | ✘ | ✘ |
+| Salir (borrar la propia fila) | ✘ (RF-28) | ✔ | ✔ | — | — | ✘ |
+| INSERT directo en `calendar_members` | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| `calendar_members_with_names` | ✔ | ✔ | ✔ | solo sus calendarios | 0 filas | ✘ |
+
+## Trazabilidad RF → tarea → test (T12)
+
+Los tests están en `tests/integration/` (`.test.ts`, base de datos) y `tests/unit/`. Las demos manuales se hicieron con `playwright-cli` y varias cuentas contra `dev` (T5, T6 y T7–T11 en bloque).
+
+| RF | Tareas | Evidencia |
+|----|--------|-----------|
+| RF-1 | T2, T4, T6 | `invites` (create_invite), `sharing-schemas`, `share-actions`, `invite-form` |
+| RF-2 | T4, T6 | `invite-url`, `copy-button`, `invite-form` |
+| RF-3 | T2, T4, T6 | `invites` (22023), `sharing-schemas`, `invite-form`, `share-actions` |
+| RF-4 | T2 | `invites` (caducidad a 7 días) |
+| RF-5 | T2, T8 | `invites` (vista previa sin modificar), `invite-join-card`; demo |
+| RF-6 | T2, T8 | `invites` (accept_invite), `accept-invite-action`, `invite-join-card`; demo |
+| RF-7 | T5 | `next-path`, `route-access`, `proxy-redirect`, `auth-next-actions`, `login-form`, `signup-form`, `auth-card`; demo |
+| RF-8 | T2, T4, T8 | `invites` (CF404), `sharing-error-messages`, `invite-join-card` |
+| RF-9 | T2, T8 | `invites` (miembro no gasta uso), `invite-join-card`; demo |
+| RF-10 | T2 | `invites` (use_count) |
+| RF-11 | T1, T6 | `sharing-tables`, `invite-list` |
+| RF-12 | T2, T6 | `invites` (revoke_invite), `share-actions`, `invite-list` |
+| RF-13 | T2 | `invites` (carrera por el último uso) |
+| RF-14 | T3, T4, T7 | `access-codes` (set_access_code), `sharing-schemas`, `access-code-panel` |
+| RF-15 | T3, T4, T7 | `access-codes` (PIN mal formado), `sharing-schemas`, `access-code-panel` |
+| RF-16 | T1, T7 | `sharing-tables` (sin `pin_hash`), `access-code-panel`; demo |
+| RF-17 | T3, T7 | `access-codes` (cambiar PIN), `share-actions` |
+| RF-18 | T3, T7 | `access-codes` (desactivar y reactivar), `share-actions`, `access-code-panel` |
+| RF-19 | T3, T9 | `access-codes` (join_with_code), `join-code-action`, `join-code-form` |
+| RF-20 | T3, T4, T9 | `access-codes` (invalid sin distinguir), `sharing-error-messages`, `join-code-form` |
+| RF-21 | T3, T4, T9 | `access-codes` (5 fallos), `sharing-error-messages`; demo |
+| RF-22 | T3, T4, T9 | `access-codes` (20 fallos por ID) |
+| RF-23 | T3, T9 | `access-codes` (member), `join-code-action` |
+| RF-24 | T1, T10 | `sharing-tables` (calendar_members_with_names), `member-list` |
+| RF-25 | T1, T10 | `sharing-tables` (update), `members-actions`, `member-list` |
+| RF-26 | T1, T10 | `sharing-tables` (delete), `rls`, `members-actions`, `member-list` |
+| RF-27 | T1, T10 | `sharing-tables` (salir), `members-actions`, `member-list`, `calendar-list` |
+| RF-28 | T1, T4, T10 | `sharing-tables`, `sharing-error-messages`, `members-actions` |
+| RF-29 | T1, T2, T3, T6, T10 | matriz de permisos de arriba; 404 de `/share` para un Editor (demo T6) |
+| RF-30 | T1, T10 | `sharing-tables` (leaving a calendar) |
+| RF-31 | T1, T10 | `sharing-tables` (trigger de preferencias) |
+| RF-32 | T8 | `grouping` (spec 002); demo (el calendario aparece al final) |
+| RF-33 | T10 | `calendar-list` (Compartir y miembros); demo |
+| RF-34 | T10 | `calendar-list` (Miembros y Salir); demo |
+| RF-35 | T9 | acceso "Unirme con código" en `/dashboard`; demo |
+| RF-36 | T4, T11 | `merge-access`, `merge-form`; demo |
+| RF-37 | T4, T11 | `merge-access`, `merge-form`; demo |
+| RF-38 | T1, T11 | `merge-calendars` ("members (RF-55)"); demo (B pierde el acceso, C lo conserva) |
+
+## Fuera de alcance (T12)
+
+Comprobado: sin transferir propiedad, sin correos ni notificaciones, sin enlaces públicos sin cuenta (la ruta `/invite/[token]` exige sesión), sin roles nuevos (el rol `owner` se rechaza en invitaciones, códigos y cambios de rol), y `package.json` sin cambios respecto a `main`. Ninguna pantalla nueva desborda entre 360 y 1920 px (`/dashboard`, `/dashboard/join`, `/share`, `/members`, `/merge`, `/invite/[token]`).
 
 ## Dudas abiertas
 
