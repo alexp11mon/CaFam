@@ -11,12 +11,15 @@ import type { ConfirmState, FormAction } from "@/lib/forms/form-state";
  */
 export function ConfirmDialog({
   triggerLabel,
+  triggerAriaLabel,
   title,
   description,
   confirmLabel,
   action,
 }: {
   triggerLabel: string;
+  /** Longer accessible name when several triggers share the same visible label. */
+  triggerAriaLabel?: string;
   title: string;
   description: string;
   confirmLabel: string;
@@ -32,6 +35,7 @@ export function ConfirmDialog({
         variant="danger"
         onClick={() => dialog.current?.showModal()}
         aria-haspopup="dialog"
+        aria-label={triggerAriaLabel}
       >
         {triggerLabel}
       </Button>

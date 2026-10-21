@@ -109,3 +109,22 @@ export async function canSeeCalendar(
     .maybeSingle();
   return Boolean(data);
 }
+
+export interface CategoryRecord {
+  id: string;
+  name: string;
+}
+
+/** Categories of one calendar, alphabetical (RF-13). RLS limits them to members. */
+export async function getCategories(
+  supabase: Client,
+  calendarId: string,
+): Promise<CategoryRecord[]> {
+  const { data, error } = await supabase
+    .from("event_categories")
+    .select("id, name")
+    .eq("calendar_id", calendarId)
+    .order("name");
+  if (error) throw error;
+  return data ?? [];
+}
