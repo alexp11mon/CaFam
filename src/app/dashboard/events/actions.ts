@@ -185,5 +185,5 @@ export async function deleteEvent(id: string): Promise<ConfirmState> {
   }
 
   refresh();
-  redirect("/dashboard");
+  redirect("/dashboard/calendar");
 }

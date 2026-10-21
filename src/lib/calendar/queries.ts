@@ -224,3 +224,44 @@ export async function canSeeEvent(
     .maybeSingle();
   return Boolean(data);
 }
+
+export interface CalendarEventRecord {
+  id: string;
+  calendarId: string;
+  title: string;
+  startsAt: string;
+  endsAt: string;
+  allDay: boolean;
+  color: string | null;
+  categoryId: string | null;
+}
+
+/**
+ * Events of every calendar the user belongs to that overlap [from, to) (RF-31).
+ * Columns are kept to the minimum the views draw (plan D14); RLS limits the rows.
+ */
+export async function getEventsInRange(
+  supabase: Client,
+  from: Date,
+  to: Date,
+): Promise<CalendarEventRecord[]> {
+  const { data, error } = await supabase
+    .from("events")
+    .select(
+      "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id",
+    )
+    .lt("starts_at", to.toISOString())
+    .gte("ends_at", from.toISOString())
+    .order("starts_at");
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    calendarId: row.calendar_id,
+    title: row.title,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    allDay: row.all_day,
+    color: row.color,
+    categoryId: row.category_id,
+  }));
+}

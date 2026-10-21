@@ -188,3 +188,11 @@ export function layoutTimedDay<T extends LayoutEventInput>(
 
   return slots;
 }
+
+/** An event as the views draw it: color already resolved (own or its calendar's, RF-17). */
+export interface CalendarEventItem extends LayoutEventInput {
+  title: string;
+  color: string;
+  calendarId: string;
+  categoryId: string | null;
+}

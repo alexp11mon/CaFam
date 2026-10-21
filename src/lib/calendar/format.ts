@@ -1,8 +1,11 @@
-// Display and form helpers for events (spec 002 RF-20, RF-34, RF-36).
+// Display and form helpers for events and views (spec 002 RF-20, RF-29, RF-34, RF-36).
+import { weekStart } from "./ranges";
 import {
+  addDays,
   allDayFromRange,
   formatTime,
   utcToZonedParts,
+  weekdayIndex,
   zonedDateKey,
 } from "./time-zone";
 
@@ -86,4 +89,40 @@ export function todayKey(timeZone: string, now: Date = new Date()): string {
   return [year, month, day]
     .map((part, index) => String(part).padStart(index === 0 ? 4 : 2, "0"))
     .join("-");
+}
+
+const WEEKDAY_LABELS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+
+/** Short weekday of a date key, Monday first. */
+export function weekdayLabel(dateKey: string): string {
+  return WEEKDAY_LABELS[weekdayIndex(dateKey)] ?? "";
+}
+
+function formatKey(
+  dateKey: string,
+  options: Intl.DateTimeFormatOptions,
+): string {
+  return new Intl.DateTimeFormat("es-ES", {
+    ...options,
+    timeZone: "UTC",
+  }).format(new Date(`${dateKey}T00:00:00Z`));
+}
+
+/** "miércoles, 21 de octubre de 2026" for a date key. */
+export function formatDateKeyFull(dateKey: string): string {
+  return formatKey(dateKey, { dateStyle: "full" });
+}
+
+/** Heading of the period shown by a view. */
+export function formatPeriodTitle(
+  view: "month" | "week" | "day",
+  dateKey: string,
+): string {
+  if (view === "day") return formatDateKeyFull(dateKey);
+  if (view === "month") {
+    return formatKey(dateKey, { month: "long", year: "numeric" });
+  }
+  const first = weekStart(dateKey);
+  const short = { day: "numeric", month: "short" } as const;
+  return `${formatKey(first, short)} – ${formatKey(addDays(first, 6), { ...short, year: "numeric" })}`;
 }

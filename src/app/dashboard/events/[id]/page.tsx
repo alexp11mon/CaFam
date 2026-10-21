@@ -85,7 +85,7 @@ async function Event({ params }: { params: Promise<{ id: string }> }) {
             categories={categories}
             submitLabel="Guardar cambios"
             pendingLabel="Guardando…"
-            cancelHref="/dashboard"
+            cancelHref="/dashboard/calendar"
           />
         </section>
       ) : null}
@@ -99,7 +99,11 @@ export default function EventPage({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <PageShell title="Evento">
+    <PageShell
+      title="Evento"
+      backHref="/dashboard/calendar"
+      backLabel="Volver al calendario"
+    >
       <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
         <Event params={params} />
       </Suspense>

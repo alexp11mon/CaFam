@@ -76,7 +76,7 @@ async function NewEvent({ searchParams }: { searchParams: SearchParams }) {
       categories={categories}
       submitLabel="Crear evento"
       pendingLabel="Creando…"
-      cancelHref="/dashboard"
+      cancelHref="/dashboard/calendar"
     />
   );
 }
@@ -87,7 +87,11 @@ export default function NewEventPage({
   searchParams: SearchParams;
 }) {
   return (
-    <PageShell title="Nuevo evento">
+    <PageShell
+      title="Nuevo evento"
+      backHref="/dashboard/calendar"
+      backLabel="Volver al calendario"
+    >
       <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
         <NewEvent searchParams={searchParams} />
       </Suspense>
