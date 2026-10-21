@@ -119,6 +119,48 @@
 - RF-55 -> T2
 - RNF (rendimiento, PWA, contraste, mobile-first, fuera de alcance) -> T3, T9, T12
 
+## Evidencias de validación (T12)
+
+Salida del checklist al cerrar T11 (rama `002-calendarios-y-eventos`, con la base de datos `dev`): `typecheck`, `lint` y `format:check` sin errores; `npm test` 32 ficheros y 269 tests en verde; `npm run test:db` 8 ficheros y 75 tests en verde; `npm run build` sin errores. `package.json` y `package-lock.json` no cambian respecto a `main` (cero dependencias nuevas).
+
+Demos manuales hechas en local (`next start`, navegador real, contra `dev`) a 375 px y 1280 px, sin scroll horizontal de página en ninguna pantalla nueva: crear, validar, editar y borrar calendarios (T6); categorías con duplicado, renombrar y borrar (T7); eventos con hora, de día completo y de varios días, error de fin anterior, cambio de calendario y borrado (T8); vistas mes, día y semana con eventos solapados y de medianoche (T9); ocultar, reordenar, recargar y entrar desde otra sesión (T10); juntar dos calendarios en uno nuevo (T11).
+
+| RF | Test que lo cubre |
+|----|-------------------|
+| RF-1, 2, 4 | `calendar-schemas`, `calendar-form`, `calendars-events` (límite 50) |
+| RF-3 | `calendar-form` + demo T6 |
+| RF-5, 6 | `calendars-events` (cascada), `confirm-dialog` |
+| RF-7 | `calendar-list` (estado vacío) |
+| RF-8 | `calendars-events`, `rls` |
+| RF-9 a 14 | `category-manager`, `calendars-events`, `calendar-error-messages` |
+| RF-15 a 19 | `calendar-schemas`, `event-form`, `calendars-events` (límites y color) |
+| RF-20, 21 | `time-zone`, `calendar-schemas`, `layout`, `event-detail`, `event-format` |
+| RF-22 a 24 | `event-form`, `event-detail`, `confirm-dialog` + demo T8 |
+| RF-25, 26 | `calendars-events`, `rls`, `event-detail` (lector sin botones) |
+| RF-27, 28 | `calendars-events` (mover y categoría ajena), `event-form` |
+| RF-29, 30 | `ranges`, `view-toolbar`, `month-view` |
+| RF-31 | demo T9 (eventos de todos los calendarios) y `range-performance` |
+| RF-32, 33 | `calendar-filters` |
+| RF-34 | `time-zone`, `event-detail`, `week-view`, `day-view` |
+| RF-35, 39, 40 | `layout`, `month-view`, `week-view`, `day-view` |
+| RF-36 | `event-detail` |
+| RF-37, 38 | `month-view`, `week-view`, `day-view` |
+| RF-41 | `calendar-list` |
+| RF-42 | `grouping`, `calendars-events` (`visible_people`), `calendar-filters` |
+| RF-43, 44 | `calendar-filters`, `preferences-actions` |
+| RF-45 a 47 | `grouping`, `calendar-filters`, `preferences-actions`, `preferences` |
+| RF-48 | `calendars-events`, `preferences` (privadas) |
+| RF-49 a 51 | `merge-calendars`, `merge-form`, `merge-action` |
+| RF-52 | `merge-form` |
+| RF-53 | `merge-calendars`, `merge-action` |
+| RF-54 | `merge-calendars` (nombre inválido a mitad: nada cambia) |
+| RF-55 | `merge-calendars` (miembros) |
+| RNF contraste | `palette` (4,5:1 en toda la paleta) |
+| RNF PWA | `sw-no-data` |
+| RNF rendimiento | `range-performance` (500 eventos, < 3 s) |
+
+Pendiente para cerrar T12: aplicar las migraciones en prod, demo manual en producción y aprobación del usuario.
+
 ## Dudas abiertas
 
 - [NECESITA ACLARACIÓN] RF-55 (heredada de la spec y el plan): con compartición real (spec 003), juntar calendarios con miembros distintos descartaría a los miembros de los origen. En esta spec solo hay un miembro por calendario; T2 deja el comportamiento cubierto con tests y se revisará en la 003.

@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-21, al cerrar la spec 001.
+> Última actualización: 2026-10-21, tras implementar la spec 002 (T1–T11; T12 pendiente de la validación en producción y de la aprobación del usuario).
 
 ## 1. Qué es
 
@@ -28,13 +28,21 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | Spec | Alcance | Estado |
 |------|---------|--------|
 | 001-base-aplicacion | Proyecto base, auth email/contraseña, esquema con RLS, panel esqueleto, PWA, despliegue | **Cerrada** (2026-10-21), T1–T12 hechas |
-| 002-calendarios-y-eventos | CRUD de calendarios y eventos; vistas mensual, semanal y diaria | Pendiente (siguiente) |
+| 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Implementada** (T1–T11, rama `002-calendarios-y-eventos`). Falta T12: migraciones en prod, demo en producción y aprobación del usuario para cerrarla |
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor | Pendiente |
 | 004-suscripciones-ical | Suscripción de solo lectura a `.ics` (Google, iCloud, Outlook) | Pendiente |
 | 005-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
 | 006-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
 
-Lo que hay hoy: registro, login, logout, protección de rutas, panel con "Hola, <nombre>" y la lista de calendarios con color y rol, portada, pantalla offline, PWA instalable y cron de keep-alive. **No hay** interfaz para crear o editar calendarios ni eventos (es la spec 002).
+Lo que hay hoy: registro, login, logout, protección de rutas, portada, pantalla offline, PWA instalable y cron de keep-alive (spec 001), y además (spec 002):
+
+- Panel con los calendarios en el orden guardado por el usuario, con accesos a crear, editar, categorías y juntar.
+- CRUD de calendarios (nombre, descripción, color de una paleta pastel cerrada) y de categorías por calendario.
+- CRUD de eventos (hora, día completo, varios días, descripción, lugar, color propio y categoría).
+- Vistas mensual, semanal y diaria que mezclan todos los calendarios, con panel de filtros por persona → calendario → categoría. La visibilidad y el orden se guardan por usuario.
+- Juntar calendarios propios en uno (fusión real, irreversible, con confirmación).
+
+**No hay** compartición (spec 003, así que en la práctica el único "persona" del panel es el propio usuario), `.ics` (004), gestión de cuenta (005) ni eventos recurrentes (spec futura sin número).
 
 ## 3. Reglas de trabajo (obligatorias)
 
@@ -91,16 +99,22 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   │   ├── actions.ts     # Server Actions signUp, signIn, signOut
 │   │   │   ├── login/page.tsx
 │   │   │   └── signup/page.tsx
-│   │   ├── dashboard/page.tsx # panel: saludo, "Cerrar sesión", lista de calendarios
+│   │   ├── dashboard/         # panel (page.tsx) y todo lo de la spec 002, protegido por getRouteAccess
+│   │   │   ├── calendar/      # vistas mes/semana/día (?view=&date=) + preferences-actions.ts
+│   │   │   ├── calendars/     # new, [id]/edit, [id]/categories, merge + actions.ts (calendarios y juntar)
+│   │   │   └── events/        # new, [id] (detalle + edición + borrado) + actions.ts
 │   │   ├── offline/page.tsx   # "Sin conexión" + "Reintentar" (estática, la precachea el SW)
 │   │   └── api/cron/keep-alive/route.ts  # GET protegido por CRON_SECRET
 │   ├── components/
-│   │   ├── ui/                # button, link-button, text-field, form-alert (solo tokens de marca)
+│   │   ├── ui/                # button (variantes), link-button, text-field, text-area, select, form-alert (solo tokens de marca)
 │   │   ├── auth/              # auth-card, login-form, signup-form (Client Components con useActionState)
 │   │   ├── dashboard/         # calendar-list
+│   │   ├── calendar/          # formularios, vistas (month/week/day, time-grid), filtros, workspace, merge-form, confirm-dialog…
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
 │   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts
+│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, grouping, format, schemas, error-messages; queries.ts (lecturas con RLS)
+│   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
 │   │   └── supabase/          # env.ts, server.ts, client.ts, proxy.ts
 │   └── types/database.ts      # GENERADO con `npm run db:types`; no editar a mano
 ├── public/
@@ -108,11 +122,11 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon-192, icon-512, icon-512-maskable, apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 20261020210000_base_schema.sql, 20261020210100_rls_policies.sql
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars
 ├── tests/
 │   ├── setup-unit.ts
-│   ├── unit/                  # *.test.ts(x): esquemas, errores, route-access, formularios, calendar-list, manifest, keep-alive, no-secrets
-│   └── integration/           # schema, rls, signup, login contra Supabase dev + helpers.ts
+│   ├── unit/                  # *.test.ts(x): lógica pura, formularios, vistas, filtros, sw-no-data, no-secrets…
+│   └── integration/           # schema, rls, signup, login, calendars-events, merge-calendars, preferences, range-performance contra Supabase dev + helpers.ts
 ├── vercel.json                # cron "0 6 * * *" → /api/cron/keep-alive
 ├── next.config.ts             # cacheComponents, partialPrefetching, cabeceras de /sw.js
 ├── postcss.config.mjs, eslint.config.mjs, vitest.config.ts, tsconfig.json (alias @/* → src/*)
@@ -142,6 +156,9 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/` | pública | Portada; con sesión redirige a `/dashboard` (lo hace la página, no el proxy) |
 | `/signup`, `/login` | solo sin sesión (con sesión → `/dashboard`) | Formularios |
 | `/dashboard` y subrutas | solo con sesión (sin sesión → `/login`) | Panel |
+| `/dashboard/calendar` | con sesión | Vistas `?view=month\|week\|day&date=YYYY-MM-DD` (valores inválidos → mes de hoy) |
+| `/dashboard/calendars/new`, `/[id]/edit`, `/[id]/categories`, `/merge` | con sesión | Calendarios, categorías y juntar. `edit` solo propietario, `categories` propietario o editor; otros → 404 |
+| `/dashboard/events/new`, `/dashboard/events/[id]` | con sesión | Alta (`?calendar=&date=`) y detalle con edición y borrado |
 | `/offline` | pública | Pantalla sin conexión |
 | `/manifest.webmanifest`, `/sw.js`, `/icons/*` | pública | PWA |
 | `/api/cron/keep-alive` | `Authorization: Bearer ${CRON_SECRET}` | `200 {"ok":true}` / `401` / `500` |
@@ -176,7 +193,14 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   | `events` | Los miembros | Crear, modificar y borrar owner y editor |
 
   `anon` no ve nada.
-- Convención de eventos de día completo (para la 002): `all_day = true`, inicio a las 00:00 del primer día y fin exclusivo a las 00:00 del día siguiente al último.
+- Convención de eventos de día completo: `all_day = true`, inicio a las 00:00 **UTC** del primer día y fin exclusivo a las 00:00 UTC del día siguiente al último. Se muestran por fecha UTC sin convertir a la zona del lector (un cumpleaños no cambia de día entre zonas, plan 002 D6). Los eventos con hora son instantes UTC que se escriben y muestran en la zona del **perfil**, que el servidor lee de la base de datos (nunca del cliente).
+- Añadido por la spec 002:
+  - `event_categories (calendar_id, name)`: por calendario, nombre único ignorando mayúsculas y espacios; leen los miembros, escriben propietario y editor.
+  - `events.color` (opcional) y `events.category_id`. La FK compuesta `(category_id, calendar_id)` impide una categoría de otro calendario; al borrar la categoría el evento queda sin ella; un trigger la quita al mover el evento a otro calendario.
+  - `calendar_preferences (user_id, calendar_id, visible, position)` y `person_preferences (user_id, person_id, position)`: privadas, filas creadas bajo demanda (sin fila = visible y al final). Los upserts parciales conservan la otra columna.
+  - `visible_people()` (`SECURITY DEFINER`): `id` y `display_name` del usuario y de los propietarios de calendarios que comparte, sin zona horaria. La política de `profiles` sigue siendo "solo el propio".
+  - `merge_calendars(p_source_ids, p_target_id, p_name, p_color)` (`SECURITY INVOKER`, una transacción): solo propietario de todos; unifica categorías con el mismo nombre; los miembros de los calendarios que desaparecen se pierden (ver Dudas de la spec 003).
+  - Límites: calendario 50, categoría 40, título 100, descripción de evento 2000, lugar 200. La paleta de colores NO se impone en SQL, solo en `zod` (`lib/calendar/palette.ts`).
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, `ics_subscriptions`…) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
@@ -252,6 +276,10 @@ npm run db:types       # regenera src/types/database.ts
   - Errores enlazados con `aria-describedby` y anunciados (`role="alert"`, `aria-live`).
   - Botones con `min-h-11`.
   - Todo usable solo con teclado.
+- **Páginas dinámicas (spec 002):** el `page.tsx` es síncrono; `params`/`searchParams` son promesas que se esperan dentro de un componente `async` bajo `<Suspense>`. Los `[id]` inválidos o ajenos hacen `notFound()`.
+- **Server Actions que escriben:** validan con `zod` en español, leen con `requireActionUser()` (`lib/calendar/queries.ts`; los componentes usan `requireUser()`, que añade `connection()`), traducen errores con `getCalendarErrorMessage`, y antes de `redirect()` llaman a `revalidatePath("/dashboard", "layout")`. Sin eso, tras redirigir se ve el dato viejo por la caché de rutas del cliente. RLS oculta las filas sin dar error: un `update`/`delete` que devuelve 0 filas se explica con `canSeeCalendar`/`canSeeEvent` ("ya no existe" frente a "sin permiso").
+- **Formularios con React 19:** tras cada acción React reinicia los campos. Usa campos **no controlados** (`defaultValue` desde `state.values`) y deja `useState` solo para lo que cambia la interfaz (p. ej. ocultar horas); un campo controlado no recupera lo enviado.
+- **Ids de campos:** `useId()`, nunca `field-${name}` (ver trampas).
 - **Para valores que solo existen en el navegador** (zona horaria, user agent…), usa `useSyncExternalStore` con un snapshot de servidor, no `useEffect` con `setState` (evita el aviso de hidratación y la regla de lint).
 - **Comentarios:** en inglés, breves, explicando el porqué y citando el requisito o la decisión del plan (`// ... (RF-26, plan D13)`).
 - **Tests:**
@@ -265,6 +293,9 @@ npm run db:types       # regenera src/types/database.ts
 - **Next.js 16 ≠ lo que conoces:** `middleware.ts` se llama `proxy.ts`; hay `cacheComponents`, `partialPrefetching` y `LayoutProps`/`PageProps` globales. Consulta `node_modules/next/dist/docs/` antes de usar una API.
 - **Finales de línea:** la máquina tiene `core.autocrlf=true`. `.gitattributes` fuerza LF, y si `format:check` falla en masa por CRLF, `npx prettier --write .` lo arregla sin cambiar contenido. `docs/`, `specs/` y `AGENTS.md` están en `.prettierignore` (se redactan a mano).
 - **`test:db` es intermitente:** a veces una llamada a Supabase dev se cuelga y un test da timeout (30 s). Es un problema conocido y no siempre cae en el mismo test: repite la ejecución antes de investigar el código. Mejora pendiente: añadir timeout o reintento en los helpers.
+- **Con `cacheComponents`, Next conserva la página anterior oculta en el DOM** (Activity). Hay dos formularios a la vez tras navegar, así que los `id` fijos se duplican y `getByLabel` de Playwright da "strict mode violation": filtra con `.locator('visible=true')`. En producción no se nota para el usuario.
+- **Probar en un navegador real:** `playwright-cli` está instalado globalmente. Arranca la app compilada con `npx next start -p 3100`, crea el usuario de prueba por `/signup` y bórralo de `dev` al terminar. Un `check()` sobre un radio `sr-only` falla: haz clic en el círculo (`label span[aria-hidden]`).
+- **jsdom no implementa `<dialog>.showModal()`:** los tests de diálogos lo simulan en un `beforeAll`.
 - **Tras usar el link de prod**, vuelve a enlazar dev; si no, `db:types` o `db:push` irían contra producción.
 - **`src/types/database.ts`** se regenera tras cada migración y no se formatea con Prettier.
 - **Usuarios de prueba:** los tests los crean y borran solos. Si creas usuarios a mano en dev para probar, bórralos al terminar.
@@ -272,12 +303,16 @@ npm run db:types       # regenera src/types/database.ts
 
 ## 11. Fuera de alcance hasta su spec
 
-Interfaz de calendarios y eventos (002), compartición e invitaciones (003), `.ics` (004), recuperación de contraseña, verificación y cambio de email, borrado de cuenta y edición de perfil (005), login social y OAuth (006), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
+Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), arrastrar y soltar eventos, búsqueda y vista de agenda, papelera o deshacer, zona horaria por evento, juntar calendarios ajenos o importados, compartición e invitaciones (003), `.ics` (004), recuperación de contraseña, verificación y cambio de email, borrado de cuenta y edición de perfil (005), login social y OAuth (006), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
 
-## 12. Cómo empezar la siguiente spec (002)
+## 12. Cómo empezar la siguiente spec
 
-1. Crea la rama `002-calendarios-y-eventos` desde `main`.
-2. Redacta `specs/002-calendarios-y-eventos/spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación.
-3. Haz lo mismo con `plan.md` (`plan-generator`), donde se decide y aprueba la librería de vistas de calendario si hace falta, y con `tasks.md` (`tasks-generator`).
+La 002 está implementada pero **no cerrada**: antes de abrir la 003, el usuario aplica las migraciones en prod (comandos de la sección 7), valida la demo en producción y aprueba el cierre (T12), y se integra la rama con `git merge --ff-only` en `main`.
+
+Después, para la 003 (compartición):
+
+1. Crea la rama `003-comparticion` desde `main`.
+2. Redacta `specs/003-comparticion/spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. Resuelve ahí RF-55 de la 002: qué pasa con los miembros al juntar calendarios compartidos.
+3. Haz lo mismo con `plan.md` (`plan-generator`) y `tasks.md` (`tasks-generator`). La 003 añadirá las RPC controladas sobre `calendar_members` y una política para que `visible_people()` siga siendo la única vía de ver nombres ajenos.
 4. Implementa tarea a tarea con el test primero, el checklist de verificación y un commit por tarea.
 5. Valida en producción y pide al usuario la aprobación para cerrar.

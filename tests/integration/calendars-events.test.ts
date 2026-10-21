@@ -493,3 +493,48 @@ describe("visible_people (RF-42)", () => {
     expect(error).not.toBeNull();
   });
 });
+
+describe("deleting a calendar (RF-5)", () => {
+  it("removes its events and categories with it", async () => {
+    const calendar = await owner.client
+      .from("calendars")
+      .insert({ owner_id: owner.id, name: "Para borrar" })
+      .select("id")
+      .single();
+    const calendarId = calendar.data!.id;
+    const category = await createCategory(owner, calendarId, "Se va");
+    const eventId = await createEvent(calendarId, {
+      category_id: category.data!.id,
+    });
+
+    const deleted = await owner.client
+      .from("calendars")
+      .delete()
+      .eq("id", calendarId)
+      .select("id");
+    const [events, categories] = await Promise.all([
+      admin.from("events").select("id").eq("id", eventId),
+      admin.from("event_categories").select("id").eq("calendar_id", calendarId),
+    ]);
+
+    expect(deleted.data).toHaveLength(1);
+    expect(events.data).toEqual([]);
+    expect(categories.data).toEqual([]);
+  });
+
+  it("is refused to editors and viewers (RF-8)", async () => {
+    const asEditor = await editor.client
+      .from("calendars")
+      .delete()
+      .eq("id", ownerCalendarId)
+      .select("id");
+    const asViewer = await viewer.client
+      .from("calendars")
+      .update({ name: "Hackeado" })
+      .eq("id", ownerCalendarId)
+      .select("id");
+
+    expect(asEditor.data).toEqual([]);
+    expect(asViewer.data).toEqual([]);
+  });
+});
