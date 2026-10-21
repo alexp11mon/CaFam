@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { NextField } from "@/components/auth/next-field";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
@@ -29,6 +30,7 @@ export function LoginForm({ action }: { action: FormAction<SignInState> }) {
         type="password"
         autoComplete="current-password"
       />
+      <NextField />
       <Button type="submit" disabled={pending}>
         {pending ? "Entrando…" : "Entrar"}
       </Button>

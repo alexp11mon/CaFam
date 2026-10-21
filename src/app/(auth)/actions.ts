@@ -7,6 +7,7 @@ import type {
   SignUpField,
   SignUpState,
 } from "@/lib/auth/form-state";
+import { getSafeNextPath } from "@/lib/auth/next-path";
 import { signInSchema, signUpSchema } from "@/lib/auth/schemas";
 import { createClient } from "@/lib/supabase/server";
 
@@ -57,7 +58,8 @@ export async function signUp(
     return { formError: getAuthErrorMessage(error), values };
   }
 
-  redirect("/dashboard");
+  // `next` only survives if it is an invite link (RF-7, plan D9).
+  redirect(getSafeNextPath(formData.get("next")));
 }
 
 export async function signIn(
@@ -85,7 +87,8 @@ export async function signIn(
     return { formError: getAuthErrorMessage(error), values };
   }
 
-  redirect("/dashboard");
+  // `next` only survives if it is an invite link (RF-7, plan D9).
+  redirect(getSafeNextPath(formData.get("next")));
 }
 
 export async function signOut(): Promise<void> {

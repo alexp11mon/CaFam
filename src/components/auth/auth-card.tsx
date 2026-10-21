@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { LinkKeepingNext } from "@/components/auth/next-field";
 
 interface AuthCardProps {
   title: string;
@@ -16,12 +16,12 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
         {children}
         <p className="mt-6 text-sm text-ink">
           {footer.text}{" "}
-          <Link
+          <LinkKeepingNext
             href={footer.href}
             className="font-semibold text-brand underline"
           >
             {footer.linkLabel}
-          </Link>
+          </LinkKeepingNext>
         </p>
       </div>
     </main>

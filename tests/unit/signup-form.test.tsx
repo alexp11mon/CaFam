@@ -4,7 +4,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SignupForm } from "@/components/auth/signup-form";
 import type { FormAction, SignUpState } from "@/lib/auth/form-state";
 
+const search = vi.hoisted(() => ({ query: "" }));
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(search.query),
+}));
+
 afterEach(() => {
+  search.query = "";
   vi.restoreAllMocks();
 });
 
@@ -93,5 +100,18 @@ describe("SignupForm", () => {
 
     expect(action).toHaveBeenCalledTimes(1);
     expect(action.mock.calls[0]?.[1].get("timeZone")).toBe("America/Bogota");
+  });
+
+  it("carries the next of the URL in a hidden field (RF-7)", () => {
+    search.query =
+      "next=%2Finvite%2FabcDEF123-_abcDEF123-_abcDEF123-_abcDEF123-_";
+    const action = vi.fn<FormAction<SignUpState>>(async () => ({
+      values: { displayName: "", email: "" },
+    }));
+    const { container } = render(<SignupForm action={action} />);
+
+    expect(container.querySelector('input[name="next"]')).toHaveValue(
+      "/invite/abcDEF123-_abcDEF123-_abcDEF123-_abcDEF123-_",
+    );
   });
 });

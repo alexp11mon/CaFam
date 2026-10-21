@@ -41,10 +41,10 @@ export async function updateSession(request: NextRequest) {
   );
 
   if (access.type === "redirect") {
-    const url = request.nextUrl.clone();
-    url.pathname = access.destination;
-    url.search = "";
-    const redirect = NextResponse.redirect(url);
+    // The destination carries its own query (`next` for invites), nothing else is kept.
+    const redirect = NextResponse.redirect(
+      new URL(access.destination, request.nextUrl),
+    );
     // Keep refreshed session cookies on the redirect response.
     response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
     return redirect;

@@ -1,8 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LoginForm } from "@/components/auth/login-form";
 import type { FormAction, SignInState } from "@/lib/auth/form-state";
+
+const search = vi.hoisted(() => ({ query: "" }));
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(search.query),
+}));
 
 async function fillAndSubmit() {
   const user = userEvent.setup();
@@ -12,6 +18,10 @@ async function fillAndSubmit() {
 }
 
 describe("LoginForm", () => {
+  beforeEach(() => {
+    search.query = "";
+  });
+
   it("shows the generic credentials error and keeps the email (RF-6)", async () => {
     const action = vi.fn<FormAction<SignInState>>(async () => ({
       formError: "Email o contraseña incorrectos.",
@@ -59,5 +69,27 @@ describe("LoginForm", () => {
     const formData = action.mock.calls[0]?.[1];
     expect(formData?.get("email")).toBe("ana@example.com");
     expect(formData?.get("password")).toBe("incorrecta");
+  });
+
+  it("carries the next of the URL in a hidden field (RF-7)", () => {
+    search.query =
+      "next=%2Finvite%2FabcDEF123-_abcDEF123-_abcDEF123-_abcDEF123-_";
+    const action = vi.fn<FormAction<SignInState>>(async () => ({
+      values: { email: "" },
+    }));
+    const { container } = render(<LoginForm action={action} />);
+
+    expect(container.querySelector('input[name="next"]')).toHaveValue(
+      "/invite/abcDEF123-_abcDEF123-_abcDEF123-_abcDEF123-_",
+    );
+  });
+
+  it("sends an empty next when the URL has none", () => {
+    const action = vi.fn<FormAction<SignInState>>(async () => ({
+      values: { email: "" },
+    }));
+    const { container } = render(<LoginForm action={action} />);
+
+    expect(container.querySelector('input[name="next"]')).toHaveValue("");
   });
 });

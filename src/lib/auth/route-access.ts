@@ -2,6 +2,7 @@ export type RouteAccess =
   { type: "allow" } | { type: "redirect"; destination: string };
 
 const PROTECTED_PREFIX = "/dashboard";
+const INVITE_PREFIX = "/invite";
 const GUEST_ONLY_PATHS = new Set(["/login", "/signup"]);
 
 function isProtected(pathname: string): boolean {
@@ -17,6 +18,17 @@ export function getRouteAccess(
 ): RouteAccess {
   if (!hasSession && isProtected(pathname)) {
     return { type: "redirect", destination: "/login" };
+  }
+  // An invite link survives the login detour through `next` (RF-7, plan D9).
+  if (
+    !hasSession &&
+    pathname.startsWith(`${INVITE_PREFIX}/`) &&
+    pathname.length > INVITE_PREFIX.length + 1
+  ) {
+    return {
+      type: "redirect",
+      destination: `/login?next=${encodeURIComponent(pathname)}`,
+    };
   }
   if (hasSession && GUEST_ONLY_PATHS.has(pathname)) {
     return { type: "redirect", destination: "/dashboard" };
