@@ -468,6 +468,11 @@ export type Database = {
         }
         Returns: string
       }
+      disable_access_code: {
+        Args: { p_calendar_id: string }
+        Returns: undefined
+      }
+      generate_access_code_id: { Args: never; Returns: string }
       get_invite_preview: {
         Args: { p_token: string }
         Returns: {
@@ -478,6 +483,13 @@ export type Database = {
         }[]
       }
       is_calendar_member: { Args: { p_calendar_id: string }; Returns: boolean }
+      join_with_code: {
+        Args: { p_code: string; p_pin: string }
+        Returns: {
+          calendar_id: string
+          status: string
+        }[]
+      }
       list_tables_without_rls: { Args: never; Returns: string[] }
       merge_calendars: {
         Args: {
@@ -489,6 +501,14 @@ export type Database = {
         Returns: string
       }
       revoke_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      set_access_code: {
+        Args: {
+          p_calendar_id: string
+          p_pin: string
+          p_role: Database["public"]["Enums"]["calendar_role"]
+        }
+        Returns: string
+      }
       visible_people: {
         Args: never
         Returns: {
