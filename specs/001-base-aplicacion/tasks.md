@@ -30,7 +30,7 @@
   Pasos: test primero en `tests/unit/route-access.test.ts` para `getRouteAccess(pathname, hasSession)` (sin sesión: `/dashboard` y `/dashboard/x` → `/login`; con sesión: `/login` y `/signup` → `/dashboard`; `/`, `/offline`, `/sw.js`, `/manifest.webmanifest` y estáticos → `allow`); `src/lib/supabase/{server,client,proxy}.ts`; `src/proxy.ts` usando `getClaims()` y matcher que excluye estáticos.
   Hecho cuando: `npm test -- route-access` en verde y, con `npm run dev`, abrir `/dashboard` sin sesión redirige a `/login`. Cubre: RF-8, RF-9, RF-10 | Módulo: route-guard, supabase-clients
 
-- [ ] T7 Implementar el registro con validación, traducción de errores y formulario accesible
+- [x] T7 Implementar el registro con validación, traducción de errores y formulario accesible
   Pasos: tests primero en `tests/unit/auth-schemas.test.ts` (email normalizado, límites 7/8/72/73 de contraseña, nombre vacío y de 51 caracteres, `timeZone` válido se conserva y ausente o no válido se descarta sin error), `tests/unit/auth-error-messages.test.ts` (tabla de códigos del plan) y `tests/unit/signup-form.test.tsx` (errores junto al campo, botón deshabilitado mientras está pendiente, email conservado tras error, campo oculto `timeZone` relleno con el valor de `Intl` simulado); `src/lib/auth/schemas.ts`, `src/lib/auth/error-messages.ts`, Server Action `signUp`, página `/signup` y `src/components/auth/signup-form.tsx`; test `tests/integration/signup.test.ts` para email duplicado.
   Hecho cuando: `npm test -- auth signup` y `npm run test:db -- signup` en verde, y en `npm run dev` un registro nuevo lleva a `/dashboard` y su perfil en Supabase `dev` tiene la zona horaria del equipo. Cubre: RF-1, RF-2, RF-3, RF-11, RF-12, RF-26, RF-27 | Módulo: auth, auth-validation, auth-errors
 
