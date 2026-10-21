@@ -1,0 +1,33 @@
+import type { z } from "zod";
+
+// Generic result of the spec 002 Server Actions (plan "Estado de las Server Actions").
+// The auth forms keep their own state types in lib/auth/form-state.ts.
+export type { FormAction } from "@/lib/auth/form-state";
+
+export interface FormState<Field extends string> {
+  fieldErrors?: Partial<Record<Field, string>>;
+  formError?: string;
+  /** What the user typed, so a failed submit does not lose it. */
+  values: Record<Field, string>;
+}
+
+export type ParseResult<Data, Field extends string> =
+  | { ok: true; data: Data }
+  | { ok: false; fieldErrors: Partial<Record<Field, string>> };
+
+/** First message per field of a zod error. */
+export function fieldErrorsFromZod<Field extends string>(
+  error: z.ZodError,
+): Partial<Record<Field, string>> {
+  const errors: Partial<Record<Field, string>> = {};
+  for (const issue of error.issues) {
+    const field = String(issue.path[0]) as Field;
+    errors[field] ??= issue.message;
+  }
+  return errors;
+}
+
+export function readString(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+}
