@@ -446,6 +446,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite: { Args: { p_token: string }; Returns: string }
       calendar_members_with_names: {
         Args: { p_calendar_ids: string[] }
         Returns: {
@@ -459,6 +460,23 @@ export type Database = {
         Args: { p_calendar_id: string }
         Returns: Database["public"]["Enums"]["calendar_role"]
       }
+      create_invite: {
+        Args: {
+          p_calendar_id: string
+          p_max_uses: number
+          p_role: Database["public"]["Enums"]["calendar_role"]
+        }
+        Returns: string
+      }
+      get_invite_preview: {
+        Args: { p_token: string }
+        Returns: {
+          already_member: boolean
+          calendar_name: string
+          owner_name: string
+          role: Database["public"]["Enums"]["calendar_role"]
+        }[]
+      }
       is_calendar_member: { Args: { p_calendar_id: string }; Returns: boolean }
       list_tables_without_rls: { Args: never; Returns: string[] }
       merge_calendars: {
@@ -470,6 +488,7 @@ export type Database = {
         }
         Returns: string
       }
+      revoke_invite: { Args: { p_invite_id: string }; Returns: undefined }
       visible_people: {
         Args: never
         Returns: {
