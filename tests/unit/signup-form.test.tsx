@@ -29,7 +29,8 @@ describe("SignupForm", () => {
 
     await fillAndSubmit();
 
-    const email = await screen.findByLabelText("Email");
+    await screen.findByText("Introduce un email válido.");
+    const email = screen.getByLabelText("Email");
     expect(email).toHaveAccessibleDescription("Introduce un email válido.");
     expect(email).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByLabelText("Contraseña")).toHaveAccessibleDescription(
