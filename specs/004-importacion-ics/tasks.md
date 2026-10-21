@@ -7,7 +7,7 @@
 
 ## Tareas
 
-- [ ] T1 Crear la migración de `import_calendar` con su test de base de datos
+- [x] T1 Crear la migración de `import_calendar` con su test de base de datos
   Pasos: test primero en `tests/integration/import-calendar.test.ts` con un usuario y `anon`: crea un calendario del llamante con su fila `owner` y los eventos del `jsonb` (título, descripción, lugar, instantes y `all_day`, con `created_by` = el llamante); usa el azul de marca si el color es nulo; dos llamadas iguales crean dos calendarios distintos (sin deduplicar); rechaza con `22023` un `p_events` que no sea un array, vacío o de más de 2.000 elementos; si un solo evento viola una restricción de `events` (por ejemplo `ends_at` anterior a `starts_at`) no queda ni el calendario ni ningún evento; no deja ninguna columna ni tabla de origen (el calendario creado tiene exactamente las columnas de siempre); `anon` no puede llamarla. Migración `supabase/migrations/<timestamp>_import_calendar.sql` (`SECURITY INVOKER`, `search_path = ''`, revocada a `public` y `anon`); comprobar antes que el link apunta a `dev`, `npm run db:push` y `npm run db:types`.
   Hecho cuando: `npm run test:db -- import-calendar schema rls` en verde y `src/types/database.ts` contiene `import_calendar`. Cubre: RF-7, RF-11, RF-12, RF-27, RF-30 | Módulo: SQL (`import_calendar`)
 

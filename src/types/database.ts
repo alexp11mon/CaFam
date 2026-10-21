@@ -482,6 +482,10 @@ export type Database = {
           role: Database["public"]["Enums"]["calendar_role"]
         }[]
       }
+      import_calendar: {
+        Args: { p_color: string; p_events: Json; p_name: string }
+        Returns: string
+      }
       is_calendar_member: { Args: { p_calendar_id: string }; Returns: boolean }
       join_with_code: {
         Args: { p_code: string; p_pin: string }
