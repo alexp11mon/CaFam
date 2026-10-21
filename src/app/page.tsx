@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { IosInstallHint } from "@/components/pwa/ios-install-hint";
 import { LinkButton } from "@/components/ui/link-button";
 import { createClient } from "@/lib/supabase/server";
 
@@ -38,6 +39,7 @@ export default function HomePage() {
             Iniciar sesión
           </LinkButton>
         </div>
+        <IosInstallHint />
       </div>
     </main>
   );
