@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -14,6 +14,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: { default: "CalenderFam", template: "%s · CalenderFam" },
+};
+
+// Mobile-first (RF-24): device width, user zoom stays enabled for accessibility.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#2563EB",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
