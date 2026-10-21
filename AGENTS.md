@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-22, con la spec 003 implementada (T1–T11) y T12 preparada; falta aplicar sus migraciones en prod, validarla allí y que el usuario la cierre.
+> Última actualización: 2026-10-22, al cerrar la spec 003.
 
 ## 1. Qué es
 
@@ -29,7 +29,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 |------|---------|--------|
 | 001-base-aplicacion | Proyecto base, auth email/contraseña, esquema con RLS, panel esqueleto, PWA, despliegue | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Cerrada** (2026-10-21), T1–T12 hechas |
-| 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Implementada** (T1–T11 hechas en `dev`); T12 pendiente de prod y cierre |
+| 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
 | 004-suscripciones-ical | Suscripción de solo lectura a `.ics` (Google, iCloud, Outlook) | Pendiente |
 | 005-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
 | 006-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
@@ -336,7 +336,7 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 ## 12. Cómo continuar
 
-La 003 está implementada y probada contra `dev` (T1–T11). Para cerrarla (T12) el usuario debe aplicar las migraciones a prod, hacer la demo en producción con dos cuentas y aprobar el cierre; después se marca T12 `[x]` y se actualiza el estado de este archivo. Para la siguiente spec (004, suscripciones iCal):
+La 003 está cerrada y desplegada en producción (migraciones aplicadas y demo validada). Para la siguiente spec (004, suscripciones iCal):
 
 1. Crea la rama `004-suscripciones-ical` desde `main` (con la 003 ya integrada).
 2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. La librería de parseo `.ics` exige aprobación explícita (P6).
