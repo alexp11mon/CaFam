@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from "react";
+import { useId, type InputHTMLAttributes } from "react";
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -13,7 +13,8 @@ export function TextField({
   error,
   ...inputProps
 }: TextFieldProps) {
-  const id = `field-${name}`;
+  // useId, not the name: with cacheComponents Next keeps the previous page hidden in the DOM, so a fixed id would repeat.
+  const id = useId();
   const errorId = `${id}-error`;
 
   return (

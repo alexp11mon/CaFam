@@ -33,12 +33,42 @@ describe("CalendarList", () => {
     });
   });
 
-  it("shows the empty state when there are no calendars", () => {
+  it("keeps the order it receives (RF-45)", () => {
+    render(<CalendarList calendars={[...CALENDARS].reverse()} />);
+
+    const names = screen
+      .getAllByRole("listitem")
+      .map((item) => within(item).getByTestId("calendar-name").textContent);
+    expect(names).toEqual(["Fútbol", "Familia", "Mi calendario"]);
+  });
+
+  it("offers Editar only to the owner and Categorías to owner and editor (RF-41)", () => {
+    render(<CalendarList calendars={CALENDARS} />);
+
+    const [owner, editor, viewer] = screen.getAllByRole("listitem");
+
+    expect(
+      within(owner!).getByRole("link", { name: /Editar/ }),
+    ).toHaveAttribute("href", "/dashboard/calendars/1/edit");
+    expect(
+      within(owner!).getByRole("link", { name: /Categorías/ }),
+    ).toHaveAttribute("href", "/dashboard/calendars/1/categories");
+    expect(within(editor!).queryByRole("link", { name: /Editar/ })).toBeNull();
+    expect(
+      within(editor!).getByRole("link", { name: /Categorías/ }),
+    ).toHaveAttribute("href", "/dashboard/calendars/2/categories");
+    expect(within(viewer!).queryByRole("link")).toBeNull();
+  });
+
+  it("shows the empty state with a way to create a calendar (RF-7)", () => {
     render(<CalendarList calendars={[]} />);
 
     expect(
       screen.getByText("Todavía no tienes calendarios."),
     ).toBeInTheDocument();
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Crear calendario" }),
+    ).toHaveAttribute("href", "/dashboard/calendars/new");
   });
 });

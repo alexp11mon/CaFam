@@ -34,6 +34,8 @@ const paletteColor = z
 
 // Calendar (RF-1, RF-2, RF-4) and category (RF-9) -----------------------------
 
+export type CalendarField = "name" | "description" | "color";
+
 export const calendarSchema = z.object({
   name: nameField(50),
   description: optionalText(

@@ -11,6 +11,11 @@ export interface FormState<Field extends string> {
   values: Record<Field, string>;
 }
 
+/** Result of a confirm-and-act Server Action (delete, merge): only an error comes back. */
+export interface ConfirmState {
+  formError?: string;
+}
+
 export type ParseResult<Data, Field extends string> =
   | { ok: true; data: Data }
   | { ok: false; fieldErrors: Partial<Record<Field, string>> };

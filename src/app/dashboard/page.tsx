@@ -1,30 +1,16 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { connection } from "next/server";
 import { Suspense } from "react";
-import {
-  CalendarList,
-  type CalendarListItem,
-} from "@/components/dashboard/calendar-list";
+import { CalendarList } from "@/components/dashboard/calendar-list";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
+import { LinkButton } from "@/components/ui/link-button";
+import { getMyCalendars, requireUser } from "@/lib/calendar/queries";
 import { signOut } from "../(auth)/actions";
 
 export const metadata: Metadata = { title: "Panel" };
 
-async function getCurrentUserId() {
-  // Supabase reads Date.now() to check the session: render per request.
-  await connection();
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const userId = data?.claims.sub;
-  if (!userId) redirect("/login");
-  return { supabase, userId };
-}
-
 // Reads the session cookies, so it streams behind <Suspense> (cacheComponents).
 async function Greeting() {
-  const { supabase, userId } = await getCurrentUserId();
+  const { supabase, userId } = await requireUser();
   const { data: profile } = await supabase
     .from("profiles")
     .select("display_name")
@@ -35,20 +21,26 @@ async function Greeting() {
 }
 
 async function Calendars() {
-  const { supabase, userId } = await getCurrentUserId();
-  // RLS returns every member of my calendars; filtering by user_id keeps my role (RF-13).
-  const { data } = await supabase
-    .from("calendar_members")
-    .select("role, calendars(id, name, color)")
-    .eq("user_id", userId)
-    .order("created_at");
+  const { supabase, userId } = await requireUser();
+  const calendars = await getMyCalendars(supabase, userId);
+  const ownedCount = calendars.filter((c) => c.role === "owner").length;
 
-  const calendars: CalendarListItem[] = (data ?? []).flatMap(
-    ({ role, calendars: calendar }) =>
-      calendar ? [{ ...calendar, role }] : [],
+  return (
+    <>
+      <div className="flex flex-wrap gap-3">
+        <LinkButton href="/dashboard/calendar">Abrir calendario</LinkButton>
+        <LinkButton href="/dashboard/calendars/new" variant="secondary">
+          Nuevo calendario
+        </LinkButton>
+        {ownedCount >= 2 ? (
+          <LinkButton href="/dashboard/calendars/merge" variant="secondary">
+            Juntar calendarios
+          </LinkButton>
+        ) : null}
+      </div>
+      <CalendarList calendars={calendars} />
+    </>
   );
-
-  return <CalendarList calendars={calendars} />;
 }
 
 export default function DashboardPage() {
