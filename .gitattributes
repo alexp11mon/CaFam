@@ -1,0 +1,2 @@
+# Prettier expects LF; keep it regardless of core.autocrlf on Windows.
+* text=auto eol=lf
