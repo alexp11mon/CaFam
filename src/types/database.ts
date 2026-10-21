@@ -39,6 +39,98 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_access_codes: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          enabled: boolean
+          pin_hash: string
+          public_code: string
+          role: Database["public"]["Enums"]["calendar_role"]
+          updated_at: string
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          enabled?: boolean
+          pin_hash: string
+          public_code: string
+          role: Database["public"]["Enums"]["calendar_role"]
+          updated_at?: string
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          enabled?: boolean
+          pin_hash?: string
+          public_code?: string
+          role?: Database["public"]["Enums"]["calendar_role"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_access_codes_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: true
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_invites: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          max_uses: number
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["calendar_role"]
+          token_hash: string
+          use_count: number
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          max_uses: number
+          revoked_at?: string | null
+          role: Database["public"]["Enums"]["calendar_role"]
+          token_hash: string
+          use_count?: number
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          max_uses?: number
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["calendar_role"]
+          token_hash?: string
+          use_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_invites_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_invites_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_members: {
         Row: {
           calendar_id: string
@@ -257,6 +349,35 @@ export type Database = {
           },
         ]
       }
+      join_attempts: {
+        Row: {
+          code: string
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "join_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       person_preferences: {
         Row: {
           created_at: string
@@ -325,6 +446,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calendar_members_with_names: {
+        Args: { p_calendar_ids: string[] }
+        Returns: {
+          calendar_id: string
+          display_name: string
+          role: Database["public"]["Enums"]["calendar_role"]
+          user_id: string
+        }[]
+      }
       calendar_role_for: {
         Args: { p_calendar_id: string }
         Returns: Database["public"]["Enums"]["calendar_role"]

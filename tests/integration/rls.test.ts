@@ -266,7 +266,7 @@ describe("calendar_members (RF-19)", () => {
     expect(byOwner.error?.code).toBe("42501");
   });
 
-  it("nobody modifies or deletes memberships", async () => {
+  it("only the owner changes roles or removes others (spec 003)", async () => {
     const promote = await viewer.client
       .from("calendar_members")
       .update({ role: "editor" })
@@ -275,21 +275,27 @@ describe("calendar_members (RF-19)", () => {
       .select("role");
     expect(promote.data ?? []).toEqual([]);
 
+    const byEditor = await editor.client
+      .from("calendar_members")
+      .delete()
+      .eq("calendar_id", calendarId)
+      .eq("user_id", viewer.id)
+      .select("user_id");
+    expect(byEditor.data ?? []).toEqual([]);
+
     const remove = await owner.client
       .from("calendar_members")
       .delete()
       .eq("calendar_id", calendarId)
       .eq("user_id", viewer.id)
       .select("user_id");
-    expect(remove.data ?? []).toEqual([]);
+    expect(remove.data).toEqual([{ user_id: viewer.id }]);
 
-    const { data } = await admin
+    // Later cases still need the viewer as a member.
+    const { error } = await admin
       .from("calendar_members")
-      .select("role")
-      .eq("calendar_id", calendarId)
-      .eq("user_id", viewer.id)
-      .single();
-    expect(data?.role).toBe("viewer");
+      .insert({ calendar_id: calendarId, user_id: viewer.id, role: "viewer" });
+    if (error) throw error;
   });
 });
 

@@ -7,7 +7,7 @@
 
 ## Tareas
 
-- [ ] T1 Crear la migración de tablas, políticas, trigger y lista de miembros con nombres, con su matriz de permisos
+- [x] T1 Crear la migración de tablas, políticas, trigger y lista de miembros con nombres, con su matriz de permisos
   Pasos: test primero en `tests/integration/sharing-tables.test.ts` con Propietario, Editor, Lector, ajeno y `anon` (las filas de `calendar_invites` y `calendar_access_codes` se insertan con la clave secreta, solo en `tests/`):
   - invitaciones y códigos: el propietario lee sus filas sin `token_hash` ni `pin_hash` (pedir esas columnas falla con `42501`); Editor, Lector, ajeno y `anon` no ven nada; nadie escribe directamente; `join_attempts` no se puede leer ni escribir;
   - `calendar_members`: el propietario cambia el rol de otros entre Lector y Editor, no puede ponerlo a `owner` ni cambiar la fila del propietario, ni cambiar `user_id` o `calendar_id` (permiso por columna); Editor y Lector no cambian roles; el propietario borra a otros y cualquier no propietario borra su propia fila; el propietario no puede borrar la suya; Editor y Ajeno no borran a otros; el INSERT directo sigue rechazado con `42501` para todos;
