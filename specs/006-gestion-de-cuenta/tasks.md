@@ -55,7 +55,7 @@
   Función `decide_orphan_calendar`, `SECURITY DEFINER` con comprobación de membresía y de estado.
   Hecho cuando: `npm run test:db -- account-decide` en verde. Cubre: RF-24, RF-25 | Módulo: account_functions
 
-- [ ] T6 Copiar un calendario para cada miembro que lo conserva con `copy_calendar_for_owner`
+- [x] T6 Copiar un calendario para cada miembro que lo conserva con `copy_calendar_for_owner`
   Pasos: test primero en `tests/integration/account-copy.test.ts`. Comprueba que:
   - la copia tiene el mismo nombre, color y descripción, y su propietario es el miembro indicado con fila `owner`;
   - las categorías se copian y cada evento conserva su categoría de la copia (mapa de ids);

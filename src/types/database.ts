@@ -585,6 +585,10 @@ export type Database = {
         Args: { p_calendar_id: string }
         Returns: Database["public"]["Enums"]["calendar_role"]
       }
+      copy_calendar_for_owner: {
+        Args: { p_calendar_id: string; p_user_id: string }
+        Returns: string
+      }
       create_invite: {
         Args: {
           p_calendar_id: string
