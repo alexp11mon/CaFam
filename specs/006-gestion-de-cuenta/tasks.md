@@ -65,7 +65,7 @@
   Función `copy_calendar_for_owner`, interna, sin acceso desde clientes.
   Hecho cuando: `npm run test:db -- account-copy` en verde. Cubre: RF-28, RF-20 | Módulo: account_functions
 
-- [ ] T7 Aplicar la decisión de un calendario sin propietario con `apply_orphan_decisions`
+- [x] T7 Aplicar la decisión de un calendario sin propietario con `apply_orphan_decisions`
   Pasos: test primero en `tests/integration/account-apply.test.ts`, con `orphaned_at` fijado en el pasado para simular el plazo. Comprueba que:
   - con dos miembros que conservan, cada uno recibe copia, el original desaparece y se crean dos avisos `kept_copy`;
   - con un único miembro que conserva, pasa a propietario sin copia (fila `owner`, `owner_id` fijado, `orphaned_at` a nulo);

@@ -572,6 +572,7 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { p_token: string }; Returns: string }
+      apply_orphan_decisions: { Args: never; Returns: undefined }
       calendar_members_with_names: {
         Args: { p_calendar_ids: string[] }
         Returns: {
