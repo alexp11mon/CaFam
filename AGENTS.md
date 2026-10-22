@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-22, con la spec 004 implementada (T1–T10) y T11 preparada; falta aplicar su migración en prod, validarla allí y que el usuario la cierre.
+> Última actualización: 2026-10-22, al cerrar la spec 004.
 
 ## 1. Qué es
 
@@ -30,7 +30,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 001-base-aplicacion | Proyecto base, auth email/contraseña, esquema con RLS, panel esqueleto, PWA, despliegue | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
-| 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Implementada** (T1–T10 hechas en `dev`); T11 pendiente de prod y cierre |
+| 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
 | 005-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
 | 006-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
 
@@ -354,7 +354,7 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 ## 12. Cómo continuar
 
-La 004 está implementada y probada contra `dev` (T1–T10). Para cerrarla (T11) el usuario debe aplicar la migración a prod, desplegar, medir la importación de un `.ics` de 2.000 eventos en Vercel, hacer la demo con `.ics` reales y aprobar el cierre; después se marca T11 `[x]` y se actualiza el estado de este archivo. La siguiente spec es la 005 (gestión de cuenta, requiere SMTP gratuito):
+La 004 está cerrada y desplegada en producción (migración aplicada y demo validada con `.ics` reales). La siguiente spec es la 005 (gestión de cuenta, requiere SMTP gratuito):
 
 1. Crea la rama `005-gestion-de-cuenta` desde `main` (con la 004 ya integrada).
 2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación.
