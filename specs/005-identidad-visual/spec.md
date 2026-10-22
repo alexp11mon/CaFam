@@ -2,6 +2,7 @@
 
 > Estado: **Aprobada** por el usuario (2026-10-22). Constitución: `docs/constitution.md` (P9 y sección "Identidad visual y diseño de interfaz"). Parte de las specs 001 a 004 (cerradas).
 > Decisiones de la entrevista (2026-10-22): el acento se guarda por usuario y se ve igual en todos sus dispositivos; se añade una vista de agenda de 14 días; la app pasa a un marco fijo (escritorio) y a una barra inferior (móvil); se añade el bloque "Próximo evento"; el rediseño alcanza también las páginas sin sesión y el icono de la app.
+> **Cambio aprobado** por el usuario (2026-10-22), tras desplegar T1–T11: quitar de todas partes el azul antiguo `#2563EB` (RF-55 a RF-58). Decisiones: el color por defecto de los calendarios pasa a Azul cielo `#A0C4FF`, los calendarios y eventos que ya lo tenían guardado pasan también a Azul cielo, y el acento "Azul" sigue existiendo con otro tono.
 > Esta spec **amplía el alcance**: la vista de agenda figuraba como fuera de alcance en la spec 002 y en `AGENTS.md`. Al aprobarla se actualiza `AGENTS.md` (§11).
 
 ## Contexto y objetivo
@@ -103,6 +104,13 @@ CalenderFam ya hace lo que tiene que hacer (calendarios, eventos, compartir, imp
 - RF-52: EL SISTEMA usará el icono nuevo como favicon, icono de la app instalada (incluidos el adaptable de Android y el de iOS) y en la pantalla sin conexión.
 - RF-53: EL SISTEMA usará el color piedra del fondo como color de la barra del sistema en la app instalada.
 - RF-54: CUANDO se publica la nueva versión, EL SISTEMA hará que las apps ya instaladas dejen de usar los recursos antiguos guardados sin que el usuario tenga que reinstalar.
+
+### Sin el azul antiguo (cambio aprobado el 2026-10-22)
+
+- RF-55: EL SISTEMA no ofrecerá el azul antiguo (`#2563EB`) en la paleta de colores de calendarios y eventos.
+- RF-56: CUANDO se crea un calendario sin color elegido (al registrarse, al importar o al juntar en uno nuevo), EL SISTEMA le dará Azul cielo (`#A0C4FF`).
+- RF-57: EL SISTEMA cambiará a Azul cielo el color de los calendarios y de los eventos que tuvieran guardado el azul antiguo.
+- RF-58: EL SISTEMA mostrará el acento "Azul" con un tono distinto del azul antiguo, cumpliendo RF-14.
 
 ## Requisitos no funcionales
 

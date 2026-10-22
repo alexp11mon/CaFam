@@ -162,6 +162,7 @@ Supabase ── profiles.accent (check en 6 valores, por defecto 'red'; RLS "sol
 - D16: **Guardia de diseño como test unitario** que recorre `src/`. Descartado añadir un plugin de ESLint (P6). Cubre: RF-1, P9.
 - D17: **Breakpoint de 1024 px = `lg` de Tailwind**, sin breakpoints propios. Cubre: RF-16–RF-19.
 - D18: **`CACHE_NAME` a `calenderfam-v2`**: el `activate` existente borra las cachés con otro nombre. Descartado un mecanismo de versión nuevo. Cubre: RF-54.
+- D19 (cambio del 2026-10-22): **quitar el azul antiguo con una migración nueva `remove_old_blue`** que cambia el valor por defecto de `calendars.color` a `#A0C4FF`, redefine `merge_calendars` e `import_calendar` con ese mismo respaldo (mismo cuerpo, solo cambia el color) y actualiza los calendarios y eventos con `#2563EB` (comparando sin mayúsculas). En el código: `DEFAULT_CALENDAR_COLOR = "#A0C4FF"`, fuera "Azul marca" de la paleta y el acento Azul pasa a `fill #1D4ED8` / `ink #1E40AF` (6,7:1 con blanco encima y 6,9:1 como texto sobre piedra). La guardia de diseño prohíbe `#2563EB` en `src/`. Descartados un `check` en SQL que prohíba el color (la paleta ya se impone con `zod`, plan 002 D13) y dejar los datos como estaban (decisión del usuario). Cubre: RF-55, RF-56, RF-57, RF-58.
 
 ## Trazabilidad RF -> módulo
 
@@ -221,6 +222,10 @@ Supabase ── profiles.accent (check en 6 valores, por defecto 'red'; RLS "sol
 | RF-52 | brand, pwa |
 | RF-53 | pwa (`theme_color`, `viewport`) |
 | RF-54 | pwa (`CACHE_NAME`) |
+| RF-55 | palette, design-guard (D19) |
+| RF-56 | migración `remove_old_blue`, palette (D19) |
+| RF-57 | migración `remove_old_blue` (D19) |
+| RF-58 | accents, tokens (D19) |
 
 ## Riesgos y mitigaciones
 

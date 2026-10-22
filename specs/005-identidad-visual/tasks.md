@@ -178,6 +178,18 @@
   - Capturas a 390, 768 y 1440 px de cada pantalla con el acento rojo y el amarillo, revisadas contra la sección de la constitución.
   Hecho cuando: `npm test` completo en verde, incluido `design-tokens`. Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RF-11 | Módulo: restyle, design-guard, tokens
 
+- [ ] T13 Quitar el azul antiguo `#2563EB` de todas partes (cambio aprobado el 2026-10-22)
+  Pasos:
+  - Tests primero:
+    - `palette.test.ts`: el color por defecto es `#A0C4FF` y `#2563EB` no está en la paleta.
+    - `accents.test.ts`: ningún acento usa `#2563EB`, y el Azul es `#1D4ED8` / `#1E40AF`.
+    - `design-tokens.test.ts`: ningún archivo de `src/` contiene `#2563EB`.
+    - `tests/integration/remove-old-blue.test.ts`: un usuario nuevo tiene "Mi calendario" en `#A0C4FF`; `import_calendar` y `merge_calendars` sin color dan `#A0C4FF`; no queda ningún calendario ni evento con `#2563EB`.
+  - Migración `supabase/migrations/<timestamp>_remove_old_blue.sql` (plan D19); `npm run db:push` en `dev` y `npm run db:types`.
+  - Cambiar `palette.ts`, `accents.ts` y `globals.css`, y los tests de las specs 002 a 004 que usaban el azul antiguo como color de ejemplo (citando RF-55).
+  - Capturas de la agenda, Mis calendarios y Ajustes con el acento Azul.
+  Hecho cuando: `npm test` y `npm run test:db -- remove-old-blue import-calendar merge-calendars schema` en verde. Cubre: RF-55, RF-56, RF-57, RF-58 | Módulo: palette, accents, tokens, migración (D19), design-guard
+
 - [ ] T12 Validar la spec RF por RF, en producción, y cerrar la documentación
   Pasos:
   - Añadir a `tasks.md` la tabla "Trazabilidad RF → tarea → test" y la comprobación de "Fuera de alcance": sin tema oscuro, sin notificaciones, sin fotos y sin recordar la última vista.
@@ -246,6 +258,10 @@
 | RF-52 | T10 |
 | RF-53 | T10 |
 | RF-54 | T10 |
+| RF-55 | T13 |
+| RF-56 | T13 |
+| RF-57 | T13 |
+| RF-58 | T13 |
 
 Todos los módulos del plan tienen tarea:
 
