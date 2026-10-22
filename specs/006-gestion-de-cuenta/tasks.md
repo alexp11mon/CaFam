@@ -82,6 +82,7 @@
   - con la clave de Vault ausente, la función falla sin borrar la cola.
   Migración `supabase/migrations/<timestamp>_account_mail_jobs.sql` y `send_pending_emails` con `net.http_post` a `https://api.brevo.com/v3/smtp/email`, cabecera `api-key` leída de Vault y correo en español.
   Hecho cuando: `npm run test:db -- account-jobs` en verde y, en dev, un correo de prueba llega a la bandeja del usuario. Cubre: RF-23, RF-26, RF-29 | Módulo: account_mail_jobs
+  Estado: código, migración y tests (4) en verde. Pendiente la prueba de entrega real: necesita las claves de Brevo en Vault (las pone el usuario en T9). Hasta entonces, T8 no se marca como hecha.
 
 - [ ] T9 Configurar Auth en dev: Brevo como SMTP, plantillas de recuperación y cambio de email, y notificación de cambio
   Pasos (los hace el usuario en el panel de dev, con las instrucciones entregadas en la conversación): SMTP propio con Brevo, plantillas con `token_hash` apuntando a `/auth/confirm`, Site URL, límite de correos ajustado, notificación de cambio de email activa. Después, se pide un enlace de recuperación de prueba y se confirma que llega.

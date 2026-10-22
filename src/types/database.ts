@@ -345,6 +345,7 @@ export type Database = {
           body: string
           created_at: string
           id: number
+          request_id: number | null
           sent_at: string | null
           subject: string
           to_email: string
@@ -354,6 +355,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: never
+          request_id?: number | null
           sent_at?: string | null
           subject: string
           to_email: string
@@ -363,6 +365,7 @@ export type Database = {
           body?: string
           created_at?: string
           id?: never
+          request_id?: number | null
           sent_at?: string | null
           subject?: string
           to_email?: string
@@ -572,6 +575,13 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { p_token: string }; Returns: string }
+      account_scheduled_jobs: {
+        Args: never
+        Returns: {
+          jobname: string
+          schedule: string
+        }[]
+      }
       apply_orphan_decisions: { Args: never; Returns: undefined }
       calendar_members_with_names: {
         Args: { p_calendar_ids: string[] }
@@ -641,6 +651,10 @@ export type Database = {
       }
       request_recovery: { Args: { p_email: string }; Returns: boolean }
       revoke_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      send_pending_emails: {
+        Args: { p_dry_run?: boolean; p_limit?: number }
+        Returns: number[]
+      }
       set_access_code: {
         Args: {
           p_calendar_id: string
