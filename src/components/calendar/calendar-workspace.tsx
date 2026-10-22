@@ -6,9 +6,12 @@ import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import type { GroupableCalendar, PersonGroup } from "@/lib/calendar/grouping";
 import type { CalendarView } from "@/lib/calendar/ranges";
 import { AgendaView, type AgendaEvent } from "./agenda-view";
+import type { MonthMarks } from "@/lib/calendar/month-marks";
 import { CalendarFilters, type FilterCategory } from "./calendar-filters";
 import { DayView } from "./day-view";
+import { MiniMonth } from "./mini-month";
 import { MonthView } from "./month-view";
+import { NextEventCard, type NextEventItem } from "./next-event-card";
 import { WeekView } from "./week-view";
 
 export interface PanelCalendar extends GroupableCalendar {
@@ -62,6 +65,10 @@ export function CalendarWorkspace({
   setCalendarVisibility,
   setPersonVisibility,
   saveOrder,
+  nextEvents,
+  loadedAt,
+  monthMarks,
+  loadMonthMarks,
 }: {
   view: CalendarView;
   date: string;
@@ -76,6 +83,14 @@ export function CalendarWorkspace({
   setCalendarVisibility: (id: string, visible: boolean) => Promise<Result>;
   setPersonVisibility: (id: string, visible: boolean) => Promise<Result>;
   saveOrder: (order: SavedOrder) => Promise<Result>;
+  /** Timed events of the next 48 h and when they were read (spec 005 RF-45, plan D12). */
+  nextEvents?: NextEventItem[];
+  loadedAt?: number;
+  /** Dots of the month of `date` and how to read another month (spec 005 RF-24, RF-26). */
+  monthMarks?: MonthMarks;
+  loadMonthMarks?: (
+    month: string,
+  ) => Promise<{ marks: MonthMarks } | { error: string }>;
 }) {
   const [groups, setGroups] = useState(initialGroups);
   const [hiddenCategories, setHiddenCategories] = useState<ReadonlySet<string>>(
@@ -197,24 +212,49 @@ export function CalendarWorkspace({
       !(event.categoryId && hiddenCategories.has(event.categoryId)),
   );
 
+  const colors = Object.fromEntries(
+    groups.flatMap((group) => group.calendars.map((c) => [c.id, c.color])),
+  );
+
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-      <div className="flex flex-col gap-2 lg:w-72 lg:shrink-0">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
+      <div className="flex flex-col gap-3 lg:w-84 lg:shrink-0">
+        {nextEvents && loadedAt !== undefined ? (
+          <NextEventCard
+            events={nextEvents}
+            visibleCalendarIds={visibleCalendars}
+            timeZone={timeZone}
+            loadedAt={loadedAt}
+          />
+        ) : null}
         <button
           type="button"
           aria-expanded={panelOpen}
           aria-controls={panelId}
           onClick={() => setPanelOpen((open) => !open)}
-          className="inline-flex min-h-11 items-center justify-center rounded-lg border-2 border-brand px-4 text-base font-semibold text-brand hover:bg-brand-soft/30 lg:hidden"
+          className="inline-flex min-h-11 items-center justify-center rounded-full border border-control bg-paper px-4 text-base font-semibold text-ink transition-colors hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink lg:hidden"
         >
           Calendarios y filtros
         </button>
         <div
           id={panelId}
           ref={panel}
-          className={`${panelOpen ? "flex" : "hidden"} flex-col gap-2 lg:flex`}
+          className={`${panelOpen ? "flex" : "hidden"} flex-col gap-3 lg:flex`}
         >
           <FormAlert message={error} />
+          {monthMarks && loadMonthMarks ? (
+            <MiniMonth
+              // A new month in the main view starts the mini month there again.
+              key={date.slice(0, 7)}
+              month={date.slice(0, 7)}
+              today={today}
+              view={view}
+              initialMarks={monthMarks}
+              colors={colors}
+              visibleCalendarIds={visibleCalendars}
+              loadMonthMarks={loadMonthMarks}
+            />
+          ) : null}
           <CalendarFilters
             groups={groups}
             categories={categories}

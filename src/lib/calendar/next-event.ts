@@ -42,3 +42,19 @@ export function formatCountdown(ms: number): string {
   const rest = minutes % 60;
   return rest === 0 ? `en ${hours} h` : `en ${hours} h ${rest} min`;
 }
+
+// The server sends 48 h so the block stays right while the page is open (plan D12).
+const LOAD_WINDOW_MS = 2 * NEXT_EVENT_WINDOW_MS;
+
+/** Instants the server reads for the next event block, and when it read them. */
+export function nextEventsWindow(now: number = Date.now()): {
+  from: Date;
+  to: Date;
+  loadedAt: number;
+} {
+  return {
+    from: new Date(now),
+    to: new Date(now + LOAD_WINDOW_MS),
+    loadedAt: now,
+  };
+}

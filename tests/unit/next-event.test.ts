@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { formatCountdown, pickNextEvent } from "@/lib/calendar/next-event";
+import {
+  formatCountdown,
+  nextEventsWindow,
+  pickNextEvent,
+} from "@/lib/calendar/next-event";
 
 // Spec 005, T4: which event the "Próximo evento" block shows and how much is
 // left (RF-45, RF-46, RF-48, RF-49; plan D12).
@@ -93,5 +97,17 @@ describe("formatCountdown (RF-46)", () => {
     [24 * 60 * MINUTE, "en 24 h"],
   ])("%i ms → %s", (ms, text) => {
     expect(formatCountdown(ms)).toBe(text);
+  });
+});
+
+describe("nextEventsWindow (plan D12)", () => {
+  it("reads 48 hours from now and remembers when", () => {
+    const now = Date.parse("2026-11-02T10:00:00Z");
+
+    expect(nextEventsWindow(now)).toEqual({
+      from: new Date("2026-11-02T10:00:00Z"),
+      to: new Date("2026-11-04T10:00:00Z"),
+      loadedAt: now,
+    });
   });
 });

@@ -133,7 +133,7 @@
     - `range-performance.test.ts` ampliado con la agenda.
   Hecho cuando: `npm test -- agenda-view view-toolbar` en verde. Cubre: RF-4, RF-5, RF-30, RF-32, RF-35, RF-37, RF-38, RF-41, RF-42 | Módulo: agenda-view, calendar-page, queries
 
-- [ ] T9 Montar el panel con el mini calendario, el próximo evento y los filtros con avatares
+- [x] T9 Montar el panel con el mini calendario, el próximo evento y los filtros con avatares
   Pasos:
   - Tests primero en `tests/unit/mini-month.test.tsx`:
     - semanas que empiezan en lunes, hoy con relleno de acento y negrita;

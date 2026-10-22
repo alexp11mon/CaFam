@@ -1,8 +1,10 @@
 "use client";
 
 import { useId } from "react";
+import { Avatar } from "@/components/people/avatar";
 import { Button } from "@/components/ui/button";
 import type { PersonGroup } from "@/lib/calendar/grouping";
+import { assignTints } from "@/lib/people/avatar";
 import type { PanelCalendar } from "./calendar-workspace";
 
 export interface FilterCategory {
@@ -60,10 +62,12 @@ function MoveButtons({
 
 function PersonCheckbox({
   name,
+  tint,
   calendars,
   onChange,
 }: {
   name: string;
+  tint: string;
   calendars: { visible: boolean }[];
   onChange: (visible: boolean) => void;
 }) {
@@ -81,8 +85,9 @@ function PersonCheckbox({
           if (input) input.indeterminate = some;
         }}
         onChange={() => onChange(!all)}
-        className="size-5 shrink-0 accent-brand"
+        className="size-5 shrink-0 accent-ink"
       />
+      <Avatar name={name} tint={tint} />
       <span className="min-w-0 break-words">{name}</span>
     </label>
   );
@@ -118,11 +123,13 @@ export function CalendarFilters({
   const headingId = useId();
   // With nobody else sharing, the person level would only repeat my own name.
   const showPeople = groups.length > 1;
+  // Same tint for a person everywhere, whatever the saved order (spec 005 RF-28).
+  const tints = assignTints(groups.map((group) => group.person.id));
 
   return (
     <section
       aria-labelledby={headingId}
-      className="flex flex-col gap-3 rounded-lg border border-ink/15 bg-white p-3"
+      className="flex flex-col gap-3 rounded-3xl bg-paper p-3"
     >
       <h2 id={headingId} className="text-base font-semibold text-ink">
         Calendarios
@@ -134,6 +141,7 @@ export function CalendarFilters({
               <div className="flex items-center justify-between gap-2">
                 <PersonCheckbox
                   name={group.person.displayName}
+                  tint={tints.get(group.person.id)!}
                   calendars={group.calendars}
                   onChange={(visible) =>
                     onTogglePerson(group.person.id, visible)
@@ -149,9 +157,7 @@ export function CalendarFilters({
                 />
               </div>
             ) : null}
-            <ul
-              className={showPeople ? "ml-3 border-l border-ink/15 pl-3" : ""}
-            >
+            <ul className={showPeople ? "ml-3 border-l border-line pl-3" : ""}>
               {group.calendars.map((calendar, calendarIndex) => {
                 const calendarCategories = categories.filter(
                   (category) => category.calendarId === calendar.id,
@@ -166,11 +172,11 @@ export function CalendarFilters({
                           onChange={() =>
                             onToggleCalendar(calendar.id, !calendar.visible)
                           }
-                          className="size-5 shrink-0 accent-brand"
+                          className="size-5 shrink-0 accent-ink"
                         />
                         <span
                           aria-hidden="true"
-                          className="size-3 shrink-0 rounded-full border border-ink/20"
+                          className="size-3 shrink-0 rounded-full ring-1 ring-ink/20"
                           style={{ backgroundColor: calendar.color }}
                         />
                         <span className="min-w-0 break-words">
@@ -200,7 +206,7 @@ export function CalendarFilters({
                                     event.target.checked,
                                   )
                                 }
-                                className="size-5 shrink-0 accent-brand"
+                                className="size-5 shrink-0 accent-ink"
                               />
                               <span className="min-w-0 break-words">
                                 {category.name}

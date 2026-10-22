@@ -36,3 +36,10 @@ export function visibleMarks(
   }
   return result;
 }
+
+const MONTH_KEY = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+/** "2026-11": the month the mini month shows. */
+export function isMonthKey(value: unknown): value is string {
+  return typeof value === "string" && MONTH_KEY.test(value);
+}

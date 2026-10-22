@@ -6,6 +6,8 @@ import { ViewToolbar } from "@/components/calendar/view-toolbar";
 import { LinkButton } from "@/components/ui/link-button";
 import { todayKey } from "@/lib/calendar/format";
 import { groupByPerson } from "@/lib/calendar/grouping";
+import { monthMarks } from "@/lib/calendar/month-marks";
+import { nextEventsWindow } from "@/lib/calendar/next-event";
 import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
 import {
   getCategoriesForCalendars,
@@ -17,6 +19,7 @@ import {
   requireUser,
 } from "@/lib/calendar/queries";
 import { getVisibleRange, parseViewParams } from "@/lib/calendar/ranges";
+import { loadMonthMarks } from "./mini-month-actions";
 import {
   saveOrder,
   setCalendarVisibility,
@@ -39,13 +42,21 @@ async function CalendarContent({
   const today = todayKey(timeZone);
   const { view, date } = parseViewParams(query, today);
   const range = getVisibleRange(view, date, timeZone);
+  // The mini month shows the weeks of the month of `date` (spec 005 RF-23).
+  const monthRange = getVisibleRange("month", date, timeZone);
+  const upcomingWindow = nextEventsWindow();
 
-  const [calendars, records, people, preferences] = await Promise.all([
-    getMyCalendars(supabase, userId),
-    getEventsInRange(supabase, range.from, range.to),
-    getPeople(supabase),
-    getPreferences(supabase, userId),
-  ]);
+  const [calendars, records, monthRecords, upcoming, people, preferences] =
+    await Promise.all([
+      getMyCalendars(supabase, userId),
+      getEventsInRange(supabase, range.from, range.to),
+      view === "month"
+        ? null
+        : getEventsInRange(supabase, monthRange.from, monthRange.to),
+      getEventsInRange(supabase, upcomingWindow.from, upcomingWindow.to),
+      getPeople(supabase),
+      getPreferences(supabase, userId),
+    ]);
 
   if (calendars.length === 0) {
     return (
@@ -75,6 +86,17 @@ async function CalendarContent({
     calendarName: names.get(record.calendarId) ?? "",
   }));
   const canCreate = calendars.some((calendar) => calendar.role !== "viewer");
+  const nextEvents = upcoming
+    .filter((record) => !record.allDay)
+    .map((record) => ({
+      id: record.id,
+      title: record.title,
+      startsAt: record.startsAt,
+      endsAt: record.endsAt,
+      allDay: record.allDay,
+      calendarId: record.calendarId,
+      calendarName: names.get(record.calendarId) ?? "",
+    }));
 
   const categories = await getCategoriesForCalendars(
     supabase,
@@ -120,6 +142,14 @@ async function CalendarContent({
         setCalendarVisibility={setCalendarVisibility}
         setPersonVisibility={setPersonVisibility}
         saveOrder={saveOrder}
+        nextEvents={nextEvents}
+        loadedAt={upcomingWindow.loadedAt}
+        monthMarks={monthMarks(
+          monthRecords ?? records,
+          monthRange.days,
+          timeZone,
+        )}
+        loadMonthMarks={loadMonthMarks}
       />
     </>
   );

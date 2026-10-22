@@ -131,6 +131,31 @@ describe("CalendarWorkspace filter tree (RF-42)", () => {
     }
   });
 
+  it("draws each person as an avatar with initials and a tint of their own (spec 005 RF-27, RF-28)", () => {
+    setup({
+      groups: [
+        groups()[0]!,
+        {
+          person: { id: "ana", displayName: "Ana López", isMe: false },
+          calendars: [calendar("c3", "Familia de Ana", "ana", "#FFADAD")],
+        },
+      ],
+    });
+
+    const ana = screen
+      .getByRole("checkbox", { name: "Ana López" })
+      .closest("label")!;
+    const me = screen.getByRole("checkbox", { name: "Yo" }).closest("label")!;
+    const anaAvatar = ana.querySelector<HTMLElement>("[data-avatar]")!;
+    const myAvatar = me.querySelector<HTMLElement>("[data-avatar]")!;
+    expect(anaAvatar).toHaveTextContent("AL");
+    expect(anaAvatar).toHaveAttribute("aria-hidden", "true");
+    expect(myAvatar).toHaveTextContent("Y");
+    expect(anaAvatar.style.backgroundColor).not.toBe(
+      myAvatar.style.backgroundColor,
+    );
+  });
+
   it("shows only my own calendars when nobody shares with me", () => {
     setup({ groups: [groups()[0]!] });
 
@@ -244,8 +269,14 @@ describe("failed saves", () => {
 
 describe("order (RF-45)", () => {
   function labels() {
+    // The avatar initials are decorative (spec 005 RF-27): read the name only.
     return (screen.getAllByRole("checkbox") as HTMLInputElement[]).map(
-      (box) => box.labels?.[0]?.textContent?.trim() ?? "",
+      (box) => {
+        const label = box.labels?.[0]?.cloneNode(true) as
+          HTMLElement | undefined;
+        label?.querySelector("[data-avatar]")?.remove();
+        return label?.textContent?.trim() ?? "";
+      },
     );
   }
 
