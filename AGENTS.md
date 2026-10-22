@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-22, al cerrar la spec 004.
+> Última actualización: 2026-10-22, al cerrar la spec 004 y definir la identidad visual (constitución, P9).
 
 ## 1. Qué es
 
@@ -31,8 +31,11 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
-| 005-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
-| 006-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
+| 005-identidad-visual | Rediseño de todas las pantallas con la identidad visual propia y acento elegido por el usuario (6 colores) | **En curso**: spec aprobada (2026-10-22), falta el plan |
+| 006-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
+| 007-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
+
+Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
 Lo que hay hoy: registro, login, logout, protección de rutas, portada, pantalla offline, PWA instalable y cron de keep-alive (spec 001), y además (spec 002):
 
@@ -55,7 +58,7 @@ Añadido por la spec 004 (`/dashboard/import`):
 - Cada repetición de un evento repetido se crea como evento suelto (la app no tiene recurrentes propios): las series sin fin llegan hasta 1 año desde el día de la importación, y se respetan `EXDATE` y las repeticiones modificadas (`RECURRENCE-ID`). Los eventos cancelados no se importan.
 - Límite de **2 MB y 2.000 eventos**. Los eventos con zona horaria no reconocida (típicamente los nombres de Windows de Outlook) o con fin anterior al inicio se omiten y se cuentan en el resumen.
 
-**No hay** gestión de cuenta (005), eventos recurrentes propios (spec futura sin número), sincronización ni actualización de lo importado.
+**No hay** identidad visual propia todavía (005: la interfaz actual es azul sobre blanco), gestión de cuenta (006), eventos recurrentes propios (spec futura sin número), sincronización ni actualización de lo importado.
 
 ## 3. Reglas de trabajo (obligatorias)
 
@@ -74,6 +77,7 @@ La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen d
 - **Stack cerrado (P6):** solo las dependencias de la sección 4. Cualquier otra exige aprobación del usuario registrada en la spec que la introduce (incluidas la librería de vistas de calendario de la 002 y la de parseo `.ics` de la 004).
 - **Prohibido:** servicios de pago, SDK de analítica/tracking/telemetría (GA, Sentry…), librerías PWA (`next-pwa`, Serwist, Workbox), ORMs (Prisma, Drizzle), backends paralelos, y otro gestor de paquetes que no sea npm.
 - **Aprobaciones del usuario:** pasar de fase (spec → plan → tareas → implementación) y cerrar una spec exigen su aprobación explícita. No la des por supuesta.
+- **Identidad visual (P9):** toda pantalla nueva o rediseñada sigue la sección "Identidad visual y diseño de interfaz" de la constitución (estilo de `docs/referencia.jpg`, solo local) y se revisa con capturas a 390, 768 y 1440 px. Para diseñar usa las skills `design-taste-frontend` (pantallas de aplicación), `frontend-design` y `web-design-guidelines`. Ver §6 "Identidad visual".
 - **Acciones externas:** el usuario ejecuta él mismo (con `!` en Claude Code) las acciones sobre producción: `supabase db push` a prod, `git push` y merges a `main`. Prepárale los comandos exactos.
 
 ## 4. Stack
@@ -196,7 +200,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 ### Autenticación
 
 - `signUp` valida con `signUpSchema` (email normalizado a minúsculas sin espacios; contraseña de 8 a 72 caracteres; nombre de 1 a 50) y llama a `supabase.auth.signUp` con los metadatos `display_name` y `time_zone`. La zona horaria la detecta el navegador (`Intl`) en un campo oculto; si no es válida se descarta y Postgres aplica `Europe/Madrid`.
-- **"Confirm email" está desactivado** en Supabase (no hay SMTP hasta la spec 005), así que el registro devuelve sesión y redirige a `/dashboard`. El registro es abierto (cualquiera con la URL).
+- **"Confirm email" está desactivado** en Supabase (no hay SMTP hasta la spec 006), así que el registro devuelve sesión y redirige a `/dashboard`. El registro es abierto (cualquiera con la URL).
 - Los errores de Supabase se traducen en `src/lib/auth/error-messages.ts`; un código desconocido o un error de red se convierte en "No se ha podido conectar…".
 - Los formularios usan `useActionState`, `noValidate` (los errores vienen del servidor en español) y desactivan el botón mientras la acción está pendiente.
 - `signOut` usa `scope: "local"` y redirige a `/login`.
@@ -252,7 +256,19 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 
 ### Identidad visual
 
-Tokens en `src/app/globals.css` (`@theme`): `brand` `#2563EB` (botones y enlaces, texto blanco 5,2:1), `brand-soft` `#A6E1FA` (**solo fondo**, nunca texto sobre blanco) e `ink` `#0D160B` (texto). Usa `bg-brand`, `text-ink`… y no valores arbitrarios como `bg-[#2563EB]`. Contraste mínimo 4,5:1 (WCAG AA). Fondo blanco, sin tema oscuro (fuera de alcance).
+**Hoy (hasta que se implemente la spec 005):** tokens en `src/app/globals.css` (`@theme`): `brand` `#2563EB` (botones y enlaces, texto blanco 5,2:1), `brand-soft` `#A6E1FA` (**solo fondo**, nunca texto sobre blanco) e `ink` `#0D160B` (texto), con Geist y Geist Mono. Usa `bg-brand`, `text-ink`… y no valores arbitrarios como `bg-[#2563EB]`. Contraste mínimo 4,5:1 (WCAG AA). Fondo blanco, sin tema oscuro (fuera de alcance).
+
+**Objetivo (spec 005, reglas completas en la constitución):** estilo propio sobrio y editorial inspirado en `docs/referencia.jpg`. Esa imagen está en `.gitignore` (no se sube a GitHub): si no la tienes, la constitución basta. En resumen:
+
+- Fondo piedra cálido (≈ `#E8E5DD`), paneles un tono más claros (≈ `#F2F0EA`), tinta casi negra y gris cálido para lo secundario; superficies separadas por tono, no por sombras.
+- En la agenda/día, el **número del día enorme y muy grueso** con el día de la semana pequeño en el acento: es el gesto distintivo.
+- Eventos como filas de texto: hora en negrita y fin en gris, barra vertical fina con el color del calendario o categoría, título en negrita, lugar en gris.
+- **Acento elegido por el usuario** entre rojo (por defecto), azul, verde, amarillo, morado y gris, solo para "hoy", la línea de la hora actual, los días de la semana y la selección. Cada acento trae su color de texto encima y su variante legible sobre el fondo. No se mezcla con los colores pastel de los calendarios, que colorean datos.
+- Botones de acción negros y totalmente redondos; "+" como círculo negro; mini calendario con puntos de color; personas como avatares circulares de iniciales.
+- Escritorio en columnas (navegación estrecha, panel con mini calendario, agenda); móvil con barra inferior de botones circulares y la acción principal como píldora negra.
+- Una sola neo-grotesca con `next/font` y cifras tabulares, sin monoespaciada.
+- Se ignoran el asistente de IA, tareas, voz, documentos, integraciones y emojis de la referencia.
+- Prohibido: degradados, sombras en reposo, cristal/desenfoque, emojis, iconos en cuadrados de color, tarjetas idénticas con icono, etiquetas en mayúsculas espaciadas y el acento en todos los botones. Iconos como SVG propios en línea (ninguna librería sin aprobación).
 
 ## 7. Entornos, despliegue y variables
 
@@ -350,14 +366,14 @@ npm run db:types       # regenera src/types/database.ts
 
 ## 11. Fuera de alcance hasta su spec
 
-Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), arrastrar y soltar eventos, búsqueda y vista de agenda, papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, recuperación de contraseña, verificación y cambio de email, borrado de cuenta y edición de perfil (005), login social y OAuth (006), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
+Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), arrastrar y soltar eventos, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, recuperación de contraseña, verificación y cambio de email, borrado de cuenta y edición de perfil (006), login social y OAuth (007), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
 
 ## 12. Cómo continuar
 
-La 004 está cerrada y desplegada en producción (migración aplicada y demo validada con `.ics` reales). La siguiente spec es la 005 (gestión de cuenta, requiere SMTP gratuito):
+La 004 está cerrada y desplegada en producción (migración aplicada y demo validada con `.ics` reales). La siguiente spec es la **005 (identidad visual)**: rediseñar todas las pantallas existentes según la constitución y permitir elegir el color de acento. Va antes de la gestión de cuenta para que las pantallas de la 006 nazcan ya con el estilo nuevo y no haya que rehacerlas. Después vendrá la 006 (gestión de cuenta, requiere SMTP gratuito).
 
-1. Crea la rama `005-gestion-de-cuenta` desde `main` (con la 004 ya integrada).
-2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación.
+1. Crea la rama `005-identidad-visual` desde `main` (con la 004 ya integrada).
+2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. Decisiones abiertas para la 005 (ver "Dudas abiertas" de la constitución): tipografía, valores exactos de los seis acentos y si el acento se guarda por usuario en la base de datos o por dispositivo.
 3. Haz lo mismo con `plan.md` (`plan-generator`) y `tasks.md` (`tasks-generator`).
 4. Implementa tarea a tarea con el test primero, el checklist de verificación y un commit por tarea.
 5. Valida en producción y pide al usuario la aprobación para cerrar.
