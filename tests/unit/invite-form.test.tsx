@@ -48,7 +48,9 @@ describe("InviteForm (RF-1..RF-3)", () => {
 
     await user.click(screen.getByRole("button", { name: "Crear invitación" }));
 
-    const field = await screen.findByLabelText("Usos máximos");
+    // The field exists before the action answers: wait for the error itself.
+    await screen.findByText("Elige entre 1 y 20 usos.");
+    const field = screen.getByLabelText("Usos máximos");
     expect(field).toHaveAccessibleDescription("Elige entre 1 y 20 usos.");
     expect(field).toHaveAttribute("aria-invalid", "true");
     expect(field).toHaveValue("21");

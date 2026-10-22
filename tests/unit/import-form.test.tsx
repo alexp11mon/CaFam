@@ -85,7 +85,9 @@ describe("ImportForm errors", () => {
 
     await userEvent.setup().click(submit());
 
-    const field = await screen.findByLabelText("Enlace .ics");
+    // The field exists before the action answers: wait for the error itself.
+    await screen.findByText("Indica un enlace o sube un archivo, no los dos.");
+    const field = screen.getByLabelText("Enlace .ics");
     expect(field).toHaveAccessibleDescription(
       "Indica un enlace o sube un archivo, no los dos.",
     );

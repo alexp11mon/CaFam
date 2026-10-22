@@ -99,7 +99,7 @@
   - Módulos: `src/components/shell/side-rail.tsx`, `bottom-bar.tsx`, `more-sheet.tsx` e `icons.tsx`, montados en `AppFrame`. La barra lateral solo desde `lg` y la inferior por debajo. Objetivos de 44 px y tooltips visibles al enfocar.
   Hecho cuando: `npm test -- side-rail bottom-bar` en verde. Cubre: RF-16, RF-18, RF-20, RF-22 | Módulo: side-rail, bottom-bar, icons, nav
 
-- [ ] T7 Implementar Ajustes con la elección del acento
+- [x] T7 Implementar Ajustes con la elección del acento
   Pasos:
   - Tests primero en `tests/unit/settings-actions.test.ts` (`setAccent`):
     - valida con `accentSchema` y da "Elige uno de los colores disponibles." con un valor no válido;

@@ -18,7 +18,11 @@ export function AppFrame({
   children: ReactNode;
 }) {
   return (
-    <div data-accent={accent} className="flex min-h-full flex-1 flex-col">
+    <div
+      data-app-frame=""
+      data-accent={accent}
+      className="flex min-h-full flex-1 flex-col"
+    >
       <SideRail signOutAction={signOutAction} />
       <div className="flex flex-1 flex-col pb-24 lg:pb-0 lg:pl-20">
         {children}
