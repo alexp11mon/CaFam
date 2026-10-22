@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
+import type { AgendaEvent } from "@/components/calendar/agenda-view";
 import { CalendarWorkspace } from "@/components/calendar/calendar-workspace";
 import { ViewToolbar } from "@/components/calendar/view-toolbar";
 import { LinkButton } from "@/components/ui/link-button";
 import { todayKey } from "@/lib/calendar/format";
-import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { groupByPerson } from "@/lib/calendar/grouping";
 import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
 import {
@@ -50,7 +49,7 @@ async function CalendarContent({
 
   if (calendars.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-lg bg-brand-soft/40 px-4 py-6 text-center text-ink">
+      <div className="flex flex-col items-center gap-4 rounded-3xl bg-paper px-4 py-6 text-center text-ink">
         <p>Todavía no tienes calendarios.</p>
         <LinkButton href="/dashboard/calendars/new">
           Crear calendario
@@ -61,7 +60,8 @@ async function CalendarContent({
 
   // An event without its own color takes its calendar's (RF-17).
   const colors = new Map(calendars.map((c) => [c.id, c.color]));
-  const events: CalendarEventItem[] = records.map((record) => ({
+  const names = new Map(calendars.map((c) => [c.id, c.name]));
+  const events: AgendaEvent[] = records.map((record) => ({
     id: record.id,
     title: record.title,
     startsAt: record.startsAt,
@@ -71,7 +71,10 @@ async function CalendarContent({
     categoryId: record.categoryId,
     color:
       record.color ?? colors.get(record.calendarId) ?? DEFAULT_CALENDAR_COLOR,
+    location: record.location,
+    calendarName: names.get(record.calendarId) ?? "",
   }));
+  const canCreate = calendars.some((calendar) => calendar.role !== "viewer");
 
   const categories = await getCategoriesForCalendars(
     supabase,
@@ -95,9 +98,14 @@ async function CalendarContent({
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ViewToolbar view={view} date={date} today={today} />
-        <LinkButton href={`/dashboard/events/new?date=${date}`}>
-          Nuevo evento
-        </LinkButton>
+        {/* On a phone "+ Evento" lives in the bottom bar (spec 005 RF-22). */}
+        {canCreate ? (
+          <div className="hidden lg:block">
+            <LinkButton href={`/dashboard/events/new?date=${date}`}>
+              Nuevo evento
+            </LinkButton>
+          </div>
+        ) : null}
       </div>
       <CalendarWorkspace
         view={view}
@@ -106,6 +114,7 @@ async function CalendarContent({
         today={today}
         timeZone={timeZone}
         events={events}
+        canCreate={canCreate}
         groups={groups}
         categories={categories}
         setCalendarVisibility={setCalendarVisibility}
@@ -122,17 +131,9 @@ export default function CalendarPage({
   searchParams: SearchParams;
 }) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
-      <header className="flex flex-col gap-1 border-b border-ink/10 pb-4">
-        <Link
-          href="/dashboard/calendars"
-          className="inline-flex min-h-11 items-center text-sm font-semibold text-brand underline"
-        >
-          ← Mis calendarios
-        </Link>
-        <h1 className="text-xl font-bold text-ink sm:text-2xl">Calendario</h1>
-      </header>
-      <Suspense fallback={<p className="text-ink/70">Cargando calendario…</p>}>
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
+      <h1 className="text-2xl font-bold text-ink">Calendario</h1>
+      <Suspense fallback={<p className="text-muted">Cargando calendario…</p>}>
         <CalendarContent searchParams={searchParams} />
       </Suspense>
     </main>

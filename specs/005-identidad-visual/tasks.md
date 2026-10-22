@@ -115,7 +115,7 @@
   - Módulos: `src/app/dashboard/settings/page.tsx` y `actions.ts`, y `src/components/settings/accent-picker.tsx`.
   Hecho cuando: `npm test -- settings-actions accent-picker` en verde. Cubre: RF-6, RF-7, RF-8, RF-12 | Módulo: settings, accent-picker
 
-- [ ] T8 Pintar la vista agenda y conectarla a la pantalla de calendario
+- [x] T8 Pintar la vista agenda y conectarla a la pantalla de calendario
   Pasos:
   - Tests primero en `tests/unit/agenda-view.test.tsx`:
     - 14 días con el número del día y la abreviatura, y el nombre accesible con la fecha completa;

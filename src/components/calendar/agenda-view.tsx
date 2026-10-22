@@ -1,0 +1,144 @@
+"use client";
+
+import Link from "next/link";
+import { buildAgenda, type AgendaDay } from "@/lib/calendar/agenda";
+import type { CalendarEventItem } from "@/lib/calendar/layout";
+import { formatTime } from "@/lib/calendar/time-zone";
+import { useNow } from "@/lib/hooks/use-now";
+import { PlusIcon } from "@/components/shell/icons";
+import { EventRow } from "./event-row";
+
+/** Optional extras only the agenda rows show (spec 005 RF-35). */
+export interface AgendaEvent extends CalendarEventItem {
+  location?: string | null;
+  calendarName?: string;
+}
+
+function NowLine({ now, timeZone }: { now: number; timeZone: string }) {
+  return (
+    <li className="flex items-center gap-2 py-1 text-sm font-semibold text-accent-ink tabular-nums">
+      <span className="sr-only">Hora actual</span>
+      <span aria-hidden="true" className="size-2 rounded-full bg-accent-ink" />
+      {formatTime(now, timeZone)}
+      <span
+        aria-hidden="true"
+        className="h-0.5 flex-1 rounded-full bg-accent-ink"
+      />
+    </li>
+  );
+}
+
+function AgendaDaySection({
+  day,
+  now,
+  timeZone,
+  canCreate,
+}: {
+  day: AgendaDay<AgendaEvent>;
+  now: number | null;
+  timeZone: string;
+  canCreate: boolean;
+}) {
+  const headingId = `agenda-${day.key}`;
+  const rows = day.entries.map((entry) => (
+    <li key={entry.event.id}>
+      <EventRow entry={entry} />
+    </li>
+  ));
+  if (day.nowIndex !== null && now !== null) {
+    rows.splice(
+      day.nowIndex,
+      0,
+      <NowLine key="now" now={now} timeZone={timeZone} />,
+    );
+  }
+
+  return (
+    <section
+      aria-labelledby={headingId}
+      className="grid gap-3 border-t border-line pt-4 pb-8 first:border-t-2 first:border-ink sm:grid-cols-[11rem_1fr] sm:gap-6 lg:grid-cols-[13rem_1fr]"
+    >
+      <div className="flex items-start justify-between gap-3 sm:flex-col sm:justify-start">
+        <h2 id={headingId} className="flex items-start gap-2">
+          <span className="sr-only">
+            {day.isToday ? `${day.label}, hoy` : day.label}
+          </span>
+          {/* The big number is the signature of the agenda (constitution, spec 005 RF-32). */}
+          <span
+            aria-hidden="true"
+            className="text-[clamp(4rem,14vw,7rem)] leading-[0.82] font-extrabold tracking-[-0.06em] text-ink tabular-nums"
+          >
+            {day.number}
+          </span>
+          <span
+            aria-hidden="true"
+            className="flex flex-col items-start gap-1 pt-1"
+          >
+            <span className="text-lg font-bold text-accent-ink first-letter:uppercase">
+              {day.weekday}
+            </span>
+            {day.isToday ? (
+              <span className="rounded-full border border-accent-edge bg-accent px-2 py-0.5 text-xs font-bold text-on-accent">
+                Hoy
+              </span>
+            ) : null}
+          </span>
+        </h2>
+        {canCreate ? (
+          <Link
+            href={`/dashboard/events/new?date=${day.key}`}
+            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-control text-ink transition-colors hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          >
+            <PlusIcon />
+            <span className="sr-only">Crear evento el {day.label}</span>
+          </Link>
+        ) : null}
+      </div>
+      {day.entries.length > 0 ? (
+        <ul className="flex min-w-0 flex-col gap-2">{rows}</ul>
+      ) : (
+        <p className="flex min-h-16 items-center rounded-2xl border border-dashed border-control px-4 text-muted">
+          Sin eventos
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** 14 days in a row with the big day numbers of the reference (spec 005 RF-30..RF-42). */
+export function AgendaView({
+  days,
+  events,
+  timeZone,
+  today,
+  canCreate,
+}: {
+  days: string[];
+  events: AgendaEvent[];
+  timeZone: string;
+  today: string;
+  canCreate: boolean;
+}) {
+  const now = useNow();
+  const agenda = buildAgenda({
+    days,
+    events,
+    timeZone,
+    today,
+    now: now === null ? undefined : new Date(now),
+  });
+
+  return (
+    <div className="flex flex-col">
+      {agenda.map((day) => (
+        <AgendaDaySection
+          key={day.key}
+          day={day}
+          now={now}
+          timeZone={timeZone}
+          canCreate={canCreate}
+        />
+      ))}
+    </div>
+  );
+}

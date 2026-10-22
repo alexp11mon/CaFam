@@ -249,6 +249,7 @@ export interface CalendarEventRecord {
   allDay: boolean;
   color: string | null;
   categoryId: string | null;
+  location: string | null;
 }
 
 /**
@@ -263,7 +264,7 @@ export async function getEventsInRange(
   const { data, error } = await supabase
     .from("events")
     .select(
-      "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id",
+      "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location",
     )
     .lt("starts_at", to.toISOString())
     .gte("ends_at", from.toISOString())
@@ -278,6 +279,8 @@ export async function getEventsInRange(
     allDay: row.all_day,
     color: row.color,
     categoryId: row.category_id,
+    // The agenda rows show the place (spec 005 RF-35).
+    location: row.location,
   }));
 }
 

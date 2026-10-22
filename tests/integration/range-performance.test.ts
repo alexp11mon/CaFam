@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { getVisibleRange } from "@/lib/calendar/ranges";
 import {
   admin,
   createTestUser,
@@ -8,11 +9,13 @@ import {
 } from "./helpers";
 
 // Spec 002 RNF rendimiento (plan D14): the month view query with 500 events
-// answers in under 3 s, through RLS as a real user.
+// answers in under 3 s, through RLS as a real user. Spec 005 adds the same
+// threshold for the agenda: 500 events in its 14 days (RNF rendimiento).
 let user: TestUser;
 let calendarId: string;
 
 const EVENTS_IN_MONTH = 500;
+const EVENTS_IN_AGENDA = 500;
 
 beforeAll(async () => {
   user = await createTestUser({ display_name: "Rendimiento" });
@@ -31,9 +34,17 @@ beforeAll(async () => {
     starts_at: "2026-12-15T10:00:00Z",
     ends_at: "2026-12-15T11:00:00Z",
   }));
+  // 4 to 17 January 2027 in Madrid: the 14 days of the agenda below.
+  const january = Array.from({ length: EVENTS_IN_AGENDA }, (_, index) => ({
+    calendar_id: calendarId,
+    title: `Agenda ${index}`,
+    location: "Casa",
+    starts_at: `2027-01-${day((index % 14) + 4)}T${day((index % 12) + 8)}:00:00Z`,
+    ends_at: `2027-01-${day((index % 14) + 4)}T${day((index % 12) + 8)}:45:00Z`,
+  }));
   const { error } = await admin
     .from("events")
-    .insert([...november, ...december]);
+    .insert([...november, ...december, ...january]);
   if (error) throw error;
 });
 
@@ -57,6 +68,27 @@ describe("month query with 500 events", () => {
 
     expect(error).toBeNull();
     expect(data).toHaveLength(EVENTS_IN_MONTH);
+    expect(elapsed).toBeLessThan(3000);
+  });
+});
+
+describe("agenda query with 500 events (spec 005 RNF rendimiento)", () => {
+  it("returns the 14 days in under 3 seconds", async () => {
+    const range = getVisibleRange("agenda", "2027-01-04", "Europe/Madrid");
+    const started = performance.now();
+    const { data, error } = await user.client
+      .from("events")
+      .select(
+        "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location",
+      )
+      // The same filter getEventsInRange applies to the agenda range.
+      .lt("starts_at", range.to.toISOString())
+      .gte("ends_at", range.from.toISOString())
+      .order("starts_at");
+    const elapsed = performance.now() - started;
+
+    expect(error).toBeNull();
+    expect(data).toHaveLength(EVENTS_IN_AGENDA);
     expect(elapsed).toBeLessThan(3000);
   });
 });

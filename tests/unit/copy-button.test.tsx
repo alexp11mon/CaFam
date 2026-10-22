@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CopyButton } from "@/components/sharing/copy-button";
 
@@ -41,8 +41,11 @@ describe("CopyButton (RF-2, plan R6)", () => {
     const field = await screen.findByRole("textbox", { name: "Enlace" });
     expect(field).toHaveValue(LINK);
     expect(field).toHaveAttribute("readonly");
-    expect((field as HTMLInputElement).selectionStart).toBe(0);
-    expect((field as HTMLInputElement).selectionEnd).toBe(LINK.length);
+    // The selection happens in an effect right after the field appears.
+    await waitFor(() => {
+      expect((field as HTMLInputElement).selectionStart).toBe(0);
+      expect((field as HTMLInputElement).selectionEnd).toBe(LINK.length);
+    });
     expect(screen.getByRole("status")).toHaveTextContent(
       "No se ha podido copiar. Copia el enlace seleccionado.",
     );

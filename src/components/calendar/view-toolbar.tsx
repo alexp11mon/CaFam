@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronIcon } from "@/components/shell/icons";
 import { formatPeriodTitle } from "@/lib/calendar/format";
 import {
   calendarHref,
@@ -39,7 +40,7 @@ const VIEWS: {
 ];
 
 const BUTTON =
-  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border-2 border-brand px-3 text-base font-semibold text-brand hover:bg-brand-soft/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
+  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-control bg-paper px-4 text-base font-semibold text-ink transition-colors hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 /** View switcher, previous / next / today and the period heading (RF-29, RF-37). */
 export function ViewToolbar({
@@ -64,26 +65,27 @@ export function ViewToolbar({
           aria-label={current.previous}
           className={BUTTON}
         >
-          <span aria-hidden="true">‹</span>
+          <ChevronIcon direction="left" />
         </Link>
         <Link
           href={calendarHref(view, navigate(view, date, 1))}
           aria-label={current.next}
           className={BUTTON}
         >
-          <span aria-hidden="true">›</span>
+          <ChevronIcon direction="right" />
         </Link>
-        <h2 className="min-w-0 flex-1 text-lg font-bold text-ink first-letter:uppercase">
+        <h2 className="min-w-0 flex-1 text-lg font-bold text-ink tabular-nums first-letter:uppercase">
           {formatPeriodTitle(view, date)}
         </h2>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-1 self-start rounded-full bg-paper p-1 max-sm:self-stretch">
         {VIEWS.map((item) => (
           <Link
             key={item.view}
             href={calendarHref(item.view, date)}
             aria-current={item.view === view ? "page" : undefined}
-            className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-lg px-4 text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:flex-none ${item.view === view ? "bg-brand text-white" : "border-2 border-brand text-brand hover:bg-brand-soft/30"}`}
+            // The chosen view is a selection, so it takes the accent (constitution, RF-3).
+            className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:flex-none ${item.view === view ? "border border-accent-edge bg-accent text-on-accent" : "text-muted hover:text-ink"}`}
           >
             {item.label}
           </Link>

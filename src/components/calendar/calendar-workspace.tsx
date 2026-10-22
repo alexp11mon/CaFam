@@ -4,8 +4,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { FormAlert } from "@/components/ui/form-alert";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import type { GroupableCalendar, PersonGroup } from "@/lib/calendar/grouping";
-import type { CalendarEventItem } from "@/lib/calendar/layout";
 import type { CalendarView } from "@/lib/calendar/ranges";
+import { AgendaView, type AgendaEvent } from "./agenda-view";
 import { CalendarFilters, type FilterCategory } from "./calendar-filters";
 import { DayView } from "./day-view";
 import { MonthView } from "./month-view";
@@ -56,6 +56,7 @@ export function CalendarWorkspace({
   today,
   timeZone,
   events,
+  canCreate = false,
   groups: initialGroups,
   categories,
   setCalendarVisibility,
@@ -67,7 +68,9 @@ export function CalendarWorkspace({
   days: string[];
   today: string;
   timeZone: string;
-  events: CalendarEventItem[];
+  events: AgendaEvent[];
+  /** At least one calendar the user can add events to (spec 005 RF-38). */
+  canCreate?: boolean;
   groups: Group[];
   categories: FilterCategory[];
   setCalendarVisibility: (id: string, visible: boolean) => Promise<Result>;
@@ -224,7 +227,15 @@ export function CalendarWorkspace({
         </div>
       </div>
       <div className="min-w-0 flex-1">
-        {view === "month" ? (
+        {view === "agenda" ? (
+          <AgendaView
+            days={days}
+            events={shown}
+            timeZone={timeZone}
+            today={today}
+            canCreate={canCreate}
+          />
+        ) : view === "month" ? (
           <MonthView
             date={date}
             days={days}
