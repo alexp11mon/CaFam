@@ -7,7 +7,7 @@
 
 ## Tareas
 
-- [ ] T1 Crear la migración del acento en `profiles` con su test de base de datos
+- [x] T1 Crear la migración del acento en `profiles` con su test de base de datos
   Pasos: test primero en `tests/integration/profile-accent.test.ts` con dos usuarios y `anon`. Comprueba que:
   - un usuario nuevo tiene `accent = 'red'`;
   - puede cambiar el suyo a cada uno de los seis valores;

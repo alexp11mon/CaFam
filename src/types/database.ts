@@ -419,6 +419,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accent: string
           created_at: string
           display_name: string
           id: string
@@ -426,6 +427,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accent?: string
           created_at?: string
           display_name: string
           id: string
@@ -433,6 +435,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accent?: string
           created_at?: string
           display_name?: string
           id?: string
