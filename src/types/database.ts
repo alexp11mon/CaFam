@@ -629,6 +629,7 @@ export type Database = {
         }
         Returns: string
       }
+      request_recovery: { Args: { p_email: string }; Returns: boolean }
       revoke_invite: { Args: { p_invite_id: string }; Returns: undefined }
       set_access_code: {
         Args: {

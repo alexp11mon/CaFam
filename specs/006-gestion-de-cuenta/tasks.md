@@ -24,7 +24,7 @@
   Migración `supabase/migrations/<timestamp>_account_orphan_schema.sql`.
   Hecho cuando: `npm run test:db -- account-schema schema rls` en verde y `src/types/database.ts` contiene `orphaned_at`, `account_notices` y `email_outbox`. Cubre: RF-21, RF-22, RF-23 | Módulo: account_orphan_schema
 
-- [ ] T3 Limitar las peticiones de recuperación por cuenta con `request_recovery`
+- [x] T3 Limitar las peticiones de recuperación por cuenta con `request_recovery`
   Pasos: test primero en `tests/integration/account-recovery.test.ts`. Comprueba que:
   - `anon` puede llamar a la función y recibe `true` en las tres primeras peticiones de un mismo email en 15 minutos;
   - la cuarta devuelve `false`;
