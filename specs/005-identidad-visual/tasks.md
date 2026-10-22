@@ -87,7 +87,7 @@
   - Comprobar con `playwright-cli` que un usuario con `accent = 'blue'` en `dev` recibe `data-accent="blue"` en el HTML inicial, sin ejecutar JavaScript.
   Hecho cuando: `npm test -- app-frame route-access auth-next-actions calendar-list` en verde. Cubre: RF-9, RF-15, RF-21 | Módulo: app-frame, routes, queries
 
-- [ ] T6 Implementar la barra lateral, la barra inferior, la hoja "Más" y los iconos
+- [x] T6 Implementar la barra lateral, la barra inferior, la hoja "Más" y los iconos
   Pasos:
   - Tests primero en `tests/unit/side-rail.test.tsx`: la marca y los seis destinos, cada uno con nombre accesible; la sección activa con `aria-current="page"`; "Cerrar sesión" envía el formulario de `signOut`.
   - Tests primero en `tests/unit/bottom-bar.test.tsx`:

@@ -1,21 +1,27 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AppFrame, FrameSkeleton } from "@/components/shell/app-frame";
 
 // Spec 005, T5: the frame of every screen with a session carries the user's
-// accent from the first HTML (RF-9; plan D3).
+// accent from the first HTML (RF-9; plan D3), with the rail and the bottom bar (T6).
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/dashboard/calendar",
+}));
 describe("AppFrame (RF-9)", () => {
   it("wraps the page in the user's accent", () => {
     const { container } = render(
-      <AppFrame accent="blue">
+      <AppFrame accent="blue" signOutAction={vi.fn(async () => {})}>
         <p>Contenido</p>
       </AppFrame>,
     );
 
     expect(screen.getByText("Contenido")).toBeInTheDocument();
-    expect(container.querySelector('[data-accent="blue"]')).toContainElement(
-      screen.getByText("Contenido"),
-    );
+    const frame = container.querySelector('[data-accent="blue"]');
+    expect(frame).toContainElement(screen.getByText("Contenido"));
+    // One navigation per width: the rail from 1024 px, the bottom bar below (RF-16, RF-18).
+    expect(
+      screen.getAllByRole("navigation", { name: "Principal" }),
+    ).toHaveLength(2);
   });
 });
 
