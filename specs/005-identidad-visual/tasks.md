@@ -1,6 +1,6 @@
 # Tasks 005 - Identidad visual
 
-> Estado: **Aprobadas** por el usuario (2026-10-22).
+> Estado: **Aprobadas** por el usuario (2026-10-22). **Cerrada** (2026-10-22): migraciones `profile_accent` y `remove_old_blue` aplicadas en prod, demo en producción correcta y cierre aprobado por el usuario.
 > Spec: `specs/005-identidad-visual/spec.md`. Plan: `specs/005-identidad-visual/plan.md`.
 > Reglas: una tarea cada vez, test primero (rojo → verde), y al cerrar cada tarea se ejecuta y reporta el checklist de "Verificación obligatoria" de la constitución (P7, P8, P9): `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, más `npm run test:db` si toca esquema, RLS o acceso a datos, y, si toca interfaz, capturas a 390, 768 y 1440 px revisadas contra "Identidad visual y diseño de interfaz". Un commit por tarea citándola, en la rama `005-identidad-visual`.
 > Sin dependencias nuevas: ninguna tarea toca `package.json`. Las páginas siguen los patrones de AGENTS §9 (`page.tsx` síncrono, lecturas en `<Suspense>`, `revalidatePath("/dashboard", "layout")` tras escribir, `useId()`, `useSyncExternalStore` para valores del navegador). Las capturas y demos se hacen con `playwright-cli` contra `npx next start -p 3100` y `dev`, y los usuarios de prueba se borran al terminar. Los tests de las specs 001 a 004 solo se tocan cuando un RF de esta spec cambia lo que comprueban, y se cita ese RF en el test.
@@ -190,7 +190,7 @@
   - Capturas de la agenda, Mis calendarios y Ajustes con el acento Azul.
   Hecho cuando: `npm test` y `npm run test:db -- remove-old-blue import-calendar merge-calendars schema` en verde. Cubre: RF-55, RF-56, RF-57, RF-58 | Módulo: palette, accents, tokens, migración (D19), design-guard
 
-- [ ] T12 Validar la spec RF por RF, en producción, y cerrar la documentación
+- [x] T12 Validar la spec RF por RF, en producción, y cerrar la documentación
   Pasos:
   - Añadir a `tasks.md` la tabla "Trazabilidad RF → tarea → test" y la comprobación de "Fuera de alcance": sin tema oscuro, sin notificaciones, sin fotos y sin recordar la última vista.
   - Contraste de los seis acentos comprobado en capturas.

@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-22, al implementar la spec 005 (identidad visual, T1–T11); falta su validación en producción y el cierre (T12).
+> Última actualización: 2026-10-22, al cerrar la spec 005 (identidad visual).
 
 ## 1. Qué es
 
@@ -31,7 +31,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
-| 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Implementada** (2026-10-22), T1–T11 hechas; falta la validación en producción y el cierre (T12) |
+| 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Cerrada** (2026-10-22), T1–T13 hechas |
 | 006-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
 | 007-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
 
@@ -400,7 +400,7 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 ## 12. Cómo continuar
 
-La 005 está implementada en la rama `005-identidad-visual` (T1–T11) y le falta T12: aplicar la migración `profile_accent` en prod, integrar en `main`, hacer la demo en producción y pedir al usuario la aprobación del cierre. Después viene la **006 (gestión de cuenta, requiere SMTP gratuito)**:
+La 005 está cerrada y desplegada en producción (migraciones `profile_accent` y `remove_old_blue` aplicadas y demo validada). La siguiente spec es la **006 (gestión de cuenta, requiere SMTP gratuito)**:
 
 1. Crea la rama `006-gestion-de-cuenta` desde `main` (con la 005 ya integrada).
 2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. Sus pantallas nacen con la identidad visual y la cuenta se añade a Ajustes (`/dashboard/settings`).

@@ -1,6 +1,6 @@
 # Spec 005 — Identidad visual
 
-> Estado: **Aprobada** por el usuario (2026-10-22). Constitución: `docs/constitution.md` (P9 y sección "Identidad visual y diseño de interfaz"). Parte de las specs 001 a 004 (cerradas).
+> Estado: **Aprobada** por el usuario (2026-10-22). **Cerrada** (2026-10-22) tras la demo en producción. Constitución: `docs/constitution.md` (P9 y sección "Identidad visual y diseño de interfaz"). Parte de las specs 001 a 004 (cerradas).
 > Decisiones de la entrevista (2026-10-22): el acento se guarda por usuario y se ve igual en todos sus dispositivos; se añade una vista de agenda de 14 días; la app pasa a un marco fijo (escritorio) y a una barra inferior (móvil); se añade el bloque "Próximo evento"; el rediseño alcanza también las páginas sin sesión y el icono de la app.
 > **Cambio aprobado** por el usuario (2026-10-22), tras desplegar T1–T11: quitar de todas partes el azul antiguo `#2563EB` (RF-55 a RF-58). Decisiones: el color por defecto de los calendarios pasa a Azul cielo `#A0C4FF`, los calendarios y eventos que ya lo tenían guardado pasan también a Azul cielo, y el acento "Azul" sigue existiendo con otro tono.
 > Esta spec **amplía el alcance**: la vista de agenda figuraba como fuera de alcance en la spec 002 y en `AGENTS.md`. Al aprobarla se actualiza `AGENTS.md` (§11).
