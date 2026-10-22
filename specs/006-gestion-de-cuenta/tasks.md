@@ -45,7 +45,7 @@
   Función `delete_own_account` (D1), con la marca de transacción de D2 para el cambio de propietario y el nombre visible guardado antes del borrado.
   Hecho cuando: `npm run test:db -- account-delete` en verde. Cubre: RF-18, RF-19, RF-20, RF-21, RF-23 | Módulo: account_functions
 
-- [ ] T5 Conservar o salir de un calendario sin propietario con `decide_orphan_calendar`
+- [x] T5 Conservar o salir de un calendario sin propietario con `decide_orphan_calendar`
   Pasos: test primero en `tests/integration/account-decide.test.ts`. Comprueba que:
   - un miembro puede registrar `keep = true` y luego cambiarlo a `false`;
   - con `keep = false` su membresía desaparece y el calendario sigue existiendo;

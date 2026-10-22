@@ -593,6 +593,10 @@ export type Database = {
         }
         Returns: string
       }
+      decide_orphan_calendar: {
+        Args: { p_calendar_id: string; p_keep: boolean }
+        Returns: undefined
+      }
       delete_own_account: { Args: never; Returns: undefined }
       disable_access_code: {
         Args: { p_calendar_id: string }
