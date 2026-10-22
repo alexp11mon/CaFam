@@ -19,9 +19,10 @@ describe("CALENDAR_COLORS (RF-2)", () => {
     }
   });
 
-  it("includes the default blue of spec 001", () => {
-    expect(DEFAULT_CALENDAR_COLOR).toBe("#2563EB");
-    expect(isPaletteColor("#2563EB")).toBe(true);
+  it("defaults to sky blue and no longer offers the old blue (spec 005 RF-55, RF-56)", () => {
+    expect(DEFAULT_CALENDAR_COLOR).toBe("#A0C4FF");
+    expect(isPaletteColor(DEFAULT_CALENDAR_COLOR)).toBe(true);
+    expect(isPaletteColor("#2563EB")).toBe(false);
   });
 });
 
@@ -53,8 +54,8 @@ describe("readableTextColor (RNF contrast)", () => {
     }
   });
 
-  it("uses white on the brand blue and dark ink on pastel colors", () => {
-    expect(readableTextColor("#2563EB")).toBe("#FFFFFF");
+  it("uses white on a dark color and dark ink on pastel colors", () => {
+    expect(readableTextColor("#1D4ED8")).toBe("#FFFFFF");
     expect(readableTextColor("#FDFFB6")).toBe("#141414");
   });
 

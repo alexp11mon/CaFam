@@ -43,7 +43,7 @@ describe("base schema", () => {
     expect(calendars).toHaveLength(1);
     expect(calendars?.[0]).toMatchObject({
       name: "Mi calendario",
-      color: "#2563EB",
+      color: "#A0C4FF",
     });
 
     const { data: members } = await admin

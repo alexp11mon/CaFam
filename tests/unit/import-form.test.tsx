@@ -52,7 +52,7 @@ describe("ImportForm fields (RF-1, RF-2, RF-8, RF-10)", () => {
       .calls[0]?.[1] as FormData;
     expect(formData.get("url")).toBe("webcal://calendar.example.com/a.ics");
     expect(formData.get("name")).toBe("Clases");
-    expect(formData.get("color")).toBe("#2563EB");
+    expect(formData.get("color")).toBe("#A0C4FF");
   });
 
   it("takes the chosen file and submits the form", async () => {

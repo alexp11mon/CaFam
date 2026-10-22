@@ -28,7 +28,7 @@ describe("parseImportForm name (RF-8)", () => {
 });
 
 describe("parseImportForm color (RF-10)", () => {
-  it("defaults to the brand blue", () => {
+  it("defaults to sky blue (spec 005 RF-56)", () => {
     const result = parseImportForm({ ...VALID, color: "" });
 
     expect(result.ok && result.data.color).toBe(DEFAULT_CALENDAR_COLOR);

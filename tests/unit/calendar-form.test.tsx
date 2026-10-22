@@ -12,7 +12,7 @@ type State = FormState<CalendarField>;
 const EMPTY: State["values"] = {
   name: "",
   description: "",
-  color: "#2563EB",
+  color: "#A0C4FF",
 };
 
 function renderForm(
@@ -134,19 +134,19 @@ describe("ColorPicker (RF-2)", () => {
 
   it("is usable with the keyboard", async () => {
     const user = userEvent.setup();
-    render(<ColorPicker name="color" defaultValue="#2563EB" />);
+    render(<ColorPicker name="color" defaultValue="#FFADAD" />);
 
-    screen.getByRole("radio", { name: "Azul marca" }).focus();
+    screen.getByRole("radio", { name: "Coral" }).focus();
     await user.keyboard("{ArrowDown}");
 
-    expect(screen.getByRole("radio", { name: "Coral" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Melocotón" })).toBeChecked();
   });
 
   it("shows its error linked to the group", () => {
     render(
       <ColorPicker
         name="color"
-        defaultValue="#2563EB"
+        defaultValue="#A0C4FF"
         error="Elige un color."
       />,
     );

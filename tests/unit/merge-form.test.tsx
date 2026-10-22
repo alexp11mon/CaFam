@@ -31,7 +31,7 @@ const EMPTY: MergeFormValues = {
   sourceIds: "",
   targetId: "",
   newName: "",
-  newColor: "#2563EB",
+  newColor: "#A0C4FF",
 };
 
 function setup(

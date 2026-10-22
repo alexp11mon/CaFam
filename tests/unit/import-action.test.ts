@@ -120,11 +120,11 @@ describe("importCalendar action success (RF-7, RF-31)", () => {
     ).toEqual(["Mis clases", null]);
   });
 
-  it("uses the brand blue when no color is chosen", async () => {
+  it("uses sky blue when no color is chosen (spec 005 RF-56)", async () => {
     await importCalendar(INITIAL, form({ file: FILE() }));
 
     expect((state.rpcCalls[0].args as { p_color: string }).p_color).toBe(
-      "#2563EB",
+      "#A0C4FF",
     );
   });
 

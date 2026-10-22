@@ -34,7 +34,7 @@ function groups(): PersonGroup<PanelCalendar>[] {
     {
       person: { id: "me", displayName: "Yo", isMe: true },
       calendars: [
-        calendar("c1", "Mi calendario", "me", "#2563EB"),
+        calendar("c1", "Mi calendario", "me", "#A0C4FF"),
         calendar("c2", "Clases Uni", "me", "#A0C4FF"),
       ],
     },

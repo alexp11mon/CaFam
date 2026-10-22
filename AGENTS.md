@@ -167,12 +167,12 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon.svg (maestro) → icon-192, icon-512, icon-512-maskable (letras al 85 %), apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
 │   ├── unit/                  # *.test.ts(x): lógica pura, formularios, vistas, filtros, sw-no-data, no-secrets…
-│   └── integration/           # schema, rls, signup, login, calendars-events, merge-calendars, preferences, profile-accent, range-performance contra Supabase dev + helpers.ts
+│   └── integration/           # schema, rls, signup, login, calendars-events, merge-calendars, preferences, profile-accent, remove-old-blue, range-performance contra Supabase dev + helpers.ts
 ├── vercel.json                # cron "0 6 * * *" → /api/cron/keep-alive
 ├── next.config.ts             # cacheComponents, partialPrefetching, cabeceras de /sw.js
 ├── postcss.config.mjs, eslint.config.mjs, vitest.config.ts, tsconfig.json (alias @/* → src/*)
@@ -229,7 +229,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 ### Base de datos (`supabase/migrations/`)
 
 - Enum `calendar_role`: `owner | editor | viewer` (en la UI: Propietario, Editor, Lector).
-- Tablas: `profiles` (1:1 con `auth.users`: `display_name`, `time_zone`), `calendars` (`owner_id`, `name`, `description`, `color`, por defecto `#2563EB`), `calendar_members` (PK `calendar_id + user_id`, `role`; **el propietario también tiene su fila `owner`**, con un solo owner por calendario) y `events` (`starts_at`/`ends_at` en `timestamptz` con `ends_at >= starts_at`, `all_day`, `created_by`). Todas tienen `created_at` y, las editables, `updated_at`.
+- Tablas: `profiles` (1:1 con `auth.users`: `display_name`, `time_zone`), `calendars` (`owner_id`, `name`, `description`, `color`, por defecto Azul cielo `#A0C4FF` desde la spec 005), `calendar_members` (PK `calendar_id + user_id`, `role`; **el propietario también tiene su fila `owner`**, con un solo owner por calendario) y `events` (`starts_at`/`ends_at` en `timestamptz` con `ends_at >= starts_at`, `all_day`, `created_by`). Todas tienen `created_at` y, las editables, `updated_at`.
 - Triggers:
   - `handle_new_user`: crea el perfil y "Mi calendario".
   - `add_owner_membership`: crea la fila `owner`.
@@ -259,6 +259,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `calendar_members`: `UPDATE` solo de la columna `role` y solo del propietario sobre filas no `owner`; `DELETE` por el propietario sobre otros o por cualquiera sobre su propia fila si no es `owner`. El `INSERT` directo sigue prohibido. Un trigger borra las preferencias de quien sale (los eventos y categorías que creó se quedan).
   - Funciones `SECURITY DEFINER` con `search_path = ''`: `create_invite`, `revoke_invite`, `get_invite_preview`, `accept_invite` (bloquea la fila: la carrera por el último uso da un éxito y un `CF404`), `set_access_code`, `disable_access_code`, `join_with_code` (devuelve `status` `ok | member | invalid | limited` en vez de lanzar, para que el fallo quede registrado) y `calendar_members_with_names(uuid[])` (única vía para ver nombres ajenos: nombre y rol, sin email ni zona horaria). `CF404` es el SQLSTATE propio de "invitación no válida".
   - `merge_calendars` no cambia: los miembros de los calendarios que desaparecen caen en cascada.
+- Añadido por la spec 005: el azul antiguo de la spec 001 desaparece (migración `remove_old_blue`): el valor por defecto de `calendars.color` y el respaldo de `merge_calendars` e `import_calendar` pasan a `#A0C4FF`, y los calendarios y eventos con el azul antiguo se cambiaron a ese color. La guardia de diseño prohíbe el código del azul antiguo en `src/`.
 - Añadido por la spec 005: `profiles.accent` (`text`, por defecto `'red'`, `check` en `red|blue|green|yellow|purple|gray`). La protegen las políticas de `profiles` (solo el propio); `visible_people()` y `calendar_members_with_names` no la exponen.
 - Añadido por la spec 004: `import_calendar(p_name, p_color, p_events jsonb)` (`SECURITY INVOKER`, una transacción): crea el calendario del llamante y sus eventos desde un array de 1 a 2.000 elementos (`22023` si no) y, si un evento viola una restricción, no deja nada. No hay tablas ni columnas nuevas: el calendario importado no guarda nada de su origen.
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.

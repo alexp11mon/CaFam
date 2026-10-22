@@ -54,10 +54,11 @@ export const ACCENTS: readonly Accent[] = [
   {
     id: "blue",
     label: "Azul",
-    fill: "#2563EB",
+    // A darker blue than the old blue of spec 001 (spec 005 RF-58).
+    fill: "#1D4ED8",
     onFill: WHITE,
-    ink: "#1D4ED8",
-    edge: "#2563EB",
+    ink: "#1E40AF",
+    edge: "#1D4ED8",
   },
   {
     id: "green",

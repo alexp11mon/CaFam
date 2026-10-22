@@ -178,7 +178,7 @@
   - Capturas a 390, 768 y 1440 px de cada pantalla con el acento rojo y el amarillo, revisadas contra la sección de la constitución.
   Hecho cuando: `npm test` completo en verde, incluido `design-tokens`. Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RF-11 | Módulo: restyle, design-guard, tokens
 
-- [ ] T13 Quitar el azul antiguo `#2563EB` de todas partes (cambio aprobado el 2026-10-22)
+- [x] T13 Quitar el azul antiguo `#2563EB` de todas partes (cambio aprobado el 2026-10-22)
   Pasos:
   - Tests primero:
     - `palette.test.ts`: el color por defecto es `#A0C4FF` y `#2563EB` no está en la paleta.

@@ -59,6 +59,8 @@ const RULES: { name: string; pattern: RegExp; allow?: Set<string> }[] = [
     pattern: /\buppercase\b[^"]*\btracking-(?:wide|wider|widest)\b/,
   },
   { name: "an emoji", pattern: /\p{Extended_Pictographic}/u },
+  // The old blue of spec 001 is gone everywhere (spec 005 RF-55..RF-58).
+  { name: "the old blue #2563EB", pattern: /#2563eb/i },
 ];
 
 describe("design guard (P9)", () => {
@@ -81,5 +83,6 @@ describe("design guard (P9)", () => {
     const css = readFileSync(join(ROOT, "app/globals.css"), "utf8");
 
     expect(css).not.toMatch(/--color-brand/);
+    expect(css).not.toMatch(/#2563eb/i);
   });
 });

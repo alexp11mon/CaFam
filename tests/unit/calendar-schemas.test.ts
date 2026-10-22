@@ -14,7 +14,7 @@ const UUID_B = "22222222-2222-4222-8222-222222222222";
 const UUID_C = "33333333-3333-4333-8333-333333333333";
 
 describe("calendarSchema (RF-1, RF-2, RF-4)", () => {
-  const valid = { name: "Familia", description: "", color: "#2563EB" };
+  const valid = { name: "Familia", description: "", color: "#A0C4FF" };
 
   it("accepts a name of 1 to 50 characters and trims it", () => {
     expect(calendarSchema.safeParse({ ...valid, name: "a" }).success).toBe(

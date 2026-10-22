@@ -5,9 +5,8 @@ export interface PaletteColor {
   label: string;
 }
 
-/** Pastel, clean colors plus the brand blue every spec 001 calendar already uses. */
+/** Pastel, clean colors; the old blue of spec 001 is gone (spec 005 RF-55, plan D19). */
 export const CALENDAR_COLORS: readonly PaletteColor[] = [
-  { value: "#2563EB", label: "Azul marca" },
   { value: "#FFADAD", label: "Coral" },
   { value: "#FFD6A5", label: "Melocotón" },
   { value: "#FDFFB6", label: "Limón" },
@@ -23,7 +22,8 @@ export const CALENDAR_COLORS: readonly PaletteColor[] = [
   { value: "#F7D6E0", label: "Rosa suave" },
 ];
 
-export const DEFAULT_CALENDAR_COLOR = "#2563EB";
+// Sky blue, also the database default (spec 005 RF-56).
+export const DEFAULT_CALENDAR_COLOR = "#A0C4FF";
 
 const INK = "#141414";
 const WHITE = "#FFFFFF";

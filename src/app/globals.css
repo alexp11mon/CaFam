@@ -33,10 +33,10 @@
 }
 
 [data-accent="blue"] {
-  --accent: #2563eb;
+  --accent: #1d4ed8;
   --on-accent: #ffffff;
-  --accent-ink: #1d4ed8;
-  --accent-edge: #2563eb;
+  --accent-ink: #1e40af;
+  --accent-edge: #1d4ed8;
 }
 
 [data-accent="green"] {

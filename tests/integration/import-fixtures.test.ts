@@ -263,7 +263,7 @@ describe("limits and performance (RF-27)", () => {
     const started = Date.now();
     const { data: id, error } = await user.client.rpc("import_calendar", {
       p_name: "Máximo",
-      p_color: "#2563EB",
+      p_color: "#A0C4FF",
       p_events: events as never,
     });
     console.info(`TIMING 2000 maximum-size rows: ${Date.now() - started} ms`);

@@ -8,7 +8,7 @@ import {
 } from "@/components/dashboard/calendar-list";
 
 const CALENDARS: CalendarListItem[] = [
-  { id: "1", name: "Mi calendario", color: "#2563EB", role: "owner" },
+  { id: "1", name: "Mi calendario", color: "#A0C4FF", role: "owner" },
   { id: "2", name: "Familia", color: "#16A34A", role: "editor" },
   { id: "3", name: "Fútbol", color: "#DC2626", role: "viewer" },
 ];
@@ -33,7 +33,7 @@ describe("CalendarList", () => {
     expect(items).toHaveLength(3);
 
     const expected = [
-      ["Mi calendario", "Propietario", "#2563EB"],
+      ["Mi calendario", "Propietario", "#A0C4FF"],
       ["Familia", "Editor", "#16A34A"],
       ["Fútbol", "Lector", "#DC2626"],
     ];

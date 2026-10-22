@@ -39,6 +39,19 @@ describe("accents", () => {
     expect(DEFAULT_ACCENT).toBe("red");
   });
 
+  it("never use the old blue; Azul has its own darker tone (spec 005 RF-58)", () => {
+    for (const accent of ACCENTS) {
+      expect(
+        [accent.fill, accent.ink, accent.edge].map((c) => c.toUpperCase()),
+      ).not.toContain("#2563EB");
+    }
+    expect(ACCENTS.find((accent) => accent.id === "blue")).toMatchObject({
+      fill: "#1D4ED8",
+      ink: "#1E40AF",
+      edge: "#1D4ED8",
+    });
+  });
+
   it("accepts only those six", () => {
     expect(isAccent("blue")).toBe(true);
     expect(isAccent("pink")).toBe(false);

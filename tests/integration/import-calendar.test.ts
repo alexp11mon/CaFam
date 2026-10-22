@@ -99,7 +99,7 @@ describe("import_calendar (RF-7)", () => {
     expect(events?.[1]).toMatchObject({ title: "Cumpleaños", all_day: true });
   });
 
-  it("uses the brand blue when there is no color", async () => {
+  it("uses sky blue when there is no color (spec 005 RF-56)", async () => {
     const { data: id } = await importCalendar([EVENT], "Sin color", null);
 
     const { data } = await admin
@@ -107,7 +107,7 @@ describe("import_calendar (RF-7)", () => {
       .select("color")
       .eq("id", id!)
       .single();
-    expect(data?.color).toBe("#2563EB");
+    expect(data?.color).toBe("#A0C4FF");
   });
 });
 
@@ -196,7 +196,7 @@ describe("import_calendar access", () => {
   it("anon cannot call it", async () => {
     const { error } = await anonClient().rpc("import_calendar", {
       p_name: "Anon",
-      p_color: "#2563EB",
+      p_color: "#A0C4FF",
       p_events: [EVENT] as never,
     });
 
