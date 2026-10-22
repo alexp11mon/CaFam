@@ -593,6 +593,7 @@ export type Database = {
         }
         Returns: string
       }
+      delete_own_account: { Args: never; Returns: undefined }
       disable_access_code: {
         Args: { p_calendar_id: string }
         Returns: undefined

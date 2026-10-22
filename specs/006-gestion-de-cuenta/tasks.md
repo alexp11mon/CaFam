@@ -34,7 +34,7 @@
   Función `request_recovery` en la migración de la tarea T2 o en una nueva si hace falta, `SECURITY DEFINER`, `search_path = ''`.
   Hecho cuando: `npm run test:db -- account-recovery` en verde. Cubre: RF-1, RF-5 | Módulo: account_functions
 
-- [ ] T4 Borrar la cuenta conservando los calendarios compartidos con `delete_own_account`
+- [x] T4 Borrar la cuenta conservando los calendarios compartidos con `delete_own_account`
   Pasos: test primero en `tests/integration/account-delete.test.ts` con tres usuarios A, B y C. Comprueba que, con A borrando su cuenta:
   - un calendario de A sin otros miembros desaparece con sus eventos, categorías y preferencias;
   - un calendario de A con B y C queda con `owner_id` nulo, `orphaned_at` fijado y sin cambios en sus eventos;
