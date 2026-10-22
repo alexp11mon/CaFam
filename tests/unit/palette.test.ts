@@ -55,11 +55,11 @@ describe("readableTextColor (RNF contrast)", () => {
 
   it("uses white on the brand blue and dark ink on pastel colors", () => {
     expect(readableTextColor("#2563EB")).toBe("#FFFFFF");
-    expect(readableTextColor("#FDFFB6")).toBe("#0D160B");
+    expect(readableTextColor("#FDFFB6")).toBe("#141414");
   });
 
   it("works with any valid hex, not only palette colors", () => {
     expect(readableTextColor("#000000")).toBe("#FFFFFF");
-    expect(readableTextColor("#ffffff")).toBe("#0D160B");
+    expect(readableTextColor("#ffffff")).toBe("#141414");
   });
 });

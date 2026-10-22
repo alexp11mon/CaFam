@@ -28,13 +28,13 @@ export function Select({
         name={name}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
-        className="min-h-11 w-full rounded-lg border border-ink/30 bg-white px-3 py-2 text-base text-ink outline-none focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand aria-invalid:border-red-700"
+        className="min-h-11 w-full rounded-xl border border-control bg-paper px-3 py-2 text-base text-ink outline-none focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20 aria-invalid:border-danger"
         {...props}
       >
         {children}
       </select>
       {error ? (
-        <p id={errorId} aria-live="polite" className="text-sm text-red-700">
+        <p id={errorId} aria-live="polite" className="text-sm text-danger">
           {error}
         </p>
       ) : null}

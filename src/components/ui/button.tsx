@@ -4,11 +4,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger";
 }
 
+// Actions are black pills; the accent never colors a button (spec 005, P9).
 const VARIANTS = {
-  // White text on brand: 5.2:1 contrast (RNF-9).
-  primary: "bg-brand text-white hover:opacity-90",
-  secondary: "border-2 border-brand bg-white text-brand hover:bg-brand-soft/30",
-  danger: "border-2 border-red-700 bg-white text-red-800 hover:bg-red-50",
+  primary: "bg-ink text-white hover:bg-ink/85",
+  secondary: "border border-control bg-paper text-ink hover:bg-stone",
+  danger: "border border-danger bg-paper text-danger hover:bg-danger/10",
 };
 
 /** Action button; `primary` is the default. */
@@ -21,7 +21,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2 text-base font-semibold transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60 ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60 ${VARIANTS[variant]} ${className}`}
       {...props}
     />
   );

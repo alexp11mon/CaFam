@@ -8,8 +8,8 @@ interface LinkButtonProps extends LinkProps {
 }
 
 const VARIANTS = {
-  primary: "bg-brand text-white hover:opacity-90",
-  secondary: "border-2 border-brand bg-white text-brand hover:bg-brand-soft/30",
+  primary: "bg-ink text-white hover:bg-ink/85",
+  secondary: "border border-control bg-paper text-ink hover:bg-stone",
 };
 
 /** Navigation styled as a button; same size and focus ring as Button (RNF-7, RNF-9). */
@@ -20,7 +20,7 @@ export function LinkButton({
 }: LinkButtonProps) {
   return (
     <Link
-      className={`inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2 text-base font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${VARIANTS[variant]} ${className}`}
       {...props}
     />
   );

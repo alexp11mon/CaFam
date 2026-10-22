@@ -19,7 +19,7 @@
   Migración `supabase/migrations/<timestamp>_profile_accent.sql`. Antes, comprobar que el link apunta a `dev`. Después, `npm run db:push` y `npm run db:types`.
   Hecho cuando: `npm run test:db -- profile-accent schema rls` en verde y `src/types/database.ts` contiene `accent`. Cubre: RF-8, RF-10, RF-13 | Módulo: accent-migration
 
-- [ ] T2 Definir los acentos, los tokens, la tipografía y el reestilo de `components/ui`
+- [x] T2 Definir los acentos, los tokens, la tipografía y el reestilo de `components/ui`
   Pasos:
   - Tests primero en `tests/unit/accents.test.ts`:
     - hay exactamente seis acentos con nombre en español y el rojo por defecto;

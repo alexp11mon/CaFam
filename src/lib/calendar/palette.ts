@@ -25,7 +25,7 @@ export const CALENDAR_COLORS: readonly PaletteColor[] = [
 
 export const DEFAULT_CALENDAR_COLOR = "#2563EB";
 
-const INK = "#0D160B";
+const INK = "#141414";
 const WHITE = "#FFFFFF";
 
 export function isPaletteColor(value: string): boolean {

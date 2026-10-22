@@ -1,16 +1,76 @@
 @import "tailwindcss";
 
-/* Brand tokens (plan "Identidad visual", RNF-9). brand-soft is only a
-   background, never text on white. */
+/* Design tokens (constitution "Identidad visual y diseño de interfaz", P9;
+   spec 005 plan "Modelo de datos"). Values mirror src/lib/theme/accents.ts and
+   accents.test.ts keeps them equal. brand and brand-soft are the spec 001
+   tokens, kept only until every screen is restyled (spec 005 T11). */
 @theme {
+  --color-stone: #e8e5dd;
+  --color-paper: #f2f0ea;
+  --color-ink: #141414;
+  --color-muted: #66635d;
+  --color-line: #d6d1c4;
+  --color-control: #857f75;
+  --color-danger: #b42318;
   --color-brand: #2563eb;
   --color-brand-soft: #a6e1fa;
-  --color-ink: #0d160b;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* The user's accent switches with data-accent on the app frame (plan D2). */
+@theme inline {
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-edge: var(--accent-edge);
+}
+
+/* Red without a session (RF-11). */
+:root,
+[data-accent="red"] {
+  --accent: #d92d20;
+  --on-accent: #ffffff;
+  --accent-ink: #b42318;
+  --accent-edge: #d92d20;
+}
+
+[data-accent="blue"] {
+  --accent: #2563eb;
+  --on-accent: #ffffff;
+  --accent-ink: #1d4ed8;
+  --accent-edge: #2563eb;
+}
+
+[data-accent="green"] {
+  --accent: #1f7a4a;
+  --on-accent: #ffffff;
+  --accent-ink: #186a3f;
+  --accent-edge: #1f7a4a;
+}
+
+/* Yellow fades into stone (1.3:1), so filled shapes get a dark edge (plan R6). */
+[data-accent="yellow"] {
+  --accent: #f5c518;
+  --on-accent: #141414;
+  --accent-ink: #7a5c00;
+  --accent-edge: #7a5c00;
+}
+
+[data-accent="purple"] {
+  --accent: #7c4dcc;
+  --on-accent: #ffffff;
+  --accent-ink: #6b3fbf;
+  --accent-edge: #7c4dcc;
+}
+
+[data-accent="gray"] {
+  --accent: #5f5c55;
+  --on-accent: #ffffff;
+  --accent-ink: #5f5c55;
+  --accent-edge: #5f5c55;
 }
 
 body {
-  background: #ffffff;
+  background: var(--color-stone);
   color: var(--color-ink);
 }
