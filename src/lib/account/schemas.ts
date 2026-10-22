@@ -33,3 +33,6 @@ export type ProfileInput = z.infer<typeof profileSchema>;
 export type ChangeEmailInput = z.infer<typeof changeEmailSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
+
+export const newPasswordSchema = z.object({ password });
+export const recoveryEmailSchema = email;

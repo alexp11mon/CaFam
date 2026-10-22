@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AuthCard } from "@/components/auth/auth-card";
 import { LoginForm } from "@/components/auth/login-form";
 import { signIn } from "../actions";
@@ -16,6 +17,12 @@ export default function LoginPage() {
       }}
     >
       <LoginForm action={signIn} />
+      <Link
+        href="/forgot-password"
+        className="mt-4 block text-center text-sm font-medium text-accent-ink underline underline-offset-4"
+      >
+        ¿Olvidaste tu contraseña?
+      </Link>
     </AuthCard>
   );
 }

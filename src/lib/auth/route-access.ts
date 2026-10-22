@@ -4,10 +4,14 @@ export type RouteAccess =
 const PROTECTED_PREFIX = "/dashboard";
 const INVITE_PREFIX = "/invite";
 const GUEST_ONLY_PATHS = new Set(["/login", "/signup"]);
+// Needs a session, which the recovery link creates (spec 006 T11).
+const SESSION_PATHS = new Set(["/reset-password"]);
 
 function isProtected(pathname: string): boolean {
   return (
-    pathname === PROTECTED_PREFIX || pathname.startsWith(`${PROTECTED_PREFIX}/`)
+    pathname === PROTECTED_PREFIX ||
+    pathname.startsWith(`${PROTECTED_PREFIX}/`) ||
+    SESSION_PATHS.has(pathname)
   );
 }
 

@@ -100,6 +100,7 @@
   - un error de Auth se muestra con el texto de `error-messages`.
   Páginas `src/app/(auth)/forgot-password/page.tsx`, `src/app/(auth)/reset-password/page.tsx`, acciones `actions.ts` de cada una, y componentes `src/components/account/forgot-password-form.tsx` y `reset-password-form.tsx`. Capturas a 390, 768 y 1440 px con el acento rojo y amarillo (P9).
   Hecho cuando: `npm test -- forgot-password reset-password` en verde y el flujo completo se prueba en el navegador con `playwright-cli` en dev (pedir enlace, abrir el correo, cambiar contraseña, entrar con la nueva). Cubre: RF-1, RF-2, RF-4 | Módulo: forgot-password, reset-password, forgot-password-form, reset-password-form
+  Estado: tests unitarios (action, formularios, enlace en login, acceso) en verde y build correcto. Pendiente: el flujo completo en navegador con playwright-cli en dev (necesita T9: correos de Auth) y las capturas a 390, 768 y 1440 px. T11 no se marca como hecha hasta entonces.
 
 - [x] T12 Validar los datos de cuenta y los mensajes de error comunes
   Pasos: tests primero en `tests/unit/account-schemas.test.ts` y `tests/unit/account-error-messages.test.ts`. Comprueba que:
