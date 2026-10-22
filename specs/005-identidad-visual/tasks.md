@@ -54,7 +54,7 @@
   - Módulos: `src/lib/calendar/ranges.ts` y `src/lib/calendar/agenda.ts`. Actualizar `view-toolbar.test.tsx` y `parseViewParams` porque la vista por defecto pasa de mes a agenda (RF-15, RF-44).
   Hecho cuando: `npm test -- ranges agenda view-toolbar` en verde. Cubre: RF-15, RF-31, RF-33, RF-34, RF-36, RF-39, RF-40, RF-43, RF-44 | Módulo: agenda-range, agenda-layout
 
-- [ ] T4 Implementar como funciones puras el próximo evento, los avatares, las marcas del mes, la navegación y el reloj
+- [x] T4 Implementar como funciones puras el próximo evento, los avatares, las marcas del mes, la navegación y el reloj
   Pasos: tests primero.
   - `tests/unit/next-event.test.ts`:
     - elige el primer evento con hora no empezado que empiece en menos de 24 h, solo de calendarios visibles;
