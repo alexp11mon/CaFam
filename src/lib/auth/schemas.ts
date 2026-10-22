@@ -8,7 +8,7 @@ const email = z
   .toLowerCase()
   .pipe(z.email({ error: "Introduce un email válido." }));
 
-function isValidTimeZone(value: string): boolean {
+export function isValidTimeZone(value: string): boolean {
   try {
     new Intl.DateTimeFormat("en", { timeZone: value });
     return true;

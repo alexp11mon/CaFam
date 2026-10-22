@@ -88,7 +88,7 @@
   Pasos (los hace el usuario en el panel de dev, con las instrucciones entregadas en la conversación): SMTP propio con Brevo, plantillas con `token_hash` apuntando a `/auth/confirm`, Site URL, límite de correos ajustado, notificación de cambio de email activa. Después, se pide un enlace de recuperación de prueba y se confirma que llega.
   Hecho cuando: el usuario confirma que llega el correo de recuperación y el de cambio de email de prueba, con el enlace apuntando a `/auth/confirm`, y que el aviso al correo anterior aparece (o se anota como no disponible en R-plan, para la cola propia). Cubre: RF-1, RF-9 | Módulo: configuración de Auth (sin código)
 
-- [ ] T10 Confirmar el enlace de Auth con `/auth/confirm`
+- [x] T10 Confirmar el enlace de Auth con `/auth/confirm`
   Pasos: tests primero en `tests/unit/account-confirm.test.ts` (route handler con `// @vitest-environment node` y Supabase mockeado): `token_hash` y `type` válidos llaman a `verifyOtp` y redirigen; un `type` distinto de `recovery` o `email_change` no llama a Auth; `next` fuera de `/reset-password` o `/dashboard/settings` vuelve a `/dashboard`; un token rechazado redirige a una página de enlace no válido. Ruta `src/app/auth/confirm/route.ts` y `src/lib/account/confirm-type.ts`. Añadir `/auth/confirm` a las rutas públicas de `route-access.ts` con su test.
   Hecho cuando: `npm test -- account-confirm route-access` en verde. Cubre: RF-2, RF-3, RF-11, RF-12 | Módulo: auth/confirm, confirm-type
 
@@ -101,7 +101,7 @@
   Páginas `src/app/(auth)/forgot-password/page.tsx`, `src/app/(auth)/reset-password/page.tsx`, acciones `actions.ts` de cada una, y componentes `src/components/account/forgot-password-form.tsx` y `reset-password-form.tsx`. Capturas a 390, 768 y 1440 px con el acento rojo y amarillo (P9).
   Hecho cuando: `npm test -- forgot-password reset-password` en verde y el flujo completo se prueba en el navegador con `playwright-cli` en dev (pedir enlace, abrir el correo, cambiar contraseña, entrar con la nueva). Cubre: RF-1, RF-2, RF-4 | Módulo: forgot-password, reset-password, forgot-password-form, reset-password-form
 
-- [ ] T12 Validar los datos de cuenta y los mensajes de error comunes
+- [x] T12 Validar los datos de cuenta y los mensajes de error comunes
   Pasos: tests primero en `tests/unit/account-schemas.test.ts` y `tests/unit/account-error-messages.test.ts`. Comprueba que:
   - el nombre visible acepta de 1 a 50 caracteres y rechaza vacío y 51;
   - la contraseña nueva acepta de 8 a 72 caracteres con las reglas del registro, y rechaza igual a la actual (esto último lo recibe la acción, no el esquema);
