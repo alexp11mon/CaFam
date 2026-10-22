@@ -5,6 +5,8 @@
 > - Alcance: recuperar contraseña, cambiar email, editar perfil y borrar cuenta.
 > - Borrar cuenta con calendarios compartidos: los miembros reciben aviso y deciden si conservar el calendario o salir de él. Si nadie lo conserva, se borra a los 15 días. Si solo uno lo conserva, pasa a ser suyo; si lo conservan varios, cada uno recibe una copia completa.
 > - Cambiar la contraseña desde Ajustes también forma parte de la spec (además de la recuperación por correo).
+> - Cambio posterior a la aprobación (2026-10-22, pedido por el usuario): en los eventos de una cuenta borrada, el autor se muestra como "Cuenta borrada" (RF-20).
+> - Proveedor SMTP aprobado (2026-10-22, P6): **Brevo**, plan gratuito (300 correos al día, sin tarjeta, cuenta aprobada antes del primer envío). Se usa para el correo de Auth (SMTP) y para los avisos de la cola (API HTTP). Credenciales solo en el panel de Supabase y en Vault.
 > - Avisos a los miembros: dentro de la app y por correo.
 > - Correo: servicio SMTP gratuito propio, no el envío por defecto de Supabase.
 > - Cambio de email: pide la contraseña actual y la confirmación desde el correo nuevo; el antiguo recibe un aviso.
@@ -59,7 +61,7 @@ Hoy la cuenta es irrecuperable: quien olvida la contraseña pierde sus calendari
 - RF-17: SI la contraseña o el email de confirmación no coinciden, ENTONCES EL SISTEMA no borrará nada.
 - RF-18: CUANDO el usuario confirma el borrado, EL SISTEMA eliminará sus calendarios en los que no haya otros miembros, con todos sus eventos, categorías y preferencias.
 - RF-19: CUANDO el usuario confirma el borrado, EL SISTEMA eliminará su cuenta y sus datos de perfil, y cerrará su sesión en todos sus dispositivos.
-- RF-20: CUANDO el usuario confirma el borrado, EL SISTEMA quitará al usuario de los calendarios en los que era miembro, y conservará los eventos y categorías que creó en ellos, sin mostrar su nombre como autor.
+- RF-20: CUANDO el usuario confirma el borrado, EL SISTEMA quitará al usuario de los calendarios en los que era miembro, y conservará los eventos y categorías que creó en ellos, mostrando como autor "Cuenta borrada" en lugar de su nombre.
 - RF-21: CUANDO el usuario confirma el borrado y es propietario de calendarios con otros miembros, EL SISTEMA dejará esos calendarios sin propietario durante 15 días.
 - RF-22: MIENTRAS un calendario esté sin propietario, EL SISTEMA mantendrá los permisos de cada miembro sin cambios.
 - RF-23: CUANDO un calendario queda sin propietario, EL SISTEMA avisará a sus miembros dentro de la app y por correo, nombrando a la persona que borró su cuenta y el plazo de 15 días.
