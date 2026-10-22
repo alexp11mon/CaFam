@@ -339,6 +339,10 @@ Los tests están en `tests/unit/` y `tests/integration/`. Las capturas se hicier
 | RF-52 | T10 | `brand-icons` (tamaños y SVG único), `manifest`; favicon enlazado en el HTML |
 | RF-53 | T10 | `manifest`; `<meta name="theme-color" content="#E8E5DD">` en el HTML |
 | RF-54 | T10 | `brand-icons` (`calenderfam-v2` y borrado de cachés antiguas) |
+| RF-55 | T13 | `palette` (sin el azul antiguo), `design-tokens` (prohibido en `src/` y en `globals.css`) |
+| RF-56 | T13 | `remove-old-blue` (BD: registro, importar, juntar y valor por defecto), `palette`, `import-calendar`, `ics-schemas`, `import-action` |
+| RF-57 | T13 | `remove-old-blue` (BD: ningún calendario ni evento con el azul antiguo en `dev`) |
+| RF-58 | T13 | `accents` (Azul `#1D4ED8` / `#1E40AF`, contraste); captura con el acento Azul |
 
 Rendimiento: `range-performance` (BD) lee los 500 eventos de los 14 días de la agenda en menos de 3 s a través de RLS. La medición en Vercel queda para la demo de producción.
 
