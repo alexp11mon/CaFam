@@ -164,7 +164,7 @@
     - `sw-no-data.test.ts`: `CACHE_NAME` es `calenderfam-v2` y el `activate` borra las cachés con otro nombre.
   Hecho cuando: `npm test -- manifest layout sw-no-data` en verde y los cuatro PNG existen con sus tamaños (comprobado con `file public/icons/*.png`). Cubre: RF-51, RF-52, RF-53, RF-54 | Módulo: brand, pwa
 
-- [ ] T11 Aplicar la identidad a todas las pantallas y activar la guardia de diseño
+- [x] T11 Aplicar la identidad a todas las pantallas y activar la guardia de diseño
   Pasos:
   - Test primero en `tests/unit/design-tokens.test.ts`: falla si `src/` contiene clases `brand`/`brand-soft`, colores `[#…]` en clases, `font-mono`, `bg-gradient`, `backdrop-blur`, `shadow-` fuera de la lista blanca (`dialog` y menús) o emojis en textos.
   - Reestilar:

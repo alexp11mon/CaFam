@@ -28,7 +28,7 @@ export function InviteJoinCard({
         </p>
         <Link
           href="/dashboard/calendar"
-          className="inline-flex min-h-11 items-center font-semibold text-brand underline"
+          className="inline-flex min-h-11 items-center font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
         >
           Ir al calendario
         </Link>
@@ -38,7 +38,7 @@ export function InviteJoinCard({
 
   return (
     <div className="flex flex-col gap-4 text-ink">
-      <dl className="flex flex-col gap-3 rounded-lg bg-brand-soft/40 p-4">
+      <dl className="flex flex-col gap-3 rounded-3xl bg-paper p-4">
         <div>
           <dt className="text-sm">Calendario</dt>
           <dd className="min-w-0 break-words text-lg font-bold">

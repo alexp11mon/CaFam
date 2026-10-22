@@ -23,7 +23,7 @@ async function Members({ params }: { params: Promise<{ id: string }> }) {
       <p className="flex items-center gap-2 text-ink">
         <span
           aria-hidden="true"
-          className="size-4 shrink-0 rounded-full border border-ink/20"
+          className="size-4 shrink-0 rounded-full ring-1 ring-ink/20"
           style={{ backgroundColor: calendar.color }}
         />
         <span className="min-w-0 break-words font-semibold">
@@ -48,7 +48,7 @@ export default function MembersPage({
 }) {
   return (
     <PageShell title="Miembros">
-      <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
+      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
         <Members params={params} />
       </Suspense>
     </PageShell>

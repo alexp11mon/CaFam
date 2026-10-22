@@ -23,7 +23,7 @@ async function Merge() {
 
   if (owned.length < 2) {
     return (
-      <p className="rounded-lg bg-brand-soft/40 px-4 py-6 text-center text-ink">
+      <p className="rounded-3xl bg-paper px-4 py-6 text-center text-ink">
         Necesitas al menos dos calendarios propios para poder juntarlos.
       </p>
     );
@@ -62,7 +62,7 @@ export default function MergePage() {
         Los eventos y las categorías de los calendarios elegidos pasan a uno
         solo y los demás desaparecen. No se puede deshacer.
       </p>
-      <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
+      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
         <Merge />
       </Suspense>
     </PageShell>

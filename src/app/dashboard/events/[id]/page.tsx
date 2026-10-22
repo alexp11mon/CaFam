@@ -60,7 +60,7 @@ async function Event({ params }: { params: Promise<{ id: string }> }) {
       {canEdit ? (
         <section
           aria-labelledby="edit-heading"
-          className="flex flex-col gap-4 border-t border-ink/10 pt-6"
+          className="flex flex-col gap-4 border-t border-line pt-6"
         >
           <h2 id="edit-heading" className="text-lg font-semibold text-ink">
             Editar evento
@@ -104,7 +104,7 @@ export default function EventPage({
       backHref="/dashboard/calendar"
       backLabel="Volver al calendario"
     >
-      <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
+      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
         <Event params={params} />
       </Suspense>
     </PageShell>

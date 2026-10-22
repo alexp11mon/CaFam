@@ -36,25 +36,25 @@ export function MonthView({
     <div className="flex flex-col gap-3">
       <div
         aria-hidden="true"
-        className="grid grid-cols-7 text-center text-xs font-semibold text-ink/70"
+        className="grid grid-cols-7 text-center text-xs font-semibold text-muted"
       >
         {days.slice(0, 7).map((day) => (
           <span key={day}>{weekdayLabel(day)}</span>
         ))}
       </div>
-      <ol className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-ink/15 bg-ink/15">
+      <ol className="grid grid-cols-7 gap-px overflow-hidden rounded-3xl bg-line">
         {perDay.map(({ day, visible, hidden }) => (
           <li
             key={day}
             data-testid="day-cell"
             data-date={day}
-            className={`flex min-h-20 min-w-0 flex-col gap-1 p-1 ${day.slice(0, 7) === month ? "bg-white" : "bg-ink/5"}`}
+            className={`flex min-h-20 min-w-0 flex-col gap-1 p-1 ${day.slice(0, 7) === month ? "bg-paper" : "bg-stone"}`}
           >
             <Link
               href={calendarHref("day", day)}
               aria-label={formatDateKeyFull(day)}
               aria-current={day === today ? "date" : undefined}
-              className={`inline-flex size-7 items-center justify-center self-start rounded-full text-sm font-semibold ${day === today ? "bg-brand text-white" : "text-ink"}`}
+              className={`inline-flex size-7 items-center justify-center self-start rounded-full text-sm font-semibold ${day === today ? "border border-accent-edge bg-accent font-extrabold text-on-accent" : "text-ink"}`}
             >
               {Number(day.slice(8))}
             </Link>
@@ -68,7 +68,7 @@ export function MonthView({
             {hidden > 0 ? (
               <Link
                 href={calendarHref("day", day)}
-                className="text-xs font-semibold text-brand underline"
+                className="text-xs font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
               >
                 +{hidden} más
               </Link>
@@ -77,7 +77,7 @@ export function MonthView({
         ))}
       </ol>
       {isEmpty ? (
-        <p className="text-center text-ink/70">No hay eventos</p>
+        <p className="text-center text-muted">No hay eventos</p>
       ) : null}
     </div>
   );

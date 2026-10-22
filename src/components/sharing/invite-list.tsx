@@ -40,7 +40,7 @@ export function InviteList({
 
   if (valid.length === 0) {
     return (
-      <p className="rounded-lg bg-brand-soft/40 px-4 py-6 text-center text-ink">
+      <p className="rounded-3xl bg-paper px-4 py-6 text-center text-ink">
         No hay invitaciones vigentes.
       </p>
     );
@@ -51,7 +51,7 @@ export function InviteList({
       {valid.map((invite) => (
         <li
           key={invite.id}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-ink/10 p-4"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-paper p-4"
         >
           <div className="flex min-w-0 flex-col gap-1 text-ink">
             <span className="font-semibold">{ROLE_LABELS[invite.role]}</span>

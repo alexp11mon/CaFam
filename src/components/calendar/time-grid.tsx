@@ -5,7 +5,6 @@ import {
   layoutTimedDay,
   type CalendarEventItem,
 } from "@/lib/calendar/layout";
-import { readableTextColor } from "@/lib/calendar/palette";
 import { calendarHref } from "@/lib/calendar/ranges";
 import { formatTime } from "@/lib/calendar/time-zone";
 import { EventChip } from "./event-chip";
@@ -52,15 +51,15 @@ export function TimeGrid({
   return (
     <div className="flex flex-col gap-3">
       {/* The grid scrolls on its own so a narrow screen never scrolls the whole page. */}
-      <div className="overflow-x-auto rounded-lg border border-ink/15">
+      <div className="overflow-x-auto rounded-3xl bg-paper">
         <div style={{ minWidth: days.length > 1 ? "40rem" : undefined }}>
-          <div className="grid border-b border-ink/15" style={columns}>
+          <div className="grid border-b border-line" style={columns}>
             <div />
             {perDay.map(({ day }) => (
               <div
                 key={day}
                 data-testid="day-header"
-                className="flex flex-col items-center py-1 text-xs font-semibold text-ink/70"
+                className="flex flex-col items-center py-1 text-xs font-semibold text-muted"
               >
                 <span>{weekdayLabel(day)}</span>
                 {linkDays ? (
@@ -68,14 +67,14 @@ export function TimeGrid({
                     href={calendarHref("day", day)}
                     aria-label={formatDateKeyFull(day)}
                     aria-current={day === today ? "date" : undefined}
-                    className={`inline-flex size-7 items-center justify-center rounded-full text-sm ${day === today ? "bg-brand text-white" : "text-ink"}`}
+                    className={`inline-flex size-7 items-center justify-center rounded-full text-sm ${day === today ? "border border-accent-edge bg-accent font-extrabold text-on-accent" : "text-ink"}`}
                   >
                     {Number(day.slice(8))}
                   </Link>
                 ) : (
                   <span
                     aria-current={day === today ? "date" : undefined}
-                    className={`inline-flex size-7 items-center justify-center rounded-full text-sm ${day === today ? "bg-brand text-white" : "text-ink"}`}
+                    className={`inline-flex size-7 items-center justify-center rounded-full text-sm ${day === today ? "border border-accent-edge bg-accent font-extrabold text-on-accent" : "text-ink"}`}
                   >
                     {Number(day.slice(8))}
                   </span>
@@ -86,10 +85,10 @@ export function TimeGrid({
           {hasBanners ? (
             <div
               data-testid="banner-strip"
-              className="grid border-b border-ink/15 bg-brand-soft/20"
+              className="grid border-b border-line bg-stone"
               style={columns}
             >
-              <span className="p-1 text-[11px] text-ink/70">Todo el día</span>
+              <span className="p-1 text-[11px] text-muted">Todo el día</span>
               {perDay.map(({ day, banners }) => (
                 <ul key={day} className="flex min-w-0 flex-col gap-0.5 p-0.5">
                   {banners.map(({ event }) => (
@@ -111,7 +110,7 @@ export function TimeGrid({
                   <div
                     key={hour}
                     style={{ height: HOUR_PX }}
-                    className="border-t border-transparent pr-1 text-right text-[11px] text-ink/70"
+                    className="border-t border-transparent pr-1 text-right text-[11px] text-muted"
                   >
                     {String(hour).padStart(2, "0")}:00
                   </div>
@@ -120,7 +119,7 @@ export function TimeGrid({
               {perDay.map(({ day, slots }) => (
                 <div
                   key={day}
-                  className="relative border-l border-ink/15"
+                  className="relative border-l border-line"
                   style={{ height: 24 * HOUR_PX }}
                 >
                   {HOURS.map((hour) => (
@@ -128,7 +127,7 @@ export function TimeGrid({
                       key={hour}
                       aria-hidden="true"
                       style={{ height: HOUR_PX }}
-                      className="border-t border-ink/10"
+                      className="border-t border-line"
                     />
                   ))}
                   {slots.map((slot) => {
@@ -142,10 +141,10 @@ export function TimeGrid({
                           height: `${Math.max(((slot.endMinute - slot.startMinute) / 60) * HOUR_PX, MIN_SLOT_PX)}px`,
                           left: percent(slot.column * width),
                           width: percent(width),
-                          backgroundColor: slot.event.color,
-                          color: readableTextColor(slot.event.color),
+                          // The color marks, the text stays in ink (spec 005 RF-4).
+                          borderLeftColor: slot.event.color,
                         }}
-                        className="absolute overflow-hidden rounded border border-white/70 px-1 text-xs"
+                        className="absolute overflow-hidden rounded-md border-l-4 bg-stone px-1 text-xs text-ink ring-1 ring-paper"
                       >
                         <span className="font-semibold">
                           {formatTime(slot.event.startsAt, timeZone)}
@@ -161,7 +160,7 @@ export function TimeGrid({
         </div>
       </div>
       {isEmpty ? (
-        <p className="text-center text-ink/70">No hay eventos</p>
+        <p className="text-center text-muted">No hay eventos</p>
       ) : null}
     </div>
   );

@@ -90,7 +90,8 @@ describe("MonthView (RF-29, RF-37..RF-39)", () => {
     });
     expect(chip).toHaveTextContent("08:00");
     expect(chip).toHaveAttribute("href", "/dashboard/events/Clase");
-    expect(chip).toHaveStyle({ backgroundColor: "#A0C4FF" });
+    // The color is a bar; the text stays in ink (spec 005 RF-4).
+    expect(chip).toHaveStyle({ borderLeftColor: "#A0C4FF" });
   });
 
   it("shows multi-day and all-day events in every day they occupy (RF-21)", () => {

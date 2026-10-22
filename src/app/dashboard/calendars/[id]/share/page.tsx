@@ -34,7 +34,7 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
       <p className="flex items-center gap-2 text-ink">
         <span
           aria-hidden="true"
-          className="size-4 shrink-0 rounded-full border border-ink/20"
+          className="size-4 shrink-0 rounded-full ring-1 ring-ink/20"
           style={{ backgroundColor: calendar.color }}
         />
         <span className="min-w-0 break-words font-semibold">
@@ -43,7 +43,7 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
       </p>
       <Link
         href={`/dashboard/calendars/${id}/members`}
-        className="inline-flex min-h-11 items-center text-sm font-semibold text-brand underline"
+        className="inline-flex min-h-11 items-center text-sm font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
       >
         Ver miembros
       </Link>
@@ -84,7 +84,7 @@ export default function SharePage({
 }) {
   return (
     <PageShell title="Compartir calendario">
-      <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
+      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
         <Share params={params} />
       </Suspense>
     </PageShell>

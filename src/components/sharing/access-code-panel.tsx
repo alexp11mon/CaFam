@@ -95,9 +95,9 @@ export function AccessCodePanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1 rounded-lg bg-brand-soft/40 p-4 text-ink">
+      <div className="flex flex-col gap-1 rounded-3xl bg-paper p-4 text-ink">
         <p className="text-sm">ID del calendario</p>
-        <p className="font-mono text-2xl font-bold tracking-widest select-all">
+        <p className="text-3xl font-extrabold tracking-[0.2em] tabular-nums select-all">
           {code.publicCode}
         </p>
         <p className="text-sm">Rol de quien se une: {ROLE_LABELS[code.role]}</p>

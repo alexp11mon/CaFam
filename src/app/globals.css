@@ -2,8 +2,8 @@
 
 /* Design tokens (constitution "Identidad visual y diseño de interfaz", P9;
    spec 005 plan "Modelo de datos"). Values mirror src/lib/theme/accents.ts and
-   accents.test.ts keeps them equal. brand and brand-soft are the spec 001
-   tokens, kept only until every screen is restyled (spec 005 T11). */
+   accents.test.ts keeps them equal; design-tokens.test.ts keeps every screen
+   on them. */
 @theme {
   --color-stone: #e8e5dd;
   --color-paper: #f2f0ea;
@@ -12,8 +12,6 @@
   --color-line: #d6d1c4;
   --color-control: #857f75;
   --color-danger: #b42318;
-  --color-brand: #2563eb;
-  --color-brand-soft: #a6e1fa;
   --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
 }
 

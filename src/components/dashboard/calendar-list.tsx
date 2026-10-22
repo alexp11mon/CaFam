@@ -20,7 +20,7 @@ const ROLE_LABELS: Record<CalendarRole, string> = {
 };
 
 const ACTION_LINK =
-  "inline-flex min-h-11 items-center text-sm font-semibold text-brand underline";
+  "inline-flex min-h-11 items-center text-sm font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink";
 
 /** Calendars the user belongs to, in the order received (RF-13, RF-41, RF-45). */
 export function CalendarList({
@@ -33,7 +33,7 @@ export function CalendarList({
 }) {
   if (calendars.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-lg bg-brand-soft/40 px-4 py-6 text-center text-ink">
+      <div className="flex flex-col items-center gap-4 rounded-3xl bg-paper px-4 py-6 text-center text-ink">
         <p>Todavía no tienes calendarios.</p>
         <LinkButton href="/dashboard/calendars/new">
           Crear calendario
@@ -47,13 +47,13 @@ export function CalendarList({
       {calendars.map((calendar) => (
         <li
           key={calendar.id}
-          className="flex min-w-0 flex-col gap-2 rounded-xl border border-ink/15 bg-white p-4"
+          className="flex min-w-0 flex-col gap-2 rounded-3xl bg-paper p-4"
         >
           <div className="flex min-w-0 items-center gap-3">
             <span
               data-testid="calendar-color"
               aria-hidden="true"
-              className="size-4 shrink-0 rounded-full border border-ink/20"
+              className="size-4 shrink-0 rounded-full ring-1 ring-ink/20"
               style={{ backgroundColor: calendar.color }}
             />
             <span
@@ -62,7 +62,7 @@ export function CalendarList({
             >
               {calendar.name}
             </span>
-            <span className="shrink-0 rounded-full bg-brand-soft px-2.5 py-0.5 text-sm font-medium text-ink">
+            <span className="shrink-0 rounded-full bg-stone px-2.5 py-0.5 text-sm font-medium text-ink">
               {ROLE_LABELS[calendar.role]}
             </span>
           </div>

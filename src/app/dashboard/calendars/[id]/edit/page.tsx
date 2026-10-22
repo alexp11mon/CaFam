@@ -31,7 +31,7 @@ async function EditCalendar({ params }: { params: Promise<{ id: string }> }) {
       />
       <section
         aria-labelledby="danger-heading"
-        className="flex flex-col gap-3 border-t border-ink/10 pt-6"
+        className="flex flex-col gap-3 border-t border-line pt-6"
       >
         <h2 id="danger-heading" className="text-lg font-semibold text-ink">
           Borrar calendario
@@ -60,7 +60,7 @@ export default function EditCalendarPage({
 }) {
   return (
     <PageShell title="Editar calendario">
-      <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
+      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
         <EditCalendar params={params} />
       </Suspense>
     </PageShell>

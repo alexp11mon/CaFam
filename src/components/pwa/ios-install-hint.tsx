@@ -24,7 +24,7 @@ export function IosInstallHint() {
   if (!show) return null;
 
   return (
-    <p className="rounded-lg bg-brand-soft/40 px-4 py-3 text-sm text-ink">
+    <p className="rounded-2xl bg-paper px-4 py-3 text-sm text-ink">
       Para instalar CalenderFam en tu iPhone o iPad, pulsa{" "}
       <strong>Compartir</strong> y después{" "}
       <strong>Añadir a pantalla de inicio</strong>.

@@ -30,7 +30,7 @@ export default function InvitePage({
 }) {
   return (
     <PageShell title="Invitación a un calendario">
-      <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
+      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
         <Invite params={params} />
       </Suspense>
     </PageShell>

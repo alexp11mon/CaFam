@@ -83,14 +83,14 @@ export function MemberList({
         {members.map((member) => (
           <li
             key={member.userId}
-            className="flex flex-col gap-3 rounded-lg border border-ink/10 p-4"
+            className="flex flex-col gap-3 rounded-3xl bg-paper p-4"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="min-w-0 break-words font-semibold text-ink">
                 {member.name}
               </span>
               {isOwner && member.role !== "owner" ? null : (
-                <span className="shrink-0 rounded-full bg-brand-soft px-2.5 py-0.5 text-sm font-medium text-ink">
+                <span className="shrink-0 rounded-full bg-stone px-2.5 py-0.5 text-sm font-medium text-ink">
                   {ROLE_LABELS[member.role]}
                 </span>
               )}

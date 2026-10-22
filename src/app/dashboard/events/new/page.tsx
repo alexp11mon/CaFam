@@ -34,7 +34,7 @@ async function NewEvent({ searchParams }: { searchParams: SearchParams }) {
 
   if (editable.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-lg bg-brand-soft/40 px-4 py-6 text-center text-ink">
+      <div className="flex flex-col items-center gap-4 rounded-3xl bg-paper px-4 py-6 text-center text-ink">
         <p>No tienes ningún calendario donde puedas crear eventos.</p>
         <LinkButton href="/dashboard/calendars/new">
           Crear calendario
@@ -92,7 +92,7 @@ export default function NewEventPage({
       backHref="/dashboard/calendar"
       backLabel="Volver al calendario"
     >
-      <Suspense fallback={<p className="text-ink/70">Cargando…</p>}>
+      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
         <NewEvent searchParams={searchParams} />
       </Suspense>
     </PageShell>

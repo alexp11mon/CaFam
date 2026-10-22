@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { IosInstallHint } from "@/components/pwa/ios-install-hint";
+import { Logo } from "@/components/brand/logo";
 import { LinkButton } from "@/components/ui/link-button";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,13 +24,13 @@ export default function HomePage() {
       </Suspense>
       <div className="flex w-full max-w-md flex-col gap-8 text-center">
         <div className="flex flex-col gap-3">
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand">
-            CalenderFam
-          </p>
-          <h1 className="text-3xl font-bold text-ink sm:text-4xl">
+          <span className="self-center">
+            <Logo />
+          </span>
+          <h1 className="text-3xl leading-tight font-extrabold tracking-tight text-ink sm:text-4xl">
             El calendario de tu familia, en un solo sitio
           </h1>
-          <p className="text-lg text-ink/80">
+          <p className="text-lg text-muted">
             Organiza tus planes y compártelos con quien tú elijas.
           </p>
         </div>

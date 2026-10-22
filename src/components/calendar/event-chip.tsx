@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
-import { readableTextColor } from "@/lib/calendar/palette";
 import { formatTime } from "@/lib/calendar/time-zone";
 
-/** One event as a colored link to its detail (RF-17, RF-36); text color keeps 4.5:1 contrast. */
+/**
+ * One event as a link to its detail (RF-17, RF-36). The text stays in ink and
+ * its color is a bar on the left (spec 005 RF-4, plan D15).
+ */
 export function EventChip({
   event,
   timeZone,
@@ -18,10 +20,11 @@ export function EventChip({
     <Link
       href={`/dashboard/events/${event.id}`}
       style={{
-        backgroundColor: event.color,
-        color: readableTextColor(event.color),
+        borderLeftColor: event.color,
+        // On a phone the compact chip is only the bar, filled with the color.
+        ["--chip-color" as string]: event.color,
       }}
-      className={`block truncate rounded px-1.5 text-xs font-medium ${compact ? "h-1.5 overflow-hidden sm:h-auto sm:py-0.5" : "py-0.5"}`}
+      className={`block truncate rounded-md border-l-4 bg-stone px-1.5 text-xs font-medium text-ink ring-1 ring-ink/10 ${compact ? "h-1.5 overflow-hidden max-sm:bg-(--chip-color) sm:h-auto sm:py-0.5" : "py-0.5"}`}
     >
       <span className={compact ? "sr-only sm:not-sr-only" : undefined}>
         {event.allDay ? null : `${formatTime(event.startsAt, timeZone)} `}

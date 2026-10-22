@@ -58,7 +58,8 @@ describe("WeekView (RF-29, RF-35, RF-40)", () => {
     expect(slot).toHaveTextContent("08:30");
     expect(slot.style.top).toBe("408px"); // 8.5 h * 48 px
     expect(slot.style.height).toBe("72px"); // 1.5 h * 48 px
-    expect(slot).toHaveStyle({ backgroundColor: "#A0C4FF" });
+    // The color is a bar; the text stays in ink (spec 005 RF-4).
+    expect(slot).toHaveStyle({ borderLeftColor: "#A0C4FF" });
   });
 
   it("puts overlapping events side by side without covering each other (RF-40)", () => {

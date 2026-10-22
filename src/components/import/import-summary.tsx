@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ImportSummaryData } from "@/lib/ics/import-state";
 
 const ACTION_LINK =
-  "inline-flex min-h-11 items-center font-semibold text-brand underline";
+  "inline-flex min-h-11 items-center font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink";
 
 const events = (n: number) => (n === 1 ? "1 evento" : `${n} eventos`);
 
@@ -13,7 +13,7 @@ export function ImportSummary({ result }: { result: ImportSummaryData }) {
   return (
     <div
       role="status"
-      className="flex flex-col gap-2 rounded-lg bg-brand-soft/40 p-4 text-ink"
+      className="flex flex-col gap-2 rounded-3xl bg-paper p-4 text-ink"
     >
       <p className="font-semibold">Calendario creado con {events(created)}.</p>
       {skipped > 0 ? (

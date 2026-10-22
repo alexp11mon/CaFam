@@ -26,7 +26,7 @@ function Row({
 }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <dt className="text-sm font-medium text-ink/70">{label}</dt>
+      <dt className="text-sm font-medium text-muted">{label}</dt>
       <dd className="min-w-0 break-words text-ink">{children}</dd>
     </div>
   );
@@ -51,7 +51,7 @@ export function EventDetail({
         <span
           data-testid="event-color"
           aria-hidden="true"
-          className="mt-2 size-4 shrink-0 rounded-full border border-ink/20"
+          className="mt-2 size-4 shrink-0 rounded-full ring-1 ring-ink/20"
           style={{ backgroundColor: event.color ?? event.calendarColor }}
         />
         <h2 className="min-w-0 break-words text-xl font-bold text-ink">

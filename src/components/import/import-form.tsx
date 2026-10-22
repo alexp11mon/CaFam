@@ -55,13 +55,13 @@ export function ImportForm({ action }: { action: FormAction<ImportState> }) {
             const file = event.target.files?.[0];
             setFileError(file && file.size > MAX_BYTES ? TOO_LARGE : undefined);
           }}
-          className="w-full rounded-lg border border-ink/30 bg-white px-3 py-2 text-base text-ink file:mr-3 file:min-h-11 file:rounded-lg file:border-0 file:bg-brand file:px-4 file:font-semibold file:text-white aria-invalid:border-red-700"
+          className="w-full rounded-xl border border-control bg-paper px-3 py-2 text-base text-ink file:mr-3 file:min-h-11 file:rounded-full file:border-0 file:bg-ink file:px-5 file:font-semibold file:text-white aria-invalid:border-danger"
         />
         {fileError ? (
           <p
             id={fileErrorId}
             aria-live="polite"
-            className="text-sm text-red-700"
+            className="text-sm text-danger"
           >
             {fileError}
           </p>

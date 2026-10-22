@@ -137,11 +137,11 @@ export function MergeForm({
                 calendar.id,
               )}
               onChange={() => toggle(calendar.id)}
-              className="size-5 shrink-0 accent-brand"
+              className="size-5 shrink-0 accent-ink"
             />
             <span
               aria-hidden="true"
-              className="size-3 shrink-0 rounded-full border border-ink/20"
+              className="size-3 shrink-0 rounded-full ring-1 ring-ink/20"
               style={{ backgroundColor: calendar.color }}
             />
             <span className="min-w-0 break-words">
@@ -150,7 +150,7 @@ export function MergeForm({
           </label>
         ))}
         {sourceError ? (
-          <p aria-live="polite" className="text-sm text-red-700">
+          <p aria-live="polite" className="text-sm text-danger">
             {sourceError}
           </p>
         ) : null}
@@ -203,7 +203,7 @@ export function MergeForm({
       <dialog
         ref={dialog}
         aria-labelledby={titleId}
-        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-ink/20 bg-white p-6 text-ink backdrop:bg-ink/50"
+        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-paper p-6 text-ink shadow-xl backdrop:bg-ink/50"
       >
         <div className="flex flex-col gap-4">
           <h2 id={titleId} className="text-lg font-bold">
