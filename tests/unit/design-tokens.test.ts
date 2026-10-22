@@ -84,5 +84,7 @@ describe("design guard (P9)", () => {
 
     expect(css).not.toMatch(/--color-brand/);
     expect(css).not.toMatch(/#2563eb/i);
+    // Only src/ is scanned, so examples in the docs never become CSS.
+    expect(css).toMatch(/@import "tailwindcss" source\("\.\."\);/);
   });
 });

@@ -1,4 +1,7 @@
-@import "tailwindcss";
+/* Classes are only looked for in src/: by default Tailwind scans the whole
+   repo and turned examples in the docs (e.g. the old blue) into CSS (spec 005
+   RF-55). */
+@import "tailwindcss" source("..");
 
 /* Design tokens (constitution "Identidad visual y diseño de interfaz", P9;
    spec 005 plan "Modelo de datos"). Values mirror src/lib/theme/accents.ts and

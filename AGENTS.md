@@ -392,6 +392,7 @@ npm run db:types       # regenera src/types/database.ts
 - **Cookie de un usuario borrado**: `getClaims()` valida el JWT sin consultar la base de datos, así que en `playwright-cli` sigues "con sesión" tras borrar el usuario de prueba. Limpia las cookies (`page.context().clearCookies()`) antes de registrar otro.
 - **Icono de la app instalada**: iOS no lo cambia hasta volver a añadir la app a la pantalla de inicio; Android lo actualiza cuando revisa el manifest. Lo que sí se renueva al publicar es lo que guarda el service worker (`CACHE_NAME`).
 - **La carpeta `.playwright-cli/`** (capturas de la herramienta) no está ignorada: bórrala al terminar o `format:check` falla.
+- **Tailwind 4 solo busca clases en `src/`** (`@import "tailwindcss" source("..")` en `globals.css`). Sin eso escanea todo el repositorio y convierte en CSS los ejemplos de la documentación (así se coló el azul antiguo `bg-[#…]` en producción).
 
 ## 11. Fuera de alcance hasta su spec
 
