@@ -83,7 +83,7 @@ export function ImportForm({ action }: { action: FormAction<ImportState> }) {
         <Button type="submit" disabled={pending || Boolean(fileError)}>
           {pending ? "Importando…" : "Importar calendario"}
         </Button>
-        <LinkButton href="/dashboard" variant="secondary">
+        <LinkButton href="/dashboard/calendars" variant="secondary">
           Cancelar
         </LinkButton>
       </div>

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_ACCENT, isAccent, type AccentId } from "@/lib/theme/accents";
 import type { CalendarPreference, Person, PersonPreference } from "./grouping";
 import type { Database } from "@/types/database";
 
@@ -144,6 +145,19 @@ export async function getProfileTimeZone(
     .maybeSingle();
   if (error) throw error;
   return data?.time_zone ?? DEFAULT_TIME_ZONE;
+}
+
+/** The user's interface accent; red if the row cannot be read (spec 005 RF-9, RF-10). */
+export async function getAccent(
+  supabase: Client,
+  userId: string,
+): Promise<AccentId> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("accent")
+    .eq("id", userId)
+    .maybeSingle();
+  return isAccent(data?.accent) ? data.accent : DEFAULT_ACCENT;
 }
 
 export interface CategoryOptionRecord {

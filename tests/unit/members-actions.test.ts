@@ -177,8 +177,9 @@ describe("leaveCalendar (RF-27, RF-28)", () => {
   it("deletes the own row and goes back to the panel", async () => {
     state.queue = [{ data: [{ user_id: ME }], error: null }];
 
+    // The list of calendars lives in "Mis calendarios" (spec 005 RF-21).
     await expect(leaveCalendar(CALENDAR)).rejects.toThrow(
-      "REDIRECT:/dashboard",
+      /^REDIRECT:\/dashboard\/calendars$/,
     );
 
     expect(state.log).toContainEqual(["eq", "user_id", ME]);

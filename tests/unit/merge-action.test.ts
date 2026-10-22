@@ -64,7 +64,7 @@ describe("mergeCalendars action (RF-49, RF-50, RF-53)", () => {
         { values: EMPTY },
         form({ sourceIds: [A, B], targetId: B, newName: "", newColor: "" }),
       ),
-    ).rejects.toThrow("REDIRECT:/dashboard");
+    ).rejects.toThrow(/^REDIRECT:\/dashboard\/calendars$/);
 
     expect(state.rpcCalls).toEqual([
       {
@@ -86,7 +86,7 @@ describe("mergeCalendars action (RF-49, RF-50, RF-53)", () => {
           newColor: "#a0c4ff",
         }),
       ),
-    ).rejects.toThrow("REDIRECT:/dashboard");
+    ).rejects.toThrow(/^REDIRECT:\/dashboard\/calendars$/);
 
     expect(state.rpcCalls[0]?.args).toEqual({
       p_source_ids: [A, B, C],

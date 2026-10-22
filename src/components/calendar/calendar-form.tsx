@@ -56,7 +56,7 @@ export function CalendarForm({
         <Button type="submit" disabled={pending}>
           {pending ? pendingLabel : submitLabel}
         </Button>
-        <LinkButton href="/dashboard" variant="secondary">
+        <LinkButton href="/dashboard/calendars" variant="secondary">
           Cancelar
         </LinkButton>
       </div>

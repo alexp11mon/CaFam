@@ -111,12 +111,12 @@ describe("CalendarForm (RF-1, RF-2, RF-4)", () => {
     expect(formData.get("color")).toBe("#BDB2FF");
   });
 
-  it("offers a way back to the panel", () => {
+  it("offers a way back to Mis calendarios (spec 005 RF-21)", () => {
     renderForm();
 
     expect(screen.getByRole("link", { name: "Cancelar" })).toHaveAttribute(
       "href",
-      "/dashboard",
+      "/dashboard/calendars",
     );
   });
 });

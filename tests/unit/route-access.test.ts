@@ -54,12 +54,15 @@ describe("getRouteAccess", () => {
   });
 
   describe("with session (RF-9)", () => {
-    it.each(["/login", "/signup"])("redirects %s to /dashboard", (pathname) => {
-      expect(getRouteAccess(pathname, true)).toEqual({
-        type: "redirect",
-        destination: "/dashboard",
-      });
-    });
+    it.each(["/login", "/signup"])(
+      "redirects %s to the calendar (spec 005 RF-15)",
+      (pathname) => {
+        expect(getRouteAccess(pathname, true)).toEqual({
+          type: "redirect",
+          destination: "/dashboard/calendar",
+        });
+      },
+    );
 
     it.each(["/dashboard", "/dashboard/x", ...PUBLIC_PATHS])(
       "allows %s",

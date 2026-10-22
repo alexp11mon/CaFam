@@ -134,5 +134,5 @@ export async function leaveCalendar(calendarId: string): Promise<ConfirmState> {
   }
 
   refresh();
-  redirect("/dashboard");
+  redirect("/dashboard/calendars");
 }

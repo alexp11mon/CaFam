@@ -195,7 +195,7 @@ export function MergeForm({
         <Button disabled={!canContinue || pending} onClick={openConfirmation}>
           {pending ? "Juntando…" : "Juntar calendarios"}
         </Button>
-        <LinkButton href="/dashboard" variant="secondary">
+        <LinkButton href="/dashboard/calendars" variant="secondary">
           Cancelar
         </LinkButton>
       </div>

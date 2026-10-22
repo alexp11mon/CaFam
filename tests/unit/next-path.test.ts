@@ -15,8 +15,12 @@ describe("getSafeNextPath (RF-7, plan D9)", () => {
     expect(getSafeNextPath(`/invite/${"a".repeat(128)}`)).toBe(
       `/invite/${"a".repeat(128)}`,
     );
-    expect(getSafeNextPath(`/invite/${"a".repeat(15)}`)).toBe("/dashboard");
-    expect(getSafeNextPath(`/invite/${"a".repeat(129)}`)).toBe("/dashboard");
+    expect(getSafeNextPath(`/invite/${"a".repeat(15)}`)).toBe(
+      "/dashboard/calendar",
+    );
+    expect(getSafeNextPath(`/invite/${"a".repeat(129)}`)).toBe(
+      "/dashboard/calendar",
+    );
   });
 
   it.each([
@@ -35,7 +39,7 @@ describe("getSafeNextPath (RF-7, plan D9)", () => {
     undefined,
     null,
     42,
-  ])("falls back to /dashboard for %j", (next) => {
-    expect(getSafeNextPath(next)).toBe("/dashboard");
+  ])("falls back to the calendar for %j (spec 005 RF-15)", (next) => {
+    expect(getSafeNextPath(next)).toBe("/dashboard/calendar");
   });
 });

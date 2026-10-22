@@ -31,7 +31,7 @@ export function getRouteAccess(
     };
   }
   if (hasSession && GUEST_ONLY_PATHS.has(pathname)) {
-    return { type: "redirect", destination: "/dashboard" };
+    return { type: "redirect", destination: "/dashboard/calendar" };
   }
   return { type: "allow" };
 }

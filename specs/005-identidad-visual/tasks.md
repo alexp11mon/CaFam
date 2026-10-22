@@ -72,7 +72,7 @@
   Módulos: `src/lib/calendar/next-event.ts`, `src/lib/people/avatar.ts`, `src/lib/calendar/month-marks.ts`, `src/lib/shell/nav.ts` y `src/lib/hooks/use-now.ts`.
   Hecho cuando: `npm test -- next-event avatar month-marks nav use-now` en verde. Cubre: RF-20, RF-24, RF-27, RF-28, RF-45, RF-46, RF-47, RF-48, RF-49 | Módulo: next-event, avatars, mini-month, nav, clock
 
-- [ ] T5 Crear el marco de `/dashboard` con el acento del usuario y mover las rutas
+- [x] T5 Crear el marco de `/dashboard` con el acento del usuario y mover las rutas
   Pasos:
   - Tests primero:
     - `tests/unit/app-frame.test.tsx`: el contenedor lleva el `data-accent` recibido y el esqueleto de carga no usa acento.

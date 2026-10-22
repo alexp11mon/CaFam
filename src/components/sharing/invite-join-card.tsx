@@ -27,10 +27,10 @@ export function InviteJoinCard({
           {SHARING_MESSAGES.invalidInvite}
         </p>
         <Link
-          href="/dashboard"
+          href="/dashboard/calendar"
           className="inline-flex min-h-11 items-center font-semibold text-brand underline"
         >
-          Ir al panel
+          Ir al calendario
         </Link>
       </div>
     );

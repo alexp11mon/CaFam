@@ -56,7 +56,7 @@ export async function createCalendar(
 
   // Drop the client router cache: the panel and the views must show the change.
   revalidatePath("/dashboard", "layout");
-  redirect("/dashboard");
+  redirect("/dashboard/calendars");
 }
 
 /** RLS hides rows without an error, so an empty result is explained afterwards (RF-8). */
@@ -103,7 +103,7 @@ export async function updateCalendar(
 
   // Drop the client router cache: the panel and the views must show the change.
   revalidatePath("/dashboard", "layout");
-  redirect("/dashboard");
+  redirect("/dashboard/calendars");
 }
 
 // The state argument useActionState passes is not needed: nothing to carry over.
@@ -129,7 +129,7 @@ export async function deleteCalendar(id: string): Promise<ConfirmState> {
 
   // Drop the client router cache: the panel and the views must show the change.
   revalidatePath("/dashboard", "layout");
-  redirect("/dashboard");
+  redirect("/dashboard/calendars");
 }
 
 type MergeFormState = FormState<MergeField>;
@@ -169,5 +169,5 @@ export async function mergeCalendars(
 
   // Drop the client router cache: the panel and the views must show the result.
   revalidatePath("/dashboard", "layout");
-  redirect("/dashboard");
+  redirect("/dashboard/calendars");
 }

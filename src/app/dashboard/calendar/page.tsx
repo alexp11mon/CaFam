@@ -125,10 +125,10 @@ export default function CalendarPage({
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       <header className="flex flex-col gap-1 border-b border-ink/10 pb-4">
         <Link
-          href="/dashboard"
+          href="/dashboard/calendars"
           className="inline-flex min-h-11 items-center text-sm font-semibold text-brand underline"
         >
-          ← Volver al panel
+          ← Mis calendarios
         </Link>
         <h1 className="text-xl font-bold text-ink sm:text-2xl">Calendario</h1>
       </header>

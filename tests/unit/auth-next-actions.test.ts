@@ -51,16 +51,18 @@ describe("signIn and signUp redirect (RF-7)", () => {
     ["signIn", (data: FormData) => signIn(signInState, data), SIGN_IN],
     ["signUp", (data: FormData) => signUp(signUpState, data), SIGN_UP],
   ] as const)(
-    "%s goes to /dashboard without next or with an invalid one",
+    "%s goes to the calendar without next or with an invalid one (spec 005 RF-15)",
     async (_name, run, fields) => {
-      await expect(run(form(fields))).rejects.toThrow("REDIRECT:/dashboard");
+      await expect(run(form(fields))).rejects.toThrow(
+        /^REDIRECT:\/dashboard\/calendar$/,
+      );
       for (const next of [
         "",
         "/dashboard/calendar",
         "https://evil.example.com",
       ]) {
         await expect(run(form({ ...fields, next }))).rejects.toThrow(
-          "REDIRECT:/dashboard",
+          /^REDIRECT:\/dashboard\/calendar$/,
         );
       }
     },

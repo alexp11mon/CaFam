@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 /** Common frame of the spec 002 form pages: back link, title and content. */
 export function PageShell({
   title,
-  backHref = "/dashboard",
-  backLabel = "Volver al panel",
+  backHref = "/dashboard/calendars",
+  backLabel = "Volver a Mis calendarios",
   children,
 }: {
   title: string;
