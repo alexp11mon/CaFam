@@ -39,6 +39,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_notices: {
+        Row: {
+          calendar_name: string
+          created_at: string
+          id: string
+          kind: string
+          person_name: string
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          calendar_name: string
+          created_at?: string
+          id?: string
+          kind: string
+          person_name?: string
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          calendar_name?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          person_name?: string
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_notices_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auth_email_requests: {
+        Row: {
+          created_at: string
+          email_hash: string
+        }
+        Insert: {
+          created_at?: string
+          email_hash: string
+        }
+        Update: {
+          created_at?: string
+          email_hash?: string
+        }
+        Relationships: []
+      }
       calendar_access_codes: {
         Row: {
           calendar_id: string
@@ -167,6 +220,42 @@ export type Database = {
           },
         ]
       }
+      calendar_orphan_decisions: {
+        Row: {
+          calendar_id: string
+          decided_at: string
+          keep: boolean
+          user_id: string
+        }
+        Insert: {
+          calendar_id: string
+          decided_at?: string
+          keep: boolean
+          user_id: string
+        }
+        Update: {
+          calendar_id?: string
+          decided_at?: string
+          keep?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_orphan_decisions_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_orphan_decisions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_preferences: {
         Row: {
           calendar_id: string
@@ -216,7 +305,8 @@ export type Database = {
           description: string | null
           id: string
           name: string
-          owner_id: string
+          orphaned_at: string | null
+          owner_id: string | null
           updated_at: string
         }
         Insert: {
@@ -225,7 +315,8 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
-          owner_id: string
+          orphaned_at?: string | null
+          owner_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -234,7 +325,8 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
-          owner_id?: string
+          orphaned_at?: string | null
+          owner_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -246,6 +338,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_outbox: {
+        Row: {
+          attempts: number
+          body: string
+          created_at: string
+          id: number
+          sent_at: string | null
+          subject: string
+          to_email: string
+        }
+        Insert: {
+          attempts?: number
+          body: string
+          created_at?: string
+          id?: never
+          sent_at?: string | null
+          subject: string
+          to_email: string
+        }
+        Update: {
+          attempts?: number
+          body?: string
+          created_at?: string
+          id?: never
+          sent_at?: string | null
+          subject?: string
+          to_email?: string
+        }
+        Relationships: []
       }
       event_categories: {
         Row: {

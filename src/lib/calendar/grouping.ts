@@ -9,7 +9,8 @@ export interface Person {
 export interface GroupableCalendar {
   id: string;
   name: string;
-  ownerId: string;
+  // null for a calendar without owner (spec 006 RF-21): it belongs to no person group.
+  ownerId: string | null;
   createdAt: string;
 }
 
@@ -69,7 +70,7 @@ export function groupByPerson<T extends GroupableCalendar>({
   // An owner we cannot name (profile not shared) still gets a group.
   const known = new Map(people.map((person) => [person.id, person]));
   for (const calendar of calendars) {
-    if (!known.has(calendar.ownerId)) {
+    if (calendar.ownerId !== null && !known.has(calendar.ownerId)) {
       known.set(calendar.ownerId, {
         id: calendar.ownerId,
         displayName: UNKNOWN_PERSON,

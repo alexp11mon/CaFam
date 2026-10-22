@@ -12,7 +12,8 @@
   Pasos: en el proyecto dev, con SQL de prueba y sin tocar el esquema: (a) una función `SECURITY DEFINER` con `search_path = ''` borra un `auth.users` de prueba creado para la comprobación; (b) `pg_cron`, `pg_net` y `vault` están disponibles y activos; (c) `vault.create_secret` guarda y `vault.decrypted_secrets` lee un valor de prueba. Se borran el usuario y el secreto de prueba al terminar. Los resultados se anotan en `plan.md` (R1 y R2).
   Hecho cuando: las tres comprobaciones dan el resultado esperado y `plan.md` anota la salida de cada una. Si (a) falla, se detiene la implementación y se vuelve a D1 con el usuario. Cubre: RF-19, RF-23, RF-26 | Módulo: account_orphan_schema (comprobación)
 
-- [ ] T2 Crear el esquema de cuenta: propietario anulable, avisos, decisiones, cola de correo y límite de recuperación
+- [x] T2 Crear el esquema de cuenta: propietario anulable, avisos, decisiones, cola de correo y límite de recuperación
+  Ajuste al cerrar: la comprobación de "un cambio de propietario dentro de la marca funciona" no se puede hacer desde los tests de cliente (no hay forma de activar la marca); pasa a los tests de T4, donde la función la activa. Los tipos de `calendars.owner_id` pasan a anulable en `queries.ts` y `grouping.ts`; los calendarios sin propietario no existen hasta T4 y su pantalla llega en la iteración 2 (no desplegar T4 a producción antes de esa pantalla).
   Pasos: test primero en `tests/integration/account-schema.test.ts`. Comprueba que:
   - `calendars.owner_id` admite nulo solo con `orphaned_at` fijado (el `check` rechaza el resto con `23514`);
   - un cambio de propietario fuera de la marca de transacción falla con `42501`, y dentro de ella funciona;
