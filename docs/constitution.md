@@ -128,4 +128,4 @@ Checklist que cierra cada tarea (se reporta la salida de cada comando):
 ## Dudas abiertas
 
 - Las decisiones de stack de esta versión (Next.js 16 + Supabase Free + Vercel Hobby + Tailwind CSS 4) fueron confirmadas por el usuario en la spec 001.
-- Para la spec 005: la familia tipográfica, los valores exactos de los seis acentos y dónde se guarda el acento elegido (por usuario en la base de datos, para que se vea igual en todos sus dispositivos, o solo en el dispositivo).
+- Resueltas en la spec 005: la tipografía es Inter Tight; los valores de los seis acentos y de los neutros están en `src/lib/theme/accents.ts` (con su contraste comprobado en `accents.test.ts`); y el acento se guarda por usuario en `profiles.accent`, así que se ve igual en todos sus dispositivos.

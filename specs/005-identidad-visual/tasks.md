@@ -263,6 +263,75 @@ Todos los módulos del plan tienen tarea:
 | brand, pwa | T10 |
 | restyle, design-guard | T11 |
 
+## Trazabilidad RF → tarea → test (T12)
+
+Los tests están en `tests/unit/` y `tests/integration/`. Las capturas se hicieron con `playwright-cli` contra `npx next start -p 3100` y `dev`, con un usuario de prueba (dos calendarios, una categoría, eventos y una invitación) que se borró al terminar: las 17 pantallas a 390, 768 y 1440 px con el acento rojo, y la agenda, el mes y Ajustes también con el amarillo. Ninguna pantalla desborda en horizontal (comprobado también a 360 px en la agenda).
+
+| RF | Tareas | Evidencia |
+|----|--------|-----------|
+| RF-1 | T11 | `design-tokens` (guardia: sin `brand`, colores sueltos, paleta de Tailwind, `bg-white`, monoespaciada, degradados, cristal, sombras en reposo, mayúsculas espaciadas ni emojis); capturas de las 17 pantallas |
+| RF-2 | T1–T11 | Los tests de las specs 001 a 004 siguen en verde (793 unitarios, 155 de base de datos); solo cambian los que un RF de esta spec modifica, citándolo |
+| RF-3 | T2, T8, T9, T11 | `accents`; capturas (el acento solo en hoy, la hora actual, los días, la vista elegida y el próximo evento) |
+| RF-4 | T8, T11 | `agenda-view` (barra de color, título en tinta), `month-view` y `week-view` (`borderLeftColor`) |
+| RF-5 | T8, T9, T11 | `agenda-view` ("Hoy" escrito), `mini-month` (relleno y negrita, `aria-current="date"`) |
+| RF-6 | T2, T7 | `accents`, `accent-picker` |
+| RF-7 | T7 | `accent-picker` (repinta antes de que responda la acción); demo |
+| RF-8 | T1, T7 | `profile-accent` (BD), `settings-actions`; demo (se mantiene tras recargar) |
+| RF-9 | T5 | `app-frame`; HTML del servidor de un usuario azul con `data-accent="blue"` y sin rojo |
+| RF-10 | T1, T2 | `profile-accent` (por defecto rojo), `accents` |
+| RF-11 | T2, T11 | `accents` (`:root` en rojo); capturas de portada, acceso y sin conexión |
+| RF-12 | T7 | `accent-picker` (vuelve al anterior), `settings-actions` |
+| RF-13 | T1 | `profile-accent` (nadie lee ni cambia el de otro, `anon` no ve nada, los nombres compartidos no lo exponen) |
+| RF-14 | T2 | `accents` (4,5:1 en texto y 3:1 en bordes con los seis); capturas con rojo y amarillo |
+| RF-15 | T3, T5 | `ranges`, `route-access`, `auth-next-actions`, `next-path`, `manifest` |
+| RF-16 | T6 | `side-rail`, `app-frame`, `nav` |
+| RF-17 | T9 | `mini-month`, `next-event-card`, `calendar-filters`; capturas a 1440 px |
+| RF-18 | T6 | `bottom-bar`, `nav`; capturas a 390 y 768 px |
+| RF-19 | T9 | `calendar-filters` (panel plegable); capturas a 390 px |
+| RF-20 | T4, T6 | `nav`, `side-rail`, `bottom-bar` (también "Más" cuando la sección está en la hoja) |
+| RF-21 | T5 | `calendar-list`, `calendar-form`, `merge-action`, `members-actions` (vuelven a "Mis calendarios") |
+| RF-22 | T6 | `bottom-bar` ("+ Evento" a `/dashboard/events/new`) |
+| RF-23 | T9 | `mini-month` |
+| RF-24 | T4, T9 | `month-marks`, `mini-month` |
+| RF-25 | T9 | `mini-month` |
+| RF-26 | T9 | `mini-month`, `mini-month-actions`; demo (octubre → noviembre sin tocar la vista) |
+| RF-27 | T4, T9 | `avatar`, `calendar-filters` |
+| RF-28 | T4, T9 | `avatar` (estable y sin repetir hasta la séptima persona), `calendar-filters` |
+| RF-29 | T9 | `calendar-filters` (acción de la spec 002) |
+| RF-30 | T8 | `view-toolbar`, `agenda-view` |
+| RF-31 | T3 | `ranges`, `agenda` |
+| RF-32 | T8 | `agenda-view` (número y día de la semana) |
+| RF-33 | T3, T8 | `agenda`, `agenda-view` (región con la fecha completa) |
+| RF-34 | T3 | `agenda` |
+| RF-35 | T8 | `agenda-view` (inicio, fin, barra, título, lugar y calendario) |
+| RF-36 | T3 | `agenda` (varios días y medianoche) |
+| RF-37 | T8 | `agenda-view` |
+| RF-38 | T8 | `agenda-view` (con y sin calendario editable) |
+| RF-39 | T3, T4, T8 | `agenda`, `use-now`, `agenda-view` |
+| RF-40 | T3, T8 | `ranges`, `view-toolbar` |
+| RF-41 | T8 | `view-toolbar` |
+| RF-42 | T8 | `agenda-view` |
+| RF-43 | T3, T8 | `agenda` (zona del perfil, cambio de hora), `agenda-view` |
+| RF-44 | T3 | `ranges` |
+| RF-45 | T4, T9 | `next-event`, `next-event-card` |
+| RF-46 | T4, T9 | `next-event`, `next-event-card` |
+| RF-47 | T4, T9 | `use-now`, `next-event-card` |
+| RF-48 | T4, T9 | `next-event`, `next-event-card` (y recarga al volver tras más de 12 h) |
+| RF-49 | T4, T9 | `next-event`, `next-event-card` |
+| RF-50 | T9 | `next-event-card` |
+| RF-51 | T10, T11 | `side-rail`, `brand-icons`; capturas de portada, acceso y sin conexión |
+| RF-52 | T10 | `brand-icons` (tamaños y SVG único), `manifest`; favicon enlazado en el HTML |
+| RF-53 | T10 | `manifest`; `<meta name="theme-color" content="#E8E5DD">` en el HTML |
+| RF-54 | T10 | `brand-icons` (`calenderfam-v2` y borrado de cachés antiguas) |
+
+Rendimiento: `range-performance` (BD) lee los 500 eventos de los 14 días de la agenda en menos de 3 s a través de RLS. La medición en Vercel queda para la demo de producción.
+
+## Fuera de alcance (T12)
+
+Comprobado en el código: sin tema oscuro (ni `dark:` ni `prefers-color-scheme`), sin notificaciones, sin fotos de perfil (solo iniciales), sin recordar la última vista (sin `localStorage` ni columna nueva), sin animaciones de entrada y sin dependencias nuevas (`git diff main -- package.json package-lock.json` vacío). La única migración nueva es `profile_accent`.
+
+Diferencias con el plan, todas sin cambiar ningún RF: las personas del filtro siguen siendo casillas (con el avatar al lado) para conservar el estado "a medias" de la spec 002; las continuaciones de medianoche dicen "Desde el 24 oct a las 21:30" en vez de "Desde ayer"; se añade el token `control` (`#857F75`) porque `line` no llega a 3:1 en los bordes de los campos; y los días del mini calendario miden 44 px (P9).
+
 ## Dudas abiertas
 
-- Ninguna bloqueante. T10 se para para que el usuario dé el visto bueno al icono antes de generar los PNG, y T2 se para si Inter Tight no tiene cifras tabulares (plan R7).
+- Resueltas: Inter Tight tiene cifras tabulares (medido en el navegador en T2: 96,1 px para 1111 y para 0000 con tabular-nums) y el usuario aprobó el icono tras T10.

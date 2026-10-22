@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-22, al cerrar la spec 004 y definir la identidad visual (constitución, P9).
+> Última actualización: 2026-10-22, al implementar la spec 005 (identidad visual, T1–T11); falta su validación en producción y el cierre (T12).
 
 ## 1. Qué es
 
@@ -31,7 +31,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
-| 005-identidad-visual | Rediseño de todas las pantallas con la identidad visual propia y acento elegido por el usuario (6 colores) | **En curso**: spec, plan y tareas aprobados (2026-10-22) |
+| 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Implementada** (2026-10-22), T1–T11 hechas; falta la validación en producción y el cierre (T12) |
 | 006-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
 | 007-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
 
@@ -58,7 +58,17 @@ Añadido por la spec 004 (`/dashboard/import`):
 - Cada repetición de un evento repetido se crea como evento suelto (la app no tiene recurrentes propios): las series sin fin llegan hasta 1 año desde el día de la importación, y se respetan `EXDATE` y las repeticiones modificadas (`RECURRENCE-ID`). Los eventos cancelados no se importan.
 - Límite de **2 MB y 2.000 eventos**. Los eventos con zona horaria no reconocida (típicamente los nombres de Windows de Outlook) o con fin anterior al inicio se omiten y se cuentan en el resumen.
 
-**No hay** identidad visual propia todavía (005: la interfaz actual es azul sobre blanco), gestión de cuenta (006), eventos recurrentes propios (spec futura sin número), sincronización ni actualización de lo importado.
+Añadido por la spec 005:
+
+- **Identidad visual propia** (constitución P9): fondo piedra, paneles papel, tinta casi negra, Inter Tight, botones negros redondos e iconos SVG propios. Una guardia de diseño (`tests/unit/design-tokens.test.ts`) impide volver a colores sueltos, `bg-white`, monoespaciada, degradados, sombras en reposo o emojis.
+- **Color de acento** a elegir en **Ajustes** (`/dashboard/settings`) entre rojo (por defecto), azul, verde, amarillo, morado y gris. Se guarda en `profiles.accent` y se ve igual en todos los dispositivos; sin sesión, rojo. Solo marca hoy, la hora actual, los días de la semana, la vista elegida y el próximo evento.
+- **Marco de la app** (`src/app/dashboard/layout.tsx`): barra lateral de iconos desde 1024 px; por debajo, barra inferior con Calendario, Mis calendarios, "+ Evento" y la hoja "Más" (Unirme, Importar, Ajustes, Cerrar sesión).
+- **El calendario es la pantalla de inicio**: `/dashboard` redirige a `/dashboard/calendar` y la lista de calendarios pasa a `/dashboard/calendars` ("Mis calendarios").
+- **Vista agenda** (por defecto): 14 días seguidos desde la fecha, con el número del día gigante, filas de evento (horas, barra de color, título, lugar), "Sin eventos", crear en cada día y la línea de la hora actual.
+- **Panel del calendario**: tarjeta "Próximo evento" con cuenta atrás (siguiente evento con hora en 24 h), mini calendario mensual con puntos por calendario y filtros con avatares de iniciales.
+- **Marca e iconos nuevos** ("CF" en piedra sobre tinta) y PWA en color piedra.
+
+**No hay** gestión de cuenta (006), eventos recurrentes propios (spec futura sin número), sincronización ni actualización de lo importado.
 
 ## 3. Reglas de trabajo (obligatorias)
 
@@ -77,7 +87,7 @@ La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen d
 - **Stack cerrado (P6):** solo las dependencias de la sección 4. Cualquier otra exige aprobación del usuario registrada en la spec que la introduce (incluidas la librería de vistas de calendario de la 002 y la de parseo `.ics` de la 004).
 - **Prohibido:** servicios de pago, SDK de analítica/tracking/telemetría (GA, Sentry…), librerías PWA (`next-pwa`, Serwist, Workbox), ORMs (Prisma, Drizzle), backends paralelos, y otro gestor de paquetes que no sea npm.
 - **Aprobaciones del usuario:** pasar de fase (spec → plan → tareas → implementación) y cerrar una spec exigen su aprobación explícita. No la des por supuesta.
-- **Identidad visual (P9):** toda pantalla nueva o rediseñada sigue la sección "Identidad visual y diseño de interfaz" de la constitución (estilo de `docs/referencia.jpg`, solo local) y se revisa con capturas a 390, 768 y 1440 px. Para diseñar usa las skills `design-taste-frontend` (pantallas de aplicación), `frontend-design` y `web-design-guidelines`. Ver §6 "Identidad visual".
+- **Identidad visual (P9):** toda pantalla nueva o rediseñada sigue la sección "Identidad visual y diseño de interfaz" de la constitución (estilo de `docs/referencia.jpg`, solo local), usa solo tokens (la guardia `design-tokens.test.ts` lo comprueba) y se revisa con capturas a 390, 768 y 1440 px con el acento rojo y el amarillo. Para diseñar usa las skills `design-taste-frontend` (pantallas de aplicación), `frontend-design` y `web-design-guidelines`. Ver §6 "Identidad visual".
 - **Acciones externas:** el usuario ejecuta él mismo (con `!` en Claude Code) las acciones sobre producción: `supabase db push` a prod, `git push` y merges a `main`. Prepárale los comandos exactos.
 
 ## 4. Stack
@@ -108,17 +118,18 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   ├── proxy.ts               # "middleware" de Next 16: refresca sesión y aplica getRouteAccess
 │   ├── app/
 │   │   ├── layout.tsx         # <html lang="es">, metadata (título, appleWebApp), viewport, ServiceWorkerRegister
-│   │   ├── globals.css        # @import "tailwindcss" + tokens @theme de marca
-│   │   ├── page.tsx           # portada pública "/" (con sesión redirige a /dashboard) + ayuda de instalación iOS
+│   │   ├── globals.css        # @import "tailwindcss" + tokens (@theme) y los seis [data-accent]
+│   │   ├── page.tsx           # portada pública "/" (con sesión redirige a /dashboard/calendar) + ayuda de instalación iOS
 │   │   ├── manifest.ts        # /manifest.webmanifest
-│   │   ├── icon.png           # favicon de marca
+│   │   ├── icon.svg           # favicon (copia de public/icons/icon.svg)
 │   │   ├── (auth)/            # grupo sin segmento de URL
 │   │   │   ├── actions.ts     # Server Actions signUp, signIn, signOut
 │   │   │   ├── login/page.tsx
 │   │   │   └── signup/page.tsx
-│   │   ├── dashboard/         # panel (page.tsx) y todo lo de la spec 002, protegido por getRouteAccess
-│   │   │   ├── calendar/      # vistas mes/semana/día (?view=&date=) + preferences-actions.ts
-│   │   │   ├── calendars/     # new, [id]/edit, [id]/categories, merge + actions.ts (calendarios y juntar)
+│   │   ├── dashboard/         # layout.tsx (marco con el acento), page.tsx (redirige al calendario); protegido por getRouteAccess
+│   │   │   ├── calendar/      # vistas agenda/mes/semana/día (?view=&date=) + preferences-actions.ts + mini-month-actions.ts
+│   │   │   ├── calendars/     # page.tsx ("Mis calendarios"), new, [id]/edit, [id]/categories, merge + actions.ts (calendarios y juntar)
+│   │   │   ├── settings/      # Ajustes: color de acento + actions.ts (setAccent)
 │   │   │   └── events/        # new, [id] (detalle + edición + borrado) + actions.ts
 │   │   ├── dashboard/join/    # "Unirme con código" (ID y PIN) + actions.ts
 │   │   ├── dashboard/import/  # "Importar calendario" (.ics) + actions.ts (`maxDuration` 60)
@@ -128,16 +139,24 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── offline/page.tsx   # "Sin conexión" + "Reintentar" (estática, la precachea el SW)
 │   │   └── api/cron/keep-alive/route.ts  # GET protegido por CRON_SECRET
 │   ├── components/
-│   │   ├── ui/                # button (variantes), link-button, text-field, text-area, select, form-alert (solo tokens de marca)
+│   │   ├── ui/                # button (variantes), link-button, text-field, text-area, select, form-alert (solo tokens)
+│   │   ├── shell/             # app-frame, side-rail, bottom-bar, more-sheet, bar-styles, icons (SVG propios)
+│   │   ├── brand/             # logo (LogoMark y Logo)
+│   │   ├── settings/          # accent-picker
+│   │   ├── people/            # avatar
 │   │   ├── auth/              # auth-card, login-form, signup-form (Client Components con useActionState)
 │   │   ├── dashboard/         # calendar-list
-│   │   ├── calendar/          # formularios, vistas (month/week/day, time-grid), filtros, workspace, merge-form, confirm-dialog…
+│   │   ├── calendar/          # formularios, vistas (agenda-view, event-row, month/week/day, time-grid), mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog…
 │   │   ├── sharing/           # invite-form, copy-button, invite-list, access-code-panel, member-list, join-code-form, invite-join-card
 │   │   ├── import/            # import-form, import-summary
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
 │   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts, next-path.ts (destino tras login: solo /invite/<token>)
-│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, grouping, format, schemas, error-messages; queries.ts (lecturas con RLS)
+│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, agenda, month-marks, next-event, grouping, format, schemas, error-messages; queries.ts (lecturas con RLS)
+│   │   ├── theme/             # accents.ts: los seis acentos y los neutros (fuente de los valores de globals.css)
+│   │   ├── shell/             # nav.ts: destinos y sección activa
+│   │   ├── people/            # avatar.ts: iniciales y tintes
+│   │   ├── hooks/             # use-now.ts: reloj compartido (30 s y al volver a primer plano)
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
@@ -145,15 +164,15 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── types/database.ts      # GENERADO con `npm run db:types`; no editar a mano
 ├── public/
 │   ├── sw.js                  # service worker propio
-│   └── icons/                 # icon-192, icon-512, icon-512-maskable, apple-touch-icon
+│   └── icons/                 # icon.svg (maestro) → icon-192, icon-512, icon-512-maskable (letras al 85 %), apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
 │   ├── unit/                  # *.test.ts(x): lógica pura, formularios, vistas, filtros, sw-no-data, no-secrets…
-│   └── integration/           # schema, rls, signup, login, calendars-events, merge-calendars, preferences, range-performance contra Supabase dev + helpers.ts
+│   └── integration/           # schema, rls, signup, login, calendars-events, merge-calendars, preferences, profile-accent, range-performance contra Supabase dev + helpers.ts
 ├── vercel.json                # cron "0 6 * * *" → /api/cron/keep-alive
 ├── next.config.ts             # cacheComponents, partialPrefetching, cabeceras de /sw.js
 ├── postcss.config.mjs, eslint.config.mjs, vitest.config.ts, tsconfig.json (alias @/* → src/*)
@@ -180,10 +199,12 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 
 | Ruta | Acceso | Contenido |
 |------|--------|-----------|
-| `/` | pública | Portada; con sesión redirige a `/dashboard` (lo hace la página, no el proxy) |
-| `/signup`, `/login` | solo sin sesión (con sesión → `/dashboard`) | Formularios; aceptan `?next=`, que solo se sigue si es `/invite/<token>` (campo oculto leído en el cliente) |
-| `/dashboard` y subrutas | solo con sesión (sin sesión → `/login`) | Panel |
-| `/dashboard/calendar` | con sesión | Vistas `?view=month\|week\|day&date=YYYY-MM-DD` (valores inválidos → mes de hoy) |
+| `/` | pública | Portada; con sesión redirige a `/dashboard/calendar` (lo hace la página, no el proxy) |
+| `/signup`, `/login` | solo sin sesión (con sesión → `/dashboard/calendar`) | Formularios; aceptan `?next=`, que solo se sigue si es `/invite/<token>` (campo oculto leído en el cliente) |
+| `/dashboard` y subrutas | solo con sesión (sin sesión → `/login`) | Todas dentro del marco (`dashboard/layout.tsx`). `/dashboard` redirige a `/dashboard/calendar` |
+| `/dashboard/calendar` | con sesión | Vistas `?view=agenda\|month\|week\|day&date=YYYY-MM-DD` (valores inválidos → agenda desde hoy) |
+| `/dashboard/calendars` | con sesión | "Mis calendarios": la lista con crear, importar, unirme y juntar |
+| `/dashboard/settings` | con sesión | Ajustes: color de acento |
 | `/dashboard/calendars/new`, `/[id]/edit`, `/[id]/categories`, `/merge` | con sesión | Calendarios, categorías y juntar. `edit` solo propietario, `categories` propietario o editor; otros → 404 |
 | `/dashboard/events/new`, `/dashboard/events/[id]` | con sesión | Alta (`?calendar=&date=`) y detalle con edición y borrado |
 | `/dashboard/calendars/[id]/share` | solo propietario (otros → 404) | Invitaciones por enlace e ID y PIN |
@@ -200,7 +221,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 ### Autenticación
 
 - `signUp` valida con `signUpSchema` (email normalizado a minúsculas sin espacios; contraseña de 8 a 72 caracteres; nombre de 1 a 50) y llama a `supabase.auth.signUp` con los metadatos `display_name` y `time_zone`. La zona horaria la detecta el navegador (`Intl`) en un campo oculto; si no es válida se descarta y Postgres aplica `Europe/Madrid`.
-- **"Confirm email" está desactivado** en Supabase (no hay SMTP hasta la spec 006), así que el registro devuelve sesión y redirige a `/dashboard`. El registro es abierto (cualquiera con la URL).
+- **"Confirm email" está desactivado** en Supabase (no hay SMTP hasta la spec 006), así que el registro devuelve sesión y redirige a `/dashboard/calendar`. El registro es abierto (cualquiera con la URL).
 - Los errores de Supabase se traducen en `src/lib/auth/error-messages.ts`; un código desconocido o un error de red se convierte en "No se ha podido conectar…".
 - Los formularios usan `useActionState`, `noValidate` (los errores vienen del servidor en español) y desactivan el botón mientras la acción está pendiente.
 - `signOut` usa `scope: "local"` y redirige a `/login`.
@@ -238,37 +259,36 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `calendar_members`: `UPDATE` solo de la columna `role` y solo del propietario sobre filas no `owner`; `DELETE` por el propietario sobre otros o por cualquiera sobre su propia fila si no es `owner`. El `INSERT` directo sigue prohibido. Un trigger borra las preferencias de quien sale (los eventos y categorías que creó se quedan).
   - Funciones `SECURITY DEFINER` con `search_path = ''`: `create_invite`, `revoke_invite`, `get_invite_preview`, `accept_invite` (bloquea la fila: la carrera por el último uso da un éxito y un `CF404`), `set_access_code`, `disable_access_code`, `join_with_code` (devuelve `status` `ok | member | invalid | limited` en vez de lanzar, para que el fallo quede registrado) y `calendar_members_with_names(uuid[])` (única vía para ver nombres ajenos: nombre y rol, sin email ni zona horaria). `CF404` es el SQLSTATE propio de "invitación no válida".
   - `merge_calendars` no cambia: los miembros de los calendarios que desaparecen caen en cascada.
+- Añadido por la spec 005: `profiles.accent` (`text`, por defecto `'red'`, `check` en `red|blue|green|yellow|purple|gray`). La protegen las políticas de `profiles` (solo el propio); `visible_people()` y `calendar_members_with_names` no la exponen.
 - Añadido por la spec 004: `import_calendar(p_name, p_color, p_events jsonb)` (`SECURITY INVOKER`, una transacción): crea el calendario del llamante y sus eventos desde un array de 1 a 2.000 elementos (`22023` si no) y, si un evento viola una restricción, no deja nada. No hay tablas ni columnas nuevas: el calendario importado no guarda nada de su origen.
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, …) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
 ### PWA
 
-- Manifest: CalenderFam/CaFam, `theme_color #2563EB`, `start_url /dashboard`, `standalone`, iconos 192, 512 y 512 maskable.
+- Manifest: CalenderFam/CaFam, `theme_color` y `background_color` piedra `#E8E5DD` (de `NEUTRALS.stone`), `start_url /dashboard/calendar`, `standalone`, iconos 192, 512 y 512 maskable generados desde `public/icons/icon.svg`. El favicon (`/icon.svg`) se enlaza explícitamente en `metadata.icons`: la convención de archivo sola no dejaba `<link rel="icon">`.
 - iOS: `appleWebApp` en `layout.tsx` + `apple-touch-icon`. La portada muestra la ayuda "Compartir › Añadir a pantalla de inicio" **solo** en Safari iOS.
 - `public/sw.js`:
   - Precachea `/offline`, los iconos y los `/_next/static/` que referencia `/offline`.
   - En navegaciones usa red primero, con `/offline` como respaldo.
   - Usa caché primero para `/_next/static/` e `/icons/`.
   - **Nunca cachea HTML con sesión ni respuestas de Supabase** (privacidad en dispositivos compartidos).
-  - **Si cambias `sw.js`, sube `CACHE_NAME`** (`calenderfam-vN`).
+  - **Si cambias `sw.js` o los iconos, sube `CACHE_NAME`** (`calenderfam-vN`; ahora `v2`).
   - Se registra solo en producción.
 
 ### Identidad visual
 
-**Hoy (hasta que se implemente la spec 005):** tokens en `src/app/globals.css` (`@theme`): `brand` `#2563EB` (botones y enlaces, texto blanco 5,2:1), `brand-soft` `#A6E1FA` (**solo fondo**, nunca texto sobre blanco) e `ink` `#0D160B` (texto), con Geist y Geist Mono. Usa `bg-brand`, `text-ink`… y no valores arbitrarios como `bg-[#2563EB]`. Contraste mínimo 4,5:1 (WCAG AA). Fondo blanco, sin tema oscuro (fuera de alcance).
+Reglas completas en la constitución ("Identidad visual y diseño de interfaz", P9), inspiradas en `docs/referencia.jpg` (solo local, en `.gitignore`). Lo que hay en el código:
 
-**Objetivo (spec 005, reglas completas en la constitución):** estilo propio sobrio y editorial inspirado en `docs/referencia.jpg`. Esa imagen está en `.gitignore` (no se sube a GitHub): si no la tienes, la constitución basta. En resumen:
-
-- Fondo piedra cálido (≈ `#E8E5DD`), paneles un tono más claros (≈ `#F2F0EA`), tinta casi negra y gris cálido para lo secundario; superficies separadas por tono, no por sombras.
-- En la agenda/día, el **número del día enorme y muy grueso** con el día de la semana pequeño en el acento: es el gesto distintivo.
-- Eventos como filas de texto: hora en negrita y fin en gris, barra vertical fina con el color del calendario o categoría, título en negrita, lugar en gris.
-- **Acento elegido por el usuario** entre rojo (por defecto), azul, verde, amarillo, morado y gris, solo para "hoy", la línea de la hora actual, los días de la semana y la selección. Cada acento trae su color de texto encima y su variante legible sobre el fondo. No se mezcla con los colores pastel de los calendarios, que colorean datos.
-- Botones de acción negros y totalmente redondos; "+" como círculo negro; mini calendario con puntos de color; personas como avatares circulares de iniciales.
-- Escritorio en columnas (navegación estrecha, panel con mini calendario, agenda); móvil con barra inferior de botones circulares y la acción principal como píldora negra.
-- Una sola neo-grotesca con `next/font` y cifras tabulares, sin monoespaciada.
-- Se ignoran el asistente de IA, tareas, voz, documentos, integraciones y emojis de la referencia.
-- Prohibido: degradados, sombras en reposo, cristal/desenfoque, emojis, iconos en cuadrados de color, tarjetas idénticas con icono, etiquetas en mayúsculas espaciadas y el acento en todos los botones. Iconos como SVG propios en línea (ninguna librería sin aprobación).
+- **Tokens** en `src/app/globals.css`, con los valores de `src/lib/theme/accents.ts` (`accents.test.ts` los mantiene iguales):
+  - Neutros (`@theme`): `stone #E8E5DD` (fondo), `paper #F2F0EA` (paneles), `ink #141414` (texto), `muted #66635D` (secundario, 4,5:1), `line #D6D1C4` (separadores), `control #857F75` (bordes de campos, 3:1) y `danger #B42318`.
+  - Acento (`@theme inline`): `accent` (relleno), `on-accent` (texto encima), `accent-ink` (texto y líneas sobre piedra o papel) y `accent-edge` (borde de un relleno; en amarillo es oscuro porque el relleno no se distingue del fondo). Cada `[data-accent=…]` redefine las variables; `:root` es rojo para las páginas sin sesión.
+- **El acento** lo pinta `AppFrame` con `data-accent` (y `data-app-frame`, que usa el selector de Ajustes para repintar sin recargar). Úsalo solo para hoy, la hora actual, los días de la semana, la selección y el próximo evento. Texto y líneas, siempre `accent-ink`; sobre un relleno `bg-accent`, siempre `text-on-accent` y `border-accent-edge`.
+- **Colores de calendario** (paleta pastel de la spec 002): solo como marca (barra `border-l-4`, punto o barra de 4 px con contorno `ink/15`); el texto del evento siempre en tinta.
+- **Tipografía**: Inter Tight (`next/font`, cifras tabulares comprobadas) para todo; `tabular-nums` en horas, fechas y contadores; sin monoespaciada.
+- **Forma**: superficies separadas por tono (piedra/papel), paneles `rounded-3xl`, botones y controles `rounded-full`; sombras solo en lo que flota (diálogos, hoja "Más", tooltips de la barra).
+- **Componentes base**: `Button`/`LinkButton` primario negro, secundario papel con borde `control`; campos `bg-paper` con borde `control`. Iconos: SVG propios en `components/shell/icons.tsx`.
+- Sin tema oscuro (fuera de alcance).
 
 ## 7. Entornos, despliegue y variables
 
@@ -322,6 +342,8 @@ npm run db:types       # regenera src/types/database.ts
   - El cliente de `server` siempre lleva el tipo `Database`.
 - **Permisos:** confía en RLS y filtra por `user_id` cuando necesites tu fila (p. ej. tu rol en `calendar_members`). No uses la clave secreta en la app.
 - **Server Actions:** devuelven un estado tipado (`src/lib/auth/form-state.ts`) con `fieldErrors`, `formError` y `values` para conservar lo escrito; el éxito hace `redirect()` fuera del `try`.
+- **Identidad visual:** solo tokens (`bg-paper`, `text-muted`, `bg-accent`…); nada de `bg-white`, colores de la paleta de Tailwind ni hex en clases (la guardia `design-tokens.test.ts` falla). Un color que viene de datos (calendario, avatar) va en `style`.
+- **Hora actual en el cliente:** `useNow()` (`lib/hooks/use-now.ts`), compartido y con `useSyncExternalStore`. En un Server Component no llames a `Date.now()` en el cuerpo (regla de lint de React): sácalo a una función de `lib/` (p. ej. `nextEventsWindow()`).
 - **UI:** reutiliza `Button`, `LinkButton`, `TextField` y `FormAlert`. Accesibilidad:
   - Etiqueta visible en cada campo.
   - Errores enlazados con `aria-describedby` y anunciados (`role="alert"`, `aria-live`).
@@ -363,6 +385,12 @@ npm run db:types       # regenera src/types/database.ts
 - **`src/types/database.ts`** se regenera tras cada migración y no se formatea con Prettier.
 - **Usuarios de prueba:** los tests los crean y borran solos. Si creas usuarios a mano en dev para probar, bórralos al terminar.
 - La primera petición tras un despliegue en Vercel puede tardar varios segundos (arranque en frío). No lo confundas con un fallo.
+- **`LayoutProps<"/ruta">` de una ruta nueva** no existe hasta que Next genera los tipos (build o `next typegen`): `typecheck` falla antes del build. En layouts nuevos tipa `children` a mano.
+- **`hidden` en el `className` de `LinkButton` no oculta**: su `inline-flex` gana. Para ocultarlo por tamaño envuélvelo en un `div` (`hidden lg:block`).
+- **Tests de formularios con error**: `findByLabelText` encuentra el campo antes de que llegue la respuesta de la acción; espera al mensaje (`findByText`) antes de comprobar `aria-describedby`, o el test falla de forma intermitente con la máquina cargada.
+- **Cookie de un usuario borrado**: `getClaims()` valida el JWT sin consultar la base de datos, así que en `playwright-cli` sigues "con sesión" tras borrar el usuario de prueba. Limpia las cookies (`page.context().clearCookies()`) antes de registrar otro.
+- **Icono de la app instalada**: iOS no lo cambia hasta volver a añadir la app a la pantalla de inicio; Android lo actualiza cuando revisa el manifest. Lo que sí se renueva al publicar es lo que guarda el service worker (`CACHE_NAME`).
+- **La carpeta `.playwright-cli/`** (capturas de la herramienta) no está ignorada: bórrala al terminar o `format:check` falla.
 
 ## 11. Fuera de alcance hasta su spec
 
@@ -370,10 +398,10 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 ## 12. Cómo continuar
 
-La 004 está cerrada y desplegada en producción (migración aplicada y demo validada con `.ics` reales). La siguiente spec es la **005 (identidad visual)**: rediseñar todas las pantallas existentes según la constitución y permitir elegir el color de acento. Va antes de la gestión de cuenta para que las pantallas de la 006 nazcan ya con el estilo nuevo y no haya que rehacerlas. Después vendrá la 006 (gestión de cuenta, requiere SMTP gratuito).
+La 005 está implementada en la rama `005-identidad-visual` (T1–T11) y le falta T12: aplicar la migración `profile_accent` en prod, integrar en `main`, hacer la demo en producción y pedir al usuario la aprobación del cierre. Después viene la **006 (gestión de cuenta, requiere SMTP gratuito)**:
 
-1. Crea la rama `005-identidad-visual` desde `main` (con la 004 ya integrada).
-2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. Decisiones abiertas para la 005 (ver "Dudas abiertas" de la constitución): tipografía, valores exactos de los seis acentos y si el acento se guarda por usuario en la base de datos o por dispositivo.
+1. Crea la rama `006-gestion-de-cuenta` desde `main` (con la 005 ya integrada).
+2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. Sus pantallas nacen con la identidad visual y la cuenta se añade a Ajustes (`/dashboard/settings`).
 3. Haz lo mismo con `plan.md` (`plan-generator`) y `tasks.md` (`tasks-generator`).
 4. Implementa tarea a tarea con el test primero, el checklist de verificación y un commit por tarea.
 5. Valida en producción y pide al usuario la aprobación para cerrar.
