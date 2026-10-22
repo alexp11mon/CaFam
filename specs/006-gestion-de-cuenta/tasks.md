@@ -8,7 +8,7 @@
 
 ## Tareas
 
-- [ ] T1 Comprobar en dev las tres capacidades que el plan da por supuestas (R1, R2)
+- [x] T1 Comprobar en dev las tres capacidades que el plan da por supuestas (R1, R2)
   Pasos: en el proyecto dev, con SQL de prueba y sin tocar el esquema: (a) una función `SECURITY DEFINER` con `search_path = ''` borra un `auth.users` de prueba creado para la comprobación; (b) `pg_cron`, `pg_net` y `vault` están disponibles y activos; (c) `vault.create_secret` guarda y `vault.decrypted_secrets` lee un valor de prueba. Se borran el usuario y el secreto de prueba al terminar. Los resultados se anotan en `plan.md` (R1 y R2).
   Hecho cuando: las tres comprobaciones dan el resultado esperado y `plan.md` anota la salida de cada una. Si (a) falla, se detiene la implementación y se vuelve a D1 con el usuario. Cubre: RF-19, RF-23, RF-26 | Módulo: account_orphan_schema (comprobación)
 

@@ -137,8 +137,8 @@ Requisitos no funcionales: NF-1 y NF-2 -> `error-messages` (mismo texto para cua
 
 ## Riesgos y mitigaciones
 
-- R1: `delete from auth.users` desde una función puede no estar permitido en el proyecto. Mitigación: la primera tarea de SQL lo prueba en dev antes de escribir nada más; si falla, se revisa D1 con el usuario antes de seguir.
-- R2: `pg_cron`, `pg_net` o `vault` pueden no estar disponibles en el plan gratuito. Mitigación: se comprueban en dev y prod antes de la migración; si falta alguno, D3 o D4 se replantean antes de seguir.
+- R1: `delete from auth.users` desde una función puede no estar permitido en el proyecto. **Comprobado en dev (T1, 2026-10-22): sí.** Una función `SECURITY DEFINER` con sesión `authenticated` borró el usuario de prueba (1 fila), su perfil cayó en cascada y no quedó ninguna fila ni la función de prueba. D1 se mantiene.
+- R2: `pg_cron`, `pg_net` o `vault` pueden no estar disponibles en el plan gratuito. **Comprobado en dev (T1, 2026-10-22):** `supabase_vault` 0.3.1 instalado; `pg_cron` 1.6.4 y `pg_net` 0.20.4 disponibles pero aún no instalados, se activan en la migración de T8. Vault guarda, descifra y borra un valor de prueba correctamente. D3 y D4 se mantienen.
 - R3: `signInWithPassword` en la comprobación de la contraseña sustituye las cookies de la sesión actual. Mitigación: prueba de navegador tras el cambio (sigue dentro, las otras sesiones se cierran).
 - R4: Un token de acceso ya emitido sigue válido hasta caducar aunque la cuenta se borre (`getClaims` no consulta la base de datos). Mitigación: el borrado elimina las filas que dan acceso a datos y las inserciones fallan por la clave foránea; se documenta el plazo de caducidad del token.
 - R5: Dos miembros decidiendo a la vez mientras corre el trabajo. Mitigación: `for update` sobre el calendario en `apply_orphan_decisions` y `decide_orphan_calendar`.
