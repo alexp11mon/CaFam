@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogoMark } from "@/components/brand/logo";
 import { activeSection, NAV_ITEMS } from "@/lib/shell/nav";
 import { SECTION_ICONS, SignOutIcon } from "./icons";
 
@@ -27,14 +28,9 @@ export function SideRail({
     >
       <Link
         href="/dashboard/calendar"
-        className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
-        <span
-          aria-hidden="true"
-          className="flex size-12 items-center justify-center rounded-full bg-ink text-base font-extrabold tracking-tight text-stone"
-        >
-          CF
-        </span>
+        <LogoMark />
         <span className="sr-only">CalenderFam</span>
       </Link>
       <ul className="flex flex-1 flex-col items-center gap-2">

@@ -4,7 +4,7 @@
 // device (plan R6).
 
 // Bump the version to drop old caches after a change (plan R5).
-const CACHE_NAME = "calenderfam-v1";
+const CACHE_NAME = "calenderfam-v2";
 const OFFLINE_URL = "/offline";
 const PRECACHE_URLS = [
   OFFLINE_URL,

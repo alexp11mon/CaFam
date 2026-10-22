@@ -10,10 +10,12 @@ describe("web app manifest (RF-21, RNF-9)", () => {
     expect(result).toMatchObject({
       name: "CalenderFam",
       short_name: "CaFam",
-      theme_color: "#2563EB",
-      background_color: "#FFFFFF",
+      // Stone, the ground of the new identity (spec 005 RF-53).
+      theme_color: "#E8E5DD",
+      background_color: "#E8E5DD",
       display: "standalone",
-      start_url: "/dashboard",
+      // Straight to the calendar, the home screen (spec 005 RF-15).
+      start_url: "/dashboard/calendar",
       lang: "es",
     });
   });

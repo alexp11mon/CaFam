@@ -153,7 +153,7 @@
   - Panel siempre visible desde `lg` y plegable por debajo.
   Hecho cuando: `npm test -- mini-month next-event-card calendar-filters mini-month-actions` en verde. Cubre: RF-17, RF-19, RF-23, RF-24, RF-25, RF-26, RF-27, RF-29, RF-45, RF-46, RF-47, RF-48, RF-49, RF-50 | Módulo: mini-month, next-event, filters, avatars, calendar-page
 
-- [ ] T10 Crear la marca y los iconos nuevos y actualizar la PWA
+- [x] T10 Crear la marca y los iconos nuevos y actualizar la PWA
   Pasos:
   - Dibujar `public/icons/icon.svg`: fondo tinta `#141414` y "CF" en piedra a peso 800.
   - Enseñar una captura al usuario y esperar su visto bueno antes de seguir (plan D14).

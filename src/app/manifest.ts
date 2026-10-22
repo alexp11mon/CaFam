@@ -1,17 +1,18 @@
 import type { MetadataRoute } from "next";
+import { NEUTRALS } from "@/lib/theme/accents";
 
-/** Installable PWA manifest (RF-21, RNF-9). */
+/** Installable PWA manifest (RF-21, RNF-9); stone and the new icons from spec 005 (RF-52, RF-53). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "CalenderFam",
     short_name: "CaFam",
     description: "Calendario compartido para familia y amigos.",
     lang: "es",
-    start_url: "/dashboard",
+    start_url: "/dashboard/calendar",
     scope: "/",
     display: "standalone",
-    theme_color: "#2563EB",
-    background_color: "#FFFFFF",
+    theme_color: NEUTRALS.stone,
+    background_color: NEUTRALS.stone,
     icons: [
       {
         src: "/icons/icon-192.png",
