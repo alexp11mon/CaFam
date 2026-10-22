@@ -63,6 +63,24 @@ describe("ViewToolbar (RF-29, RF-37)", () => {
     );
   });
 
+  it("offers the agenda and moves it 14 days at a time (spec 005 RF-30, RF-40, RF-41)", () => {
+    render(<ViewToolbar view="agenda" date="2026-10-14" today={TODAY} />);
+
+    expect(href("Agenda")).toBe(
+      "/dashboard/calendar?view=agenda&date=2026-10-14",
+    );
+    expect(href("14 días anteriores")).toBe(
+      "/dashboard/calendar?view=agenda&date=2026-09-30",
+    );
+    expect(href("14 días siguientes")).toBe(
+      "/dashboard/calendar?view=agenda&date=2026-10-28",
+    );
+    expect(href("Hoy")).toBe("/dashboard/calendar?view=agenda&date=2026-10-21");
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      "14 oct – 27 oct 2026",
+    );
+  });
+
   it("goes back to today in the current view", () => {
     render(<ViewToolbar view="week" date="2027-01-05" today={TODAY} />);
 

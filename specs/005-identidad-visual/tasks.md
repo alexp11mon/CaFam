@@ -36,7 +36,7 @@
   - Comprobar en el navegador que `tabular-nums` cambia el ancho de los dígitos de Inter Tight. Si no lo cambia, parar y pedir aprobación (plan R7).
   Hecho cuando: `npm test -- accents button text-field form-alert confirm-dialog` en verde. Cubre: RF-3, RF-11, RF-14 | Módulo: accents, tokens, ui-kit
 
-- [ ] T3 Añadir la vista agenda a los rangos y su lógica de días como funciones puras
+- [x] T3 Añadir la vista agenda a los rangos y su lógica de días como funciones puras
   Pasos:
   - Tests primero en `tests/unit/ranges.test.ts` (ampliado):
     - `agenda` da 14 días desde `date`;

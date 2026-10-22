@@ -88,24 +88,54 @@ describe("navigate (RF-29)", () => {
   });
 });
 
-describe("parseViewParams (RF-30)", () => {
-  it("defaults to the month view of today", () => {
-    expect(parseViewParams({}, TODAY)).toEqual({ view: "month", date: TODAY });
+describe("parseViewParams (RF-30; spec 005 RF-15, RF-44)", () => {
+  it("defaults to the agenda starting today (spec 005 RF-15)", () => {
+    expect(parseViewParams({}, TODAY)).toEqual({ view: "agenda", date: TODAY });
   });
 
   it("keeps valid values", () => {
     expect(
       parseViewParams({ view: "week", date: "2026-02-03" }, TODAY),
     ).toEqual({ view: "week", date: "2026-02-03" });
+    expect(
+      parseViewParams({ view: "agenda", date: "2026-02-03" }, TODAY),
+    ).toEqual({ view: "agenda", date: "2026-02-03" });
   });
 
-  it("falls back for invalid values and arrays", () => {
+  it("falls back to the agenda of today for invalid values and arrays (spec 005 RF-44)", () => {
     expect(
       parseViewParams({ view: "year", date: "2026-13-01" }, TODAY),
-    ).toEqual({ view: "month", date: TODAY });
+    ).toEqual({ view: "agenda", date: TODAY });
     expect(
       parseViewParams({ view: ["day", "week"], date: ["2026-01-01"] }, TODAY),
-    ).toEqual({ view: "month", date: TODAY });
+    ).toEqual({ view: "agenda", date: TODAY });
+    expect(
+      parseViewParams({ view: "agenda", date: "2026-02-30" }, TODAY),
+    ).toEqual({ view: "agenda", date: TODAY });
+  });
+});
+
+describe("agenda range (spec 005 RF-31, RF-40)", () => {
+  it("shows 14 days in a row from the start date", () => {
+    const range = getVisibleRange("agenda", "2026-10-21", MADRID);
+
+    expect(range.days).toHaveLength(14);
+    expect(range.days[0]).toBe("2026-10-21");
+    expect(range.days[13]).toBe("2026-11-03");
+    // Covers local midnight of the first day and UTC all-day dates (plan D6).
+    expect(range.from.toISOString()).toBe("2026-10-20T22:00:00.000Z");
+    expect(range.to.toISOString()).toBe("2026-11-04T00:00:00.000Z");
+  });
+
+  it("moves 14 days back and forth", () => {
+    expect(navigate("agenda", "2026-10-21", 1)).toBe("2026-11-04");
+    expect(navigate("agenda", "2026-10-21", -1)).toBe("2026-10-07");
+  });
+
+  it("builds its URL", () => {
+    expect(calendarHref("agenda", "2026-10-21")).toBe(
+      "/dashboard/calendar?view=agenda&date=2026-10-21",
+    );
   });
 });
 

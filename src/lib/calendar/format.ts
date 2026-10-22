@@ -1,5 +1,5 @@
 // Display and form helpers for events and views (spec 002 RF-20, RF-29, RF-34, RF-36).
-import { weekStart } from "./ranges";
+import { AGENDA_DAYS, weekStart, type CalendarView } from "./ranges";
 import {
   addDays,
   allDayFromRange,
@@ -114,15 +114,13 @@ export function formatDateKeyFull(dateKey: string): string {
 }
 
 /** Heading of the period shown by a view. */
-export function formatPeriodTitle(
-  view: "month" | "week" | "day",
-  dateKey: string,
-): string {
+export function formatPeriodTitle(view: CalendarView, dateKey: string): string {
   if (view === "day") return formatDateKeyFull(dateKey);
   if (view === "month") {
     return formatKey(dateKey, { month: "long", year: "numeric" });
   }
-  const first = weekStart(dateKey);
+  const first = view === "agenda" ? dateKey : weekStart(dateKey);
+  const last = addDays(first, (view === "agenda" ? AGENDA_DAYS : 7) - 1);
   const short = { day: "numeric", month: "short" } as const;
-  return `${formatKey(first, short)} – ${formatKey(addDays(first, 6), { ...short, year: "numeric" })}`;
+  return `${formatKey(first, short)} – ${formatKey(last, { ...short, year: "numeric" })}`;
 }

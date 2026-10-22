@@ -6,10 +6,36 @@ import {
   type CalendarView,
 } from "@/lib/calendar/ranges";
 
-const VIEWS: { view: CalendarView; label: string; period: string }[] = [
-  { view: "month", label: "Mes", period: "Mes" },
-  { view: "week", label: "Semana", period: "Semana" },
-  { view: "day", label: "Día", period: "Día" },
+const VIEWS: {
+  view: CalendarView;
+  label: string;
+  previous: string;
+  next: string;
+}[] = [
+  {
+    view: "agenda",
+    label: "Agenda",
+    previous: "14 días anteriores",
+    next: "14 días siguientes",
+  },
+  {
+    view: "month",
+    label: "Mes",
+    previous: "Mes anterior",
+    next: "Mes siguiente",
+  },
+  {
+    view: "week",
+    label: "Semana",
+    previous: "Semana anterior",
+    next: "Semana siguiente",
+  },
+  {
+    view: "day",
+    label: "Día",
+    previous: "Día anterior",
+    next: "Día siguiente",
+  },
 ];
 
 const BUTTON =
@@ -25,7 +51,7 @@ export function ViewToolbar({
   date: string;
   today: string;
 }) {
-  const period = VIEWS.find((item) => item.view === view)!.period;
+  const current = VIEWS.find((item) => item.view === view)!;
 
   return (
     <nav aria-label="Navegación del calendario" className="flex flex-col gap-3">
@@ -35,14 +61,14 @@ export function ViewToolbar({
         </Link>
         <Link
           href={calendarHref(view, navigate(view, date, -1))}
-          aria-label={`${period} anterior`}
+          aria-label={current.previous}
           className={BUTTON}
         >
           <span aria-hidden="true">‹</span>
         </Link>
         <Link
           href={calendarHref(view, navigate(view, date, 1))}
-          aria-label={`${period} siguiente`}
+          aria-label={current.next}
           className={BUTTON}
         >
           <span aria-hidden="true">›</span>

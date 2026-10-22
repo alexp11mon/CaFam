@@ -1,5 +1,5 @@
 // Visible ranges, navigation and URL parameters of the calendar views
-// (spec 002 RF-29, RF-30, plan D12).
+// (spec 002 RF-29, RF-30, plan D12; agenda from spec 005 RF-31, RF-40, plan D6).
 import {
   addDays,
   formatDateKey,
@@ -8,9 +8,12 @@ import {
   zonedLocalToUtc,
 } from "./time-zone";
 
-export type CalendarView = "month" | "week" | "day";
+export type CalendarView = "agenda" | "month" | "week" | "day";
 
-const VIEWS: readonly CalendarView[] = ["month", "week", "day"];
+const VIEWS: readonly CalendarView[] = ["agenda", "month", "week", "day"];
+
+/** Days in a row shown by the agenda (spec 005 RF-31). */
+export const AGENDA_DAYS = 14;
 
 export interface VisibleRange {
   view: CalendarView;
@@ -65,6 +68,9 @@ export function getVisibleRange(
   } else if (view === "week") {
     first = weekStart(dateKey);
     count = 7;
+  } else if (view === "agenda") {
+    first = dateKey;
+    count = AGENDA_DAYS;
   } else {
     first = dateKey;
     count = 1;
@@ -101,6 +107,7 @@ export function navigate(
   direction: -1 | 1,
 ): string {
   if (view === "day") return addDays(dateKey, direction);
+  if (view === "agenda") return addDays(dateKey, AGENDA_DAYS * direction);
   if (view === "week") return addDays(dateKey, 7 * direction);
   const parts = parseDateKey(dateKey)!;
   const month = parts.month + direction;
@@ -113,7 +120,7 @@ export function navigate(
 
 type SearchParam = string | string[] | undefined;
 
-/** Reads `?view=&date=`; anything invalid falls back to the month of `todayKey`. */
+/** Reads `?view=&date=`; anything invalid falls back to the agenda of `todayKey` (spec 005 RF-15, RF-44). */
 export function parseViewParams(
   params: { view?: SearchParam; date?: SearchParam },
   todayKey: string,
@@ -123,7 +130,7 @@ export function parseViewParams(
     typeof params.date === "string" && parseDateKey(params.date)
       ? params.date
       : todayKey;
-  return { view: view ?? "month", date };
+  return { view: view ?? "agenda", date };
 }
 
 export function calendarHref(view: CalendarView, dateKey: string): string {
