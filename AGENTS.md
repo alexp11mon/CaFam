@@ -31,7 +31,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 002-calendarios-y-eventos | CRUD de calendarios, categorías y eventos; vistas mensual, semanal y diaria; filtros por persona con orden guardado; juntar calendarios | **Cerrada** (2026-10-21), T1–T12 hechas |
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
-| 005-identidad-visual | Rediseño de todas las pantallas con la identidad visual propia y acento elegido por el usuario (6 colores) | **En curso**: spec aprobada (2026-10-22), falta el plan |
+| 005-identidad-visual | Rediseño de todas las pantallas con la identidad visual propia y acento elegido por el usuario (6 colores) | **En curso**: spec y plan aprobados (2026-10-22), faltan las tareas |
 | 006-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
 | 007-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
 
