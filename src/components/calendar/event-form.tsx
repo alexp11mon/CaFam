@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { LinkButton } from "@/components/ui/link-button";
@@ -10,6 +10,7 @@ import { TextField } from "@/components/ui/text-field";
 import type { EventFormField, EventFormValues } from "@/lib/calendar/schemas";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { ColorPicker } from "./color-picker";
+import { useEventModal } from "./event-modal";
 
 export type { EventFormValues };
 
@@ -49,8 +50,20 @@ export function EventForm({
   const [state, formAction, pending] = useActionState(action, {
     values: initial,
   });
+  const modal = useEventModal();
   const errors = state.fieldErrors ?? {};
-  const values = state.values;
+  // After a success the next opening starts empty: Next shows the same route
+  // instance again (Activity) when the same URL is opened later.
+  const values = state.done ? initial : state.values;
+
+  // Inside the window a success closes it instead of redirecting (spec 008 RF-8).
+  // Effects run again each time Activity shows the route: handle each result once.
+  const handled = useRef<EventFormState | null>(null);
+  useEffect(() => {
+    if (!state.done || handled.current === state) return;
+    handled.current = state;
+    modal?.finish(state.done);
+  }, [state, modal]);
 
   const [allDay, setAllDay] = useState(values.allDay === "on");
   const [calendarId, setCalendarId] = useState(values.calendarId);
@@ -81,7 +94,14 @@ export function EventForm({
 
   // noValidate: errors come from the server in Spanish, not from the browser.
   return (
-    <form action={formAction} noValidate className="flex flex-col gap-4">
+    <form
+      action={formAction}
+      noValidate
+      // Any typing counts as a change the window must not lose silently (spec 008 RF-7).
+      onInput={() => modal?.setDirty(true)}
+      className="flex flex-col gap-4"
+    >
+      {modal ? <input type="hidden" name="mode" value="modal" /> : null}
       <FormAlert message={state.formError} />
       <TextField
         label="Título"
@@ -187,9 +207,15 @@ export function EventForm({
         <Button type="submit" disabled={pending}>
           {pending ? pendingLabel : submitLabel}
         </Button>
-        <LinkButton href={cancelHref} variant="secondary">
-          Cancelar
-        </LinkButton>
+        {modal ? (
+          <Button variant="secondary" onClick={modal.requestClose}>
+            Cancelar
+          </Button>
+        ) : (
+          <LinkButton href={cancelHref} variant="secondary">
+            Cancelar
+          </LinkButton>
+        )}
       </div>
     </form>
   );

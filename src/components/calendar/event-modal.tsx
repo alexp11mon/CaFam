@@ -1,14 +1,49 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { CloseIcon, ExpandIcon } from "@/components/shell/icons";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
+import type { Done } from "@/lib/forms/form-state";
 
 const ICON_BUTTON =
   "inline-flex size-11 shrink-0 items-center justify-center rounded-full text-ink transition-colors hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
+const DONE_MESSAGES: Record<Done, string> = {
+  created: "Evento creado",
+  updated: "Cambios guardados",
+  deleted: "Evento borrado",
+};
+
+interface EventModalApi {
+  /** A form inside has unsaved changes: closing asks first (RF-7). */
+  setDirty: (dirty: boolean) => void;
+  /** Close as the user asked, with the unsaved-changes check. */
+  requestClose: () => void;
+  /** A save or delete succeeded: close, refresh the calendar and say so (RF-8, RF-32). */
+  finish: (done: Done) => void;
+}
+
+const EventModalContext = createContext<EventModalApi | null>(null);
+
+/** The window around a form, or null on a full page. */
+export function useEventModal() {
+  return useContext(EventModalContext);
+}
+
 /**
- * Window of an intercepted event route over the calendar (spec 008 RF-4..RF-6,
+ * Window of an intercepted event route over the calendar (spec 008 RF-4..RF-8,
  * RF-12, RF-29, plan D1). Native modal <dialog>: focus trap and dimmed backdrop
  * come for free. Closing goes back in history, which unmounts the route.
  */
@@ -20,9 +55,12 @@ export function EventModal({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const { show } = useToast();
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [fullscreen, setFullscreen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const dirty = useRef(false);
 
   useEffect(() => {
     // Whatever had the focus opened the window: it gets it back on close (RF-6).
@@ -40,6 +78,28 @@ export function EventModal({
     };
   }, []);
 
+  const requestClose = useCallback(() => {
+    if (dirty.current) setConfirming(true);
+    else router.back();
+  }, [router]);
+
+  const api = useMemo<EventModalApi>(
+    () => ({
+      setDirty: (value) => {
+        dirty.current = value;
+      },
+      requestClose,
+      finish: (done) => {
+        dirty.current = false;
+        show(DONE_MESSAGES[done]);
+        router.back();
+        // The router cache may still hold the calendar without the change (plan R2).
+        router.refresh();
+      },
+    }),
+    [requestClose, router, show],
+  );
+
   return (
     <dialog
       ref={dialog}
@@ -48,7 +108,8 @@ export function EventModal({
       onCancel={(event) => {
         // Escape: leave through history like "Cerrar", not by closing the element.
         event.preventDefault();
-        router.back();
+        if (confirming) setConfirming(false);
+        else requestClose();
       }}
       // Up to 768 px the window is always full screen (RF-29).
       className={`flex-col overflow-hidden bg-paper p-0 text-ink shadow-xl backdrop:bg-ink/40 open:flex max-[48.0625rem]:m-0 max-[48.0625rem]:h-full max-[48.0625rem]:max-h-none max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-none ${fullscreen ? "m-0 h-full max-h-none w-full max-w-none rounded-none" : "m-auto max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-2xl rounded-3xl"}`}
@@ -72,16 +133,33 @@ export function EventModal({
         <button
           type="button"
           aria-label="Cerrar"
-          onClick={() => router.back()}
+          onClick={requestClose}
           className={ICON_BUTTON}
         >
           <CloseIcon />
         </button>
       </header>
+      {confirming ? (
+        <div
+          role="alertdialog"
+          aria-labelledby={`${titleId}-discard`}
+          className="flex flex-wrap items-center gap-3 border-b border-line bg-stone px-4 py-3 sm:px-6"
+        >
+          <p id={`${titleId}-discard`} className="flex-1 font-semibold">
+            ¿Descartar los cambios?
+          </p>
+          <Button variant="secondary" onClick={() => setConfirming(false)}>
+            Seguir editando
+          </Button>
+          <Button variant="danger" onClick={() => router.back()}>
+            Descartar cambios
+          </Button>
+        </div>
+      ) : null}
       <div
         className={`flex-1 overflow-y-auto px-4 py-5 sm:px-6 ${fullscreen ? "mx-auto w-full max-w-2xl" : ""}`}
       >
-        {children}
+        <EventModalContext value={api}>{children}</EventModalContext>
       </div>
     </dialog>
   );

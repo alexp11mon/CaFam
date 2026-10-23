@@ -23,7 +23,7 @@
   Pasos: test primero en `tests/unit/toast.test.tsx`: `useToast().show("Evento creado")` pinta el texto en una región `role="status"` con `aria-live="polite"` y desaparece a los 4 s (temporizadores falsos). La región se monta en `AppFrame`.
   Hecho cuando: `npm test -- toast` en verde y la guardia `design-tokens` en verde. Cubre: RF-32 | Módulo: toast
 
-- [ ] T5 Abrir el alta en la ventana y cerrarla al guardar
+- [x] T5 Abrir el alta en la ventana y cerrarla al guardar
   Pasos: test primero en `tests/unit/event-modal-form.test.tsx`: al guardar con `{ done: "created" }` se cierra, se refresca y se muestra "Evento creado"; con error sigue abierta con lo escrito; cerrar con cambios pide confirmación ("Descartar cambios" / "Seguir editando") y sin cambios cierra directamente. Ruta interceptada `(.)events/new` con `EventForm` y `mode=modal`.
   Hecho cuando: `npm test -- event-modal-form` en verde y, en el navegador, "+ Evento" (barra inferior y escritorio) y "Crear" de la agenda abren la ventana y el evento creado aparece en la misma vista y fecha. Cubre: RF-1, RF-7, RF-8, RF-9 | Módulo: modal-routes, event-modal
 
