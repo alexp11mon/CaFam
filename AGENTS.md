@@ -33,7 +33,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
 | 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Cerrada** (2026-10-22), T1–T13 hechas |
 | 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Cerrada** (2026-10-23), T1–T26 hechas; aplicada y validada en producción |
-| 007-sincronizacion-oauth | Sincronización por OAuth 2.0 | Spec, plan y tareas en su rama `007-sincronizacion-oauth` (no en `main`); sin implementar |
+| 007-sincronizacion-oauth | Sincronización de solo lectura (proveedor → CaFam) con Google y Microsoft por OAuth 2.0, actualización automática y manual, y grupos de calendarios. La bidireccional queda para una versión futura | Spec, plan y tareas **aprobados** (2026-10-23), 15 tareas en tres iteraciones; implementación en curso en la rama `007-sincronizacion-oauth` |
 | 008-mejoras-de-experiencia | Calendario al estilo Google Calendar (analizado con REA): ventana de evento sobre el calendario, ventana rápida, arrastrar para crear, selector de hora, atajos, vista recordada, avisos y esqueletos | **Cerrada** (2026-10-24), T1–T23 hechas; aplicada y validada en producción |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
@@ -456,6 +456,4 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 La 006 y la 008 están cerradas y en producción (2026-10-23 y 2026-10-24). La 008 añadió la migración `profile_last_view`, ya aplicada en prod.
 
-No hay ninguna spec en curso. El usuario decide la siguiente.
-
-La **007 (OAuth)** tiene spec, plan y tareas aprobados en su rama `007-sincronizacion-oauth`, sin implementar. Esa rama salió de `main` antes de la 008: al retomarla, rebásala sobre `main` y fusiona su `AGENTS.md` con este.
+La **007 (sincronización OAuth, solo lectura)** está en curso en la rama `007-sincronizacion-oauth` (rebasada sobre `main` el 2026-10-27). Decisiones: Google y Microsoft (cuentas personales y de trabajo), Google **publicado sin verificar** (aviso de "app no verificada" y tope de 100 usuarios, sin dominio propio), grupos para todos los calendarios, los calendarios traídos no se juntan y sin dependencias nuevas. Se implementa por `specs/007-sincronizacion-oauth/tasks.md` desde T1, que necesita al usuario en las consolas de Google y Microsoft.
