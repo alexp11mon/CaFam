@@ -189,9 +189,10 @@
   Hecho cuando: `npm test -- notice-list orphan-calendar-item` en verde y el flujo se prueba en el navegador con tres usuarios de prueba (propietario que borra, dos miembros que deciden). Cubre: RF-23, RF-24, RF-25 | Módulo: notice-list, orphan-calendar-item, calendars page
   Ajuste al cerrar: el botón "Salir" lleva la etiqueta accesible "Salir de «<calendario>»" para distinguirlo cuando hay varios. La prueba en navegador con tres usuarios se hace en T23.
 
-- [ ] T22 Indicar en Miembros que el calendario no tiene propietario y comprobar los permisos
+- [x] T22 Indicar en Miembros que el calendario no tiene propietario y comprobar los permisos
   Pasos: tests primero. En `tests/integration/account-orphan-permissions.test.ts`: en un calendario sin propietario, un editor sigue pudiendo crear eventos, un lector sigue sin poder, y nadie puede editar el nombre ni el color. En `tests/unit/members-orphan-notice.test.tsx`: la página de miembros muestra "Sin propietario, plazo hasta <fecha>" y oculta los controles de rol y de expulsar. Modificación de `src/app/dashboard/calendars/[id]/members/page.tsx`.
   Hecho cuando: `npm run test:db -- account-orphan-permissions` y `npm test -- members-orphan-notice` en verde. Cubre: RF-22, RF-24 | Módulo: members page
+  Ajuste al cerrar: el test de permisos pasa sin cambios de código, porque RF-22 pide precisamente que las políticas no cambien; confirma el comportamiento. Los controles de rol y expulsión ya se ocultan sin propietario (`MemberList` solo los muestra al propietario); el aviso es el componente `OrphanNotice`.
 
 - [ ] T25 Mostrar el autor del evento en su detalle
   Pasos: tests primero. En `tests/unit/author-label.test.ts`: la función pura `authorLabel(createdBy, members)` devuelve el nombre si el autor es un miembro, "Cuenta borrada" si `createdBy` es nulo y "un antiguo miembro" si tiene id pero no está entre los miembros. En `tests/unit/event-detail.test.tsx` (ampliar): el detalle muestra "Creado por <texto>" en los tres casos. Se añade `createdBy` al detalle del evento y se resuelve el nombre con `calendar_members_with_names`. Añadida a petición del usuario tras aprobar esta iteración (por eso la iteración llega a 13 tareas).

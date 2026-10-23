@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { OrphanNotice } from "@/components/account/orphan-notice";
 import { PageShell } from "@/components/calendar/page-shell";
 import { MemberList } from "@/components/sharing/member-list";
-import { getCalendar, requireUser } from "@/lib/calendar/queries";
+import { orphanDeadline } from "@/lib/account/orphan";
+import { getOrphanCalendars } from "@/lib/account/queries";
+import {
+  getCalendar,
+  getProfileTimeZone,
+  requireUser,
+} from "@/lib/calendar/queries";
 import { getMembers } from "@/lib/sharing/queries";
 import { changeMemberRole, expelMember, leaveCalendar } from "./actions";
 
@@ -17,6 +24,12 @@ async function Members({ params }: { params: Promise<{ id: string }> }) {
   const calendar = await getCalendar(supabase, userId, id);
   if (!calendar) notFound();
   const members = await getMembers(supabase, [id]);
+  // Without owner, the members decide until the deadline (spec 006, RF-22, RF-24).
+  const orphan =
+    calendar.ownerId === null
+      ? (await getOrphanCalendars(supabase, userId)).find((c) => c.id === id)
+      : undefined;
+  const timeZone = orphan ? await getProfileTimeZone(supabase, userId) : "";
 
   return (
     <>
@@ -30,6 +43,12 @@ async function Members({ params }: { params: Promise<{ id: string }> }) {
           {calendar.name}
         </span>
       </p>
+      {orphan ? (
+        <OrphanNotice
+          deadline={orphanDeadline(orphan.orphanedAt).toISOString()}
+          timeZone={timeZone}
+        />
+      ) : null}
       <MemberList
         members={members}
         currentUserId={userId}
