@@ -94,11 +94,12 @@ export default function SettingsPage({
       <Suspense fallback={null}>
         <ConfirmNotice searchParams={searchParams} />
       </Suspense>
-      <Section id="settings-accent" title="Color de acento">
+      {/* AccentPicker brings its own heading. */}
+      <section className="rounded-3xl bg-paper p-5 sm:p-6">
         <Suspense fallback={LOADING}>
           <AccentSection />
         </Suspense>
-      </Section>
+      </section>
       <Section id="settings-profile" title="Perfil">
         <Suspense fallback={LOADING}>
           <ProfileSection />
