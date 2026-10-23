@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AgendaView,
@@ -199,5 +200,57 @@ describe("AgendaView now line (RF-39)", () => {
     ]);
     expect(items[1]).toHaveTextContent("12:00");
     expect(within(day(/^martes, 3 /)).queryByText(/Hora actual/)).toBeNull();
+  });
+});
+
+// Spec 008, T19: back to the current time (RF-23, RF-24).
+describe("AgendaView: 'Hora actual'", () => {
+  it("is always there and scrolls to the line of the current time (RF-23, RF-24)", async () => {
+    const scrolled: Element[] = [];
+    const original = HTMLElement.prototype.scrollIntoView;
+    HTMLElement.prototype.scrollIntoView = function scrollIntoView() {
+      scrolled.push(this);
+    };
+    renderAgenda([
+      event("Antes", "2026-11-02T08:00:00Z", "2026-11-02T09:00:00Z"),
+      event("Después", "2026-11-02T15:00:00Z", "2026-11-02T16:00:00Z"),
+    ]);
+
+    await userEvent.click(screen.getByRole("button", { name: "Hora actual" }));
+
+    expect(scrolled).toHaveLength(1);
+    expect(scrolled[0]).toHaveTextContent("12:00");
+    HTMLElement.prototype.scrollIntoView = original;
+  });
+
+  it("goes to today when today has no events, so no line", async () => {
+    const scrolled: Element[] = [];
+    const original = HTMLElement.prototype.scrollIntoView;
+    HTMLElement.prototype.scrollIntoView = function scrollIntoView() {
+      scrolled.push(this);
+    };
+    renderAgenda();
+
+    await userEvent.click(screen.getByRole("button", { name: "Hora actual" }));
+
+    expect(scrolled[0]).toBe(day(/, hoy$/));
+    HTMLElement.prototype.scrollIntoView = original;
+  });
+
+  it("takes to the agenda of today when today is not shown", () => {
+    render(
+      <AgendaView
+        days={getVisibleRange("agenda", "2026-12-01", TZ).days}
+        events={[]}
+        timeZone={TZ}
+        today={TODAY}
+        canCreate
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Hora actual" })).toHaveAttribute(
+      "href",
+      "/dashboard/calendar?view=agenda&date=2026-11-02#ahora",
+    );
   });
 });

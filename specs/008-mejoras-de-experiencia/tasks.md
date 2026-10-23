@@ -81,7 +81,7 @@
   Pasos: test primero en `tests/unit/time-grid.test.tsx` (ampliado): la zona con desplazamiento usa la altura disponible con mínimo de 28 rem en lugar de `max-h-[28rem]`.
   Hecho cuando: `npm test -- time-grid` en verde y capturas de semana y día a 390, 768 y 1440 px revisadas. Cubre: RF-47 | Módulo: time-grid-height
 
-- [ ] T19 Añadir "Hora actual" a la agenda
+- [x] T19 Añadir "Hora actual" a la agenda
   Pasos: test primero en `tests/unit/agenda-view.test.tsx` (ampliado): el botón "Hora actual" está siempre visible; si hoy está en la agenda llama a `scrollIntoView` de la línea de la hora actual; si no, enlaza a la agenda de hoy con `#ahora`.
   Hecho cuando: `npm test -- agenda-view` en verde. Cubre: RF-23, RF-24 | Módulo: agenda-now
 
