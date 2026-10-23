@@ -211,6 +211,56 @@
 - [ ] T24 Actualizar la documentación y preparar el paso a producción
   Pasos: actualizar `AGENTS.md` (estado de la spec, rutas nuevas, tablas, funciones, trabajos programados, configuración de Brevo y de Auth en producción) y `docs/constitution.md` si procede, y redactar los comandos exactos para producción: `npx supabase link --project-ref yznbdoskvtxeasujtirk`, `npx supabase db push`, volver a enlazar dev, los secretos de Vault y la configuración de Auth en prod. No se aplica nada en producción: lo ejecuta el usuario.
   Hecho cuando: `AGENTS.md` refleja la spec 006, la lista de comandos y pasos de producción está en `specs/006-gestion-de-cuenta/` y el usuario la ha revisado. Cubre: todos | Módulo: documentación
+  Estado (2026-10-23): redactado. `AGENTS.md` actualizado y pasos de producción en `specs/006-gestion-de-cuenta/produccion.md`. Falta la revisión del usuario para marcarla como hecha.
+
+## Validación RF por RF (T23, 2026-10-23)
+
+Evidencia de cada requisito: test que lo cubre (unitario en `tests/unit/`, de base de datos en `tests/integration/`) y, si aplica, prueba en navegador en dev con usuarios de prueba ya borrados.
+
+| RF | Tests | Navegador |
+|----|-------|-----------|
+| RF-1 | `forgot-password-action`, `forgot-password-form`, `login-recovery-link`, `account-recovery` | Sí: correo recibido |
+| RF-2 | `account-confirm`, `reset-password-action` | Sí: enlace → /reset-password → contraseña nueva |
+| RF-3 | `account-confirm`, `forgot-password-form` | — |
+| RF-4 | `reset-password-action` | — |
+| RF-5 | `account-recovery`, `forgot-password-action` | — |
+| RF-6 | `account-email-action`, `email-form`, `account-schemas` | Formulario visible; envío real sin probar (T9) |
+| RF-7 | `account-email-action`, `account-error-messages` | — |
+| RF-8 | `account-email-action`, `account-schemas`, `account-error-messages` | — |
+| RF-9 | `account-email-action` (pide el cambio a Auth) | Pendiente (T9) |
+| RF-10 | `account-email-action` (`getAccountEmails`), `email-form` | — |
+| RF-11 | `account-confirm` | Pendiente (T9) |
+| RF-12 | `account-confirm`, `settings-confirm-notice` | — |
+| RF-13 | `account-profile-password-actions`, `profile-form` | Sí: nombre guardado |
+| RF-14 | `account-profile-password-actions`, `profile-form` | — |
+| RF-15 | `account-schemas`, `account-profile-password-actions`, `profile-form` | — |
+| RF-16 | `account-delete-action`, `delete-account-dialog` | Sí: aviso, email y contraseña |
+| RF-17 | `account-delete-action`, `delete-account-dialog` | Sí: confirmar desactivado hasta rellenar |
+| RF-18 | `account-delete` | — |
+| RF-19 | `account-delete`, `account-delete-action` | Sí: redirige a /login |
+| RF-20 | `account-delete`, `author-label` | Sí: "Creado por: Cuenta borrada" |
+| RF-21 | `account-schema`, `account-delete`, `import-calendar` | Sí: calendario sin propietario con plazo |
+| RF-22 | `account-orphan-permissions`, `members-orphan-notice`, `grouping`, `calendar-filters` | Sí: grupo "Sin propietario", aviso en Miembros |
+| RF-23 | `account-delete`, `account-queries`, `account-notices-read`, `notice-list`, `orphan-actions` | Sí: aviso visible y se cierra |
+| RF-24 | `account-decide`, `orphan-actions`, `orphan-calendar-item` | Sí: Conservar |
+| RF-25 | `account-decide`, `orphan-actions`, `orphan-calendar-item` | Sí: Salir con confirmación |
+| RF-26 | `account-apply`, `orphan-deadline`, `account-jobs` | Sí: plazo de 15 días visible |
+| RF-27 | `account-apply` | Sí: traspaso a la única que conserva |
+| RF-28 | `account-copy`, `account-apply` | — |
+| RF-29 | `account-apply` | — |
+| RF-30 | `account-schemas`, `account-profile-password-actions`, `password-form` | Sí: contraseña cambiada |
+| RF-31 | `account-profile-password-actions`, `password-form` | — |
+| RF-32 | `account-profile-password-actions`, `password-form`, `account-error-messages` | — |
+| RF-33 | `account-profile-password-actions` | Sí: aviso de sesiones cerradas |
+| RF-34 | `author-label`, `event-detail` | Sí |
+| RF-35 | `author-label`, `event-detail` | Sí |
+| RF-36 | `author-label` | — |
+
+Requisitos no funcionales: NF-1 (`account-error-messages`, `forgot-password-action`: misma respuesta exista o no la cuenta); NF-2 (claves solo en Vault y en el panel; `no-secrets` en verde; la cola ignora `.test` desde `skip_test_addresses`); NF-3 y NF-4 (capturas a 390, 768 y 1440 px con el rojo y el amarillo, revisadas); NF-5 (`package.json` sin dependencias nuevas).
+
+Fuera de alcance, revisado en el código: no hay traspaso voluntario de calendarios, ni exportación de datos, ni dos pasos ni acceso social, ni copia de seguridad de lo borrado, ni más notificaciones que las de RF-23 y RF-29.
+
+Comprobaciones finales: `typecheck`, `lint`, `format:check`, `npm test` (900) y `build` en verde; `test:db` con 24 de 25 archivos en verde y `account-notices-read` repetido aparte por el límite de inicios de sesión de Supabase (ver nota de T23).
 
 ## Trazabilidad RF -> Tareas
 

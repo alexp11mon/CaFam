@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-22, al cerrar la spec 005 (identidad visual).
+> Última actualización: 2026-10-23, al implementar la spec 006 (gestión de cuenta) en dev; pendiente de producción y cierre.
 
 ## 1. Qué es
 
@@ -32,7 +32,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
 | 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Cerrada** (2026-10-22), T1–T13 hechas |
-| 006-gestion-de-cuenta | Recuperar contraseña, cambiar email, borrar cuenta, editar perfil (requiere SMTP gratuito) | Pendiente |
+| 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Implementada en dev** (2026-10-23), T1–T26; falta probar el cambio de email (T9), producción y cierre |
 | 007-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
@@ -68,7 +68,15 @@ Añadido por la spec 005:
 - **Panel del calendario**: tarjeta "Próximo evento" con cuenta atrás (siguiente evento con hora en 24 h), mini calendario mensual con puntos por calendario y filtros con avatares de iniciales.
 - **Marca e iconos nuevos** ("CF" en piedra sobre tinta) y PWA en color piedra.
 
-**No hay** gestión de cuenta (006), eventos recurrentes propios (spec futura sin número), sincronización ni actualización de lo importado.
+Añadido por la spec 006 (en dev; producción pendiente, ver `specs/006-gestion-de-cuenta/produccion.md`):
+
+- **Recuperar contraseña** desde `/login` ("¿Olvidaste tu contraseña?" → `/forgot-password`): la respuesta es la misma exista o no la cuenta, con un límite de 3 enlaces cada 15 minutos por cuenta. El enlace del correo pasa por `/auth/confirm` y lleva a `/reset-password`; al guardar se cierran las demás sesiones.
+- **Ajustes** (`/dashboard/settings`): perfil (nombre y zona horaria), cambio de email (pide la contraseña; queda pendiente hasta confirmar el enlace del email nuevo), cambio de contraseña (verifica la actual y cierra las demás sesiones) y borrar cuenta (email y contraseña).
+- **Borrar la cuenta** borra los calendarios propios sin otros miembros. Los compartidos quedan **sin propietario** 15 días: sus miembros reciben un aviso en "Mis calendarios" y por correo, y deciden **Conservar** o **Salir**. Al decidir todos o vencer el plazo: con un solo conservador pasa a ser suyo; con varios, cada uno recibe una copia completa (con los autores originales); sin nadie, se borra. Mientras tanto aparecen en un grupo **"Sin propietario"** de los filtros y de "Mis calendarios", con los permisos de cada miembro sin cambios.
+- **Autor del evento**: el detalle muestra "Creado por <nombre>", "Cuenta borrada" si el autor ya no existe y "un antiguo miembro" si salió del calendario.
+- **Correo**: Brevo (plan gratuito, 300 al día). Auth envía recuperación y cambio de email por SMTP; los avisos de cuenta salen de Postgres con `pg_net` a la API de Brevo, con la clave en Vault.
+
+**No hay** eventos recurrentes propios (spec futura sin número), sincronización ni actualización de lo importado.
 
 ## 3. Reglas de trabajo (obligatorias)
 
@@ -125,11 +133,14 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── (auth)/            # grupo sin segmento de URL
 │   │   │   ├── actions.ts     # Server Actions signUp, signIn, signOut
 │   │   │   ├── login/page.tsx
-│   │   │   └── signup/page.tsx
+│   │   │   ├── signup/page.tsx
+│   │   │   ├── forgot-password/ # pedir enlace + actions.ts (requestRecovery) — spec 006
+│   │   │   └── reset-password/  # contraseña nueva + actions.ts (resetPassword) — spec 006
+│   │   ├── auth/confirm/route.ts  # verifica el token_hash de los correos de Auth (spec 006)
 │   │   ├── dashboard/         # layout.tsx (marco con el acento), page.tsx (redirige al calendario); protegido por getRouteAccess
 │   │   │   ├── calendar/      # vistas agenda/mes/semana/día (?view=&date=) + preferences-actions.ts + mini-month-actions.ts
 │   │   │   ├── calendars/     # page.tsx ("Mis calendarios"), new, [id]/edit, [id]/categories, merge + actions.ts (calendarios y juntar)
-│   │   │   ├── settings/      # Ajustes: color de acento + actions.ts (setAccent)
+│   │   │   ├── settings/      # Ajustes: acento + actions.ts (setAccent) y cuenta + account-actions.ts (spec 006)
 │   │   │   └── events/        # new, [id] (detalle + edición + borrado) + actions.ts
 │   │   ├── dashboard/join/    # "Unirme con código" (ID y PIN) + actions.ts
 │   │   ├── dashboard/import/  # "Importar calendario" (.ics) + actions.ts (`maxDuration` 60)
@@ -143,6 +154,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── shell/             # app-frame, side-rail, bottom-bar, more-sheet, bar-styles, icons (SVG propios)
 │   │   ├── brand/             # logo (LogoMark y Logo)
 │   │   ├── settings/          # accent-picker
+│   │   ├── account/           # formularios de cuenta, diálogo de borrado, avisos, calendario sin propietario (spec 006)
 │   │   ├── people/            # avatar
 │   │   ├── auth/              # auth-card, login-form, signup-form (Client Components con useActionState)
 │   │   ├── dashboard/         # calendar-list
@@ -167,7 +179,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon.svg (maestro) → icon-192, icon-512, icon-512-maskable (letras al 85 %), apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
@@ -213,6 +225,9 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/dashboard/import` | con sesión | Importar un `.ics` (enlace o archivo) a un calendario nuevo |
 | `/invite/[token]` | sin sesión → `/login?next=/invite/<token>`; con sesión, vista previa | Cabeceras `Referrer-Policy: no-referrer` y `X-Robots-Tag: noindex` |
 | `/offline` | pública | Pantalla sin conexión |
+| `/forgot-password` | pública | Pedir el enlace de recuperación (spec 006); `?expired=1` avisa de un enlace caducado |
+| `/reset-password` | solo con sesión (la crea el enlace; sin sesión → `/login`) | Contraseña nueva |
+| `/auth/confirm` | pública (Route Handler) | `verifyOtp` con `token_hash`: `type=recovery` → `/reset-password`, `type=email_change` → `/dashboard/settings`; nunca lee `next` |
 | `/manifest.webmanifest`, `/sw.js`, `/icons/*` | pública | PWA |
 | `/api/cron/keep-alive` | `Authorization: Bearer ${CRON_SECRET}` | `200 {"ok":true}` / `401` / `500` |
 
@@ -260,6 +275,12 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - Funciones `SECURITY DEFINER` con `search_path = ''`: `create_invite`, `revoke_invite`, `get_invite_preview`, `accept_invite` (bloquea la fila: la carrera por el último uso da un éxito y un `CF404`), `set_access_code`, `disable_access_code`, `join_with_code` (devuelve `status` `ok | member | invalid | limited` en vez de lanzar, para que el fallo quede registrado) y `calendar_members_with_names(uuid[])` (única vía para ver nombres ajenos: nombre y rol, sin email ni zona horaria). `CF404` es el SQLSTATE propio de "invitación no válida".
   - `merge_calendars` no cambia: los miembros de los calendarios que desaparecen caen en cascada.
 - Añadido por la spec 005: el azul antiguo de la spec 001 desaparece (migración `remove_old_blue`): el valor por defecto de `calendars.color` y el respaldo de `merge_calendars` e `import_calendar` pasan a `#A0C4FF`, y los calendarios y eventos con el azul antiguo se cambiaron a ese color. La guardia de diseño prohíbe el código del azul antiguo en `src/`.
+- Añadido por la spec 006:
+  - `calendars.owner_id` es anulable y hay `calendars.orphaned_at` (`check`: propietario nulo si y solo si hay fecha). `prevent_owner_change` solo deja cambiar el propietario con la marca de transacción `app.account_transfer`, que activan las funciones de cuenta.
+  - Tablas (todas con RLS): `calendar_orphan_decisions` (lectura propia), `account_notices` (lectura propia y `UPDATE (read_at)` propio), `email_outbox` y `auth_email_requests` (sin acceso de clientes; la segunda solo guarda SHA-256 del email).
+  - Funciones `SECURITY DEFINER`: `request_recovery` (anon), `delete_own_account` (borra `auth.users` del llamante tras dejar sin propietario los calendarios compartidos), `decide_orphan_calendar`, y solo para `postgres` y `service_role`: `copy_calendar_for_owner`, `apply_orphan_decisions`, `send_pending_emails` (con `p_dry_run` para tests) y `account_scheduled_jobs` (ayuda de tests). `CF404` vuelve a significar "no válido para ti".
+  - `pg_cron`: `account-apply-orphans` (03:00 UTC), `account-send-emails` (cada 15 min) y `account-purge-recovery` (04:00 UTC). `pg_net` es asíncrono: un correo se marca enviado cuando una ejecución posterior lee un 2xx en `net._http_response`; hasta 5 intentos. Nunca envía a direcciones `.test`.
+  - Vault: `brevo_api_key` y `brevo_sender_email` (los crea el usuario en el SQL Editor de cada proyecto).
 - Añadido por la spec 005: `profiles.accent` (`text`, por defecto `'red'`, `check` en `red|blue|green|yellow|purple|gray`). La protegen las políticas de `profiles` (solo el propio); `visible_people()` y `calendar_members_with_names` no la exponen.
 - Añadido por la spec 004: `import_calendar(p_name, p_color, p_events jsonb)` (`SECURITY INVOKER`, una transacción): crea el calendario del llamante y sus eventos desde un array de 1 a 2.000 elementos (`22023` si no) y, si un evento viola una restricción, no deja nada. No hay tablas ni columnas nuevas: el calendario importado no guarda nada de su origen.
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.
@@ -306,6 +327,7 @@ Reglas completas en la constitución ("Identidad visual y diseño de interfaz", 
   npx supabase db push
   npx supabase link --project-ref uthubyzhonrtrmbcqcjh   # volver a dev inmediatamente
   ```
+- **Correo (spec 006)**: SMTP de Brevo y plantillas de Auth (`token_hash` → `/auth/confirm`) se configuran en el panel de cada proyecto; las claves de Brevo para los avisos van en Vault. Pasos exactos en `specs/006-gestion-de-cuenta/produccion.md`. En Brevo, la restricción de IP debe estar desactivada (Supabase llama desde IPs variables).
 - El cron de Vercel llama cada día a `/api/cron/keep-alive`, que hace una consulta mínima para que Supabase Free no pause el proyecto tras 7 días de inactividad.
 
 Variables (documentadas en `.env.example`):
@@ -396,14 +418,14 @@ npm run db:types       # regenera src/types/database.ts
 
 ## 11. Fuera de alcance hasta su spec
 
-Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), arrastrar y soltar eventos, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, recuperación de contraseña, verificación y cambio de email, borrado de cuenta y edición de perfil (006), login social y OAuth (007), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
+Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), arrastrar y soltar eventos, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social y OAuth (007), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
 
 ## 12. Cómo continuar
 
-La 005 está cerrada y desplegada en producción (migraciones `profile_accent` y `remove_old_blue` aplicadas y demo validada). La siguiente spec es la **006 (gestión de cuenta, requiere SMTP gratuito)**:
+La spec 006 está implementada en dev en la rama `006-gestion-de-cuenta` (T1–T26; detalle y validación RF por RF en `specs/006-gestion-de-cuenta/tasks.md`). Falta:
 
-1. Crea la rama `006-gestion-de-cuenta` desde `main` (con la 005 ya integrada).
-2. Redacta `spec.md` con la skill `spec-generator` (entrevista al usuario) y espera su aprobación. Sus pantallas nacen con la identidad visual y la cuenta se añade a Ajustes (`/dashboard/settings`).
-3. Haz lo mismo con `plan.md` (`plan-generator`) y `tasks.md` (`tasks-generator`).
-4. Implementa tarea a tarea con el test primero, el checklist de verificación y un commit por tarea.
-5. Valida en producción y pide al usuario la aprobación para cerrar.
+1. Probar el cambio de email con una dirección real del usuario (T9).
+2. Que el usuario aplique la spec en producción siguiendo `specs/006-gestion-de-cuenta/produccion.md` (migraciones, Vault, Auth, merge a `main`).
+3. Validar en producción y pedir al usuario la aprobación para cerrar la spec.
+
+Después, la spec 008 (mejoras de experiencia) está aprobada en `specs/008-mejoras-de-experiencia/` y le faltan plan y tareas; la 007 (OAuth) sigue pendiente.
