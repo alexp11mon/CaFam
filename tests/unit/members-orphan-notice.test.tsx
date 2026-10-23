@@ -25,8 +25,8 @@ describe("MemberList without owner (RF-22)", () => {
     render(
       <MemberList
         members={[
-          { calendarId: "c1", userId: "u1", name: "Bea", role: "editor" },
-          { calendarId: "c1", userId: "u2", name: "Cy", role: "viewer" },
+          { userId: "u1", name: "Bea", role: "editor" },
+          { userId: "u2", name: "Cy", role: "viewer" },
         ]}
         currentUserId="u1"
         changeRoleAction={vi.fn()}
