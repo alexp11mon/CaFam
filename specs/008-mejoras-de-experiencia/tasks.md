@@ -77,7 +77,7 @@
   Pasos: test primero en `tests/unit/event-chip.test.tsx` y `tests/unit/palette.test.ts` (ampliados): un evento con hora se pinta como punto del color + hora + título; uno de día completo o de varios días, como barra rellena del color con el texto en tinta; el contraste entre `ink` y cada color de la paleta es ≥ 4,5:1 (D9).
   Hecho cuando: `npm test -- event-chip palette design-tokens` en verde. Cubre: RF-48 | Módulo: month-chips
 
-- [ ] T18 Hacer que la rejilla horaria ocupe el alto de la pantalla
+- [x] T18 Hacer que la rejilla horaria ocupe el alto de la pantalla
   Pasos: test primero en `tests/unit/time-grid.test.tsx` (ampliado): la zona con desplazamiento usa la altura disponible con mínimo de 28 rem en lugar de `max-h-[28rem]`.
   Hecho cuando: `npm test -- time-grid` en verde y capturas de semana y día a 390, 768 y 1440 px revisadas. Cubre: RF-47 | Módulo: time-grid-height
 

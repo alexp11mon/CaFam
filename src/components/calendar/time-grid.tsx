@@ -125,7 +125,8 @@ export function TimeGrid({
           ) : null}
           <ScrollOnMount
             top={FIRST_VISIBLE_HOUR * HOUR_PX}
-            className="max-h-[28rem] overflow-y-auto"
+            // The screen height below the toolbar, as Google, never under 28 rem (spec 008 RF-47).
+            className="max-h-[max(28rem,calc(100dvh-17rem))] overflow-y-auto"
           >
             <div data-testid="time-grid" className="grid" style={columns}>
               <div>
