@@ -179,7 +179,7 @@
   Pasos: tests primero. En `tests/integration/account-notices-read.test.ts`: un usuario puede poner `read_at` en su aviso y no en el de otro, y no puede cambiar otras columnas. En `tests/unit/orphan-actions.test.ts`: `decideOrphanCalendar(id, keep)` llama a `decide_orphan_calendar`, traduce `CF404` a "Este calendario ya no está disponible." y llama a `revalidatePath`; `dismissNotice(id)` marca el aviso como leído. Migración con permiso de `UPDATE (read_at)` y política de fila propia sobre `account_notices` (D10). `npm run db:push` y `npm run db:types`.
   Hecho cuando: `npm run test:db -- account-notices-read account-schema` y `npm test -- orphan-actions` en verde. Cubre: RF-23, RF-24, RF-25 | Módulo: orphan-actions, account_orphan_schema
 
-- [ ] T21 Mostrar los avisos y las decisiones en Mis calendarios
+- [x] T21 Mostrar los avisos y las decisiones en Mis calendarios
   Pasos: tests primero en `tests/unit/notice-list.test.tsx` y `tests/unit/orphan-calendar-item.test.tsx`. Comprueban que:
   - la lista de avisos nombra a la persona y al calendario, y permite cerrar cada aviso;
   - cada calendario sin propietario muestra los días que quedan y los botones "Conservar" y "Salir" (con confirmación para "Salir"), y la decisión ya tomada;
@@ -187,6 +187,7 @@
 
   Componentes `notice-list.tsx` y `orphan-calendar-item.tsx`, y modificación de `src/app/dashboard/calendars/page.tsx`. Capturas a 390, 768 y 1440 px.
   Hecho cuando: `npm test -- notice-list orphan-calendar-item` en verde y el flujo se prueba en el navegador con tres usuarios de prueba (propietario que borra, dos miembros que deciden). Cubre: RF-23, RF-24, RF-25 | Módulo: notice-list, orphan-calendar-item, calendars page
+  Ajuste al cerrar: el botón "Salir" lleva la etiqueta accesible "Salir de «<calendario>»" para distinguirlo cuando hay varios. La prueba en navegador con tres usuarios se hace en T23.
 
 - [ ] T22 Indicar en Miembros que el calendario no tiene propietario y comprobar los permisos
   Pasos: tests primero. En `tests/integration/account-orphan-permissions.test.ts`: en un calendario sin propietario, un editor sigue pudiendo crear eventos, un lector sigue sin poder, y nadie puede editar el nombre ni el color. En `tests/unit/members-orphan-notice.test.tsx`: la página de miembros muestra "Sin propietario, plazo hasta <fecha>" y oculta los controles de rol y de expulsar. Modificación de `src/app/dashboard/calendars/[id]/members/page.tsx`.
