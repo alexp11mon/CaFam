@@ -1,6 +1,6 @@
 # Tasks 006 - Gestión de cuenta
 
-> Estado: **Pendientes de aprobación** por el usuario. Primera iteración: T1 a T12 (base de datos, avisos, plazo y recuperación de contraseña). La segunda iteración (Ajustes: perfil, email, contraseña, borrado y avisos en pantalla) se redacta después de aprobar esta.
+> Estado: primera iteración (T1 a T12) **aprobada**: T1 a T8, T10 y T12 hechas; T9 y T11 abiertas (ver sus notas). Segunda iteración (T13 a T24: Ajustes, avisos y calendarios sin propietario) **pendiente de aprobación** del usuario.
 > Spec: `specs/006-gestion-de-cuenta/spec.md`. Plan: `specs/006-gestion-de-cuenta/plan.md`.
 > Reglas: una tarea cada vez, test primero (rojo → verde). Al cerrar cada tarea se ejecuta y reporta `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, y `npm run test:db -- <filtro>` si toca esquema, RLS o acceso a datos. Si toca interfaz, capturas a 390, 768 y 1440 px (P9). Un commit por tarea citándola, en la rama `006-gestion-de-cuenta`.
 > Sin dependencias nuevas (P6): ninguna tarea toca `package.json`. El proveedor SMTP es Brevo, registrado en la spec.
@@ -113,6 +113,91 @@
   Archivos `src/lib/account/schemas.ts` y `src/lib/account/error-messages.ts`, reutilizando piezas de `src/lib/auth/`.
   Hecho cuando: `npm test -- account-schemas account-error-messages` en verde. Cubre: RF-7, RF-8, RF-12, RF-13, RF-15, RF-30, RF-31, RF-32 | Módulo: schemas, error-messages
 
+## Iteración 2: Ajustes, avisos y calendarios sin propietario (T13 a T24)
+
+> Estado: **Pendientes de aprobación** por el usuario. Se implementan de una en una, con el test primero y la misma verificación que la iteración 1. No se despliega T4 a producción antes de T21 (pantalla de calendarios sin propietario). Las acciones de este bloque llevan un test de servidor (`// @vitest-environment node`, Supabase mockeado) y, las pantallas, un test de componente y capturas a 390, 768 y 1440 px con el acento rojo y el amarillo (P9).
+
+- [ ] T13 Guardar el perfil y cambiar la contraseña con `saveProfile` y `changePassword`
+  Pasos: tests primero en `tests/unit/account-profile-password-actions.test.ts`. Comprueba que:
+  - `saveProfile` valida con `profileSchema`, actualiza solo la fila propia de `profiles` y llama a `revalidatePath("/dashboard", "layout")`;
+  - un nombre vacío, de 51 caracteres o una zona horaria desconocida no actualiza nada y devuelve el error de campo;
+  - `changePassword` verifica la actual con `signInWithPassword`, rechaza una nueva igual a la actual, llama a `updateUser` y luego a `signOut({ scope: "others" })`;
+  - con la actual incorrecta no cambia nada y devuelve "La contraseña actual no es correcta.".
+
+  Archivo `src/app/dashboard/settings/account-actions.ts` con estas dos acciones.
+  Hecho cuando: `npm test -- account-profile-password-actions` en verde. Cubre: RF-13, RF-14, RF-15, RF-30, RF-31, RF-32, RF-33 | Módulo: account-actions
+
+- [ ] T14 Pedir el cambio de email con `requestEmailChange` y leer el cambio pendiente
+  Pasos: tests primero en `tests/unit/account-email-action.test.ts`. Comprueba que:
+  - verifica la contraseña actual con `signInWithPassword` y, si es incorrecta, no inicia el cambio;
+  - un email no válido o igual al actual no llama a `updateUser`;
+  - una dirección ya usada devuelve "Esa dirección ya la usa otra cuenta.";
+  - un cambio aceptado llama a `updateUser({ email })` y deja el estado "pendiente de confirmar";
+  - `getPendingEmail` devuelve `new_email` del usuario de la sesión, o nulo si no hay cambio pendiente.
+
+  Acción en `account-actions.ts` y lectura en `src/lib/account/queries.ts`.
+  Hecho cuando: `npm test -- account-email-action` en verde. Cubre: RF-6, RF-7, RF-8, RF-9, RF-10 | Módulo: account-actions, queries
+
+- [ ] T15 Borrar la cuenta con `deleteAccount`
+  Pasos: test primero en `tests/unit/account-delete-action.test.ts`. Comprueba que:
+  - la acción exige que el email escrito coincida con el de la sesión y que la contraseña sea correcta (`signInWithPassword`); si no, no llama a `delete_own_account` (RF-17);
+  - con ambos correctos llama a `delete_own_account`, cierra la sesión local y redirige a `/login`;
+  - un error de la función se muestra con el mensaje de conexión, sin cerrar la sesión.
+
+  Acción `deleteAccount` en `account-actions.ts`.
+  Hecho cuando: `npm test -- account-delete-action` en verde. Cubre: RF-16, RF-17, RF-19 | Módulo: account-actions
+
+- [ ] T16 Crear los formularios de perfil y de contraseña
+  Pasos: tests primero en `tests/unit/profile-form.test.tsx` y `tests/unit/password-form.test.tsx` (Testing Library, textos en español). Comprueban que:
+  - el formulario de perfil muestra nombre y zona horaria con los valores actuales, y los errores de campo enlazados con `aria-describedby`;
+  - el de contraseña pide la actual y la nueva, y muestra "La contraseña nueva no puede ser igual a la actual." cuando la acción lo devuelve;
+  - ambos desactivan el botón mientras envían.
+
+  Componentes `src/components/account/profile-form.tsx` y `password-form.tsx`, con los componentes de `components/ui/`.
+  Hecho cuando: `npm test -- profile-form password-form` en verde. Cubre: RF-13, RF-14, RF-15, RF-30, RF-31, RF-32 | Módulo: profile-form, password-form
+
+- [ ] T17 Crear el formulario de email y el diálogo de borrado de cuenta
+  Pasos: tests primero en `tests/unit/email-form.test.tsx` y `tests/unit/delete-account-dialog.test.tsx`. Comprueban que:
+  - el formulario de email pide la dirección nueva y la contraseña actual, y muestra "Cambio pendiente de confirmar: <dirección>" cuando hay uno (RF-10);
+  - el diálogo advierte de que el borrado es irreversible, pide el email y la contraseña, y no envía hasta que ambos estén escritos;
+  - un error de la acción se muestra en el propio diálogo.
+
+  Componentes `email-form.tsx` y `delete-account-dialog.tsx` (reutiliza `ConfirmDialog`).
+  Hecho cuando: `npm test -- email-form delete-account-dialog` en verde. Cubre: RF-6, RF-10, RF-16, RF-17 | Módulo: email-form, delete-account-dialog
+
+- [ ] T18 Ampliar Ajustes con las cuatro secciones de cuenta
+  Pasos: test primero en `tests/unit/settings-page.test.tsx`: la página muestra las secciones Perfil, Email, Contraseña y Cuenta bajo el acento actual, y con `?confirm=invalid` muestra "El enlace no es válido o ha caducado. Pide uno nuevo.". Página `src/app/dashboard/settings/page.tsx`, con una sección por `<Suspense>` como la del acento. Capturas a 390, 768 y 1440 px.
+  Hecho cuando: `npm test -- settings-page` en verde y las cuatro secciones se ven y funcionan en el navegador con un usuario de prueba, a 390 y 1440 px. Cubre: RF-6, RF-10, RF-12, RF-13, RF-16, RF-30 | Módulo: settings page
+
+- [ ] T19 Leer los avisos y los calendarios sin propietario
+  Pasos: tests primero. En `tests/unit/orphan-deadline.test.ts`: `daysLeft` calcula los días que quedan hasta los 15 desde `orphaned_at` (15, 1, 0 y vencido). En `tests/integration/account-queries.test.ts`: un miembro ve sus avisos y los calendarios sin propietario con su plazo, y no ve los de otro usuario. Funciones en `src/lib/account/orphan.ts` (puras) y `queries.ts` (lecturas con RLS).
+  Hecho cuando: `npm test -- orphan-deadline` y `npm run test:db -- account-queries` en verde. Cubre: RF-22, RF-23, RF-26 | Módulo: queries, orphan
+
+- [ ] T20 Marcar avisos como leídos y decidir sobre un calendario con `orphan-actions`
+  Pasos: tests primero. En `tests/integration/account-notices-read.test.ts`: un usuario puede poner `read_at` en su aviso y no en el de otro, y no puede cambiar otras columnas. En `tests/unit/orphan-actions.test.ts`: `decideOrphanCalendar(id, keep)` llama a `decide_orphan_calendar`, traduce `CF404` a "Este calendario ya no está disponible." y llama a `revalidatePath`; `dismissNotice(id)` marca el aviso como leído. Migración con permiso de `UPDATE (read_at)` y política de fila propia sobre `account_notices` (D10). `npm run db:push` y `npm run db:types`.
+  Hecho cuando: `npm run test:db -- account-notices-read account-schema` y `npm test -- orphan-actions` en verde. Cubre: RF-23, RF-24, RF-25 | Módulo: orphan-actions, account_orphan_schema
+
+- [ ] T21 Mostrar los avisos y las decisiones en Mis calendarios
+  Pasos: tests primero en `tests/unit/notice-list.test.tsx` y `tests/unit/orphan-calendar-item.test.tsx`. Comprueban que:
+  - la lista de avisos nombra a la persona y al calendario, y permite cerrar cada aviso;
+  - cada calendario sin propietario muestra los días que quedan y los botones "Conservar" y "Salir" (con confirmación para "Salir"), y la decisión ya tomada;
+  - sin avisos ni calendarios sin propietario, el bloque no aparece.
+
+  Componentes `notice-list.tsx` y `orphan-calendar-item.tsx`, y modificación de `src/app/dashboard/calendars/page.tsx`. Capturas a 390, 768 y 1440 px.
+  Hecho cuando: `npm test -- notice-list orphan-calendar-item` en verde y el flujo se prueba en el navegador con tres usuarios de prueba (propietario que borra, dos miembros que deciden). Cubre: RF-23, RF-24, RF-25 | Módulo: notice-list, orphan-calendar-item, calendars page
+
+- [ ] T22 Indicar en Miembros que el calendario no tiene propietario y comprobar los permisos
+  Pasos: tests primero. En `tests/integration/account-orphan-permissions.test.ts`: en un calendario sin propietario, un editor sigue pudiendo crear eventos, un lector sigue sin poder, y nadie puede editar el nombre ni el color. En `tests/unit/members-orphan-notice.test.tsx`: la página de miembros muestra "Sin propietario, plazo hasta <fecha>" y oculta los controles de rol y de expulsar. Modificación de `src/app/dashboard/calendars/[id]/members/page.tsx`.
+  Hecho cuando: `npm run test:db -- account-orphan-permissions` y `npm test -- members-orphan-notice` en verde. Cubre: RF-22, RF-24 | Módulo: members page
+
+- [ ] T23 Validar la cobertura RF por RF y el flujo completo en navegador
+  Pasos: recorrer la trazabilidad de RF-1 a RF-33. Probar en `playwright-cli` contra dev, a 390 y 1440 px, con usuarios de prueba que se borran al terminar: editar perfil, cambiar contraseña, pedir cambio de email, borrar una cuenta con un calendario compartido, y las dos decisiones de los miembros, sin dejar datos en dev. Revisar que nada de "Fuera de alcance" está en el código.
+  Hecho cuando: checklist RF-1 a RF-33 con el test que cubre cada uno, demo manual del flujo de borrado con decisión de los miembros, y `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run test:db` en verde. Cubre: todos | Módulo: validación
+
+- [ ] T24 Actualizar la documentación y preparar el paso a producción
+  Pasos: actualizar `AGENTS.md` (estado de la spec, rutas nuevas, tablas, funciones, trabajos programados, configuración de Brevo y de Auth en producción) y `docs/constitution.md` si procede, y redactar los comandos exactos para producción: `npx supabase link --project-ref yznbdoskvtxeasujtirk`, `npx supabase db push`, volver a enlazar dev, los secretos de Vault y la configuración de Auth en prod. No se aplica nada en producción: lo ejecuta el usuario.
+  Hecho cuando: `AGENTS.md` refleja la spec 006, la lista de comandos y pasos de producción está en `specs/006-gestion-de-cuenta/` y el usuario la ha revisado. Cubre: todos | Módulo: documentación
+
 ## Trazabilidad RF -> Tareas
 
 Iteración 1 (T1 a T12):
@@ -144,8 +229,32 @@ Iteración 1 (T1 a T12):
 - RF-31 -> T12 (mensajes; la pantalla llega en la iteración 2)
 - RF-32 -> T12 (mensajes; la pantalla llega en la iteración 2)
 
-Iteración 2 (pendiente de aprobar la primera): RF-6, RF-10 (email y pendiente en Ajustes), RF-14 (zona horaria), RF-16 y RF-17 (diálogo de borrado), RF-22 (aviso de sin propietario en miembros), RF-24 y RF-25 (pantalla de decisión), RF-33 (cierre de sesiones al cambiar contraseña en Ajustes).
+Iteración 2 (T13 a T24):
+- RF-6 -> T14, T17, T18
+- RF-7 -> T14
+- RF-8 -> T14
+- RF-9 -> T14 (el correo de Auth se configuró en T9)
+- RF-10 -> T14, T17, T18
+- RF-12 -> T18 (aviso en Ajustes)
+- RF-13 -> T13, T16, T18
+- RF-14 -> T13, T16
+- RF-15 -> T13, T16
+- RF-16 -> T15, T17, T18
+- RF-17 -> T15, T17
+- RF-19 -> T15
+- RF-22 -> T19, T22
+- RF-23 -> T19, T20, T21
+- RF-24 -> T20, T21, T22
+- RF-25 -> T20, T21
+- RF-26 -> T19 (plazo visible)
+- RF-30 -> T13, T16, T18
+- RF-31 -> T13, T16
+- RF-32 -> T13, T16
+- RF-33 -> T13
+- RF-1 a RF-33 (validación y cierre) -> T23, T24
 
 ## Dudas abiertas
 - [NECESITA ACLARACIÓN: T1 (a) depende de que Postgres pueda borrar `auth.users` desde una función. Si no se puede, D1 se revisa con el usuario antes de T4.]
 - [NECESITA ACLARACIÓN: T9 depende de que la notificación de cambio de email de Auth esté disponible en este proyecto. Si no, el aviso al correo anterior sale por la cola propia (D4) y se añade a T8.]
+- [NECESITA ACLARACIÓN: RF-20 y RF-28 hablan de mostrar "Cuenta borrada" como autor, pero hoy la interfaz no muestra el autor de ningún evento, así que ninguna tarea lo pinta. ¿Se añade "Creado por" en el detalle del evento (cambio de spec), o RF-20 se da por cumplido al conservar el dato con autor nulo?]
+- [NECESITA ACLARACIÓN: T20 añade una migración de `UPDATE (read_at)` sobre `account_notices`, necesaria para cerrar avisos (el plan habla de "marcado de lectura propios" pero no lista función para ello). ¿Te parece bien un permiso por columna en lugar de una función?]
