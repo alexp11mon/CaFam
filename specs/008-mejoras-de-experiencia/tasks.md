@@ -73,7 +73,7 @@
   Pasos: test primero en `tests/unit/slot-layer.test.tsx` (eventos de puntero simulados): un clic abre la ventana rápida con la media hora y 1 h; un arrastre con ratón dibuja el bloque provisional y al soltar abre la ventana con ese intervalo; Escape durante el arrastre lo cancela; con `pointerType: "touch"` no se arrastra y el toque actúa como clic; el botón "Crear evento el <día>" se alcanza con el teclado.
   Hecho cuando: `npm test -- slot-layer` en verde y, en el navegador a 1440 px, un arrastre de 16:00 a 17:30 crea ese evento. Cubre: RF-20, RF-22, RF-40, RF-42, RF-43, RF-44, RF-45 | Módulo: slot-layer, draft-block
 
-- [ ] T17 Mostrar en el mes los eventos con punto o con barra
+- [x] T17 Mostrar en el mes los eventos con punto o con barra
   Pasos: test primero en `tests/unit/event-chip.test.tsx` y `tests/unit/palette.test.ts` (ampliados): un evento con hora se pinta como punto del color + hora + título; uno de día completo o de varios días, como barra rellena del color con el texto en tinta; el contraste entre `ink` y cada color de la paleta es ≥ 4,5:1 (D9).
   Hecho cuando: `npm test -- event-chip palette design-tokens` en verde. Cubre: RF-48 | Módulo: month-chips
 

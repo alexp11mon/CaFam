@@ -64,3 +64,13 @@ describe("readableTextColor (RNF contrast)", () => {
     expect(readableTextColor("#ffffff")).toBe("#141414");
   });
 });
+
+// Spec 008, T17 (plan D9): all-day bars of the month are filled with the
+// calendar color and keep their text in ink, so every color must read well.
+describe("ink on every palette color", () => {
+  it("reaches at least 4.5:1", () => {
+    for (const color of CALENDAR_COLORS) {
+      expect(contrastRatio("#141414", color.value)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});

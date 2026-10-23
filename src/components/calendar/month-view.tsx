@@ -76,9 +76,14 @@ export function MonthView({
             </Link>
             {/* Gaps between events still reach the create button below. */}
             <ul className="pointer-events-none relative flex min-w-0 flex-col gap-0.5">
-              {visible.map(({ event }) => (
+              {visible.map(({ event, banner }) => (
                 <li key={event.id} className="pointer-events-auto min-w-0">
-                  <EventChip event={event} timeZone={timeZone} compact />
+                  {/* All-day and multi-day as a bar, timed as a dot (spec 008 RF-48). */}
+                  <EventChip
+                    event={event}
+                    timeZone={timeZone}
+                    variant={banner ? "bar" : "dot"}
+                  />
                 </li>
               ))}
               {draft?.day === day ? (
