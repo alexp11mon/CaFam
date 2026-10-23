@@ -11,7 +11,7 @@
   Pasos: test primero en `tests/unit/event-modal.test.tsx` (con `showModal` simulado): abre como diálogo con el título enlazado (`aria-labelledby`), "Cerrar" y Escape llaman a `router.back()` y devuelven el foco al elemento que tenía el foco al abrir, el botón de pantalla completa alterna la clase y no aparece a ≤ 768 px (`matchMedia` simulado). Crear `@modal/default.tsx` (`null`), recibir `modal` en `dashboard/layout.tsx` y una ruta interceptada provisional `(.)events/[id]` que pinta solo el título del evento.
   Hecho cuando: `npm test -- event-modal` en verde y, en el navegador, abrir un evento desde la semana muestra la ventana con el calendario detrás, Atrás la cierra y recargar la URL da la página completa (R1). Cubre: RF-4, RF-5, RF-6, RF-10, RF-12, RF-29 | Módulo: modal-routes, event-modal
 
-- [ ] T2 Extraer los cargadores del alta y del detalle y aceptar los parámetros nuevos
+- [x] T2 Extraer los cargadores del alta y del detalle y aceptar los parámetros nuevos
   Pasos: test primero en `tests/unit/new-event-query.test.ts` para la función pura `parseNewEventQuery(query, editables, hoy)`: `date`, `calendar`, `start`, `end` (`HH:MM`), `allDay=1` y `title` (≤ 100) válidos se usan; los no válidos se ignoran con los valores por defecto de hoy. `load-new-event.ts` y `load-event.ts` reúnen la carga de las páginas actuales; las páginas completas pasan a usarlos sin cambiar lo que muestran.
   Hecho cuando: `npm test -- new-event-query` en verde y los tests existentes de las páginas de evento siguen en verde. Cubre: RF-10, RF-11, RF-39 | Módulo: event-loaders
 
