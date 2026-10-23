@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   groupByPerson,
+  ORPHAN_GROUP_ID,
   type GroupableCalendar,
   type Person,
 } from "@/lib/calendar/grouping";
@@ -161,5 +162,69 @@ describe("visibility (RF-43, RF-47)", () => {
       ["a", true],
       ["b", false],
     ]);
+  });
+});
+
+describe("calendars without owner (spec 006 RF-22)", () => {
+  const orphan = (id: string, createdAt = "2026-01-01T00:00:00Z") => ({
+    id,
+    ownerId: null,
+    name: id,
+    createdAt,
+  });
+
+  it("puts them in a last group called Sin propietario, after every person", () => {
+    const groups = groupByPerson({
+      currentUserId: "me",
+      people: [ME, ANA],
+      calendars: [
+        orphan("orphan-2", "2026-02-01T00:00:00Z"),
+        calendar("ana-1", "ana"),
+        orphan("orphan-1"),
+        calendar("mine-1", "me"),
+      ],
+      calendarPreferences: [],
+      personPreferences: [
+        { personId: "ana", position: 0 },
+        { personId: "me", position: 1 },
+      ],
+    });
+
+    expect(names(groups)).toEqual([
+      { person: "ana", calendars: ["ana-1"] },
+      { person: "me", calendars: ["mine-1"] },
+      { person: ORPHAN_GROUP_ID, calendars: ["orphan-1", "orphan-2"] },
+    ]);
+    expect(groups.at(-1)?.person).toEqual({
+      id: ORPHAN_GROUP_ID,
+      displayName: "Sin propietario",
+      isMe: false,
+    });
+  });
+
+  it("keeps their saved visibility", () => {
+    const groups = groupByPerson({
+      currentUserId: "me",
+      people: [ME],
+      calendars: [orphan("orphan-1")],
+      calendarPreferences: [
+        { calendarId: "orphan-1", visible: false, position: null },
+      ],
+      personPreferences: [],
+    });
+
+    expect(groups.at(-1)?.calendars[0]?.visible).toBe(false);
+  });
+
+  it("has no such group when every calendar has an owner", () => {
+    const groups = groupByPerson({
+      currentUserId: "me",
+      people: [ME],
+      calendars: [calendar("mine-1", "me")],
+      calendarPreferences: [],
+      personPreferences: [],
+    });
+
+    expect(groups.map((g) => g.person.id)).not.toContain(ORPHAN_GROUP_ID);
   });
 });

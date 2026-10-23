@@ -6,7 +6,7 @@ import {
   type PanelCalendar,
 } from "@/components/calendar/calendar-workspace";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
-import type { PersonGroup } from "@/lib/calendar/grouping";
+import { ORPHAN_GROUP_ID, type PersonGroup } from "@/lib/calendar/grouping";
 import { getVisibleRange } from "@/lib/calendar/ranges";
 
 const TZ = "Europe/Madrid";
@@ -353,5 +353,65 @@ describe("order (RF-45)", () => {
       "Clases Uni",
       "Familia de Ana",
     ]);
+  });
+});
+
+describe("group of calendars without owner (spec 006 RF-22)", () => {
+  function withOrphans(): PersonGroup<PanelCalendar>[] {
+    return [
+      ...groups(),
+      {
+        person: {
+          id: ORPHAN_GROUP_ID,
+          displayName: "Sin propietario",
+          isMe: false,
+        },
+        calendars: [
+          {
+            ...calendar("o1", "Familia de Luis", "x", "#CAFFBF"),
+            ownerId: null,
+          },
+          { ...calendar("o2", "Cole", "x", "#FDFFB6"), ownerId: null },
+        ],
+      },
+    ];
+  }
+
+  it("is shown last and cannot be moved, nor can anyone move below it", () => {
+    setup({ groups: withOrphans() });
+
+    expect(
+      screen.getByRole("checkbox", { name: "Sin propietario" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Subir Sin propietario" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Bajar Ana" })).toBeDisabled();
+  });
+
+  it("shows or hides its calendars one by one, not as a person", async () => {
+    const { setCalendarVisibility, setPersonVisibility } = setup({
+      groups: withOrphans(),
+    });
+
+    await userEvent.click(
+      screen.getByRole("checkbox", { name: "Sin propietario" }),
+    );
+
+    expect(setPersonVisibility).not.toHaveBeenCalled();
+    expect(setCalendarVisibility).toHaveBeenCalledWith("o1", false);
+    expect(setCalendarVisibility).toHaveBeenCalledWith("o2", false);
+  });
+
+  it("saves the order of its calendars without saving it as a person", async () => {
+    const { saveOrder } = setup({ groups: withOrphans() });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Bajar Familia de Luis" }),
+    );
+
+    const order = saveOrder.mock.calls[0]![0];
+    expect(order.people).toEqual(["me", "ana"]);
+    expect(order.calendars[ORPHAN_GROUP_ID]).toEqual(["o2", "o1"]);
   });
 });

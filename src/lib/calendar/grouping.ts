@@ -9,7 +9,7 @@ export interface Person {
 export interface GroupableCalendar {
   id: string;
   name: string;
-  // null for a calendar without owner (spec 006 RF-21): it belongs to no person group.
+  // null for a calendar without owner (spec 006 RF-21): it goes to the last group.
   ownerId: string | null;
   createdAt: string;
 }
@@ -31,6 +31,13 @@ export interface PersonGroup<T extends GroupableCalendar> {
 }
 
 const UNKNOWN_PERSON = "Persona desconocida";
+
+/**
+ * Group of the calendars whose owner deleted the account (spec 006 RF-22). It is
+ * not a person: always last, never reordered nor saved in person_preferences.
+ */
+export const ORPHAN_GROUP_ID = "orphan";
+const ORPHAN_GROUP_NAME = "Sin propietario";
 
 /** Saved positions first (ascending); anything without one goes after, ordered by `fallback`. */
 function byPosition<T>(
@@ -95,14 +102,32 @@ export function groupByPerson<T extends GroupableCalendar>({
     },
   );
 
-  return [...known.values()].sort(comparePeople).map((person) => ({
-    person: { ...person, isMe: person.id === currentUserId },
-    calendars: calendars
-      .filter((calendar) => calendar.ownerId === person.id)
+  const withVisibility = (owner: string | null) =>
+    calendars
+      .filter((calendar) => calendar.ownerId === owner)
       .sort(compareCalendars)
       .map((calendar) => ({
         ...calendar,
         visible: calendarPrefs.get(calendar.id)?.visible ?? true,
-      })),
-  }));
+      }));
+
+  const groups: PersonGroup<T>[] = [...known.values()]
+    .sort(comparePeople)
+    .map((person) => ({
+      person: { ...person, isMe: person.id === currentUserId },
+      calendars: withVisibility(person.id),
+    }));
+
+  const orphans = withVisibility(null);
+  if (orphans.length > 0) {
+    groups.push({
+      person: {
+        id: ORPHAN_GROUP_ID,
+        displayName: ORPHAN_GROUP_NAME,
+        isMe: false,
+      },
+      calendars: orphans,
+    });
+  }
+  return groups;
 }

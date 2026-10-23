@@ -16,7 +16,7 @@ export interface CalendarRecord {
   name: string;
   description: string | null;
   color: string;
-  // shortcut: null = calendario sin propietario (spec 006 RF-21); no existe hasta la T4, y su pantalla llega en la iteración 2.
+  // null for a calendar without owner (spec 006 RF-21); it is listed in the "Sin propietario" group.
   ownerId: string | null;
   createdAt: string;
   role: CalendarRole;

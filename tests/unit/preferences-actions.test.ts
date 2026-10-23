@@ -136,6 +136,20 @@ describe("saveOrder (RF-45)", () => {
     ]);
   });
 
+  it("saves the calendars of the group without owner, whose key is not a person (spec 006 RF-22)", async () => {
+    const result = await saveOrder({
+      people: [ME],
+      calendars: { orphan: [UUID_A] },
+    });
+
+    expect(result).toEqual({});
+    expect(state.upserts.at(-1)).toEqual({
+      table: "calendar_preferences",
+      rows: [{ user_id: ME, calendar_id: UUID_A, position: 0 }],
+      options: { onConflict: "user_id,calendar_id" },
+    });
+  });
+
   it("rejects malformed ids", async () => {
     const result = await saveOrder({ people: ["x"], calendars: {} });
 

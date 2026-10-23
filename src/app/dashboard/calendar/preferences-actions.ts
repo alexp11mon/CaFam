@@ -15,7 +15,9 @@ const PERSON_CONFLICT = { onConflict: "user_id,person_id" };
 
 const orderSchema = z.object({
   people: z.array(z.uuid()),
-  calendars: z.record(z.uuid(), z.array(z.uuid())),
+  // Keyed by group: a person id, or the group without owner (spec 006 RF-22).
+  // Only the calendar ids are written.
+  calendars: z.record(z.string(), z.array(z.uuid())),
 });
 
 export type SavedOrder = z.infer<typeof orderSchema>;

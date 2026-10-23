@@ -3,7 +3,11 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { FormAlert } from "@/components/ui/form-alert";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
-import type { GroupableCalendar, PersonGroup } from "@/lib/calendar/grouping";
+import {
+  ORPHAN_GROUP_ID,
+  type GroupableCalendar,
+  type PersonGroup,
+} from "@/lib/calendar/grouping";
 import type { CalendarView } from "@/lib/calendar/ranges";
 import { AgendaView, type AgendaEvent } from "./agenda-view";
 import type { MonthMarks } from "@/lib/calendar/month-marks";
@@ -29,7 +33,10 @@ export interface SavedOrder {
 
 function orderOf(groups: Group[]): SavedOrder {
   return {
-    people: groups.map((group) => group.person.id),
+    // The group without owner is not a person: its position is never saved (spec 006 RF-22).
+    people: groups
+      .map((group) => group.person.id)
+      .filter((id) => id !== ORPHAN_GROUP_ID),
     calendars: Object.fromEntries(
       groups.map((group) => [
         group.person.id,
@@ -167,8 +174,25 @@ export function CalendarWorkspace({
             }
           : group,
       ),
-      () => setPersonVisibility(personId, visible),
+      personId === ORPHAN_GROUP_ID
+        ? () => setGroupVisibility(personId, visible)
+        : () => setPersonVisibility(personId, visible),
     );
+  }
+
+  // The group without owner has no person to filter by: save each calendar (spec 006 RF-22).
+  async function setGroupVisibility(
+    groupId: string,
+    visible: boolean,
+  ): Promise<Result> {
+    const ids =
+      groups
+        .find((group) => group.person.id === groupId)
+        ?.calendars.map((calendar) => calendar.id) ?? [];
+    const results = await Promise.all(
+      ids.map((id) => setCalendarVisibility(id, visible)),
+    );
+    return results.find((result) => result.error) ?? {};
   }
 
   function toggleCategory(categoryId: string, visible: boolean) {

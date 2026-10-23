@@ -199,6 +199,10 @@
   Hecho cuando: `npm test -- author-label event-detail` en verde y, en el navegador, un evento de una cuenta borrada de prueba muestra "Creado por Cuenta borrada". Cubre: RF-34, RF-35, RF-36 | Módulo: event-detail, author-label
   Ajuste al cerrar: la comprobación en navegador del evento de una cuenta borrada se hace en T23.
 
+- [x] T26 Mostrar los calendarios sin propietario en un grupo "Sin propietario"
+  Pasos: añadida a petición del usuario (2026-10-23) al encontrar en T23 que un calendario sin propietario desaparecía de "Mis calendarios" y de las vistas, porque `groupByPerson` agrupa por propietario (contradice RF-22). Tests primero en `grouping.test.ts`, `calendar-filters.test.tsx` y `preferences-actions.test.ts`: los calendarios sin propietario van a un último grupo "Sin propietario" con su visibilidad guardada; ese grupo no se mueve ni deja mover a nadie por debajo; mostrarlo u ocultarlo guarda cada calendario (no la persona); su orden de calendarios se guarda sin guardarlo como persona.
+  Hecho cuando: `npm test -- grouping calendar-filters preferences-actions` en verde y, en el navegador, un miembro ve el calendario sin propietario en Mis calendarios y en el panel de filtros. Cubre: RF-22 | Módulo: grouping, calendar-filters, calendar-workspace, preferences-actions
+
 - [ ] T23 Validar la cobertura RF por RF y el flujo completo en navegador
   Pasos: recorrer la trazabilidad de RF-1 a RF-36. Probar en `playwright-cli` contra dev, a 390 y 1440 px, con usuarios de prueba que se borran al terminar: editar perfil, cambiar contraseña, pedir cambio de email, borrar una cuenta con un calendario compartido, y las dos decisiones de los miembros, sin dejar datos en dev. Revisar que nada de "Fuera de alcance" está en el código.
   Hecho cuando: checklist RF-1 a RF-36 con el test que cubre cada uno, demo manual del flujo de borrado con decisión de los miembros, y `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run test:db` en verde. Cubre: todos | Módulo: validación
@@ -252,7 +256,7 @@ Iteración 2 (T13 a T24):
 - RF-16 -> T15, T17, T18
 - RF-17 -> T15, T17
 - RF-19 -> T15
-- RF-22 -> T19, T22
+- RF-22 -> T19, T22, T26
 - RF-23 -> T19, T20, T21
 - RF-24 -> T20, T21, T22
 - RF-25 -> T20, T21

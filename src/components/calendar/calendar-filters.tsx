@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { Avatar } from "@/components/people/avatar";
 import { Button } from "@/components/ui/button";
-import type { PersonGroup } from "@/lib/calendar/grouping";
+import { ORPHAN_GROUP_ID, type PersonGroup } from "@/lib/calendar/grouping";
 import { assignTints } from "@/lib/people/avatar";
 import type { PanelCalendar } from "./calendar-workspace";
 
@@ -125,6 +125,10 @@ export function CalendarFilters({
   const showPeople = groups.length > 1;
   // Same tint for a person everywhere, whatever the saved order (spec 005 RF-28).
   const tints = assignTints(groups.map((group) => group.person.id));
+  // The group without owner stays last: only real people move (spec 006 RF-22).
+  const movableCount = groups.filter(
+    (group) => group.person.id !== ORPHAN_GROUP_ID,
+  ).length;
 
   return (
     <section
@@ -147,14 +151,16 @@ export function CalendarFilters({
                     onTogglePerson(group.person.id, visible)
                   }
                 />
-                <MoveButtons
-                  kind="person"
-                  id={group.person.id}
-                  name={group.person.displayName}
-                  index={groupIndex}
-                  count={groups.length}
-                  onMove={onMove}
-                />
+                {group.person.id === ORPHAN_GROUP_ID ? null : (
+                  <MoveButtons
+                    kind="person"
+                    id={group.person.id}
+                    name={group.person.displayName}
+                    index={groupIndex}
+                    count={movableCount}
+                    onMove={onMove}
+                  />
+                )}
               </div>
             ) : null}
             <ul className={showPeople ? "ml-3 border-l border-line pl-3" : ""}>
