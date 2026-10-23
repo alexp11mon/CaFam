@@ -1,4 +1,5 @@
 import { DEFAULT_END_TIME, DEFAULT_START_TIME } from "./format";
+import { clampEnd, fromMinutes, toMinutes } from "./time-options";
 import { parseDateKey } from "./time-zone";
 
 type Query = { [key: string]: string | string[] | undefined };
@@ -16,18 +17,11 @@ export interface NewEventDefaults {
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const LAST_MINUTE = 23 * 60 + 59;
 
 function single(query: Query, key: string): string | undefined {
   const value = query[key];
   return typeof value === "string" ? value : undefined;
 }
-
-const toMinutes = (time: string) =>
-  Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
-
-const fromMinutes = (minutes: number) =>
-  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 
 /**
  * Starting values of a new event from its URL: what the quick window or a
@@ -53,7 +47,7 @@ export function parseNewEventQuery(
     end && TIME.test(end) && toMinutes(end) > toMinutes(startTime)
       ? end
       : start && TIME.test(start)
-        ? fromMinutes(Math.min(toMinutes(startTime) + 60, LAST_MINUTE))
+        ? fromMinutes(clampEnd(toMinutes(startTime) + 60))
         : DEFAULT_END_TIME;
 
   return {

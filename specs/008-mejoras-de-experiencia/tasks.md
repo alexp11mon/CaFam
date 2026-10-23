@@ -31,7 +31,7 @@
   Pasos: test primero en `tests/unit/event-panel.test.tsx`: el detalle muestra "Editar", "Duplicar" y "Borrar" a propietario y editor, y ninguno a un Lector; "Editar" cambia al formulario en el mismo sitio; "Duplicar" navega a `/dashboard/events/new?from=<id>`. `parseNewEventQuery` (T2) acepta `from` y el cargador rellena título, descripción, lugar, color, categoría, hora y duración leyendo el evento con RLS. La ruta interceptada definitiva `(.)events/[id]` sustituye a la provisional de T1 y la página completa usa `EventPanel`.
   Hecho cuando: `npm test -- event-panel new-event-query` en verde y, en el navegador, ver, editar, duplicar y borrar desde la ventana funcionan con el aviso correspondiente. Cubre: RF-2, RF-3, RF-35, RF-36 | Módulo: event-panel, duplicate
 
-- [ ] T7 Calcular las listas de horas y la hora de fin
+- [x] T7 Calcular las listas de horas y la hora de fin
   Pasos: test primero en `tests/unit/time-options.test.ts`: `startOptions()` da 48 horas de 00:00 a 23:30; `endOptions("10:00")` empieza en 10:30 con "30 min", sigue con "1 h", "1 h 30 min" y termina en 23:30; `normalizeTime` acepta `9:05`, `0905` y `09:05` y rechaza `24:00` o `9:60`; `shiftEnd` conserva la duración y `clampEnd` fija 23:59 al pasarse del día.
   Hecho cuando: `npm test -- time-options` en verde. Cubre: RF-13, RF-16, RF-17, RF-30, RF-49 | Módulo: time-options
 
