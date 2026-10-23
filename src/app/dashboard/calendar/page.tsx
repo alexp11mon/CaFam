@@ -133,7 +133,10 @@ async function CalendarContent({
         {/* On a phone "+ Evento" lives in the bottom bar (spec 005 RF-22). */}
         {canCreate ? (
           <div className="hidden lg:block">
-            <LinkButton href={`/dashboard/events/new?date=${date}`}>
+            <LinkButton
+              href={`/dashboard/events/new?date=${date}`}
+              aria-keyshortcuts="N"
+            >
               Nuevo evento
             </LinkButton>
           </div>
@@ -160,6 +163,7 @@ async function CalendarContent({
           timeZone,
         )}
         loadMonthMarks={loadMonthMarks}
+        saveLastView={saveLastView}
       />
     </>
   );

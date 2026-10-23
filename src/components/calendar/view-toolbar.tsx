@@ -12,30 +12,36 @@ import {
 const VIEWS: {
   view: CalendarView;
   label: string;
+  /** Shortcut key (spec 008 RF-46). */
+  key: string;
   previous: string;
   next: string;
 }[] = [
   {
     view: "agenda",
     label: "Agenda",
+    key: "A",
     previous: "14 días anteriores",
     next: "14 días siguientes",
   },
   {
     view: "month",
     label: "Mes",
+    key: "M",
     previous: "Mes anterior",
     next: "Mes siguiente",
   },
   {
     view: "week",
     label: "Semana",
+    key: "S",
     previous: "Semana anterior",
     next: "Semana siguiente",
   },
   {
     view: "day",
     label: "Día",
+    key: "D",
     previous: "Día anterior",
     next: "Día siguiente",
   },
@@ -62,12 +68,17 @@ export function ViewToolbar({
   return (
     <nav aria-label="Navegación del calendario" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Link href={calendarHref(view, today)} className={BUTTON}>
+        <Link
+          href={calendarHref(view, today)}
+          aria-keyshortcuts="T"
+          className={BUTTON}
+        >
           Hoy
         </Link>
         <Link
           href={calendarHref(view, navigate(view, date, -1))}
           aria-label={current.previous}
+          aria-keyshortcuts="ArrowLeft"
           className={BUTTON}
         >
           <ChevronIcon direction="left" />
@@ -75,6 +86,7 @@ export function ViewToolbar({
         <Link
           href={calendarHref(view, navigate(view, date, 1))}
           aria-label={current.next}
+          aria-keyshortcuts="ArrowRight"
           className={BUTTON}
         >
           <ChevronIcon direction="right" />
@@ -89,12 +101,20 @@ export function ViewToolbar({
             key={item.view}
             href={calendarHref(item.view, date)}
             aria-current={item.view === view ? "page" : undefined}
+            aria-keyshortcuts={item.key}
             // Fire and forget: failing to remember the view must not block it.
             onClick={() => void saveLastView?.(item.view)}
             // The chosen view is a selection, so it takes the accent (constitution, RF-3).
             className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:flex-none ${item.view === view ? "border border-accent-edge bg-accent text-on-accent" : "text-muted hover:text-ink"}`}
           >
             {item.label}
+            {/* The key, as Google shows it in its view menu; only with a keyboard-sized screen. */}
+            <kbd
+              aria-hidden="true"
+              className={`ml-2 hidden font-sans text-xs font-semibold lg:inline ${item.view === view ? "text-on-accent/70" : "text-muted"}`}
+            >
+              {item.key}
+            </kbd>
           </Link>
         ))}
       </div>

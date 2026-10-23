@@ -129,4 +129,29 @@ describe("ViewToolbar (RF-29, RF-37)", () => {
 
     expect(saveLastView).toHaveBeenCalledWith("month");
   });
+
+  it("shows the key of each view and of today (spec 008 RF-46)", () => {
+    render(<ViewToolbar view="week" date="2026-10-14" today={TODAY} />);
+
+    expect(screen.getByRole("link", { name: "Agenda" })).toHaveAttribute(
+      "aria-keyshortcuts",
+      "A",
+    );
+    expect(screen.getByRole("link", { name: "Mes" })).toHaveAttribute(
+      "aria-keyshortcuts",
+      "M",
+    );
+    expect(screen.getByRole("link", { name: "Semana" })).toHaveAttribute(
+      "aria-keyshortcuts",
+      "S",
+    );
+    expect(screen.getByRole("link", { name: "Día" })).toHaveAttribute(
+      "aria-keyshortcuts",
+      "D",
+    );
+    expect(screen.getByRole("link", { name: "Hoy" })).toHaveAttribute(
+      "aria-keyshortcuts",
+      "T",
+    );
+  });
 });

@@ -51,7 +51,7 @@
   Pasos: test primero en `tests/unit/ranges.test.ts` (ampliado) y `tests/unit/view-toolbar.test.tsx`: `parseViewParams` usa la vista guardada con la fecha de hoy si la URL no trae `view`, la de la URL si la trae y agenda si no hay ninguna; pulsar un botón de vista llama a `saveLastView` con esa vista. Acción `saveLastView` validada con `zod`.
   Hecho cuando: `npm test -- ranges view-toolbar` en verde. Cubre: RF-25, RF-26, RF-27 | Módulo: last-view, view-toolbar
 
-- [ ] T12 Añadir los atajos de teclado
+- [x] T12 Añadir los atajos de teclado
   Pasos: test primero en `tests/unit/shortcuts.test.ts` y `tests/unit/use-calendar-shortcuts.test.tsx`: `shortcutFor` devuelve N, T, anterior, siguiente, A, M, S y D; ignora teclas con Ctrl, Alt o Meta, con el foco en un campo de texto o con un `dialog[open]`; un usuario solo Lector no tiene N. El hook navega a la URL correcta y guarda la vista. Cada botón de vista muestra su tecla (`<kbd>`, `aria-keyshortcuts`).
   Hecho cuando: `npm test -- shortcuts` en verde. Cubre: RF-31, RF-36, RF-46 | Módulo: shortcuts, view-toolbar
 

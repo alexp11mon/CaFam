@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { FormAlert } from "@/components/ui/form-alert";
+import { useCalendarShortcuts } from "@/lib/hooks/use-calendar-shortcuts";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import {
   ORPHAN_GROUP_ID,
@@ -76,6 +77,7 @@ export function CalendarWorkspace({
   loadedAt,
   monthMarks,
   loadMonthMarks,
+  saveLastView,
 }: {
   view: CalendarView;
   date: string;
@@ -98,7 +100,10 @@ export function CalendarWorkspace({
   loadMonthMarks?: (
     month: string,
   ) => Promise<{ marks: MonthMarks } | { error: string }>;
+  /** Remembers a view chosen with a shortcut (spec 008 RF-25). */
+  saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
 }) {
+  useCalendarShortcuts({ view, date, today, canCreate, saveLastView });
   const [groups, setGroups] = useState(initialGroups);
   const [hiddenCategories, setHiddenCategories] = useState<ReadonlySet<string>>(
     new Set(),
