@@ -49,7 +49,7 @@ beforeEach(() => {
 
 describe("decideOrphanCalendar (RF-24, RF-25)", () => {
   it("records the decision and refreshes the views", async () => {
-    const state = await decideOrphanCalendar("cal-1", true, {}, new FormData());
+    const state = await decideOrphanCalendar("cal-1", true);
 
     expect(h.rpc).toHaveBeenCalledWith("decide_orphan_calendar", {
       p_calendar_id: "cal-1",
@@ -62,12 +62,7 @@ describe("decideOrphanCalendar (RF-24, RF-25)", () => {
   it("explains a calendar that is no longer available (CF404)", async () => {
     h.rpc.mockResolvedValue({ data: null, error: { code: "CF404" } });
 
-    const state = await decideOrphanCalendar(
-      "cal-1",
-      false,
-      {},
-      new FormData(),
-    );
+    const state = await decideOrphanCalendar("cal-1", false);
 
     expect(state.formError).toBe("Este calendario ya no está disponible.");
   });
@@ -75,7 +70,7 @@ describe("decideOrphanCalendar (RF-24, RF-25)", () => {
 
 describe("dismissNotice (RF-23)", () => {
   it("marks the notice as read and refreshes the views", async () => {
-    const state = await dismissNotice("notice-1", {}, new FormData());
+    const state = await dismissNotice("notice-1");
 
     expect(h.update).toHaveBeenCalledWith({ read_at: expect.any(String) });
     expect(h.eq).toHaveBeenCalledWith("id", "notice-1");

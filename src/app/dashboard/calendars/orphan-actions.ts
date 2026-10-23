@@ -9,13 +9,11 @@ const ORPHAN_GONE = "Este calendario ya no está disponible.";
 
 /**
  * Keep (true) or leave (false) a calendar without owner (RF-24, RF-25). Bound
- * with the calendar and the choice; useActionState passes the rest, unused.
+ * with the calendar and the choice; the arguments useActionState adds are ignored.
  */
 export async function decideOrphanCalendar(
   calendarId: string,
   keep: boolean,
-  _prevState: ConfirmState,
-  _formData: FormData,
 ): Promise<ConfirmState> {
   const { supabase } = await requireActionUser();
   try {
@@ -38,11 +36,7 @@ export async function decideOrphanCalendar(
 }
 
 /** Closes a notice; RLS and the column privilege only allow read_at on own rows (RF-23). */
-export async function dismissNotice(
-  noticeId: string,
-  _prevState: ConfirmState,
-  _formData: FormData,
-): Promise<ConfirmState> {
+export async function dismissNotice(noticeId: string): Promise<ConfirmState> {
   const { supabase } = await requireActionUser();
   try {
     const { error } = await supabase
