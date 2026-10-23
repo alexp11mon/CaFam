@@ -1,7 +1,7 @@
 # Plan 006 — Gestión de cuenta
 
 > Nota (2026-10-23): se añaden RF-34 a RF-36 (autor del evento) por petición del usuario; solo afectan al detalle del evento, sin tablas ni funciones nuevas.
-> Spec de origen: `specs/006-gestion-de-cuenta/spec.md` (aprobada, 2026-10-22). Constitución: `docs/constitution.md`. Estado: **Aprobado** por el usuario (2026-10-22), con Brevo como proveedor SMTP registrado en la spec.
+> Spec de origen: `specs/006-gestion-de-cuenta/spec.md` (aprobada, 2026-10-22). Constitución: `docs/constitution.md`. Estado: **Aprobado** por el usuario (2026-10-22), con Brevo como proveedor SMTP registrado en la spec. Spec **cerrada** el 2026-10-23.
 
 ## Resumen de arquitectura
 

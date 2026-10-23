@@ -1,6 +1,6 @@
 # Tasks 006 - Gestión de cuenta
 
-> Estado: primera iteración (T1 a T12) **aprobada**: T1 a T8, T10 y T12 hechas; T9 y T11 abiertas (ver sus notas). Segunda iteración (T13 a T25: Ajustes, avisos, calendarios sin propietario y autor del evento) **aprobada** por el usuario (2026-10-23), sin ninguna hecha todavía.
+> Estado: **Cerrada** (2026-10-23) por decisión del usuario. T1–T26 hechas. T9 se cierra con la recuperación de contraseña probada y el cambio de email sin probar (ver su nota).
 > Spec: `specs/006-gestion-de-cuenta/spec.md`. Plan: `specs/006-gestion-de-cuenta/plan.md`.
 > Reglas: una tarea cada vez, test primero (rojo → verde). Al cerrar cada tarea se ejecuta y reporta `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, y `npm run test:db -- <filtro>` si toca esquema, RLS o acceso a datos. Si toca interfaz, capturas a 390, 768 y 1440 px (P9). Un commit por tarea citándola, en la rama `006-gestion-de-cuenta`.
 > Sin dependencias nuevas (P6): ninguna tarea toca `package.json`. El proveedor SMTP es Brevo, registrado en la spec.
@@ -84,10 +84,10 @@
   Hecho cuando: `npm run test:db -- account-jobs` en verde y, en dev, un correo de prueba llega a la bandeja del usuario. Cubre: RF-23, RF-26, RF-29 | Módulo: account_mail_jobs
   Hecha (2026-10-22). Prueba de entrega real: correo de prueba recibido en la bandeja, tras configurar el secreto brevo_api_key en Vault y desactivar la restricción de IP en Brevo (la primera llamada dio 401 por IP no autorizada).
 
-- [ ] T9 Configurar Auth en dev: Brevo como SMTP, plantillas de recuperación y cambio de email, y notificación de cambio
+- [x] T9 Configurar Auth en dev: Brevo como SMTP, plantillas de recuperación y cambio de email, y notificación de cambio
   Pasos (los hace el usuario en el panel de dev, con las instrucciones entregadas en la conversación): SMTP propio con Brevo, plantillas con `token_hash` apuntando a `/auth/confirm`, Site URL, límite de correos ajustado, notificación de cambio de email activa. Después, se pide un enlace de recuperación de prueba y se confirma que llega.
   Hecho cuando: el usuario confirma que llega el correo de recuperación y el de cambio de email de prueba, con el enlace apuntando a `/auth/confirm`, y que el aviso al correo anterior aparece (o se anota como no disponible en R-plan, para la cola propia). Cubre: RF-1, RF-9 | Módulo: configuración de Auth (sin código)
-  Estado (2026-10-23): parcial. SMTP de Brevo y plantillas configurados en dev; el correo de recuperación llega y su enlace funciona (confirmado por el usuario). Pendiente: probar el correo de cambio de email y el aviso al email anterior con una dirección real del usuario. T9 sigue abierta solo por eso.
+  Estado (2026-10-23): parcial. SMTP de Brevo y plantillas configurados en dev; el correo de recuperación llega y su enlace funciona (confirmado por el usuario). El correo de cambio de email y el aviso al email anterior no se han probado; el usuario cierra la spec igualmente y queda como comprobación en producción (AGENTS.md §12).
 
 - [x] T10 Confirmar el enlace de Auth con `/auth/confirm`
   Pasos: tests primero en `tests/unit/account-confirm.test.ts` (route handler con `// @vitest-environment node` y Supabase mockeado): `token_hash` y `type` válidos llaman a `verifyOtp` y redirigen; un `type` distinto de `recovery` o `email_change` no llama a Auth; `next` fuera de `/reset-password` o `/dashboard/settings` vuelve a `/dashboard`; un token rechazado redirige a una página de enlace no válido. Ruta `src/app/auth/confirm/route.ts` y `src/lib/account/confirm-type.ts`. Añadir `/auth/confirm` a las rutas públicas de `route-access.ts` con su test.
@@ -208,10 +208,10 @@
   Hecho cuando: checklist RF-1 a RF-36 con el test que cubre cada uno, demo manual del flujo de borrado con decisión de los miembros, y `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run test:db` en verde. Cubre: todos | Módulo: validación
   Estado (2026-10-23): hecha. Los dos errores encontrados se corrigieron (T26: grupo "Sin propietario"; `skip_test_addresses`: la cola no envía a .test y los tests limpian su correo). `test:db` completo en verde (`account-notices-read` repetido tras el límite de inicios de sesión de Supabase). Recorrido en navegador y capturas a 390, 768 y 1440 px con el rojo y el amarillo. Validación RF por RF en la sección "Validación RF por RF". Sin probar: el envío real del cambio de email (T9).
 
-- [ ] T24 Actualizar la documentación y preparar el paso a producción
+- [x] T24 Actualizar la documentación y preparar el paso a producción
   Pasos: actualizar `AGENTS.md` (estado de la spec, rutas nuevas, tablas, funciones, trabajos programados, configuración de Brevo y de Auth en producción) y `docs/constitution.md` si procede, y redactar los comandos exactos para producción: `npx supabase link --project-ref yznbdoskvtxeasujtirk`, `npx supabase db push`, volver a enlazar dev, los secretos de Vault y la configuración de Auth en prod. No se aplica nada en producción: lo ejecuta el usuario.
   Hecho cuando: `AGENTS.md` refleja la spec 006, la lista de comandos y pasos de producción está en `specs/006-gestion-de-cuenta/` y el usuario la ha revisado. Cubre: todos | Módulo: documentación
-  Estado (2026-10-23): redactado. `AGENTS.md` actualizado y pasos de producción en `specs/006-gestion-de-cuenta/produccion.md`. Falta la revisión del usuario para marcarla como hecha.
+  Estado (2026-10-23): hecha. `AGENTS.md` actualizado (estado, rutas, base de datos, correo en §7 y pasos de producción en §12). Por decisión del usuario no hay un documento aparte de producción: los pasos viven en `AGENTS.md`.
 
 ## Validación RF por RF (T23, 2026-10-23)
 

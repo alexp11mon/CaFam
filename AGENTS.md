@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-23, al implementar la spec 006 (gestión de cuenta) en dev; pendiente de producción y cierre.
+> Última actualización: 2026-10-23, al cerrar la spec 006 (gestión de cuenta).
 
 ## 1. Qué es
 
@@ -32,7 +32,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
 | 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Cerrada** (2026-10-22), T1–T13 hechas |
-| 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Implementada en dev** (2026-10-23), T1–T26; falta probar el cambio de email (T9), producción y cierre |
+| 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Cerrada** (2026-10-23), T1–T26 hechas; pendiente de aplicar en producción |
 | 007-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
@@ -68,7 +68,7 @@ Añadido por la spec 005:
 - **Panel del calendario**: tarjeta "Próximo evento" con cuenta atrás (siguiente evento con hora en 24 h), mini calendario mensual con puntos por calendario y filtros con avatares de iniciales.
 - **Marca e iconos nuevos** ("CF" en piedra sobre tinta) y PWA en color piedra.
 
-Añadido por la spec 006 (en dev; producción pendiente, ver `specs/006-gestion-de-cuenta/produccion.md`):
+Añadido por la spec 006 (cerrada; pendiente de aplicar en producción, ver §7 y §12):
 
 - **Recuperar contraseña** desde `/login` ("¿Olvidaste tu contraseña?" → `/forgot-password`): la respuesta es la misma exista o no la cuenta, con un límite de 3 enlaces cada 15 minutos por cuenta. El enlace del correo pasa por `/auth/confirm` y lleva a `/reset-password`; al guardar se cierran las demás sesiones.
 - **Ajustes** (`/dashboard/settings`): perfil (nombre y zona horaria), cambio de email (pide la contraseña; queda pendiente hasta confirmar el enlace del email nuevo), cambio de contraseña (verifica la actual y cierra las demás sesiones) y borrar cuenta (email y contraseña).
@@ -216,7 +216,7 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/dashboard` y subrutas | solo con sesión (sin sesión → `/login`) | Todas dentro del marco (`dashboard/layout.tsx`). `/dashboard` redirige a `/dashboard/calendar` |
 | `/dashboard/calendar` | con sesión | Vistas `?view=agenda\|month\|week\|day&date=YYYY-MM-DD` (valores inválidos → agenda desde hoy) |
 | `/dashboard/calendars` | con sesión | "Mis calendarios": la lista con crear, importar, unirme y juntar |
-| `/dashboard/settings` | con sesión | Ajustes: color de acento |
+| `/dashboard/settings` | con sesión | Ajustes: color de acento, perfil, email, contraseña y borrar cuenta (spec 006); `?confirm=invalid` avisa de un enlace de cambio de email no válido |
 | `/dashboard/calendars/new`, `/[id]/edit`, `/[id]/categories`, `/merge` | con sesión | Calendarios, categorías y juntar. `edit` solo propietario, `categories` propietario o editor; otros → 404 |
 | `/dashboard/events/new`, `/dashboard/events/[id]` | con sesión | Alta (`?calendar=&date=`) y detalle con edición y borrado |
 | `/dashboard/calendars/[id]/share` | solo propietario (otros → 404) | Invitaciones por enlace e ID y PIN |
@@ -236,7 +236,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 ### Autenticación
 
 - `signUp` valida con `signUpSchema` (email normalizado a minúsculas sin espacios; contraseña de 8 a 72 caracteres; nombre de 1 a 50) y llama a `supabase.auth.signUp` con los metadatos `display_name` y `time_zone`. La zona horaria la detecta el navegador (`Intl`) en un campo oculto; si no es válida se descarta y Postgres aplica `Europe/Madrid`.
-- **"Confirm email" está desactivado** en Supabase (no hay SMTP hasta la spec 006), así que el registro devuelve sesión y redirige a `/dashboard/calendar`. El registro es abierto (cualquiera con la URL).
+- **"Confirm email" está desactivado** en Supabase (desde la spec 006 hay SMTP de Brevo, pero sigue desactivado), así que el registro devuelve sesión y redirige a `/dashboard/calendar`. El registro es abierto (cualquiera con la URL).
 - Los errores de Supabase se traducen en `src/lib/auth/error-messages.ts`; un código desconocido o un error de red se convierte en "No se ha podido conectar…".
 - Los formularios usan `useActionState`, `noValidate` (los errores vienen del servidor en español) y desactivan el botón mientras la acción está pendiente.
 - `signOut` usa `scope: "local"` y redirige a `/login`.
@@ -327,7 +327,11 @@ Reglas completas en la constitución ("Identidad visual y diseño de interfaz", 
   npx supabase db push
   npx supabase link --project-ref uthubyzhonrtrmbcqcjh   # volver a dev inmediatamente
   ```
-- **Correo (spec 006)**: SMTP de Brevo y plantillas de Auth (`token_hash` → `/auth/confirm`) se configuran en el panel de cada proyecto; las claves de Brevo para los avisos van en Vault. Pasos exactos en `specs/006-gestion-de-cuenta/produccion.md`. En Brevo, la restricción de IP debe estar desactivada (Supabase llama desde IPs variables).
+- **Correo (spec 006)**, configurado a mano en cada proyecto de Supabase (dev ya lo tiene):
+  - Authentication → Emails → SMTP: Brevo, `smtp-relay.brevo.com`, puerto `587`; usuario el login SMTP de Brevo (`…@smtp-brevo.com`) y contraseña una **clave SMTP** (`xsmtpsib-…`), no la clave API. Remitente el email verificado en Brevo.
+  - Plantillas *Reset password* y *Change email address*: el enlace es `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery` (o `type=email_change`). Site URL correcta, notificación *Email address changed* activa y límite de correos por hora subido.
+  - SQL Editor: `select vault.create_secret('<clave API>', 'brevo_api_key');` y `select vault.create_secret('<remitente>', 'brevo_sender_email');`. Sin ellas, el envío programado falla (los avisos siguen en la app).
+  - Brevo: restricción de IP desactivada (Supabase llama desde IPs variables). Plan gratuito: 300 correos al día.
 - El cron de Vercel llama cada día a `/api/cron/keep-alive`, que hace una consulta mínima para que Supabase Free no pause el proyecto tras 7 días de inactividad.
 
 Variables (documentadas en `.env.example`):
@@ -422,10 +426,11 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 ## 12. Cómo continuar
 
-La spec 006 está implementada en dev en la rama `006-gestion-de-cuenta` (T1–T26; detalle y validación RF por RF en `specs/006-gestion-de-cuenta/tasks.md`). Falta:
+La 006 está cerrada (2026-10-23) en la rama `006-gestion-de-cuenta`, con la validación RF por RF en `specs/006-gestion-de-cuenta/tasks.md`. Queda aplicarla en producción, en este orden y siempre por el usuario:
 
-1. Probar el cambio de email con una dirección real del usuario (T9).
-2. Que el usuario aplique la spec en producción siguiendo `specs/006-gestion-de-cuenta/produccion.md` (migraciones, Vault, Auth, merge a `main`).
-3. Validar en producción y pedir al usuario la aprobación para cerrar la spec.
+1. Migraciones de la 006 en prod (comandos de §7) y comprobar en el panel que existen los tres trabajos `account-*` de pg_cron.
+2. Configuración de correo en el proyecto de prod (§7, "Correo"), incluidos los dos secretos de Vault.
+3. `git switch main`, `git merge --ff-only 006-gestion-de-cuenta` y `git push origin main` (Vercel despliega).
+4. Probar en prod la recuperación de contraseña y el cambio de email; este último no se probó en dev (ver T9).
 
 Después, la spec 008 (mejoras de experiencia) está aprobada en `specs/008-mejoras-de-experiencia/` y le faltan plan y tareas; la 007 (OAuth) sigue pendiente.
