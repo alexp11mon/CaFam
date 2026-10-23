@@ -1,8 +1,10 @@
 // Reads for the account screens (spec 006). Everything goes through the user's
 // session: Auth for the addresses, RLS for the rows.
-import type { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 
-type Client = Awaited<ReturnType<typeof createClient>>;
+// The server client and the test clients share this type.
+type Client = SupabaseClient<Database>;
 
 /** Current address and the one waiting for confirmation, if any (RF-10). */
 export async function getAccountEmails(
@@ -28,4 +30,84 @@ export async function getProfile(
     .single();
   if (error) throw error;
   return { displayName: data.display_name, timeZone: data.time_zone };
+}
+
+export type NoticeKind = "orphaned" | "kept_copy" | "deleted_calendar";
+
+export interface AccountNotice {
+  id: string;
+  kind: NoticeKind;
+  personName: string;
+  calendarName: string;
+  createdAt: string;
+}
+
+const NOTICE_KINDS = new Set<string>([
+  "orphaned",
+  "kept_copy",
+  "deleted_calendar",
+]);
+
+/** Unread notices of the user, newest first; RLS only returns the own ones (RF-23). */
+export async function getNotices(supabase: Client): Promise<AccountNotice[]> {
+  const { data, error } = await supabase
+    .from("account_notices")
+    .select("id, kind, person_name, calendar_name, created_at")
+    .is("read_at", null)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? [])
+    .filter((row) => NOTICE_KINDS.has(row.kind))
+    .map((row) => ({
+      id: row.id,
+      kind: row.kind as NoticeKind,
+      personName: row.person_name,
+      calendarName: row.calendar_name,
+      createdAt: row.created_at,
+    }));
+}
+
+export interface OrphanCalendar {
+  id: string;
+  name: string;
+  color: string;
+  orphanedAt: string;
+  /** true keeps it, false left it, null not decided yet (RF-24, RF-25). */
+  decision: boolean | null;
+}
+
+/** Calendars without owner the user belongs to, with their own decision (RF-24, RF-26). */
+export async function getOrphanCalendars(
+  supabase: Client,
+  userId: string,
+): Promise<OrphanCalendar[]> {
+  const [calendars, decisions] = await Promise.all([
+    supabase
+      .from("calendars")
+      .select("id, name, color, orphaned_at")
+      .is("owner_id", null)
+      .order("orphaned_at"),
+    supabase
+      .from("calendar_orphan_decisions")
+      .select("calendar_id, keep")
+      .eq("user_id", userId),
+  ]);
+  if (calendars.error) throw calendars.error;
+  if (decisions.error) throw decisions.error;
+  const keepById = new Map(
+    (decisions.data ?? []).map((row) => [row.calendar_id, row.keep]),
+  );
+  return (calendars.data ?? []).flatMap((row) =>
+    row.orphaned_at
+      ? [
+          {
+            id: row.id,
+            name: row.name,
+            color: row.color,
+            orphanedAt: row.orphaned_at,
+            decision: keepById.get(row.id) ?? null,
+          },
+        ]
+      : [],
+  );
 }
