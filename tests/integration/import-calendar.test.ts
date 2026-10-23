@@ -123,10 +123,13 @@ describe("import_calendar keeps no trace of the source (RF-11, RF-12)", () => {
         "description",
         "id",
         "name",
+        // Spec 006 RF-21: set only when the owner deletes the account, never by an import.
+        "orphaned_at",
         "owner_id",
         "updated_at",
       ].sort(),
     );
+    expect(calendar.orphaned_at).toBeNull();
   });
 
   it("two identical imports give two independent calendars", async () => {
