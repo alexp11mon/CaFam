@@ -19,7 +19,7 @@
   Pasos: test primero en `tests/unit/event-actions.test.ts` (Supabase simulado): con `mode=modal`, `createEvent` y `updateEvent` devuelven `{ done }` y llaman a `revalidatePath`; con un error de validación devuelven `fieldErrors` y los valores escritos; sin `mode` siguen redirigiendo; `deleteEvent(id, "modal")` devuelve `{ done: "deleted" }`.
   Hecho cuando: `npm test -- event-actions` en verde. Cubre: RF-8, RF-9, RF-11, RF-38 | Módulo: modal-actions
 
-- [ ] T4 Añadir los avisos breves
+- [x] T4 Añadir los avisos breves
   Pasos: test primero en `tests/unit/toast.test.tsx`: `useToast().show("Evento creado")` pinta el texto en una región `role="status"` con `aria-live="polite"` y desaparece a los 4 s (temporizadores falsos). La región se monta en `AppFrame`.
   Hecho cuando: `npm test -- toast` en verde y la guardia `design-tokens` en verde. Cubre: RF-32 | Módulo: toast
 

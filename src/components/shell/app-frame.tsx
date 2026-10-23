@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ToastProvider } from "@/components/ui/toast";
 import type { AccentId } from "@/lib/theme/accents";
 import { BottomBar } from "./bottom-bar";
 import { SideRail } from "./side-rail";
@@ -23,11 +24,13 @@ export function AppFrame({
       data-accent={accent}
       className="flex min-h-full flex-1 flex-col"
     >
-      <SideRail signOutAction={signOutAction} />
-      <div className="flex flex-1 flex-col pb-24 lg:pb-0 lg:pl-20">
-        {children}
-      </div>
-      <BottomBar signOutAction={signOutAction} />
+      <ToastProvider>
+        <SideRail signOutAction={signOutAction} />
+        <div className="flex flex-1 flex-col pb-24 lg:pb-0 lg:pl-20">
+          {children}
+        </div>
+        <BottomBar signOutAction={signOutAction} />
+      </ToastProvider>
     </div>
   );
 }
