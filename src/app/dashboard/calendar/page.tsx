@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import type { AgendaEvent } from "@/components/calendar/agenda-view";
+import { CalendarSkeleton } from "@/components/calendar/calendar-skeleton";
 import { CalendarWorkspace } from "@/components/calendar/calendar-workspace";
 import { ViewToolbar } from "@/components/calendar/view-toolbar";
 import { LinkButton } from "@/components/ui/link-button";
@@ -19,7 +20,11 @@ import {
   getProfileTimeZone,
   requireUser,
 } from "@/lib/calendar/queries";
-import { getVisibleRange, parseViewParams } from "@/lib/calendar/ranges";
+import {
+  getVisibleRange,
+  isCalendarView,
+  parseViewParams,
+} from "@/lib/calendar/ranges";
 import { createEvent } from "../events/actions";
 import { loadMonthMarks } from "./mini-month-actions";
 import {
@@ -174,6 +179,19 @@ async function CalendarContent({
   );
 }
 
+// Only the URL, no session: picks the shape of the loading view (spec 008 RF-33).
+async function ShapedLoading({ searchParams }: { searchParams: SearchParams }) {
+  const query = await searchParams;
+  const view = isCalendarView(query.view) ? query.view : "agenda";
+  return (
+    // No key: moving between periods keeps the current view on screen until the
+    // next one is ready (no empty screen either) and keeps the panel's state.
+    <Suspense fallback={<CalendarSkeleton view={view} />}>
+      <CalendarContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
 export default function CalendarPage({
   searchParams,
 }: {
@@ -182,8 +200,8 @@ export default function CalendarPage({
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       <h1 className="text-2xl font-bold text-ink">Calendario</h1>
-      <Suspense fallback={<p className="text-muted">Cargando calendario…</p>}>
-        <CalendarContent searchParams={searchParams} />
+      <Suspense fallback={<CalendarSkeleton view="agenda" />}>
+        <ShapedLoading searchParams={searchParams} />
       </Suspense>
     </main>
   );

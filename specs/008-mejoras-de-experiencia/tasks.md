@@ -85,7 +85,7 @@
   Pasos: test primero en `tests/unit/agenda-view.test.tsx` (ampliado): el botón "Hora actual" está siempre visible; si hoy está en la agenda llama a `scrollIntoView` de la línea de la hora actual; si no, enlaza a la agenda de hoy con `#ahora`.
   Hecho cuando: `npm test -- agenda-view` en verde. Cubre: RF-23, RF-24 | Módulo: agenda-now
 
-- [ ] T20 Mostrar un esqueleto de la vista mientras carga
+- [x] T20 Mostrar un esqueleto de la vista mientras carga
   Pasos: test primero en `tests/unit/calendar-skeleton.test.tsx`: para agenda, mes, semana y día pinta la forma correspondiente con `aria-busy="true"` y el texto accesible "Cargando calendario…". La página envuelve el contenido en un `<Suspense>` con ese esqueleto según la vista de la URL.
   Hecho cuando: `npm test -- calendar-skeleton` en verde y `npm run build` sin errores de `cacheComponents`. Cubre: RF-33 | Módulo: calendar-skeleton
 
