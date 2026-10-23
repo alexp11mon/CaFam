@@ -9,6 +9,8 @@ export const ACCOUNT_MESSAGES = {
   sameAsCurrent: "La contraseña nueva no puede ser igual a la actual.",
   emailInUse: "Esa dirección ya la usa otra cuenta.",
   invalidLink: "El enlace no es válido o ha caducado. Pide uno nuevo.",
+  sameEmail: "Esa ya es tu dirección actual.",
+  confirmationMismatch: "El email o la contraseña no coinciden.",
 } as const;
 
 const MESSAGES_BY_CODE: Record<string, string> = {

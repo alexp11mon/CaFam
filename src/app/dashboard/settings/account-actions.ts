@@ -6,10 +6,15 @@ import {
   getAccountErrorMessage,
 } from "@/lib/account/error-messages";
 import type {
+  EmailChangeState,
   PasswordChangeState,
   ProfileState,
 } from "@/lib/account/form-state";
-import { changePasswordSchema, profileSchema } from "@/lib/account/schemas";
+import {
+  changeEmailSchema,
+  changePasswordSchema,
+  profileSchema,
+} from "@/lib/account/schemas";
 import { AUTH_MESSAGES } from "@/lib/auth/error-messages";
 import { requireActionUser } from "@/lib/calendar/queries";
 import { fieldErrorsFromZod, readString } from "@/lib/forms/form-state";
@@ -99,4 +104,59 @@ export async function changePassword(
   }
 
   return { saved: true };
+}
+
+const EMAIL_TAKEN_CODES = new Set(["email_exists", "user_already_exists"]);
+
+/**
+ * Starts an email change: the new address gets a confirmation link and the old
+ * one keeps working until then (RF-6 to RF-10). Auth sends both emails.
+ */
+export async function requestEmailChange(
+  _prevState: EmailChangeState,
+  formData: FormData,
+): Promise<EmailChangeState> {
+  const values = { newEmail: readString(formData, "newEmail") };
+  const parsed = changeEmailSchema.safeParse({
+    newEmail: values.newEmail,
+    currentPassword: readString(formData, "currentPassword"),
+  });
+  if (!parsed.success) {
+    return { values, fieldErrors: fieldErrorsFromZod(parsed.error) };
+  }
+  const { newEmail, currentPassword } = parsed.data;
+
+  const { supabase } = await requireActionUser();
+  try {
+    const { data } = await supabase.auth.getUser();
+    const email = data.user?.email;
+    if (!email) return { values, formError: AUTH_MESSAGES.connection };
+    if (newEmail === email) {
+      return { values, fieldErrors: { newEmail: ACCOUNT_MESSAGES.sameEmail } };
+    }
+
+    const { error: checkError } = await supabase.auth.signInWithPassword({
+      email,
+      password: currentPassword,
+    });
+    if (checkError) {
+      return {
+        values,
+        fieldErrors: { currentPassword: getAccountErrorMessage(checkError) },
+      };
+    }
+
+    const { error } = await supabase.auth.updateUser({ email: newEmail });
+    if (error) {
+      const message = getAccountErrorMessage(error);
+      return EMAIL_TAKEN_CODES.has(String(error.code))
+        ? { values, fieldErrors: { newEmail: message } }
+        : { values, formError: message };
+    }
+  } catch (error) {
+    return { values, formError: getAccountErrorMessage(error) };
+  }
+
+  revalidatePath("/dashboard", "layout");
+  return { values: { newEmail: "" }, pendingEmail: newEmail };
 }

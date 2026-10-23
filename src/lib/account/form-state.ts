@@ -27,3 +27,11 @@ export interface PasswordChangeState {
   formError?: string;
   saved?: boolean;
 }
+
+export interface EmailChangeState {
+  fieldErrors?: { newEmail?: string; currentPassword?: string };
+  formError?: string;
+  values: { newEmail: string };
+  /** The address waiting for confirmation after a successful request (RF-10). */
+  pendingEmail?: string;
+}

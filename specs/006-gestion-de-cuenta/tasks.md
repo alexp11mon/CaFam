@@ -127,7 +127,7 @@
   Archivo `src/app/dashboard/settings/account-actions.ts` con estas dos acciones.
   Hecho cuando: `npm test -- account-profile-password-actions` en verde. Cubre: RF-13, RF-14, RF-15, RF-30, RF-31, RF-32, RF-33 | Módulo: account-actions
 
-- [ ] T14 Pedir el cambio de email con `requestEmailChange` y leer el cambio pendiente
+- [x] T14 Pedir el cambio de email con `requestEmailChange` y leer el cambio pendiente
   Pasos: tests primero en `tests/unit/account-email-action.test.ts`. Comprueba que:
   - verifica la contraseña actual con `signInWithPassword` y, si es incorrecta, no inicia el cambio;
   - un email no válido o igual al actual no llama a `updateUser`;
@@ -137,6 +137,7 @@
 
   Acción en `account-actions.ts` y lectura en `src/lib/account/queries.ts`.
   Hecho cuando: `npm test -- account-email-action` en verde. Cubre: RF-6, RF-7, RF-8, RF-9, RF-10 | Módulo: account-actions, queries
+  Ajuste al cerrar: la lectura es `getAccountEmails`, que devuelve el email actual y el pendiente, porque Ajustes muestra los dos. Una dirección ya usada se muestra como error del campo, no del formulario.
 
 - [ ] T15 Borrar la cuenta con `deleteAccount`
   Pasos: test primero en `tests/unit/account-delete-action.test.ts`. Comprueba que:
