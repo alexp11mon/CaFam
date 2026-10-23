@@ -157,7 +157,7 @@
   Componentes `src/components/account/profile-form.tsx` y `password-form.tsx`, con los componentes de `components/ui/`.
   Hecho cuando: `npm test -- profile-form password-form` en verde. Cubre: RF-13, RF-14, RF-15, RF-30, RF-31, RF-32 | Módulo: profile-form, password-form
 
-- [ ] T17 Crear el formulario de email y el diálogo de borrado de cuenta
+- [x] T17 Crear el formulario de email y el diálogo de borrado de cuenta
   Pasos: tests primero en `tests/unit/email-form.test.tsx` y `tests/unit/delete-account-dialog.test.tsx`. Comprueban que:
   - el formulario de email pide la dirección nueva y la contraseña actual, y muestra "Cambio pendiente de confirmar: <dirección>" cuando hay uno (RF-10);
   - el diálogo advierte de que el borrado es irreversible, pide el email y la contraseña, y no envía hasta que ambos estén escritos;

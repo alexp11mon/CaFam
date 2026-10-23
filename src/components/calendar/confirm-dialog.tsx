@@ -16,6 +16,8 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   action,
+  children,
+  confirmDisabled = false,
 }: {
   triggerLabel: string;
   /** Longer accessible name when several triggers share the same visible label. */
@@ -24,6 +26,9 @@ export function ConfirmDialog({
   description: string;
   confirmLabel: string;
   action: FormAction<ConfirmState>;
+  /** Extra fields the action needs, e.g. a password (spec 006, RF-16). */
+  children?: React.ReactNode;
+  confirmDisabled?: boolean;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -49,12 +54,17 @@ export function ConfirmDialog({
             {title}
           </h2>
           <p>{description}</p>
+          {children}
           <FormAlert message={state.formError} />
           <div className="flex flex-wrap justify-end gap-3">
             <Button variant="secondary" onClick={() => dialog.current?.close()}>
               Cancelar
             </Button>
-            <Button type="submit" variant="danger" disabled={pending}>
+            <Button
+              type="submit"
+              variant="danger"
+              disabled={pending || confirmDisabled}
+            >
               {confirmLabel}
             </Button>
           </div>
