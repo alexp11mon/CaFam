@@ -3,6 +3,7 @@ import {
   admin,
   anonClient,
   createTestUser,
+  deleteTestMail,
   deleteTestUser,
   type TestUser,
 } from "./helpers";
@@ -87,6 +88,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await deleteTestMail();
   // Ana's account is gone already; delete the calendars left behind and the others.
   await admin
     .from("calendars")

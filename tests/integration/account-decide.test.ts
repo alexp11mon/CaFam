@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   admin,
   createTestUser,
+  deleteTestMail,
   deleteTestUser,
   type TestUser,
 } from "./helpers";
@@ -55,6 +56,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await deleteTestMail();
   await admin
     .from("calendars")
     .delete()

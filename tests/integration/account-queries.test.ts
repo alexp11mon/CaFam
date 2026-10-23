@@ -3,6 +3,7 @@ import { getNotices, getOrphanCalendars } from "@/lib/account/queries";
 import {
   admin,
   createTestUser,
+  deleteTestMail,
   deleteTestUser,
   type TestUser,
 } from "./helpers";
@@ -35,6 +36,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await deleteTestMail();
   await admin.from("calendars").delete().eq("id", calendarId);
   await Promise.all(
     [bea, cy].filter(Boolean).map((user) => deleteTestUser(user.id)),

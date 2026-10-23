@@ -3,7 +3,9 @@ import { admin } from "./helpers";
 
 // Spec 006, T8: the scheduled account jobs and the mail queue (plan D3, D4;
 // RF-23, RF-26, RF-29). The real send needs the Brevo keys in Vault, which the
-// test does not touch; a dry run checks which rows would be sent.
+// test does not touch; a dry run checks which rows would be sent. Addresses
+// use reserved domains (RFC 2606): example.com for rows that may be listed,
+// .test for rows that must never leave the queue.
 const insertedIds: number[] = [];
 
 beforeAll(async () => {
@@ -14,19 +16,20 @@ beforeAll(async () => {
     attempts?: number;
     sent_at?: string;
   }[] = [
-    { to_email: "pendiente@calenderfam.test", subject: "T8", body: "x" },
+    { to_email: "pendiente@example.com", subject: "T8", body: "x" },
     {
-      to_email: "agotado@calenderfam.test",
+      to_email: "agotado@example.com",
       subject: "T8",
       body: "x",
       attempts: 5,
     },
     {
-      to_email: "enviado@calenderfam.test",
+      to_email: "enviado@example.com",
       subject: "T8",
       body: "x",
       sent_at: new Date().toISOString(),
     },
+    { to_email: "prueba@calenderfam.test", subject: "T8", body: "x" },
   ];
   for (const row of rows) {
     const { data, error } = await admin
@@ -67,6 +70,15 @@ describe("send_pending_emails (D4)", () => {
     expect(data).toContain(insertedIds[0]);
     expect(data).not.toContain(insertedIds[1]);
     expect(data).not.toContain(insertedIds[2]);
+  });
+
+  it("never lists an address of the reserved .test domain, which the tests use", async () => {
+    const { data, error } = await admin.rpc("send_pending_emails", {
+      p_dry_run: true,
+      p_limit: 1000,
+    });
+    expect(error).toBeNull();
+    expect(data).not.toContain(insertedIds[3]);
   });
 
   it("a dry run changes nothing: no attempt is counted and no request is recorded", async () => {

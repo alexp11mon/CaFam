@@ -88,3 +88,16 @@ export async function getOwnCalendarId(userId: string): Promise<string> {
   if (error) throw error;
   return data.id;
 }
+
+/**
+ * Removes the queued mail that deleting test accounts generates for their
+ * @calenderfam.test users (spec 006, T23). The sender already skips .test
+ * addresses; this keeps the dev queue clean.
+ */
+export async function deleteTestMail(): Promise<void> {
+  const { error } = await admin
+    .from("email_outbox")
+    .delete()
+    .like("to_email", "%@calenderfam.test");
+  if (error) throw error;
+}
