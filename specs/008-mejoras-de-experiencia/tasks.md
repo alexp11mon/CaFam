@@ -61,7 +61,7 @@
   Pasos: test primero en `tests/unit/slots.test.ts` y `tests/unit/popover.test.ts`: `minuteAt` redondea a 30 min en clic y a 15 en arrastre; `clickRange(10:12)` da 10:00–11:00 y `clickRange(23:40)` da 23:30–23:59; `dragRange` ordena un arrastre hacia arriba, aplica el mínimo de 15 min y recorta a 00:00–24:00; `placePopover` coloca a la derecha del hueco, a la izquierda si no cabe y nunca fuera de la pantalla.
   Hecho cuando: `npm test -- slots popover` en verde. Cubre: RF-20, RF-30, RF-42, RF-43 | Módulo: slots, quick-create
 
-- [ ] T14 Crear la ventana rápida
+- [x] T14 Crear la ventana rápida
   Pasos: test primero en `tests/unit/quick-create.test.tsx`: abre con el foco en el título, el día, las horas y el calendario con su color; un borrador de día completo muestra "Añadir hora", que muestra las horas; "Guardar" envía `createEvent` en modo ventana y, con `done`, cierra y avisa; "Más opciones" navega a `/dashboard/events/new` con `date`, `start`, `end`, `allDay`, `calendar` y `title`; a ≤ 768 px se pinta como hoja inferior.
   Hecho cuando: `npm test -- quick-create` en verde. Cubre: RF-28, RF-37, RF-38, RF-39, RF-41 | Módulo: quick-create
 

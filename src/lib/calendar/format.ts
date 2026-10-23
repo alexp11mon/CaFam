@@ -108,6 +108,11 @@ function formatKey(
   }).format(new Date(`${dateKey}T00:00:00Z`));
 }
 
+/** "miércoles, 21 de octubre" for a date key (spec 008 quick window). */
+export function formatDayHeading(dateKey: string): string {
+  return formatKey(dateKey, { weekday: "long", day: "numeric", month: "long" });
+}
+
 /** "miércoles, 21 de octubre de 2026" for a date key. */
 export function formatDateKeyFull(dateKey: string): string {
   return formatKey(dateKey, { dateStyle: "full" });
