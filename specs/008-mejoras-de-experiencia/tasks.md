@@ -57,7 +57,7 @@
 
 ## Iteración 2 — crear desde la rejilla y vistas al estilo Google
 
-- [ ] T13 Calcular franjas, arrastres y la posición de la ventana rápida
+- [x] T13 Calcular franjas, arrastres y la posición de la ventana rápida
   Pasos: test primero en `tests/unit/slots.test.ts` y `tests/unit/popover.test.ts`: `minuteAt` redondea a 30 min en clic y a 15 en arrastre; `clickRange(10:12)` da 10:00–11:00 y `clickRange(23:40)` da 23:30–23:59; `dragRange` ordena un arrastre hacia arriba, aplica el mínimo de 15 min y recorta a 00:00–24:00; `placePopover` coloca a la derecha del hueco, a la izquierda si no cabe y nunca fuera de la pantalla.
   Hecho cuando: `npm test -- slots popover` en verde. Cubre: RF-20, RF-30, RF-42, RF-43 | Módulo: slots, quick-create
 
