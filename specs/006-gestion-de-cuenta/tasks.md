@@ -148,7 +148,7 @@
   Acción `deleteAccount` en `account-actions.ts`.
   Hecho cuando: `npm test -- account-delete-action` en verde. Cubre: RF-16, RF-17, RF-19 | Módulo: account-actions
 
-- [ ] T16 Crear los formularios de perfil y de contraseña
+- [x] T16 Crear los formularios de perfil y de contraseña
   Pasos: tests primero en `tests/unit/profile-form.test.tsx` y `tests/unit/password-form.test.tsx` (Testing Library, textos en español). Comprueban que:
   - el formulario de perfil muestra nombre y zona horaria con los valores actuales, y los errores de campo enlazados con `aria-describedby`;
   - el de contraseña pide la actual y la nueva, y muestra "La contraseña nueva no puede ser igual a la actual." cuando la acción lo devuelve;
