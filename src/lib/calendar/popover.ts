@@ -5,6 +5,12 @@ export interface Box {
   height: number;
 }
 
+/** Where an element is on screen, as placePopover expects it. */
+export function boxOf(element: Element): Box {
+  const { left, top, width, height } = element.getBoundingClientRect();
+  return { left, top, width, height };
+}
+
 const GAP = 8;
 const MARGIN = 16;
 

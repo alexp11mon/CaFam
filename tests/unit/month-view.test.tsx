@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { MonthView } from "@/components/calendar/month-view";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { getVisibleRange } from "@/lib/calendar/ranges";
@@ -137,5 +138,89 @@ describe("MonthView (RF-29, RF-37..RF-39)", () => {
     renderMonth([event("A", "2026-10-14T06:00:00Z", "2026-10-14T07:00:00Z")]);
 
     expect(screen.queryByText("No hay eventos")).not.toBeInTheDocument();
+  });
+});
+
+// Spec 008, T15: creating from an empty day of the month (RF-19, RF-21, RF-22, RF-40).
+describe("MonthView: creating", () => {
+  it("makes the empty space of each day a button, reachable by keyboard (RF-19, RF-22)", async () => {
+    const onCreate = vi.fn();
+    render(
+      <MonthView
+        date="2026-10-21"
+        days={DAYS}
+        events={[]}
+        timeZone={TZ}
+        today={TODAY}
+        onCreate={onCreate}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "Crear evento el jueves, 22 de octubre de 2026",
+      }),
+    );
+
+    expect(onCreate).toHaveBeenCalledWith(
+      "2026-10-22",
+      expect.objectContaining({ left: expect.any(Number) }),
+    );
+  });
+
+  it("keeps the day number as a link to the day view (RF-21)", () => {
+    render(
+      <MonthView
+        date="2026-10-21"
+        days={DAYS}
+        events={[]}
+        timeZone={TZ}
+        today={TODAY}
+        onCreate={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "jueves, 22 de octubre de 2026" }),
+    ).toHaveAttribute("href", "/dashboard/calendar?view=day&date=2026-10-22");
+  });
+
+  it("offers no buttons without permission to create (RF-36)", () => {
+    renderMonth();
+
+    expect(
+      screen.queryByRole("button", { name: /Crear evento el/ }),
+    ).toBeNull();
+  });
+
+  it("draws the provisional event in its day (RF-40)", () => {
+    const { rerender } = render(
+      <MonthView
+        date="2026-10-21"
+        days={DAYS}
+        events={[]}
+        timeZone={TZ}
+        today={TODAY}
+        onCreate={vi.fn()}
+        draft={{ day: "2026-10-22", title: "" }}
+      />,
+    );
+    const cell = screen
+      .getAllByTestId("day-cell")
+      .find((element) => element.dataset.date === "2026-10-22")!;
+    expect(within(cell).getByText("(Sin título)")).toBeVisible();
+
+    rerender(
+      <MonthView
+        date="2026-10-21"
+        days={DAYS}
+        events={[]}
+        timeZone={TZ}
+        today={TODAY}
+        onCreate={vi.fn()}
+        draft={{ day: "2026-10-22", title: "Cena" }}
+      />,
+    );
+    expect(within(cell).getByText("Cena")).toBeVisible();
   });
 });

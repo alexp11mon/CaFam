@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { FormAlert } from "@/components/ui/form-alert";
+import type { Draft } from "@/lib/calendar/draft";
+import type { Box } from "@/lib/calendar/popover";
+import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { useCalendarShortcuts } from "@/lib/hooks/use-calendar-shortcuts";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import {
@@ -14,9 +17,11 @@ import { AgendaView, type AgendaEvent } from "./agenda-view";
 import type { MonthMarks } from "@/lib/calendar/month-marks";
 import { CalendarFilters, type FilterCategory } from "./calendar-filters";
 import { DayView } from "./day-view";
+import type { CalendarOption, EventFormValues } from "./event-form";
 import { MiniMonth } from "./mini-month";
 import { MonthView } from "./month-view";
 import { NextEventCard, type NextEventItem } from "./next-event-card";
+import { QuickCreate } from "./quick-create";
 import { WeekView } from "./week-view";
 
 export interface PanelCalendar extends GroupableCalendar {
@@ -78,6 +83,8 @@ export function CalendarWorkspace({
   monthMarks,
   loadMonthMarks,
   saveLastView,
+  editableCalendars = [],
+  createAction,
 }: {
   view: CalendarView;
   date: string;
@@ -102,6 +109,9 @@ export function CalendarWorkspace({
   ) => Promise<{ marks: MonthMarks } | { error: string }>;
   /** Remembers a view chosen with a shortcut (spec 008 RF-25). */
   saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
+  /** Calendars the user can write to, for the quick window (spec 008 RF-37). */
+  editableCalendars?: CalendarOption[];
+  createAction?: FormAction<FormState<keyof EventFormValues>>;
 }) {
   useCalendarShortcuts({ view, date, today, canCreate, saveLastView });
   const [groups, setGroups] = useState(initialGroups);
@@ -111,6 +121,18 @@ export function CalendarWorkspace({
   const [error, setError] = useState<string>();
   const [panelOpen, setPanelOpen] = useState(false);
   const panelId = useId();
+  // The event being created from an empty slot (spec 008 RF-37, RF-40).
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+  const [anchor, setAnchor] = useState<Box | null>(null);
+  const closeDraft = useCallback(() => setDraft(null), []);
+  const quickCreate = canCreate && createAction && editableCalendars.length > 0;
+
+  function openDraft(next: Draft, at: Box) {
+    setDraftTitle("");
+    setAnchor(at);
+    setDraft(next);
+  }
   const panel = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<string | null>(null);
 
@@ -245,6 +267,15 @@ export function CalendarWorkspace({
     groups.flatMap((group) => group.calendars.map((c) => [c.id, c.color])),
   );
 
+  // New events go to the first visible calendar of the panel the user can write
+  // to, or to the first writable one (plan workspace).
+  const panelOrder = groups.flatMap((group) => group.calendars);
+  const defaultCalendarId =
+    panelOrder.find(
+      (c) => c.visible && editableCalendars.some((e) => e.id === c.id),
+    )?.id ?? editableCalendars[0]?.id;
+  const draftMark = draft ? { day: draft.day, title: draftTitle } : null;
+
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
       <div className="flex flex-col gap-3 lg:w-84 lg:shrink-0">
@@ -311,6 +342,17 @@ export function CalendarWorkspace({
             events={shown}
             timeZone={timeZone}
             today={today}
+            // A day of the month creates an all-day event (spec 008 RF-19).
+            onCreate={
+              quickCreate
+                ? (day, at) =>
+                    openDraft(
+                      { day, allDay: true, startMinute: 540, endMinute: 600 },
+                      at,
+                    )
+                : undefined
+            }
+            draft={draftMark}
           />
         ) : view === "week" ? (
           <WeekView
@@ -328,6 +370,19 @@ export function CalendarWorkspace({
           />
         )}
       </div>
+      {draft && quickCreate && defaultCalendarId ? (
+        <QuickCreate
+          // A new slot starts a new window.
+          key={`${draft.day}-${draft.allDay}-${draft.startMinute}-${draft.endMinute}`}
+          draft={draft}
+          anchor={anchor}
+          calendars={editableCalendars}
+          defaultCalendarId={defaultCalendarId}
+          action={createAction}
+          onClose={closeDraft}
+          onTitleChange={setDraftTitle}
+        />
+      ) : null}
     </div>
   );
 }

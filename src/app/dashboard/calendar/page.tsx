@@ -20,6 +20,7 @@ import {
   requireUser,
 } from "@/lib/calendar/queries";
 import { getVisibleRange, parseViewParams } from "@/lib/calendar/ranges";
+import { createEvent } from "../events/actions";
 import { loadMonthMarks } from "./mini-month-actions";
 import {
   saveLastView,
@@ -164,6 +165,10 @@ async function CalendarContent({
         )}
         loadMonthMarks={loadMonthMarks}
         saveLastView={saveLastView}
+        editableCalendars={calendars
+          .filter((calendar) => calendar.role !== "viewer")
+          .map(({ id, name, color }) => ({ id, name, color }))}
+        createAction={createEvent}
       />
     </>
   );

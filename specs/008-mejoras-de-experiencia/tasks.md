@@ -65,7 +65,7 @@
   Pasos: test primero en `tests/unit/quick-create.test.tsx`: abre con el foco en el título, el día, las horas y el calendario con su color; un borrador de día completo muestra "Añadir hora", que muestra las horas; "Guardar" envía `createEvent` en modo ventana y, con `done`, cierra y avisa; "Más opciones" navega a `/dashboard/events/new` con `date`, `start`, `end`, `allDay`, `calendar` y `title`; a ≤ 768 px se pinta como hoja inferior.
   Hecho cuando: `npm test -- quick-create` en verde. Cubre: RF-28, RF-37, RF-38, RF-39, RF-41 | Módulo: quick-create
 
-- [ ] T15 Crear desde un día vacío del mes
+- [x] T15 Crear desde un día vacío del mes
   Pasos: test primero en `tests/unit/month-view.test.tsx` (ampliado) y `tests/unit/calendar-workspace.test.tsx`: el fondo de cada celda es un botón "Crear evento el <día>" que crea un borrador de día completo y abre la ventana rápida; el número del día sigue llevando a la vista día; el borrador se pinta en la celda con el título o "(Sin título)"; un usuario solo Lector no tiene esos botones.
   Hecho cuando: `npm test -- month-view calendar-workspace` en verde y, en el navegador, crear un evento de día completo desde el mes funciona. Cubre: RF-19, RF-21, RF-22, RF-36, RF-37, RF-40 | Módulo: month-cell, workspace, draft-block
 
