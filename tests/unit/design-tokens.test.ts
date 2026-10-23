@@ -24,6 +24,7 @@ const SOURCES = files(ROOT).map((path) => ({
 // Shadows only on what floats: dialogs, the "Más" sheet and the rail tooltips.
 const FLOATING = new Set([
   "src/components/calendar/confirm-dialog.tsx",
+  "src/components/calendar/event-modal.tsx",
   "src/components/calendar/merge-form.tsx",
   "src/components/shell/more-sheet.tsx",
   "src/components/shell/side-rail.tsx",

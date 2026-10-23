@@ -14,10 +14,20 @@ async function AccentFrame({ children }: { children: ReactNode }) {
   );
 }
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+export default function DashboardLayout({
+  children,
+  modal,
+}: {
+  children: ReactNode;
+  /** Intercepted event routes shown over the page (spec 008 plan D1). */
+  modal: ReactNode;
+}) {
   return (
     <Suspense fallback={<FrameSkeleton />}>
-      <AccentFrame>{children}</AccentFrame>
+      <AccentFrame>
+        {children}
+        {modal}
+      </AccentFrame>
     </Suspense>
   );
 }

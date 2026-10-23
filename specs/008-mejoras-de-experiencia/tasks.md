@@ -7,7 +7,7 @@
 
 ## Iteración 1 — ventana de evento, horas y vistas
 
-- [ ] T1 Montar el slot `@modal` y la ventana `EventModal` vacía
+- [x] T1 Montar el slot `@modal` y la ventana `EventModal` vacía
   Pasos: test primero en `tests/unit/event-modal.test.tsx` (con `showModal` simulado): abre como diálogo con el título enlazado (`aria-labelledby`), "Cerrar" y Escape llaman a `router.back()` y devuelven el foco al elemento que tenía el foco al abrir, el botón de pantalla completa alterna la clase y no aparece a ≤ 768 px (`matchMedia` simulado). Crear `@modal/default.tsx` (`null`), recibir `modal` en `dashboard/layout.tsx` y una ruta interceptada provisional `(.)events/[id]` que pinta solo el título del evento.
   Hecho cuando: `npm test -- event-modal` en verde y, en el navegador, abrir un evento desde la semana muestra la ventana con el calendario detrás, Atrás la cierra y recargar la URL da la página completa (R1). Cubre: RF-4, RF-5, RF-6, RF-10, RF-12, RF-29 | Módulo: modal-routes, event-modal
 
