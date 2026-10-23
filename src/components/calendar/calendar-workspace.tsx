@@ -6,6 +6,7 @@ import type { Draft } from "@/lib/calendar/draft";
 import type { Box } from "@/lib/calendar/popover";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { useCalendarShortcuts } from "@/lib/hooks/use-calendar-shortcuts";
+import { useRefreshOnFocus } from "@/lib/hooks/use-refresh-on-focus";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import {
   ORPHAN_GROUP_ID,
@@ -114,6 +115,7 @@ export function CalendarWorkspace({
   createAction?: FormAction<FormState<keyof EventFormValues>>;
 }) {
   useCalendarShortcuts({ view, date, today, canCreate, saveLastView });
+  useRefreshOnFocus(loadedAt);
   const [groups, setGroups] = useState(initialGroups);
   const [hiddenCategories, setHiddenCategories] = useState<ReadonlySet<string>>(
     new Set(),

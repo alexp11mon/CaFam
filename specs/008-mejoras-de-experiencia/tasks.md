@@ -89,7 +89,7 @@
   Pasos: test primero en `tests/unit/calendar-skeleton.test.tsx`: para agenda, mes, semana y día pinta la forma correspondiente con `aria-busy="true"` y el texto accesible "Cargando calendario…". La página envuelve el contenido en un `<Suspense>` con ese esqueleto según la vista de la URL.
   Hecho cuando: `npm test -- calendar-skeleton` en verde y `npm run build` sin errores de `cacheComponents`. Cubre: RF-33 | Módulo: calendar-skeleton
 
-- [ ] T21 Actualizar los eventos al volver a la app
+- [x] T21 Actualizar los eventos al volver a la app
   Pasos: test primero en `tests/unit/use-refresh-on-focus.test.tsx`: al pasar a `visible` llama a `router.refresh()` solo si han pasado más de 60 s desde la última carga.
   Hecho cuando: `npm test -- use-refresh-on-focus` en verde. Cubre: RF-34 | Módulo: refresh-on-focus
 
