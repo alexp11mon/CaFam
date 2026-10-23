@@ -29,6 +29,7 @@ const EVENT: EventDetailData = {
   calendarName: "Clases Uni",
   calendarColor: "#A0C4FF",
   categoryName: "Clases de la UNI",
+  author: "Ana",
 };
 
 function setup(
@@ -167,5 +168,32 @@ describe("EventDetail permissions and deletion (RF-23, RF-24, RF-26)", () => {
     await user.click(screen.getByRole("button", { name: "Sí, borrar" }));
 
     expect(remove).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows who created the event (spec 006 RF-34)", () => {
+    render(
+      <EventDetail
+        event={EVENT}
+        timeZone="Europe/Madrid"
+        canEdit={false}
+        deleteAction={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Creado por")).toBeInTheDocument();
+    expect(screen.getByText("Ana")).toBeInTheDocument();
+  });
+
+  it("shows Cuenta borrada for a deleted account (spec 006 RF-35)", () => {
+    render(
+      <EventDetail
+        event={{ ...EVENT, author: "Cuenta borrada" }}
+        timeZone="Europe/Madrid"
+        canEdit={false}
+        deleteAction={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Cuenta borrada")).toBeInTheDocument();
   });
 });

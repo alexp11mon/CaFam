@@ -15,6 +15,8 @@ export interface EventDetailData {
   calendarName: string;
   calendarColor: string;
   categoryName: string | null;
+  /** Who created it, or the text for a gone author (spec 006, RF-34 to RF-36). */
+  author: string;
 }
 
 function Row({
@@ -72,6 +74,7 @@ export function EventDetail({
         ) : null}
         <Row label="Categoría">{event.categoryName ?? "Sin categoría"}</Row>
         <Row label="Calendario">{event.calendarName}</Row>
+        <Row label="Creado por">{event.author}</Row>
       </dl>
       {canEdit ? (
         <div>

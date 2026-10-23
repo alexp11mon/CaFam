@@ -194,9 +194,10 @@
   Hecho cuando: `npm run test:db -- account-orphan-permissions` y `npm test -- members-orphan-notice` en verde. Cubre: RF-22, RF-24 | Módulo: members page
   Ajuste al cerrar: el test de permisos pasa sin cambios de código, porque RF-22 pide precisamente que las políticas no cambien; confirma el comportamiento. Los controles de rol y expulsión ya se ocultan sin propietario (`MemberList` solo los muestra al propietario); el aviso es el componente `OrphanNotice`.
 
-- [ ] T25 Mostrar el autor del evento en su detalle
+- [x] T25 Mostrar el autor del evento en su detalle
   Pasos: tests primero. En `tests/unit/author-label.test.ts`: la función pura `authorLabel(createdBy, members)` devuelve el nombre si el autor es un miembro, "Cuenta borrada" si `createdBy` es nulo y "un antiguo miembro" si tiene id pero no está entre los miembros. En `tests/unit/event-detail.test.tsx` (ampliar): el detalle muestra "Creado por <texto>" en los tres casos. Se añade `createdBy` al detalle del evento y se resuelve el nombre con `calendar_members_with_names`. Añadida a petición del usuario tras aprobar esta iteración (por eso la iteración llega a 13 tareas).
   Hecho cuando: `npm test -- author-label event-detail` en verde y, en el navegador, un evento de una cuenta borrada de prueba muestra "Creado por Cuenta borrada". Cubre: RF-34, RF-35, RF-36 | Módulo: event-detail, author-label
+  Ajuste al cerrar: la comprobación en navegador del evento de una cuenta borrada se hace en T23.
 
 - [ ] T23 Validar la cobertura RF por RF y el flujo completo en navegador
   Pasos: recorrer la trazabilidad de RF-1 a RF-36. Probar en `playwright-cli` contra dev, a 390 y 1440 px, con usuarios de prueba que se borran al terminar: editar perfil, cambiar contraseña, pedir cambio de email, borrar una cuenta con un calendario compartido, y las dos decisiones de los miembros, sin dejar datos en dev. Revisar que nada de "Fuera de alcance" está en el código.

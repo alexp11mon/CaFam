@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { EventDetail } from "@/components/calendar/event-detail";
 import { EventForm } from "@/components/calendar/event-form";
 import { PageShell } from "@/components/calendar/page-shell";
+import { authorLabel } from "@/lib/account/author-label";
 import { eventToFormDates } from "@/lib/calendar/format";
 import {
   getCalendar,
@@ -13,6 +14,7 @@ import {
   getProfileTimeZone,
   requireUser,
 } from "@/lib/calendar/queries";
+import { getMembers } from "@/lib/sharing/queries";
 import { deleteEvent, updateEvent } from "../actions";
 
 export const metadata: Metadata = { title: "Evento" };
@@ -36,6 +38,7 @@ async function Event({ params }: { params: Promise<{ id: string }> }) {
     canEdit ? editable.map((c) => c.id) : [event.calendarId],
   );
   const category = categories.find((c) => c.id === event.categoryId);
+  const members = await getMembers(supabase, [event.calendarId]);
 
   return (
     <>
@@ -52,6 +55,7 @@ async function Event({ params }: { params: Promise<{ id: string }> }) {
           calendarName: calendar.name,
           calendarColor: calendar.color,
           categoryName: category?.name ?? null,
+          author: authorLabel(event.createdBy, members),
         }}
         timeZone={timeZone}
         canEdit={canEdit}

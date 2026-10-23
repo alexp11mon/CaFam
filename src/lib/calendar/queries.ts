@@ -197,6 +197,8 @@ export interface EventRecord {
   allDay: boolean;
   color: string | null;
   categoryId: string | null;
+  /** Null once the author deleted the account (spec 006 RF-20). */
+  createdBy: string | null;
 }
 
 /** One event, or null if it does not exist, is not visible to the user or the id is malformed. */
@@ -208,7 +210,7 @@ export async function getEvent(
   const { data, error } = await supabase
     .from("events")
     .select(
-      "id, calendar_id, title, description, location, starts_at, ends_at, all_day, color, category_id",
+      "id, calendar_id, title, description, location, starts_at, ends_at, all_day, color, category_id, created_by",
     )
     .eq("id", id)
     .maybeSingle();
@@ -225,6 +227,7 @@ export async function getEvent(
     allDay: data.all_day,
     color: data.color,
     categoryId: data.category_id,
+    createdBy: data.created_by,
   };
 }
 
