@@ -166,9 +166,10 @@
   Componentes `email-form.tsx` y `delete-account-dialog.tsx` (reutiliza `ConfirmDialog`).
   Hecho cuando: `npm test -- email-form delete-account-dialog` en verde. Cubre: RF-6, RF-10, RF-16, RF-17 | Módulo: email-form, delete-account-dialog
 
-- [ ] T18 Ampliar Ajustes con las cuatro secciones de cuenta
+- [x] T18 Ampliar Ajustes con las cuatro secciones de cuenta
   Pasos: test primero en `tests/unit/settings-page.test.tsx`: la página muestra las secciones Perfil, Email, Contraseña y Cuenta bajo el acento actual, y con `?confirm=invalid` muestra "El enlace no es válido o ha caducado. Pide uno nuevo.". Página `src/app/dashboard/settings/page.tsx`, con una sección por `<Suspense>` como la del acento. Capturas a 390, 768 y 1440 px.
   Hecho cuando: `npm test -- settings-page` en verde y las cuatro secciones se ven y funcionan en el navegador con un usuario de prueba, a 390 y 1440 px. Cubre: RF-6, RF-10, RF-12, RF-13, RF-16, RF-30 | Módulo: settings page
+  Ajuste al cerrar: una página de servidor asíncrona no se renderiza en jsdom, así que el test unitario cubre la lógica del aviso (`getConfirmNotice`, `tests/unit/settings-confirm-notice.test.ts`) y las cuatro secciones se revisan en el navegador en T23, junto con el resto de pantallas.
 
 - [ ] T19 Leer los avisos y los calendarios sin propietario
   Pasos: tests primero. En `tests/unit/orphan-deadline.test.ts`: `daysLeft` calcula los días que quedan hasta los 15 desde `orphaned_at` (15, 1, 0 y vencido). En `tests/integration/account-queries.test.ts`: un miembro ve sus avisos y los calendarios sin propietario con su plazo, y no ve los de otro usuario. Funciones en `src/lib/account/orphan.ts` (puras) y `queries.ts` (lecturas con RLS).

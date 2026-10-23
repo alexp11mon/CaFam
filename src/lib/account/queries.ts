@@ -15,3 +15,17 @@ export async function getAccountEmails(
     pendingEmail: data.user?.new_email ?? null,
   };
 }
+
+/** Name and time zone of the own profile (RF-13, RF-14). */
+export async function getProfile(
+  supabase: Client,
+  userId: string,
+): Promise<{ displayName: string; timeZone: string }> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("display_name, time_zone")
+    .eq("id", userId)
+    .single();
+  if (error) throw error;
+  return { displayName: data.display_name, timeZone: data.time_zone };
+}

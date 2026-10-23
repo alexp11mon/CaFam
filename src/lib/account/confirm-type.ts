@@ -1,3 +1,5 @@
+import { ACCOUNT_MESSAGES } from "./error-messages";
+
 // Spec 006, T10: what each Auth link type verifies and where it lands (plan D8;
 // RF-2, RF-3, RF-11, RF-12). `next` is never read, so a link cannot redirect elsewhere.
 
@@ -29,4 +31,9 @@ const PLANS = new Map<string, ConfirmPlan>([
 /** The plan for a link type, or null for a type this app does not confirm. */
 export function getConfirmPlan(type: string | null): ConfirmPlan | null {
   return type === null ? null : (PLANS.get(type) ?? null);
+}
+
+/** Message for Ajustes when an email change link failed (RF-12); null otherwise. */
+export function getConfirmNotice(value: string | undefined): string | null {
+  return value === "invalid" ? ACCOUNT_MESSAGES.invalidLink : null;
 }
