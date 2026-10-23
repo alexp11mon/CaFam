@@ -175,7 +175,7 @@
   Pasos: tests primero. En `tests/unit/orphan-deadline.test.ts`: `daysLeft` calcula los días que quedan hasta los 15 desde `orphaned_at` (15, 1, 0 y vencido). En `tests/integration/account-queries.test.ts`: un miembro ve sus avisos y los calendarios sin propietario con su plazo, y no ve los de otro usuario. Funciones en `src/lib/account/orphan.ts` (puras) y `queries.ts` (lecturas con RLS).
   Hecho cuando: `npm test -- orphan-deadline` y `npm run test:db -- account-queries` en verde. Cubre: RF-22, RF-23, RF-26 | Módulo: queries, orphan
 
-- [ ] T20 Marcar avisos como leídos y decidir sobre un calendario con `orphan-actions`
+- [x] T20 Marcar avisos como leídos y decidir sobre un calendario con `orphan-actions`
   Pasos: tests primero. En `tests/integration/account-notices-read.test.ts`: un usuario puede poner `read_at` en su aviso y no en el de otro, y no puede cambiar otras columnas. En `tests/unit/orphan-actions.test.ts`: `decideOrphanCalendar(id, keep)` llama a `decide_orphan_calendar`, traduce `CF404` a "Este calendario ya no está disponible." y llama a `revalidatePath`; `dismissNotice(id)` marca el aviso como leído. Migración con permiso de `UPDATE (read_at)` y política de fila propia sobre `account_notices` (D10). `npm run db:push` y `npm run db:types`.
   Hecho cuando: `npm run test:db -- account-notices-read account-schema` y `npm test -- orphan-actions` en verde. Cubre: RF-23, RF-24, RF-25 | Módulo: orphan-actions, account_orphan_schema
 
