@@ -33,6 +33,7 @@ async function InterceptedNewEvent({
           submitLabel="Crear evento"
           pendingLabel="Creando…"
           cancelHref="/dashboard/calendar"
+          focusTitle
         />
       )}
     </EventModal>

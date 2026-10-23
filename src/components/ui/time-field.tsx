@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { normalizeTime, type TimeOption } from "@/lib/calendar/time-options";
 
 /** Index of the option to start from: the value itself, or the first one after it. */
@@ -39,6 +39,18 @@ export function TimeField({
   const [active, setActive] = useState(0);
   const list = useRef<HTMLUListElement>(null);
 
+  // Open on the current time, not at 00:00. Only the list scrolls: scrollIntoView
+  // would also scroll the window around the form.
+  useEffect(() => {
+    const element = list.current;
+    const option = element?.querySelector<HTMLElement>(
+      '[aria-selected="true"]',
+    );
+    if (!open || !element || !option) return;
+    element.scrollTop =
+      option.offsetTop - element.clientHeight / 2 + option.offsetHeight / 2;
+  }, [open]);
+
   function show() {
     setActive(activeIndexFor(options, value));
     setOpen(true);
@@ -52,10 +64,21 @@ export function TimeField({
   function move(step: number) {
     const next = Math.min(Math.max(active + step, 0), options.length - 1);
     setActive(next);
-    // jsdom has no scrollIntoView.
-    list.current
-      ?.querySelector<HTMLElement>(`#${CSS.escape(`${id}-${next}`)}`)
-      ?.scrollIntoView?.({ block: "nearest" });
+    const element = list.current;
+    const option = element?.querySelector<HTMLElement>(
+      `#${CSS.escape(`${id}-${next}`)}`,
+    );
+    if (!element || !option) return;
+    // Keep the active option visible, scrolling only the list.
+    if (option.offsetTop < element.scrollTop) {
+      element.scrollTop = option.offsetTop;
+    } else if (
+      option.offsetTop + option.offsetHeight >
+      element.scrollTop + element.clientHeight
+    ) {
+      element.scrollTop =
+        option.offsetTop + option.offsetHeight - element.clientHeight;
+    }
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -110,7 +133,7 @@ export function TimeField({
         ref={list}
         id={listId}
         role="listbox"
-        aria-label={label}
+        aria-label={`${label}: opciones`}
         hidden={!open}
         className="absolute top-full z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-line bg-paper py-1 shadow-lg"
       >

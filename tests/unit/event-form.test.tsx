@@ -233,3 +233,67 @@ describe("EventForm (RF-15, RF-16)", () => {
     expect(formData.get("allDay")).toBeNull();
   });
 });
+
+// Spec 008, T9: hour lists and the automatic end time (RF-17, RF-18, RF-28, RF-30).
+describe("EventForm: times (spec 008)", () => {
+  const start = () => screen.getByRole("combobox", { name: "Hora de inicio" });
+  const end = () => screen.getByRole("combobox", { name: "Hora de fin" });
+
+  it("moves the end keeping the duration when the start changes (RF-17)", async () => {
+    setup();
+
+    await userEvent.click(start());
+    await userEvent.click(screen.getByRole("option", { name: "10:30" }));
+
+    expect(start()).toHaveValue("10:30");
+    expect(end()).toHaveValue("11:30");
+  });
+
+  it("stops moving the end once it was changed by hand (RF-18)", async () => {
+    setup();
+    await userEvent.click(end());
+    await userEvent.click(screen.getByRole("option", { name: "12:00 (3 h)" }));
+
+    await userEvent.click(start());
+    await userEvent.click(screen.getByRole("option", { name: "08:00" }));
+
+    expect(end()).toHaveValue("12:00");
+  });
+
+  it("never moves the end past 23:59 (RF-30)", async () => {
+    setup();
+
+    await userEvent.click(start());
+    await userEvent.click(screen.getByRole("option", { name: "23:30" }));
+
+    expect(end()).toHaveValue("23:59");
+  });
+
+  it("lists the end times with their duration (RF-49)", async () => {
+    setup();
+
+    await userEvent.click(end());
+
+    expect(screen.getByRole("option", { name: "10:00 (1 h)" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("puts the cursor in the title when asked (RF-28)", () => {
+    render(
+      <EventForm
+        action={vi.fn(async () => ({ values: INITIAL }))}
+        initial={INITIAL}
+        calendars={CALENDARS}
+        categories={CATEGORIES}
+        submitLabel="Crear evento"
+        pendingLabel="Creando…"
+        cancelHref="/dashboard"
+        focusTitle
+      />,
+    );
+
+    expect(screen.getByLabelText("Título")).toHaveFocus();
+  });
+});

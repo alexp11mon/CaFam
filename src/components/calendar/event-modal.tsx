@@ -73,6 +73,8 @@ export function EventModal({
         : null;
     const element = dialog.current;
     element?.showModal();
+    // showModal focuses the first button; a form can ask for its title instead (RF-28).
+    element?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     return () => {
       // Next keeps a left route hidden in the DOM (Activity): a modal <dialog> left
       // open there would keep the page behind it inert.

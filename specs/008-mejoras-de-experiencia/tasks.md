@@ -39,7 +39,7 @@
   Pasos: test primero en `tests/unit/time-field.test.tsx`: al recibir el foco aparece la lista (`role="listbox"`, campo `role="combobox"` con `aria-expanded`); flechas y Intro eligen; un clic escribe la hora y cierra; Escape cierra sin cambiar; se puede escribir una hora fuera de la lista; la lista de fin muestra la duración.
   Hecho cuando: `npm test -- time-field` en verde. Cubre: RF-13, RF-14, RF-15, RF-16, RF-49 | Módulo: time-field
 
-- [ ] T9 Usar el campo de hora en el formulario de evento
+- [x] T9 Usar el campo de hora en el formulario de evento
   Pasos: test primero en `tests/unit/event-form.test.tsx` (ampliado): cambiar el inicio mueve el fin conservando la duración (1 h en un alta nueva); después de tocar el fin a mano, ya no se mueve; un fin que pasa del día queda en 23:59; al abrir el alta el foco está en Título.
   Hecho cuando: `npm test -- event-form` en verde. Cubre: RF-17, RF-18, RF-28, RF-30 | Módulo: event-form
 

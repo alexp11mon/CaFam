@@ -34,6 +34,7 @@ async function NewEvent({ searchParams }: { searchParams: SearchParams }) {
       submitLabel="Crear evento"
       pendingLabel="Creando…"
       cancelHref="/dashboard/calendar"
+      focusTitle
     />
   );
 }

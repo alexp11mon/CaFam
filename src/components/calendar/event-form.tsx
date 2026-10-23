@@ -7,6 +7,12 @@ import { LinkButton } from "@/components/ui/link-button";
 import { Select } from "@/components/ui/select";
 import { TextArea } from "@/components/ui/text-area";
 import { TextField } from "@/components/ui/text-field";
+import { TimeField } from "@/components/ui/time-field";
+import {
+  endOptions,
+  shiftEnd,
+  startOptions,
+} from "@/lib/calendar/time-options";
 import type { EventFormField, EventFormValues } from "@/lib/calendar/schemas";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { ColorPicker } from "./color-picker";
@@ -37,6 +43,7 @@ export function EventForm({
   submitLabel,
   pendingLabel,
   cancelHref,
+  focusTitle = false,
 }: {
   action: FormAction<EventFormState>;
   initial: EventFormValues;
@@ -46,6 +53,8 @@ export function EventForm({
   submitLabel: string;
   pendingLabel: string;
   cancelHref: string;
+  /** A new event starts with the cursor in the title (spec 008 RF-28). */
+  focusTitle?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, {
     values: initial,
@@ -68,6 +77,12 @@ export function EventForm({
   const [allDay, setAllDay] = useState(values.allDay === "on");
   const [calendarId, setCalendarId] = useState(values.calendarId);
   const [categoryId, setCategoryId] = useState(values.categoryId);
+  // The times are controlled: the end follows the start (spec 008 RF-17, RF-18).
+  const [startTime, setStartTime] = useState(values.startTime);
+  const [endTime, setEndTime] = useState(values.endTime);
+  const [endTouched, setEndTouched] = useState(false);
+  const [startDate, setStartDate] = useState(values.startDate);
+  const [endDate, setEndDate] = useState(values.endDate);
 
   // The fields are uncontrolled (React resets forms after an action); this state only
   // drives the times and the category list. A server response carries what was
@@ -78,6 +93,18 @@ export function EventForm({
     setAllDay(values.allDay === "on");
     setCalendarId(values.calendarId);
     setCategoryId(values.categoryId);
+    setStartTime(values.startTime);
+    setEndTime(values.endTime);
+    setStartDate(values.startDate);
+    setEndDate(values.endDate);
+  }
+
+  function changeStart(next: string) {
+    // Only within one day: across days the duration is not what the list shows.
+    if (!endTouched && startDate === endDate) {
+      setEndTime(shiftEnd(startTime, next, endTime));
+    }
+    setStartTime(next);
   }
 
   const calendarCategories = categories.filter(
@@ -108,6 +135,9 @@ export function EventForm({
         name="title"
         maxLength={100}
         defaultValue={values.title}
+        autoFocus={focusTitle}
+        // Inside the window the dialog opens after mounting: it focuses this one.
+        data-autofocus={focusTitle ? "" : undefined}
         error={errors.title}
       />
       <Select
@@ -139,14 +169,16 @@ export function EventForm({
           name="startDate"
           type="date"
           defaultValue={values.startDate}
+          onChange={(event) => setStartDate(event.target.value)}
           error={errors.startDate}
         />
         {allDay ? null : (
-          <TextField
+          <TimeField
             label="Hora de inicio"
             name="startTime"
-            type="time"
-            defaultValue={values.startTime}
+            value={startTime}
+            onValueChange={changeStart}
+            options={startOptions()}
             error={errors.startTime}
           />
         )}
@@ -155,14 +187,21 @@ export function EventForm({
           name="endDate"
           type="date"
           defaultValue={values.endDate}
+          onChange={(event) => setEndDate(event.target.value)}
           error={errors.endDate}
         />
         {allDay ? null : (
-          <TextField
+          <TimeField
             label="Hora de fin"
             name="endTime"
-            type="time"
-            defaultValue={values.endTime}
+            value={endTime}
+            onValueChange={(next) => {
+              setEndTouched(true);
+              setEndTime(next);
+            }}
+            options={
+              startDate === endDate ? endOptions(startTime) : startOptions()
+            }
             error={errors.endTime}
           />
         )}

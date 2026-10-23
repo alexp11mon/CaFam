@@ -124,4 +124,14 @@ describe("EventModal", () => {
 
     expect(screen.getByRole("button", { name: "Pulsado 0" })).toBeVisible();
   });
+
+  it("puts the focus on the field marked for it once open (spec 008 RF-28)", () => {
+    render(
+      <EventModal title="Nuevo evento">
+        <input aria-label="Título" data-autofocus="" />
+      </EventModal>,
+    );
+
+    expect(screen.getByLabelText("Título")).toHaveFocus();
+  });
 });
