@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-23, al cerrar la spec 006 (gestión de cuenta).
+> Última actualización: 2026-10-23, al validar en producción la spec 006 (gestión de cuenta).
 
 ## 1. Qué es
 
@@ -32,7 +32,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 003-comparticion | Enlace de invitación, ID de calendario + PIN, roles Lector/Editor, lista de miembros, aviso al juntar | **Cerrada** (2026-10-22), T1–T12 hechas |
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
 | 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Cerrada** (2026-10-22), T1–T13 hechas |
-| 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Cerrada** (2026-10-23), T1–T26 hechas; pendiente de aplicar en producción |
+| 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Cerrada** (2026-10-23), T1–T26 hechas; aplicada y validada en producción |
 | 007-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
@@ -68,7 +68,7 @@ Añadido por la spec 005:
 - **Panel del calendario**: tarjeta "Próximo evento" con cuenta atrás (siguiente evento con hora en 24 h), mini calendario mensual con puntos por calendario y filtros con avatares de iniciales.
 - **Marca e iconos nuevos** ("CF" en piedra sobre tinta) y PWA en color piedra.
 
-Añadido por la spec 006 (cerrada; pendiente de aplicar en producción, ver §7 y §12):
+Añadido por la spec 006:
 
 - **Recuperar contraseña** desde `/login` ("¿Olvidaste tu contraseña?" → `/forgot-password`): la respuesta es la misma exista o no la cuenta, con un límite de 3 enlaces cada 15 minutos por cuenta. El enlace del correo pasa por `/auth/confirm` y lleva a `/reset-password`; al guardar se cierran las demás sesiones.
 - **Ajustes** (`/dashboard/settings`): perfil (nombre y zona horaria), cambio de email (pide la contraseña; queda pendiente hasta confirmar el enlace del email nuevo), cambio de contraseña (verifica la actual y cierra las demás sesiones) y borrar cuenta (email y contraseña).
@@ -327,7 +327,7 @@ Reglas completas en la constitución ("Identidad visual y diseño de interfaz", 
   npx supabase db push
   npx supabase link --project-ref uthubyzhonrtrmbcqcjh   # volver a dev inmediatamente
   ```
-- **Correo (spec 006)**, configurado a mano en cada proyecto de Supabase (dev ya lo tiene):
+- **Correo (spec 006)**, configurado a mano en cada proyecto de Supabase (dev y prod ya lo tienen):
   - Authentication → Emails → SMTP: Brevo, `smtp-relay.brevo.com`, puerto `587`; usuario el login SMTP de Brevo (`…@smtp-brevo.com`) y contraseña una **clave SMTP** (`xsmtpsib-…`), no la clave API. Remitente el email verificado en Brevo.
   - Plantillas *Reset password* y *Change email address*: el enlace es `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery` (o `type=email_change`). Site URL correcta, notificación *Email address changed* activa y límite de correos por hora subido.
   - SQL Editor: `select vault.create_secret('<clave API>', 'brevo_api_key');` y `select vault.create_secret('<remitente>', 'brevo_sender_email');`. Sin ellas, el envío programado falla (los avisos siguen en la app).
@@ -426,11 +426,13 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 ## 12. Cómo continuar
 
-La 006 está cerrada (2026-10-23) en la rama `006-gestion-de-cuenta`, con la validación RF por RF en `specs/006-gestion-de-cuenta/tasks.md`. Queda aplicarla en producción, en este orden y siempre por el usuario:
+La 006 está cerrada y en producción (2026-10-23): migraciones aplicadas, correo y Vault configurados en prod, desplegada desde `main` y validada por el usuario, cambio de email incluido.
 
-1. Migraciones de la 006 en prod (comandos de §7) y comprobar en el panel que existen los tres trabajos `account-*` de pg_cron.
-2. Configuración de correo en el proyecto de prod (§7, "Correo"), incluidos los dos secretos de Vault.
-3. `git switch main`, `git merge --ff-only 006-gestion-de-cuenta` y `git push origin main` (Vercel despliega).
-4. Probar en prod la recuperación de contraseña y el cambio de email; este último no se probó en dev (ver T9).
+La siguiente es la **008 (mejoras de experiencia)**: su `spec.md` está aprobada en `specs/008-mejoras-de-experiencia/` (todavía sin commit) y le faltan plan y tareas:
 
-Después, la spec 008 (mejoras de experiencia) está aprobada en `specs/008-mejoras-de-experiencia/` y le faltan plan y tareas; la 007 (OAuth) sigue pendiente.
+1. Crea la rama `008-mejoras-de-experiencia` desde `main` y haz commit de su spec.
+2. Redacta `plan.md` con `plan-generator` y espera la aprobación del usuario; después `tasks.md` con `tasks-generator`.
+3. Implementa tarea a tarea con el test primero, el checklist de verificación y un commit por tarea.
+4. Valida en producción y pide al usuario la aprobación para cerrar.
+
+La 007 (OAuth) sigue pendiente.

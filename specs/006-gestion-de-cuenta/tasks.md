@@ -1,6 +1,6 @@
 # Tasks 006 - Gestión de cuenta
 
-> Estado: **Cerrada** (2026-10-23) por decisión del usuario. T1–T26 hechas. T9 se cierra con la recuperación de contraseña probada y el cambio de email sin probar (ver su nota).
+> Estado: **Cerrada** (2026-10-23) por decisión del usuario. T1–T26 hechas. Aplicada en producción y validada por el usuario, cambio de email incluido.
 > Spec: `specs/006-gestion-de-cuenta/spec.md`. Plan: `specs/006-gestion-de-cuenta/plan.md`.
 > Reglas: una tarea cada vez, test primero (rojo → verde). Al cerrar cada tarea se ejecuta y reporta `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, y `npm run test:db -- <filtro>` si toca esquema, RLS o acceso a datos. Si toca interfaz, capturas a 390, 768 y 1440 px (P9). Un commit por tarea citándola, en la rama `006-gestion-de-cuenta`.
 > Sin dependencias nuevas (P6): ninguna tarea toca `package.json`. El proveedor SMTP es Brevo, registrado en la spec.
@@ -87,7 +87,7 @@
 - [x] T9 Configurar Auth en dev: Brevo como SMTP, plantillas de recuperación y cambio de email, y notificación de cambio
   Pasos (los hace el usuario en el panel de dev, con las instrucciones entregadas en la conversación): SMTP propio con Brevo, plantillas con `token_hash` apuntando a `/auth/confirm`, Site URL, límite de correos ajustado, notificación de cambio de email activa. Después, se pide un enlace de recuperación de prueba y se confirma que llega.
   Hecho cuando: el usuario confirma que llega el correo de recuperación y el de cambio de email de prueba, con el enlace apuntando a `/auth/confirm`, y que el aviso al correo anterior aparece (o se anota como no disponible en R-plan, para la cola propia). Cubre: RF-1, RF-9 | Módulo: configuración de Auth (sin código)
-  Estado (2026-10-23): parcial. SMTP de Brevo y plantillas configurados en dev; el correo de recuperación llega y su enlace funciona (confirmado por el usuario). El correo de cambio de email y el aviso al email anterior no se han probado; el usuario cierra la spec igualmente y queda como comprobación en producción (AGENTS.md §12).
+  Estado (2026-10-23): parcial. SMTP de Brevo y plantillas configurados en dev; el correo de recuperación llega y su enlace funciona (confirmado por el usuario). El correo de cambio de email y el aviso al email anterior se comprobaron en producción (2026-10-23): el usuario confirma que funcionan.
 
 - [x] T10 Confirmar el enlace de Auth con `/auth/confirm`
   Pasos: tests primero en `tests/unit/account-confirm.test.ts` (route handler con `// @vitest-environment node` y Supabase mockeado): `token_hash` y `type` válidos llaman a `verifyOtp` y redirigen; un `type` distinto de `recovery` o `email_change` no llama a Auth; `next` fuera de `/reset-password` o `/dashboard/settings` vuelve a `/dashboard`; un token rechazado redirige a una página de enlace no válido. Ruta `src/app/auth/confirm/route.ts` y `src/lib/account/confirm-type.ts`. Añadir `/auth/confirm` a las rutas públicas de `route-access.ts` con su test.

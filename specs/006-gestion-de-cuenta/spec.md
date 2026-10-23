@@ -1,6 +1,6 @@
 # Spec 006 — Gestión de cuenta
 
-> Estado: **Cerrada** (2026-10-23) por decisión del usuario, con T1–T26 hechas. Aprobada el 2026-10-22. Pendiente de aplicar en producción (AGENTS.md §12). Rama: `006-gestion-de-cuenta`. Constitución: `docs/constitution.md`. Parte de las specs 001 a 005 (cerradas).
+> Estado: **Cerrada** (2026-10-23) por decisión del usuario, con T1–T26 hechas. Aprobada el 2026-10-22. Aplicada y validada en producción (2026-10-23). Rama: `006-gestion-de-cuenta`. Constitución: `docs/constitution.md`. Parte de las specs 001 a 005 (cerradas).
 > Decisiones de la entrevista (2026-10-22):
 > - Alcance: recuperar contraseña, cambiar email, editar perfil y borrar cuenta.
 > - Borrar cuenta con calendarios compartidos: los miembros reciben aviso y deciden si conservar el calendario o salir de él. Si nadie lo conserva, se borra a los 15 días. Si solo uno lo conserva, pasa a ser suyo; si lo conservan varios, cada uno recibe una copia completa.
