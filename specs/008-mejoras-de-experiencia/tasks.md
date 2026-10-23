@@ -43,7 +43,7 @@
   Pasos: test primero en `tests/unit/event-form.test.tsx` (ampliado): cambiar el inicio mueve el fin conservando la duración (1 h en un alta nueva); después de tocar el fin a mano, ya no se mueve; un fin que pasa del día queda en 23:59; al abrir el alta el foco está en Título.
   Hecho cuando: `npm test -- event-form` en verde. Cubre: RF-17, RF-18, RF-28, RF-30 | Módulo: event-form
 
-- [ ] T10 Guardar la última vista en el perfil
+- [x] T10 Guardar la última vista en el perfil
   Pasos: test primero en `tests/integration/profile-last-view.test.ts`: el usuario guarda y lee su `last_view`; no lee ni cambia la de otro; un valor fuera de `agenda|month|week|day` da `23514`; `list_tables_without_rls()` sigue vacía. Migración `<timestamp>_profile_last_view.sql`, `npm run db:push` (dev) y `npm run db:types`.
   Hecho cuando: `npm run test:db -- profile-last-view schema rls` en verde. Cubre: RF-25 | Módulo: last-view
 
