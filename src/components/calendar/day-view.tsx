@@ -1,5 +1,5 @@
 import type { CalendarEventItem } from "@/lib/calendar/layout";
-import { TimeGrid } from "./time-grid";
+import { TimeGrid, type CreateInGrid, type GridDraft } from "./time-grid";
 
 /** A single day (RF-29, RF-37). */
 export function DayView({
@@ -7,11 +7,15 @@ export function DayView({
   events,
   timeZone,
   today,
+  onCreate,
+  draft,
 }: {
   day: string;
   events: CalendarEventItem[];
   timeZone: string;
   today: string;
+  onCreate?: CreateInGrid;
+  draft?: GridDraft | null;
 }) {
   return (
     <TimeGrid
@@ -20,6 +24,8 @@ export function DayView({
       timeZone={timeZone}
       today={today}
       linkDays={false}
+      onCreate={onCreate}
+      draft={draft}
     />
   );
 }

@@ -275,6 +275,21 @@ export function CalendarWorkspace({
       (c) => c.visible && editableCalendars.some((e) => e.id === c.id),
     )?.id ?? editableCalendars[0]?.id;
   const draftMark = draft ? { day: draft.day, title: draftTitle } : null;
+  const gridDraft =
+    draft && !draft.allDay ? { ...draft, title: draftTitle } : null;
+  // A slot of the week or the day creates at those hours (spec 008 RF-20, RF-42).
+  const createInGrid = quickCreate
+    ? (day: string, range: { start: number; end: number }, at: Box) =>
+        openDraft(
+          {
+            day,
+            allDay: false,
+            startMinute: range.start,
+            endMinute: range.end,
+          },
+          at,
+        )
+    : undefined;
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
@@ -360,6 +375,8 @@ export function CalendarWorkspace({
             events={shown}
             timeZone={timeZone}
             today={today}
+            onCreate={createInGrid}
+            draft={gridDraft}
           />
         ) : (
           <DayView
@@ -367,6 +384,8 @@ export function CalendarWorkspace({
             events={shown}
             timeZone={timeZone}
             today={today}
+            onCreate={createInGrid}
+            draft={gridDraft}
           />
         )}
       </div>

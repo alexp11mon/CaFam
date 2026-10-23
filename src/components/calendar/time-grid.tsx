@@ -5,10 +5,28 @@ import {
   layoutTimedDay,
   type CalendarEventItem,
 } from "@/lib/calendar/layout";
+import type { Box } from "@/lib/calendar/popover";
 import { calendarHref } from "@/lib/calendar/ranges";
+import type { MinuteRange } from "@/lib/calendar/slots";
+import { fromMinutes } from "@/lib/calendar/time-options";
 import { formatTime } from "@/lib/calendar/time-zone";
 import { EventChip } from "./event-chip";
 import { ScrollOnMount } from "./scroll-on-mount";
+import { SlotLayer } from "./slot-layer";
+
+/** The event being created, drawn at its hours (spec 008 RF-40). */
+export interface GridDraft {
+  day: string;
+  startMinute: number;
+  endMinute: number;
+  title: string;
+}
+
+export type CreateInGrid = (
+  day: string,
+  range: MinuteRange,
+  anchor: Box,
+) => void;
 
 const HOUR_PX = 48;
 const MIN_SLOT_PX = 22;
@@ -27,6 +45,8 @@ export function TimeGrid({
   timeZone,
   today,
   linkDays,
+  onCreate,
+  draft,
 }: {
   days: string[];
   events: CalendarEventItem[];
@@ -34,6 +54,9 @@ export function TimeGrid({
   today: string;
   /** Header numbers link to the day view; off when the day view is already open. */
   linkDays: boolean;
+  /** Click or drag on an empty slot; absent for readers (spec 008 RF-20, RF-36). */
+  onCreate?: CreateInGrid;
+  draft?: GridDraft | null;
 }) {
   const columns = {
     gridTemplateColumns: `3rem repeat(${days.length}, minmax(0, 1fr))`,
@@ -130,6 +153,32 @@ export function TimeGrid({
                       className="border-t border-line"
                     />
                   ))}
+                  {onCreate ? (
+                    <SlotLayer
+                      day={day}
+                      dayLabel={formatDateKeyFull(day)}
+                      onCreate={onCreate}
+                    />
+                  ) : null}
+                  {draft?.day === day ? (
+                    <div
+                      data-testid="draft-block"
+                      aria-hidden="true"
+                      style={{
+                        top: `${(draft.startMinute / 60) * HOUR_PX}px`,
+                        height: `${Math.max(((draft.endMinute - draft.startMinute) / 60) * HOUR_PX, MIN_SLOT_PX)}px`,
+                      }}
+                      className="pointer-events-none absolute inset-x-0.5 z-10 overflow-hidden rounded-md border border-dashed border-ink bg-paper px-1 text-xs text-ink"
+                    >
+                      <span className="block font-semibold">
+                        {draft.title || "(Sin título)"}
+                      </span>
+                      <span className="block tabular-nums">
+                        {fromMinutes(draft.startMinute)} –{" "}
+                        {fromMinutes(draft.endMinute)}
+                      </span>
+                    </div>
+                  ) : null}
                   {slots.map((slot) => {
                     const width = 100 / slot.columns;
                     return (

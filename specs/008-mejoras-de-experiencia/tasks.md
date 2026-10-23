@@ -69,7 +69,7 @@
   Pasos: test primero en `tests/unit/month-view.test.tsx` (ampliado) y `tests/unit/calendar-workspace.test.tsx`: el fondo de cada celda es un botón "Crear evento el <día>" que crea un borrador de día completo y abre la ventana rápida; el número del día sigue llevando a la vista día; el borrador se pinta en la celda con el título o "(Sin título)"; un usuario solo Lector no tiene esos botones.
   Hecho cuando: `npm test -- month-view calendar-workspace` en verde y, en el navegador, crear un evento de día completo desde el mes funciona. Cubre: RF-19, RF-21, RF-22, RF-36, RF-37, RF-40 | Módulo: month-cell, workspace, draft-block
 
-- [ ] T16 Crear con clic y arrastre en semana y día
+- [x] T16 Crear con clic y arrastre en semana y día
   Pasos: test primero en `tests/unit/slot-layer.test.tsx` (eventos de puntero simulados): un clic abre la ventana rápida con la media hora y 1 h; un arrastre con ratón dibuja el bloque provisional y al soltar abre la ventana con ese intervalo; Escape durante el arrastre lo cancela; con `pointerType: "touch"` no se arrastra y el toque actúa como clic; el botón "Crear evento el <día>" se alcanza con el teclado.
   Hecho cuando: `npm test -- slot-layer` en verde y, en el navegador a 1440 px, un arrastre de 16:00 a 17:30 crea ese evento. Cubre: RF-20, RF-22, RF-40, RF-42, RF-43, RF-44, RF-45 | Módulo: slot-layer, draft-block
 

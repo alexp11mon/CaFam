@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DayView } from "@/components/calendar/day-view";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 
@@ -79,5 +79,49 @@ describe("DayView (RF-29, RF-35, RF-38, RF-40)", () => {
     renderDay();
 
     expect(screen.getByText("No hay eventos")).toBeInTheDocument();
+  });
+});
+
+// Spec 008, T16: creating on the hour grid (RF-20, RF-36, RF-40).
+describe("DayView: creating", () => {
+  it("listens for clicks and drags only for whoever can create (RF-36)", () => {
+    const { rerender } = render(
+      <DayView day="2026-10-21" events={[]} timeZone={TZ} today="2026-10-21" />,
+    );
+    expect(screen.queryByTestId("slot-layer")).toBeNull();
+
+    rerender(
+      <DayView
+        day="2026-10-21"
+        events={[]}
+        timeZone={TZ}
+        today="2026-10-21"
+        onCreate={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("slot-layer")).toBeInTheDocument();
+  });
+
+  it("draws the provisional event at its hours (RF-40)", () => {
+    render(
+      <DayView
+        day="2026-10-21"
+        events={[]}
+        timeZone={TZ}
+        today="2026-10-21"
+        onCreate={vi.fn()}
+        draft={{
+          day: "2026-10-21",
+          startMinute: 16 * 60,
+          endMinute: 17 * 60 + 30,
+          title: "Cena",
+        }}
+      />,
+    );
+
+    const block = screen.getByTestId("draft-block");
+    expect(block).toHaveTextContent("Cena");
+    expect(block).toHaveTextContent("16:00 – 17:30");
+    expect(block).toHaveStyle({ top: `${16 * 48}px`, height: `${1.5 * 48}px` });
   });
 });

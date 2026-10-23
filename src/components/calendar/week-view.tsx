@@ -1,5 +1,5 @@
 import type { CalendarEventItem } from "@/lib/calendar/layout";
-import { TimeGrid } from "./time-grid";
+import { TimeGrid, type CreateInGrid, type GridDraft } from "./time-grid";
 
 /** Seven days, Monday first (RF-29). */
 export function WeekView(props: {
@@ -7,6 +7,8 @@ export function WeekView(props: {
   events: CalendarEventItem[];
   timeZone: string;
   today: string;
+  onCreate?: CreateInGrid;
+  draft?: GridDraft | null;
 }) {
   return <TimeGrid {...props} linkDays />;
 }
