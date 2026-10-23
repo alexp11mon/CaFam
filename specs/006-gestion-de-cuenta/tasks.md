@@ -1,6 +1,6 @@
 # Tasks 006 - Gestión de cuenta
 
-> Estado: primera iteración (T1 a T12) **aprobada**: T1 a T8, T10 y T12 hechas; T9 y T11 abiertas (ver sus notas). Segunda iteración (T13 a T24: Ajustes, avisos y calendarios sin propietario) **pendiente de aprobación** del usuario.
+> Estado: primera iteración (T1 a T12) **aprobada**: T1 a T8, T10 y T12 hechas; T9 y T11 abiertas (ver sus notas). Segunda iteración (T13 a T25: Ajustes, avisos, calendarios sin propietario y autor del evento) **aprobada** por el usuario (2026-10-23), sin ninguna hecha todavía.
 > Spec: `specs/006-gestion-de-cuenta/spec.md`. Plan: `specs/006-gestion-de-cuenta/plan.md`.
 > Reglas: una tarea cada vez, test primero (rojo → verde). Al cerrar cada tarea se ejecuta y reporta `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, y `npm run test:db -- <filtro>` si toca esquema, RLS o acceso a datos. Si toca interfaz, capturas a 390, 768 y 1440 px (P9). Un commit por tarea citándola, en la rama `006-gestion-de-cuenta`.
 > Sin dependencias nuevas (P6): ninguna tarea toca `package.json`. El proveedor SMTP es Brevo, registrado en la spec.
@@ -113,9 +113,9 @@
   Archivos `src/lib/account/schemas.ts` y `src/lib/account/error-messages.ts`, reutilizando piezas de `src/lib/auth/`.
   Hecho cuando: `npm test -- account-schemas account-error-messages` en verde. Cubre: RF-7, RF-8, RF-12, RF-13, RF-15, RF-30, RF-31, RF-32 | Módulo: schemas, error-messages
 
-## Iteración 2: Ajustes, avisos y calendarios sin propietario (T13 a T24)
+## Iteración 2: Ajustes, avisos y calendarios sin propietario (T13 a T25)
 
-> Estado: **Pendientes de aprobación** por el usuario. Se implementan de una en una, con el test primero y la misma verificación que la iteración 1. No se despliega T4 a producción antes de T21 (pantalla de calendarios sin propietario). Las acciones de este bloque llevan un test de servidor (`// @vitest-environment node`, Supabase mockeado) y, las pantallas, un test de componente y capturas a 390, 768 y 1440 px con el acento rojo y el amarillo (P9).
+> Estado: **Aprobadas** por el usuario (2026-10-23). Se implementan de una en una, con el test primero y la misma verificación que la iteración 1. No se despliega T4 a producción antes de T21 (pantalla de calendarios sin propietario). Las acciones de este bloque llevan un test de servidor (`// @vitest-environment node`, Supabase mockeado) y, las pantallas, un test de componente y capturas a 390, 768 y 1440 px con el acento rojo y el amarillo (P9).
 
 - [ ] T13 Guardar el perfil y cambiar la contraseña con `saveProfile` y `changePassword`
   Pasos: tests primero en `tests/unit/account-profile-password-actions.test.ts`. Comprueba que:
@@ -190,9 +190,13 @@
   Pasos: tests primero. En `tests/integration/account-orphan-permissions.test.ts`: en un calendario sin propietario, un editor sigue pudiendo crear eventos, un lector sigue sin poder, y nadie puede editar el nombre ni el color. En `tests/unit/members-orphan-notice.test.tsx`: la página de miembros muestra "Sin propietario, plazo hasta <fecha>" y oculta los controles de rol y de expulsar. Modificación de `src/app/dashboard/calendars/[id]/members/page.tsx`.
   Hecho cuando: `npm run test:db -- account-orphan-permissions` y `npm test -- members-orphan-notice` en verde. Cubre: RF-22, RF-24 | Módulo: members page
 
+- [ ] T25 Mostrar el autor del evento en su detalle
+  Pasos: tests primero. En `tests/unit/author-label.test.ts`: la función pura `authorLabel(createdBy, members)` devuelve el nombre si el autor es un miembro, "Cuenta borrada" si `createdBy` es nulo y "un antiguo miembro" si tiene id pero no está entre los miembros. En `tests/unit/event-detail.test.tsx` (ampliar): el detalle muestra "Creado por <texto>" en los tres casos. Se añade `createdBy` al detalle del evento y se resuelve el nombre con `calendar_members_with_names`. Añadida a petición del usuario tras aprobar esta iteración (por eso la iteración llega a 13 tareas).
+  Hecho cuando: `npm test -- author-label event-detail` en verde y, en el navegador, un evento de una cuenta borrada de prueba muestra "Creado por Cuenta borrada". Cubre: RF-34, RF-35, RF-36 | Módulo: event-detail, author-label
+
 - [ ] T23 Validar la cobertura RF por RF y el flujo completo en navegador
-  Pasos: recorrer la trazabilidad de RF-1 a RF-33. Probar en `playwright-cli` contra dev, a 390 y 1440 px, con usuarios de prueba que se borran al terminar: editar perfil, cambiar contraseña, pedir cambio de email, borrar una cuenta con un calendario compartido, y las dos decisiones de los miembros, sin dejar datos en dev. Revisar que nada de "Fuera de alcance" está en el código.
-  Hecho cuando: checklist RF-1 a RF-33 con el test que cubre cada uno, demo manual del flujo de borrado con decisión de los miembros, y `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run test:db` en verde. Cubre: todos | Módulo: validación
+  Pasos: recorrer la trazabilidad de RF-1 a RF-36. Probar en `playwright-cli` contra dev, a 390 y 1440 px, con usuarios de prueba que se borran al terminar: editar perfil, cambiar contraseña, pedir cambio de email, borrar una cuenta con un calendario compartido, y las dos decisiones de los miembros, sin dejar datos en dev. Revisar que nada de "Fuera de alcance" está en el código.
+  Hecho cuando: checklist RF-1 a RF-36 con el test que cubre cada uno, demo manual del flujo de borrado con decisión de los miembros, y `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run test:db` en verde. Cubre: todos | Módulo: validación
 
 - [ ] T24 Actualizar la documentación y preparar el paso a producción
   Pasos: actualizar `AGENTS.md` (estado de la spec, rutas nuevas, tablas, funciones, trabajos programados, configuración de Brevo y de Auth en producción) y `docs/constitution.md` si procede, y redactar los comandos exactos para producción: `npx supabase link --project-ref yznbdoskvtxeasujtirk`, `npx supabase db push`, volver a enlazar dev, los secretos de Vault y la configuración de Auth en prod. No se aplica nada en producción: lo ejecuta el usuario.
@@ -251,10 +255,13 @@ Iteración 2 (T13 a T24):
 - RF-31 -> T13, T16
 - RF-32 -> T13, T16
 - RF-33 -> T13
-- RF-1 a RF-33 (validación y cierre) -> T23, T24
+- RF-34 -> T25
+- RF-35 -> T4 (deja el autor a nulo), T25
+- RF-36 -> T25
+- RF-1 a RF-36 (validación y cierre) -> T23, T24
 
 ## Dudas abiertas
 - [NECESITA ACLARACIÓN: T1 (a) depende de que Postgres pueda borrar `auth.users` desde una función. Si no se puede, D1 se revisa con el usuario antes de T4.]
 - [NECESITA ACLARACIÓN: T9 depende de que la notificación de cambio de email de Auth esté disponible en este proyecto. Si no, el aviso al correo anterior sale por la cola propia (D4) y se añade a T8.]
-- [NECESITA ACLARACIÓN: RF-20 y RF-28 hablan de mostrar "Cuenta borrada" como autor, pero hoy la interfaz no muestra el autor de ningún evento, así que ninguna tarea lo pinta. ¿Se añade "Creado por" en el detalle del evento (cambio de spec), o RF-20 se da por cumplido al conservar el dato con autor nulo?]
-- [NECESITA ACLARACIÓN: T20 añade una migración de `UPDATE (read_at)` sobre `account_notices`, necesaria para cerrar avisos (el plan habla de "marcado de lectura propios" pero no lista función para ello). ¿Te parece bien un permiso por columna en lugar de una función?]
+- Resuelta (2026-10-23): el detalle del evento muestra el autor, con "Cuenta borrada" cuando ya no existe. Es la tarea T25 (spec RF-34 a RF-36).
+- Resuelta (2026-10-23): T20 usa un permiso de columna `UPDATE (read_at)` con política de fila propia.

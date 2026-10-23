@@ -6,6 +6,7 @@
 > - Borrar cuenta con calendarios compartidos: los miembros reciben aviso y deciden si conservar el calendario o salir de él. Si nadie lo conserva, se borra a los 15 días. Si solo uno lo conserva, pasa a ser suyo; si lo conservan varios, cada uno recibe una copia completa.
 > - Cambiar la contraseña desde Ajustes también forma parte de la spec (además de la recuperación por correo).
 > - Cambio posterior a la aprobación (2026-10-22, pedido por el usuario): en los eventos de una cuenta borrada, el autor se muestra como "Cuenta borrada" (RF-20).
+> - Cambio posterior a la aprobación (2026-10-23, pedido por el usuario): el detalle del evento muestra el autor, con "Cuenta borrada" cuando ya no existe (RF-34 a RF-36).
 > - Proveedor SMTP aprobado (2026-10-22, P6): **Brevo**, plan gratuito (300 correos al día, sin tarjeta, cuenta aprobada antes del primer envío). Se usa para el correo de Auth (SMTP) y para los avisos de la cola (API HTTP). Credenciales solo en el panel de Supabase y en Vault.
 > - Avisos a los miembros: dentro de la app y por correo.
 > - Correo: servicio SMTP gratuito propio, no el envío por defecto de Supabase.
@@ -79,6 +80,12 @@ Hoy la cuenta es irrecuperable: quien olvida la contraseña pierde sus calendari
 - RF-32: SI la contraseña nueva es igual a la actual, ENTONCES EL SISTEMA no la aceptará y lo indicará.
 - RF-33: CUANDO el usuario guarda la contraseña nueva, EL SISTEMA cerrará las demás sesiones de la cuenta y mantendrá la actual.
 
+### Autor de los eventos
+
+- RF-34: CUANDO el usuario abre el detalle de un evento, EL SISTEMA mostrará quién lo creó con el texto "Creado por <nombre>".
+- RF-35: SI el autor del evento ya no tiene cuenta, ENTONCES EL SISTEMA mostrará "Creado por Cuenta borrada".
+- RF-36: SI el autor del evento tiene cuenta pero ya no es miembro del calendario, ENTONCES EL SISTEMA mostrará "Creado por un antiguo miembro".
+
 ## Requisitos no funcionales
 
 - NF-1: La respuesta de RF-1 es la misma para cualquier dirección, para no revelar qué cuentas existen.
@@ -118,3 +125,5 @@ Hoy la cuenta es irrecuperable: quien olvida la contraseña pierde sus calendari
 - [NECESITA ACLARACIÓN: la confirmación del borrado (RF-16) pide email y contraseña. Propuesta por defecto: sí, ambos.]
 - [NECESITA ACLARACIÓN: el enlace de recuperación (RF-2) y el de cambio de email (RF-11) caducan a la hora. Propuesta por defecto: sí.]
 - [NECESITA ACLARACIÓN: RF-5 limita a 3 enlaces en 15 minutos. Propuesta por defecto: sí.]
+- Resuelta (2026-10-23): el usuario pide mostrar el autor en el detalle del evento, para que "Cuenta borrada" tenga pantalla (RF-34 a RF-36).
+- [NECESITA ACLARACIÓN: RF-36 ("un antiguo miembro") es una propuesta para el caso de quien sigue teniendo cuenta pero salió del calendario, porque su nombre ya no es visible para el resto. ¿Te parece bien ese texto?]

@@ -1,5 +1,6 @@
 # Plan 006 — Gestión de cuenta
 
+> Nota (2026-10-23): se añaden RF-34 a RF-36 (autor del evento) por petición del usuario; solo afectan al detalle del evento, sin tablas ni funciones nuevas.
 > Spec de origen: `specs/006-gestion-de-cuenta/spec.md` (aprobada, 2026-10-22). Constitución: `docs/constitution.md`. Estado: **Aprobado** por el usuario (2026-10-22), con Brevo como proveedor SMTP registrado en la spec.
 
 ## Resumen de arquitectura
@@ -47,6 +48,7 @@ No cambian: las políticas de `calendar_members`, `events` y `calendars` (RF-22 
 - `/dashboard/settings` (modificada): cuatro secciones con el mismo patrón que el acento (`Suspense` por sección). Cubre: RF-6, RF-10, RF-13 a RF-17, RF-30 a RF-33.
 - `/dashboard/calendars` (modificada): bloque "Avisos" y calendarios sin propietario con los botones Conservar y Salir. Cubre: RF-23, RF-24, RF-25.
 - `/dashboard/calendars/[id]/members` (modificada): indica "Sin propietario, plazo hasta …" y oculta los controles de rol. Cubre: RF-22, RF-24.
+- `/dashboard/events/[id]` (modificada) y `event-detail`: muestran "Creado por <nombre>" con el nombre de `calendar_members_with_names`, "Cuenta borrada" cuando `created_by` es nulo y "un antiguo miembro" cuando el autor ya no está en el calendario. La decisión de qué texto va con cada caso es una función pura, `lib/account/author-label.ts`. Cubre: RF-34, RF-35, RF-36.
 - Componentes en `src/components/account/`: `profile-form`, `email-form` (con el aviso de cambio pendiente), `password-form`, `delete-account-dialog` (reutiliza `ConfirmDialog`), `forgot-password-form`, `reset-password-form`, `orphan-calendar-item` y `notice-list`. Cubren: RF-1, RF-2, RF-6, RF-10, RF-13, RF-16, RF-23, RF-24, RF-30.
 
 No hacen: no envían correo desde la aplicación; el correo de aviso sale siempre desde Postgres, y el de Auth desde su propio flujo.
@@ -132,6 +134,9 @@ Caso central: un propietario borra su cuenta y un calendario compartido con dos 
 - RF-31 -> `account-actions`, `error-messages`
 - RF-32 -> `account-actions`, `error-messages`
 - RF-33 -> `account-actions` (`signOut({ scope: "others" })`)
+- RF-34 -> `event-detail`, `author-label`
+- RF-35 -> `event-detail`, `author-label`, `delete_own_account` (deja `created_by` a nulo)
+- RF-36 -> `event-detail`, `author-label`
 
 Requisitos no funcionales: NF-1 y NF-2 -> `error-messages` (mismo texto para cualquier email) y D4 (ninguna clave en código); NF-3 y NF-4 -> componentes de `src/components/account/` con tokens y revisión visual; NF-5 -> sin dependencias nuevas (verificado por `package.json`).
 
