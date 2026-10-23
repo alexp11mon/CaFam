@@ -117,7 +117,7 @@
 
 > Estado: **Aprobadas** por el usuario (2026-10-23). Se implementan de una en una, con el test primero y la misma verificación que la iteración 1. No se despliega T4 a producción antes de T21 (pantalla de calendarios sin propietario). Las acciones de este bloque llevan un test de servidor (`// @vitest-environment node`, Supabase mockeado) y, las pantallas, un test de componente y capturas a 390, 768 y 1440 px con el acento rojo y el amarillo (P9).
 
-- [ ] T13 Guardar el perfil y cambiar la contraseña con `saveProfile` y `changePassword`
+- [x] T13 Guardar el perfil y cambiar la contraseña con `saveProfile` y `changePassword`
   Pasos: tests primero en `tests/unit/account-profile-password-actions.test.ts`. Comprueba que:
   - `saveProfile` valida con `profileSchema`, actualiza solo la fila propia de `profiles` y llama a `revalidatePath("/dashboard", "layout")`;
   - un nombre vacío, de 51 caracteres o una zona horaria desconocida no actualiza nada y devuelve el error de campo;

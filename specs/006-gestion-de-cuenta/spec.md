@@ -126,4 +126,4 @@ Hoy la cuenta es irrecuperable: quien olvida la contraseña pierde sus calendari
 - [NECESITA ACLARACIÓN: el enlace de recuperación (RF-2) y el de cambio de email (RF-11) caducan a la hora. Propuesta por defecto: sí.]
 - [NECESITA ACLARACIÓN: RF-5 limita a 3 enlaces en 15 minutos. Propuesta por defecto: sí.]
 - Resuelta (2026-10-23): el usuario pide mostrar el autor en el detalle del evento, para que "Cuenta borrada" tenga pantalla (RF-34 a RF-36).
-- [NECESITA ACLARACIÓN: RF-36 ("un antiguo miembro") es una propuesta para el caso de quien sigue teniendo cuenta pero salió del calendario, porque su nombre ya no es visible para el resto. ¿Te parece bien ese texto?]
+- Resuelta (2026-10-23): RF-36 usa el texto "un antiguo miembro" (aprobado por el usuario).
