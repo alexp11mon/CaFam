@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { ViewToolbar } from "@/components/calendar/view-toolbar";
 
 const TODAY = "2026-10-21";
@@ -108,5 +109,24 @@ describe("ViewToolbar (RF-29, RF-37)", () => {
     expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
       "19 oct – 25 oct 2026",
     );
+  });
+
+  it("saves the chosen view in the account (spec 008 RF-25)", async () => {
+    const saveLastView = vi.fn(async () => ({}));
+    render(
+      <ViewToolbar
+        view="agenda"
+        date="2026-10-14"
+        today={TODAY}
+        saveLastView={saveLastView}
+      />,
+    );
+    const month = screen.getByRole("link", { name: "Mes" });
+    // jsdom cannot navigate: keep the click from trying.
+    month.addEventListener("click", (event) => event.preventDefault());
+
+    await userEvent.click(month);
+
+    expect(saveLastView).toHaveBeenCalledWith("month");
   });
 });

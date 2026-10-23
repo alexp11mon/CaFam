@@ -148,6 +148,19 @@ export async function getProfileTimeZone(
   return data?.time_zone ?? DEFAULT_TIME_ZONE;
 }
 
+/** The last view the user chose, or null (spec 008 RF-25, RF-26). */
+export async function getLastView(
+  supabase: Client,
+  userId: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("last_view")
+    .eq("id", userId)
+    .maybeSingle();
+  return data?.last_view ?? null;
+}
+
 /** The user's interface accent; red if the row cannot be read (spec 005 RF-9, RF-10). */
 export async function getAccent(
   supabase: Client,

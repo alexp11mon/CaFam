@@ -12,6 +12,7 @@ import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
 import {
   getCategoriesForCalendars,
   getEventsInRange,
+  getLastView,
   getMyCalendars,
   getPeople,
   getPreferences,
@@ -21,6 +22,7 @@ import {
 import { getVisibleRange, parseViewParams } from "@/lib/calendar/ranges";
 import { loadMonthMarks } from "./mini-month-actions";
 import {
+  saveLastView,
   saveOrder,
   setCalendarVisibility,
   setPersonVisibility,
@@ -38,9 +40,12 @@ async function CalendarContent({
 }) {
   const query = await searchParams;
   const { supabase, userId } = await requireUser();
-  const timeZone = await getProfileTimeZone(supabase, userId);
+  const [timeZone, lastView] = await Promise.all([
+    getProfileTimeZone(supabase, userId),
+    getLastView(supabase, userId),
+  ]);
   const today = todayKey(timeZone);
-  const { view, date } = parseViewParams(query, today);
+  const { view, date } = parseViewParams(query, today, lastView);
   const range = getVisibleRange(view, date, timeZone);
   // The mini month shows the weeks of the month of `date` (spec 005 RF-23).
   const monthRange = getVisibleRange("month", date, timeZone);
@@ -119,7 +124,12 @@ async function CalendarContent({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <ViewToolbar view={view} date={date} today={today} />
+        <ViewToolbar
+          view={view}
+          date={date}
+          today={today}
+          saveLastView={saveLastView}
+        />
         {/* On a phone "+ Evento" lives in the bottom bar (spec 005 RF-22). */}
         {canCreate ? (
           <div className="hidden lg:block">

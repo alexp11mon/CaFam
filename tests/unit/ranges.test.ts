@@ -146,3 +146,37 @@ describe("calendarHref (RF-29, RF-37)", () => {
     );
   });
 });
+
+describe("parseViewParams with a saved view (spec 008 RF-25 to RF-27)", () => {
+  it("opens the saved view today when the URL names none (RF-26)", () => {
+    expect(parseViewParams({}, TODAY, "week")).toEqual({
+      view: "week",
+      date: TODAY,
+    });
+    expect(parseViewParams({ date: "2026-02-03" }, TODAY, "month")).toEqual({
+      view: "month",
+      date: "2026-02-03",
+    });
+  });
+
+  it("lets the URL win over the saved view (RF-27)", () => {
+    expect(parseViewParams({ view: "day" }, TODAY, "week")).toEqual({
+      view: "day",
+      date: TODAY,
+    });
+  });
+
+  it("keeps the agenda for a wrong view in the URL (spec 005 RF-44)", () => {
+    expect(parseViewParams({ view: "year" }, TODAY, "week")).toEqual({
+      view: "agenda",
+      date: TODAY,
+    });
+  });
+
+  it("ignores a saved value that is not a view", () => {
+    expect(parseViewParams({}, TODAY, "year")).toEqual({
+      view: "agenda",
+      date: TODAY,
+    });
+  });
+});

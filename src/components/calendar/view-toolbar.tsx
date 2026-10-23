@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronIcon } from "@/components/shell/icons";
 import { formatPeriodTitle } from "@/lib/calendar/format";
@@ -47,10 +49,13 @@ export function ViewToolbar({
   view,
   date,
   today,
+  saveLastView,
 }: {
   view: CalendarView;
   date: string;
   today: string;
+  /** Remembers the chosen view in the account (spec 008 RF-25). */
+  saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
 }) {
   const current = VIEWS.find((item) => item.view === view)!;
 
@@ -84,6 +89,8 @@ export function ViewToolbar({
             key={item.view}
             href={calendarHref(item.view, date)}
             aria-current={item.view === view ? "page" : undefined}
+            // Fire and forget: failing to remember the view must not block it.
+            onClick={() => void saveLastView?.(item.view)}
             // The chosen view is a selection, so it takes the accent (constitution, RF-3).
             className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:flex-none ${item.view === view ? "border border-accent-edge bg-accent text-on-accent" : "text-muted hover:text-ink"}`}
           >

@@ -47,7 +47,7 @@
   Pasos: test primero en `tests/integration/profile-last-view.test.ts`: el usuario guarda y lee su `last_view`; no lee ni cambia la de otro; un valor fuera de `agenda|month|week|day` da `23514`; `list_tables_without_rls()` sigue vacía. Migración `<timestamp>_profile_last_view.sql`, `npm run db:push` (dev) y `npm run db:types`.
   Hecho cuando: `npm run test:db -- profile-last-view schema rls` en verde. Cubre: RF-25 | Módulo: last-view
 
-- [ ] T11 Abrir el calendario en la vista recordada
+- [x] T11 Abrir el calendario en la vista recordada
   Pasos: test primero en `tests/unit/ranges.test.ts` (ampliado) y `tests/unit/view-toolbar.test.tsx`: `parseViewParams` usa la vista guardada con la fecha de hoy si la URL no trae `view`, la de la URL si la trae y agenda si no hay ninguna; pulsar un botón de vista llama a `saveLastView` con esa vista. Acción `saveLastView` validada con `zod`.
   Hecho cuando: `npm test -- ranges view-toolbar` en verde. Cubre: RF-25, RF-26, RF-27 | Módulo: last-view, view-toolbar
 

@@ -10,7 +10,16 @@ import {
 
 export type CalendarView = "agenda" | "month" | "week" | "day";
 
-const VIEWS: readonly CalendarView[] = ["agenda", "month", "week", "day"];
+export const VIEWS: readonly CalendarView[] = [
+  "agenda",
+  "month",
+  "week",
+  "day",
+];
+
+export function isCalendarView(value: unknown): value is CalendarView {
+  return VIEWS.some((view) => view === value);
+}
 
 /** Days in a row shown by the agenda (spec 005 RF-31). */
 export const AGENDA_DAYS = 14;
@@ -120,12 +129,20 @@ export function navigate(
 
 type SearchParam = string | string[] | undefined;
 
-/** Reads `?view=&date=`; anything invalid falls back to the agenda of `todayKey` (spec 005 RF-15, RF-44). */
+/**
+ * Reads `?view=&date=`; anything invalid falls back to the agenda of `todayKey`
+ * (spec 005 RF-15, RF-44). Without a view in the URL the saved one opens
+ * (spec 008 RF-26); a view in the URL always wins (RF-27).
+ */
 export function parseViewParams(
   params: { view?: SearchParam; date?: SearchParam },
   todayKey: string,
+  savedView?: string | null,
 ): { view: CalendarView; date: string } {
-  const view = VIEWS.find((candidate) => candidate === params.view);
+  const view =
+    params.view === undefined && isCalendarView(savedView)
+      ? savedView
+      : VIEWS.find((candidate) => candidate === params.view);
   const date =
     typeof params.date === "string" && parseDateKey(params.date)
       ? params.date

@@ -7,6 +7,7 @@ import {
   getCalendarErrorMessage,
 } from "@/lib/calendar/error-messages";
 import { requireActionUser } from "@/lib/calendar/queries";
+import { isCalendarView } from "@/lib/calendar/ranges";
 
 type Result = { error?: string };
 
@@ -126,5 +127,24 @@ export async function saveOrder(order: SavedOrder): Promise<Result> {
     return { error: getCalendarErrorMessage(error) };
   }
   refresh();
+  return {};
+}
+
+/**
+ * Remembers the chosen view in the user's own profile row, the same on every
+ * device (spec 008 RF-25, plan D7). Nothing on screen changes: no revalidation.
+ */
+export async function saveLastView(view: string): Promise<Result> {
+  if (!isCalendarView(view)) return { error: CALENDAR_MESSAGES.notFound };
+  const { supabase, userId } = await requireActionUser();
+  try {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ last_view: view })
+      .eq("id", userId);
+    if (error) return { error: getCalendarErrorMessage(error) };
+  } catch (error) {
+    return { error: getCalendarErrorMessage(error) };
+  }
   return {};
 }
