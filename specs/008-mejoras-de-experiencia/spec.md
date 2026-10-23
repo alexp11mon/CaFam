@@ -8,6 +8,13 @@
 > - Clic en celdas: el hueco vacío crea el evento; el número del día sigue llevando a la vista diaria.
 > - Selector de hora: intervalos de 30 minutos.
 > - Ventana: el alta, la edición y el detalle de un evento se abren en una ventana sobre el calendario, con opción de pantalla completa. La propuesta 3 (popover) se sustituye por esa ventana.
+> Ampliación (2026-10-23), tras analizar Google Calendar con REA (`analisis-google-calendar.md`) y con decisiones del usuario:
+> - Alta en dos pasos: ventana rápida junto al hueco y "Más opciones" para el formulario completo (RF-37 a RF-41).
+> - Arrastrar para **crear** en semana y día (RF-42 a RF-45). Mover eventos ya creados sigue fuera de alcance.
+> - Clic en un día vacío del mes → evento de día completo; clic en una franja de semana o día → esa media hora, 1 h (cambian RF-19 y RF-20).
+> - Atajos de vista, rejilla a toda altura, mes con punto o barra y duración en la lista de la hora de fin (RF-46 a RF-49).
+> - La ventana se monta con rutas interceptadas de Next (decisión técnica del usuario, detalle en el plan).
+> - Ampliación aprobada por el usuario (2026-10-23).
 
 ## Contexto y objetivo
 
@@ -26,12 +33,15 @@ Crear, editar o consultar un evento obliga hoy a cambiar de página completa y a
 - H4: Como usuario quiero pulsar un hueco vacío del calendario y crear un evento en ese día.
 - H5: Como usuario quiero que al abrir la app vuelva la vista que usé la última vez.
 - H6: Como usuario de la agenda quiero volver a la hora actual con un toque cuando me he alejado.
+- H7: Como usuario quiero crear un evento sencillo (título, hora y calendario) en unos segundos, y abrir el formulario completo solo si lo necesito.
+- H8: Como usuario de escritorio quiero arrastrar sobre las horas para crear un evento con esa duración.
+- H9: Como usuario de Google o Outlook quiero que el calendario funcione como estoy acostumbrado (atajos, rejilla, vista mes).
 
 ## Requisitos funcionales (criterios de aceptación en EARS)
 
 ### Ventana de evento
 
-- RF-1: CUANDO el usuario pulsa cualquier acceso para crear un evento (botón "+ Evento", "Crear" de la agenda o un hueco vacío de mes o semana), EL SISTEMA abrirá el alta en una ventana superpuesta al calendario, sin cambiar de página.
+- RF-1: CUANDO el usuario pulsa el botón "+ Evento" o "Crear" de la agenda, EL SISTEMA abrirá el formulario completo de alta en una ventana superpuesta al calendario, sin cambiar de página. Los huecos vacíos de mes, semana y día abren la ventana rápida (RF-37).
 - RF-2: CUANDO el usuario pulsa un evento en cualquier vista (agenda, mes, semana o día), EL SISTEMA abrirá su detalle en la ventana.
 - RF-3: CUANDO el usuario pulsa "Editar" en el detalle, EL SISTEMA mostrará el formulario de edición en la misma ventana.
 - RF-4: MIENTRAS la ventana está abierta, EL SISTEMA mostrará el calendario atenuado detrás y mantendrá el foco dentro de la ventana.
@@ -57,8 +67,8 @@ Crear, editar o consultar un evento obliga hoy a cambiar de página completa y a
 
 ### Creación desde el calendario
 
-- RF-19: CUANDO el usuario pulsa un hueco vacío de una celda de la vista mes, EL SISTEMA abrirá el alta con esa fecha.
-- RF-20: CUANDO el usuario pulsa una franja vacía de la vista semana, EL SISTEMA abrirá el alta con esa fecha.
+- RF-19: CUANDO el usuario pulsa un hueco vacío de una celda de la vista mes, EL SISTEMA abrirá la ventana rápida con un evento de día completo en esa fecha y un botón "Añadir hora" que lo convierte en evento con hora.
+- RF-20: CUANDO el usuario pulsa una franja vacía de la vista semana o día, EL SISTEMA abrirá la ventana rápida con un evento que empieza en la media hora pulsada y dura 1 hora (con el límite de RF-30).
 - RF-21: CUANDO el usuario pulsa el número de un día en las vistas mes o semana, EL SISTEMA abrirá la vista diaria de ese día, como hasta ahora.
 - RF-22: EL SISTEMA permitirá activar la creación de un evento en un hueco vacío desde el teclado.
 - RF-28: CUANDO se abre el alta de un evento, EL SISTEMA situará el cursor en el campo Título.
@@ -83,6 +93,28 @@ Crear, editar o consultar un evento obliga hoy a cambiar de página completa y a
 - RF-35: CUANDO el usuario pulsa "Duplicar" en el detalle de un evento, EL SISTEMA abrirá el alta con los mismos datos del evento (título, descripción, lugar, color, categoría, hora y duración), que el usuario podrá cambiar antes de guardar. Nada se guarda hasta que el usuario confirma.
 - RF-36: SI el usuario no puede crear eventos en el calendario (rol Lector), ENTONCES EL SISTEMA no ofrecerá "Duplicar" ni los atajos de creación (N).
 
+### Alta rápida (ampliación REA)
+
+- RF-37: CUANDO el usuario pulsa un hueco vacío de mes, semana o día, o termina de arrastrar (RF-42), EL SISTEMA abrirá junto al hueco una ventana rápida con el título (con el cursor), el día y las horas, el calendario con su color, y los botones "Más opciones" y "Guardar".
+- RF-38: CUANDO el usuario pulsa "Guardar" en la ventana rápida, EL SISTEMA creará el evento con esos datos (sin descripción, lugar ni categoría, y con el color del calendario), cerrará la ventana y mostrará el aviso de RF-32.
+- RF-39: CUANDO el usuario pulsa "Más opciones", EL SISTEMA mostrará el formulario completo en la ventana con lo escrito (título, fecha, horas, día completo y calendario).
+- RF-40: MIENTRAS la ventana rápida está abierta, EL SISTEMA marcará el hueco elegido en la rejilla con un bloque provisional que muestra el título escrito o "(Sin título)".
+- RF-41: MIENTRAS el ancho sea de 768 px o menos, EL SISTEMA mostrará la ventana rápida como una hoja anclada al borde inferior, a todo el ancho.
+
+### Arrastrar para crear (ampliación REA)
+
+- RF-42: CUANDO el usuario pulsa con el ratón en una franja vacía de la vista semana o día y arrastra en vertical, EL SISTEMA dibujará el bloque provisional del intervalo en pasos de 15 minutos y, al soltar, abrirá la ventana rápida con ese inicio y ese fin.
+- RF-43: EL SISTEMA limitará el arrastre al día en que empezó; la duración mínima será de 15 minutos.
+- RF-44: SI el usuario pulsa Escape durante el arrastre, ENTONCES EL SISTEMA lo cancelará sin abrir la ventana.
+- RF-45: MIENTRAS el gesto sea táctil, EL SISTEMA no iniciará el arrastre (el gesto desplaza la rejilla); un toque en una franja actúa como el clic de RF-20.
+
+### Vistas al estilo Google (ampliación REA)
+
+- RF-46: MIENTRAS el foco no esté en un campo de texto ni haya una ventana abierta, EL SISTEMA atenderá las teclas A (agenda), M (mes), S (semana) y D (día), que cambian de vista conservando la fecha, y cada botón de vista mostrará su tecla.
+- RF-47: EL SISTEMA hará que la rejilla horaria de semana y día ocupe el alto disponible de la pantalla bajo la barra de navegación, con desplazamiento propio.
+- RF-48: MIENTRAS la vista mes esté abierta, EL SISTEMA mostrará los eventos con hora como punto del color + hora + título, y los de día completo o de varios días como una barra del color con el título.
+- RF-49: CUANDO se abre la lista de la hora de fin, EL SISTEMA la empezará en la hora de inicio, en intervalos de 30 minutos, y mostrará junto a cada hora la duración resultante ("11:00 (1 h)").
+
 ## Requisitos no funcionales
 
 - NF-1: Toda pantalla o control nuevo sigue la identidad visual de la constitución (P9), usa solo tokens de diseño y pasa la guardia `design-tokens`.
@@ -98,6 +130,10 @@ Crear, editar o consultar un evento obliga hoy a cambiar de página completa y a
 - Un calendario que el usuario deja de poder ver mientras tiene la ventana abierta: al guardar se explica que ya no existe o que no tiene permiso.
 - Hueco vacío en un día sin espacio para más eventos: la creación sigue disponible.
 - Cambio de vista con la ventana abierta: no ocurre; mientras la ventana está abierta el calendario de fondo no navega.
+- Arrastre que empieza sobre un evento: no crea nada; el clic abre ese evento (RF-2).
+- Arrastre hacia arriba: el intervalo va del punto de llegada al de partida.
+- Arrastre fuera de la rejilla: se queda en el borde del día (00:00 o 24:00, con el fin limitado por RF-30).
+- Usuario solo Lector en todos sus calendarios: los huecos no abren la ventana rápida ni se puede arrastrar (RF-36).
 
 ## Mejoras propias
 
@@ -111,7 +147,8 @@ Incluidas por decisión del usuario, encontradas al revisar el código:
 
 ## Fuera de alcance
 
-- Arrastrar y soltar eventos entre días u horas (propuesta 5, con su propia spec).
+- Arrastrar y soltar eventos **ya creados** entre días u horas, y cambiar su duración arrastrando el borde (propuesta 5, con su propia spec). Arrastrar para **crear** sí entra (RF-42 a RF-45).
+- "Deshacer" en el aviso de guardado, vistas de año y de 4 días, y menú de tipos en "Crear" (vistos en Google, descartados).
 - Eventos recurrentes propios, edición de una ocurrencia o de toda una serie.
 - Popover de vista previa en la agenda (sustituido por la ventana).
 - Búsqueda, papelera, deshacer y nuevas vistas.
@@ -120,7 +157,7 @@ Incluidas por decisión del usuario, encontradas al revisar el código:
 
 ## Criterios de finalización
 
-- Todos los RF con prueba en verde y el flujo principal (crear, editar, ver y borrar desde la ventana) probado en el navegador a 390 px y 1440 px.
+- Todos los RF con prueba en verde y el flujo principal (crear con la ventana rápida, arrastrando y con el formulario completo; editar, ver y borrar desde la ventana; cambiar de vista con botones y atajos) probado en el navegador a 390 px y 1440 px.
 - Revisión visual con capturas a 390, 768 y 1440 px con los acentos rojo y amarillo.
 - Demo manual en producción y aprobación explícita del usuario para cerrar la spec.
 
@@ -129,7 +166,7 @@ Incluidas por decisión del usuario, encontradas al revisar el código:
 - Vista recordada (RF-25): se guarda en la cuenta, igual en todos los dispositivos.
 - Ventana en móvil (RF-29): siempre en pantalla completa a 768 px o menos.
 - Hora de fin al cruzar el día (RF-30): se fija en 23:59 del mismo día.
-- Franja de semana (RF-20): precarga solo la fecha.
+- Franja de semana (RF-20): precarga solo la fecha. **Sustituida el 2026-10-23**: precarga la media hora pulsada y 1 h de duración, como Google.
 - Cerrar con cambios sin guardar (RF-7): pide confirmación.
 - Botón "Hora actual" (RF-23): siempre visible en la agenda.
 - Enlaces directos (RF-10): abren la página completa.
