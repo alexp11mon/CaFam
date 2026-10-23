@@ -139,7 +139,7 @@
   Hecho cuando: `npm test -- account-email-action` en verde. Cubre: RF-6, RF-7, RF-8, RF-9, RF-10 | Módulo: account-actions, queries
   Ajuste al cerrar: la lectura es `getAccountEmails`, que devuelve el email actual y el pendiente, porque Ajustes muestra los dos. Una dirección ya usada se muestra como error del campo, no del formulario.
 
-- [ ] T15 Borrar la cuenta con `deleteAccount`
+- [x] T15 Borrar la cuenta con `deleteAccount`
   Pasos: test primero en `tests/unit/account-delete-action.test.ts`. Comprueba que:
   - la acción exige que el email escrito coincida con el de la sesión y que la contraseña sea correcta (`signInWithPassword`); si no, no llama a `delete_own_account` (RF-17);
   - con ambos correctos llama a `delete_own_account`, cierra la sesión local y redirige a `/login`;

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import {
   ACCOUNT_MESSAGES,
   getAccountErrorMessage,
@@ -13,11 +14,16 @@ import type {
 import {
   changeEmailSchema,
   changePasswordSchema,
+  deleteAccountSchema,
   profileSchema,
 } from "@/lib/account/schemas";
 import { AUTH_MESSAGES } from "@/lib/auth/error-messages";
 import { requireActionUser } from "@/lib/calendar/queries";
-import { fieldErrorsFromZod, readString } from "@/lib/forms/form-state";
+import {
+  fieldErrorsFromZod,
+  readString,
+  type ConfirmState,
+} from "@/lib/forms/form-state";
 
 const PROFILE_NOT_SAVED =
   "No se ha podido guardar el perfil. Inténtalo de nuevo.";
@@ -159,4 +165,47 @@ export async function requestEmailChange(
 
   revalidatePath("/dashboard", "layout");
   return { values: { newEmail: "" }, pendingEmail: newEmail };
+}
+
+/**
+ * Deletes the account after checking the own email and the password (RF-16,
+ * RF-17). The database keeps the shared calendars for their other members
+ * (delete_own_account, plan D1); here only the local session is closed (RF-19).
+ */
+export async function deleteAccount(
+  _prevState: ConfirmState,
+  formData: FormData,
+): Promise<ConfirmState> {
+  const mismatch = { formError: ACCOUNT_MESSAGES.confirmationMismatch };
+  const parsed = deleteAccountSchema.safeParse({
+    email: readString(formData, "email"),
+    password: readString(formData, "password"),
+  });
+  if (!parsed.success) return mismatch;
+
+  const { supabase } = await requireActionUser();
+  try {
+    const { data } = await supabase.auth.getUser();
+    const email = data.user?.email;
+    if (!email || email !== parsed.data.email) return mismatch;
+
+    const { error: checkError } = await supabase.auth.signInWithPassword({
+      email,
+      password: parsed.data.password,
+    });
+    if (checkError) {
+      return checkError.code === "invalid_credentials"
+        ? mismatch
+        : { formError: getAccountErrorMessage(checkError) };
+    }
+
+    const { error } = await supabase.rpc("delete_own_account");
+    if (error) return { formError: getAccountErrorMessage(error) };
+
+    await supabase.auth.signOut({ scope: "local" });
+  } catch (error) {
+    return { formError: getAccountErrorMessage(error) };
+  }
+
+  redirect("/login");
 }
