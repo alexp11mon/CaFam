@@ -74,9 +74,8 @@ describe("event form in the window", () => {
     await userEvent.click(screen.getByRole("button", { name: "Crear evento" }));
 
     expect(action.mock.calls[0]![1].get("mode")).toBe("modal");
-    expect(await screen.findByRole("status")).toHaveTextContent(
-      "Evento creado",
-    );
+    // The status region always exists: wait for the text, not for the region.
+    expect(await screen.findByText("Evento creado")).toBeVisible();
     expect(router.back).toHaveBeenCalledTimes(1);
     expect(router.refresh).toHaveBeenCalledTimes(1);
   });

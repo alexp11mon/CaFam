@@ -3,10 +3,11 @@ import type {
   CategoryOption,
   EventFormValues,
 } from "@/components/calendar/event-form";
-import { todayKey } from "@/lib/calendar/format";
+import { eventToFormDates, todayKey } from "@/lib/calendar/format";
 import { parseNewEventQuery } from "@/lib/calendar/new-event-query";
 import {
   getCategoriesForCalendars,
+  getEvent,
   getMyCalendars,
   getProfileTimeZone,
   requireUser,
@@ -46,6 +47,29 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
     editable.map((calendar) => calendar.id),
     todayKey(timeZone),
   );
+
+  // "Duplicar": the same event as a new one, nothing saved until confirmed (spec 008 RF-35).
+  // RLS decides whether the copied event can be read at all.
+  const source = defaults.from ? await getEvent(supabase, defaults.from) : null;
+  if (source) {
+    const sameCalendar = editable.some((c) => c.id === source.calendarId);
+    return {
+      kind: "form",
+      initial: {
+        title: source.title,
+        calendarId: sameCalendar ? source.calendarId : defaults.calendarId,
+        allDay: source.allDay ? "on" : "",
+        ...eventToFormDates(source, timeZone),
+        description: source.description ?? "",
+        location: source.location ?? "",
+        color: source.color ?? "",
+        // A category only fits its own calendar (RF-28).
+        categoryId: sameCalendar ? (source.categoryId ?? "") : "",
+      },
+      calendars: editable.map(({ id, name, color }) => ({ id, name, color })),
+      categories,
+    };
+  }
 
   return {
     kind: "form",

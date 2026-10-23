@@ -10,9 +10,12 @@ export interface NewEventDefaults {
   endTime: string;
   allDay: boolean;
   title: string;
+  /** Event to copy from (spec 008 RF-35); read later with RLS. */
+  from?: string;
 }
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LAST_MINUTE = 23 * 60 + 59;
 
 function single(query: Query, key: string): string | undefined {
@@ -41,6 +44,7 @@ export function parseNewEventQuery(
   const start = single(query, "start");
   const end = single(query, "end");
   const title = single(query, "title") ?? "";
+  const from = single(query, "from");
 
   const startTime = start && TIME.test(start) ? start : DEFAULT_START_TIME;
   // The end follows the start one hour later unless a later one is given,
@@ -62,5 +66,6 @@ export function parseNewEventQuery(
     endTime,
     allDay: single(query, "allDay") === "1",
     title: title.length <= 100 ? title : "",
+    from: from && UUID.test(from) ? from : undefined,
   };
 }

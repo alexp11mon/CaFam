@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { Activity, useState } from "react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { EventModal } from "@/components/calendar/event-modal";
@@ -96,5 +97,31 @@ describe("EventModal", () => {
     expect(
       screen.getByRole("button", { name: "Pantalla completa" }).className,
     ).toMatch(/max-\[48\.0625rem\]:hidden/);
+  });
+
+  it("starts its content afresh each time Next shows the kept route again", async () => {
+    function Counter() {
+      const [count, setCount] = useState(0);
+      return (
+        <button type="button" onClick={() => setCount((n) => n + 1)}>
+          Pulsado {count}
+        </button>
+      );
+    }
+    const tree = (mode: "visible" | "hidden") => (
+      <Activity mode={mode}>
+        <EventModal title="Cena familiar">
+          <Counter />
+        </EventModal>
+      </Activity>
+    );
+    const { rerender } = render(tree("visible"));
+    await userEvent.click(screen.getByRole("button", { name: "Pulsado 0" }));
+    expect(screen.getByRole("button", { name: "Pulsado 1" })).toBeVisible();
+
+    act(() => rerender(tree("hidden")));
+    act(() => rerender(tree("visible")));
+
+    expect(screen.getByRole("button", { name: "Pulsado 0" })).toBeVisible();
   });
 });

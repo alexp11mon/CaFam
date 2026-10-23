@@ -1,5 +1,6 @@
+import type { ReactNode } from "react";
 import { formatEventWhen } from "@/lib/calendar/format";
-import type { ConfirmState, FormAction } from "@/lib/forms/form-state";
+import type { ConfirmState, Done, FormAction } from "@/lib/forms/form-state";
 import { ConfirmDialog } from "./confirm-dialog";
 
 export interface EventDetailData {
@@ -40,12 +41,17 @@ export function EventDetail({
   timeZone,
   canEdit,
   deleteAction,
+  actions,
+  onDeleted,
 }: {
   event: EventDetailData;
   timeZone: string;
   /** Owner or editor; viewers get no buttons (RF-26). */
   canEdit: boolean;
   deleteAction: FormAction<ConfirmState>;
+  /** More buttons next to "Borrar evento" (spec 008: Editar, Duplicar). */
+  actions?: ReactNode;
+  onDeleted?: (done: Done) => void;
 }) {
   return (
     <article className="flex flex-col gap-4">
@@ -77,13 +83,15 @@ export function EventDetail({
         <Row label="Creado por">{event.author}</Row>
       </dl>
       {canEdit ? (
-        <div>
+        <div className="flex flex-wrap gap-3">
+          {actions}
           <ConfirmDialog
             triggerLabel="Borrar evento"
             title={`¿Borrar «${event.title}»?`}
             description="El evento se borrará de forma definitiva."
             confirmLabel="Sí, borrar"
             action={deleteAction}
+            onDone={onDeleted}
           />
         </div>
       ) : null}

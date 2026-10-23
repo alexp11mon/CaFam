@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useId, useRef } from "react";
+import { useActionState, useEffect, useId, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
-import type { ConfirmState, FormAction } from "@/lib/forms/form-state";
+import type { ConfirmState, Done, FormAction } from "@/lib/forms/form-state";
 
 /**
  * Explicit confirmation before a destructive action (RF-6, RF-24, RF-52).
@@ -18,6 +18,7 @@ export function ConfirmDialog({
   action,
   children,
   confirmDisabled = false,
+  onDone,
 }: {
   triggerLabel: string;
   /** Longer accessible name when several triggers share the same visible label. */
@@ -29,10 +30,21 @@ export function ConfirmDialog({
   /** Extra fields the action needs, e.g. a password (spec 006, RF-16). */
   children?: React.ReactNode;
   confirmDisabled?: boolean;
+  /** The action succeeded without redirecting, e.g. inside the event window (spec 008 RF-8). */
+  onDone?: (done: Done) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [state, formAction, pending] = useActionState(action, {});
+
+  // Effects run again each time Next shows a kept route (Activity): handle each result once.
+  const handled = useRef<ConfirmState | null>(null);
+  useEffect(() => {
+    if (!state.done || handled.current === state) return;
+    handled.current = state;
+    dialog.current?.close();
+    onDone?.(state.done);
+  }, [state, onDone]);
 
   return (
     <>

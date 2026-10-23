@@ -89,3 +89,13 @@ describe("parseNewEventQuery", () => {
     ).toBe("");
   });
 });
+
+describe("parseNewEventQuery: duplicating (spec 008 RF-35)", () => {
+  it("passes on a valid event id to copy from", () => {
+    const id = "5b8f6c2e-3f0a-4d8e-9a51-2a8f1d7c9e10";
+    expect(parseNewEventQuery({ from: id }, CALENDARS, TODAY).from).toBe(id);
+    expect(
+      parseNewEventQuery({ from: "nope" }, CALENDARS, TODAY).from,
+    ).toBeUndefined();
+  });
+});

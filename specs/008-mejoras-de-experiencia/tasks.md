@@ -27,7 +27,7 @@
   Pasos: test primero en `tests/unit/event-modal-form.test.tsx`: al guardar con `{ done: "created" }` se cierra, se refresca y se muestra "Evento creado"; con error sigue abierta con lo escrito; cerrar con cambios pide confirmación ("Descartar cambios" / "Seguir editando") y sin cambios cierra directamente. Ruta interceptada `(.)events/new` con `EventForm` y `mode=modal`.
   Hecho cuando: `npm test -- event-modal-form` en verde y, en el navegador, "+ Evento" (barra inferior y escritorio) y "Crear" de la agenda abren la ventana y el evento creado aparece en la misma vista y fecha. Cubre: RF-1, RF-7, RF-8, RF-9 | Módulo: modal-routes, event-modal
 
-- [ ] T6 Abrir el detalle en la ventana con Editar, Duplicar y Borrar
+- [x] T6 Abrir el detalle en la ventana con Editar, Duplicar y Borrar
   Pasos: test primero en `tests/unit/event-panel.test.tsx`: el detalle muestra "Editar", "Duplicar" y "Borrar" a propietario y editor, y ninguno a un Lector; "Editar" cambia al formulario en el mismo sitio; "Duplicar" navega a `/dashboard/events/new?from=<id>`. `parseNewEventQuery` (T2) acepta `from` y el cargador rellena título, descripción, lugar, color, categoría, hora y duración leyendo el evento con RLS. La ruta interceptada definitiva `(.)events/[id]` sustituye a la provisional de T1 y la página completa usa `EventPanel`.
   Hecho cuando: `npm test -- event-panel new-event-query` en verde y, en el navegador, ver, editar, duplicar y borrar desde la ventana funcionan con el aviso correspondiente. Cubre: RF-2, RF-3, RF-35, RF-36 | Módulo: event-panel, duplicate
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import {
   createContext,
+  Fragment,
   useCallback,
   useContext,
   useEffect,
@@ -61,6 +62,8 @@ export function EventModal({
   const [fullscreen, setFullscreen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const dirty = useRef(false);
+  // Changes on every closing, so the next opening mounts the content afresh.
+  const [opening, setOpening] = useState(0);
 
   useEffect(() => {
     // Whatever had the focus opened the window: it gets it back on close (RF-6).
@@ -75,6 +78,11 @@ export function EventModal({
       // open there would keep the page behind it inert.
       element?.close();
       opener?.focus();
+      // Next shows this same hidden instance when the URL is opened again: drop
+      // its old state (an edit form, a typed title) so it opens afresh.
+      dirty.current = false;
+      setConfirming(false);
+      setOpening((count) => count + 1);
     };
   }, []);
 
@@ -159,7 +167,9 @@ export function EventModal({
       <div
         className={`flex-1 overflow-y-auto px-4 py-5 sm:px-6 ${fullscreen ? "mx-auto w-full max-w-2xl" : ""}`}
       >
-        <EventModalContext value={api}>{children}</EventModalContext>
+        <EventModalContext value={api}>
+          <Fragment key={opening}>{children}</Fragment>
+        </EventModalContext>
       </div>
     </dialog>
   );

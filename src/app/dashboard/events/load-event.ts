@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import type { EventDetailData } from "@/components/calendar/event-detail";
 import type {
   CalendarOption,
@@ -29,16 +28,16 @@ export interface EventData {
 
 /**
  * An event and what editing it needs, for the full page and the window over
- * the calendar alike (spec 008 RF-10, RF-11, plan event-loaders). An invalid
- * or foreign id is a 404, as RLS hides it.
+ * the calendar alike (spec 008 RF-10, RF-11, plan event-loaders). Null for an
+ * invalid, foreign (RLS hides it) or just deleted id: each route decides.
  */
-export async function loadEvent(id: string): Promise<EventData> {
+export async function loadEvent(id: string): Promise<EventData | null> {
   const { supabase, userId } = await requireUser();
   const event = await getEvent(supabase, id);
   const calendar = event
     ? await getCalendar(supabase, userId, event.calendarId)
     : null;
-  if (!event || !calendar) notFound();
+  if (!event || !calendar) return null;
 
   const canEdit = calendar.role !== "viewer";
   const timeZone = await getProfileTimeZone(supabase, userId);

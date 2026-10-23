@@ -1,7 +1,9 @@
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { EventModal } from "@/components/calendar/event-modal";
-import { getEvent, requireUser } from "@/lib/calendar/queries";
+import { EventPanel } from "@/components/calendar/event-panel";
+import { GoneEvent } from "@/components/calendar/gone-event";
+import { deleteEvent, updateEvent } from "../../../events/actions";
+import { loadEvent } from "../../../events/load-event";
 
 // Reads the session and the route param, so it streams behind <Suspense> (cacheComponents).
 async function InterceptedEvent({
@@ -10,10 +12,25 @@ async function InterceptedEvent({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { supabase } = await requireUser();
-  const event = await getEvent(supabase, id);
-  if (!event) notFound();
-  return <EventModal title={event.title}>{null}</EventModal>;
+  const data = await loadEvent(id);
+  // Deleting from the window re-renders this route: the event is gone, and a
+  // 404 here would replace the whole page.
+  if (!data) return <GoneEvent />;
+
+  return (
+    <EventModal title={data.detail.title}>
+      <EventPanel
+        detail={data.detail}
+        timeZone={data.timeZone}
+        canEdit={data.canEdit}
+        editInitial={data.editInitial}
+        calendars={data.calendars}
+        categories={data.categories}
+        updateAction={updateEvent.bind(null, id)}
+        deleteAction={deleteEvent.bind(null, id, "modal")}
+      />
+    </EventModal>
+  );
 }
 
 // An event opened from inside the app shows over the calendar (spec 008 RF-2, plan D1).
