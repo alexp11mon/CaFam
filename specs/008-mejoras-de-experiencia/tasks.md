@@ -35,7 +35,7 @@
   Pasos: test primero en `tests/unit/time-options.test.ts`: `startOptions()` da 48 horas de 00:00 a 23:30; `endOptions("10:00")` empieza en 10:30 con "30 min", sigue con "1 h", "1 h 30 min" y termina en 23:30; `normalizeTime` acepta `9:05`, `0905` y `09:05` y rechaza `24:00` o `9:60`; `shiftEnd` conserva la duración y `clampEnd` fija 23:59 al pasarse del día.
   Hecho cuando: `npm test -- time-options` en verde. Cubre: RF-13, RF-16, RF-17, RF-30, RF-49 | Módulo: time-options
 
-- [ ] T8 Crear el campo de hora con lista desplegable
+- [x] T8 Crear el campo de hora con lista desplegable
   Pasos: test primero en `tests/unit/time-field.test.tsx`: al recibir el foco aparece la lista (`role="listbox"`, campo `role="combobox"` con `aria-expanded`); flechas y Intro eligen; un clic escribe la hora y cierra; Escape cierra sin cambiar; se puede escribir una hora fuera de la lista; la lista de fin muestra la duración.
   Hecho cuando: `npm test -- time-field` en verde. Cubre: RF-13, RF-14, RF-15, RF-16, RF-49 | Módulo: time-field
 

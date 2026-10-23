@@ -28,6 +28,7 @@ const FLOATING = new Set([
   "src/components/calendar/merge-form.tsx",
   "src/components/shell/more-sheet.tsx",
   "src/components/shell/side-rail.tsx",
+  "src/components/ui/time-field.tsx",
   "src/components/ui/toast.tsx",
 ]);
 
