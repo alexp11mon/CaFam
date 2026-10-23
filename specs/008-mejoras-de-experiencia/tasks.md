@@ -15,7 +15,7 @@
   Pasos: test primero en `tests/unit/new-event-query.test.ts` para la función pura `parseNewEventQuery(query, editables, hoy)`: `date`, `calendar`, `start`, `end` (`HH:MM`), `allDay=1` y `title` (≤ 100) válidos se usan; los no válidos se ignoran con los valores por defecto de hoy. `load-new-event.ts` y `load-event.ts` reúnen la carga de las páginas actuales; las páginas completas pasan a usarlos sin cambiar lo que muestran.
   Hecho cuando: `npm test -- new-event-query` en verde y los tests existentes de las páginas de evento siguen en verde. Cubre: RF-10, RF-11, RF-39 | Módulo: event-loaders
 
-- [ ] T3 Devolver estado en lugar de redirigir en modo ventana
+- [x] T3 Devolver estado en lugar de redirigir en modo ventana
   Pasos: test primero en `tests/unit/event-actions.test.ts` (Supabase simulado): con `mode=modal`, `createEvent` y `updateEvent` devuelven `{ done }` y llaman a `revalidatePath`; con un error de validación devuelven `fieldErrors` y los valores escritos; sin `mode` siguen redirigiendo; `deleteEvent(id, "modal")` devuelve `{ done: "deleted" }`.
   Hecho cuando: `npm test -- event-actions` en verde. Cubre: RF-8, RF-9, RF-11, RF-38 | Módulo: modal-actions
 

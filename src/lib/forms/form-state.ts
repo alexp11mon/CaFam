@@ -9,11 +9,16 @@ export interface FormState<Field extends string> {
   formError?: string;
   /** What the user typed, so a failed submit does not lose it. */
   values: Record<Field, string>;
+  /** Success inside the event window, which closes itself instead of redirecting (spec 008 RF-8). */
+  done?: Done;
 }
+
+export type Done = "created" | "updated" | "deleted";
 
 /** Result of a confirm-and-act Server Action (delete, merge): only an error comes back. */
 export interface ConfirmState {
   formError?: string;
+  done?: Done;
 }
 
 export type ParseResult<Data, Field extends string> =

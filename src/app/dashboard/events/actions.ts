@@ -44,6 +44,12 @@ function readEventValues(formData: FormData): EventFormValues {
   };
 }
 
+// Inside the event window the form sends mode=modal: answer with a state so the
+// window closes itself and the calendar stays where it was (spec 008 RF-8, plan D2).
+function inWindow(formData: FormData): boolean {
+  return formData.get("mode") === "modal";
+}
+
 function refresh() {
   // Drop the client router cache: the views must show the change.
   revalidatePath("/dashboard", "layout");
@@ -114,6 +120,7 @@ export async function createEvent(
   }
 
   refresh();
+  if (inWindow(formData)) return { done: "created", values };
   redirect(`/dashboard/events/${id}`);
 }
 
@@ -156,11 +163,16 @@ export async function updateEvent(
   }
 
   refresh();
+  if (inWindow(formData)) return { done: "updated", values };
   redirect(`/dashboard/events/${id}`);
 }
 
-// The state argument useActionState passes is not needed: nothing to carry over.
-export async function deleteEvent(id: string): Promise<ConfirmState> {
+// Bound as deleteEvent(id) or deleteEvent(id, "modal"); useActionState then appends
+// its state and form data, which are not needed: nothing to carry over.
+export async function deleteEvent(
+  id: string,
+  mode?: unknown,
+): Promise<ConfirmState> {
   if (!z.uuid().safeParse(id).success) {
     return { formError: CALENDAR_MESSAGES.notFound };
   }
@@ -185,5 +197,6 @@ export async function deleteEvent(id: string): Promise<ConfirmState> {
   }
 
   refresh();
+  if (mode === "modal") return { done: "deleted" };
   redirect("/dashboard/calendar");
 }
