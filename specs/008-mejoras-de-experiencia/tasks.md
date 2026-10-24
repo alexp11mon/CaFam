@@ -93,9 +93,77 @@
   Pasos: test primero en `tests/unit/use-refresh-on-focus.test.tsx`: al pasar a `visible` llama a `router.refresh()` solo si han pasado más de 60 s desde la última carga.
   Hecho cuando: `npm test -- use-refresh-on-focus` en verde. Cubre: RF-34 | Módulo: refresh-on-focus
 
-- [ ] T22 Validar la spec RF por RF en el navegador
+- [x] T22 Validar la spec RF por RF en el navegador
   Pasos: tabla RF-1 a RF-49 en este archivo con el test que lo cubre y, con `playwright-cli` sobre `npx next start -p 3100` y un usuario de prueba de dev (borrado al terminar), el recorrido de los criterios de finalización: crear con la ventana rápida, arrastrando y con el formulario completo; editar, duplicar y borrar en la ventana; atajos; recargar una URL de evento. Capturas a 390, 768 y 1440 px con los acentos rojo y amarillo. Se corrigen los fallos encontrados, cada uno con su test.
   Hecho cuando: la tabla tiene todos los RF con evidencia y el checklist de P8 completo está en verde. Cubre: todos | Módulo: validación
+
+## Validación RF por RF (T22, 2026-10-23)
+
+Recorrido en `npx next start -p 3100` con `playwright-cli` y un usuario de prueba de dev (`prueba008@cafam.test`, borrado al terminar desde Ajustes → Borrar cuenta). Capturas a 390, 768 y 1440 px con los acentos rojo y amarillo, revisadas (quedan en el directorio temporal de la sesión, no en el repositorio).
+
+| RF | Test que lo cubre | Evidencia en el navegador |
+|----|-------------------|---------------------------|
+| RF-1 | `event-modal-form` | "Nuevo evento" (escritorio), "+ Evento" (barra inferior a 390 px) y "Crear" de la agenda abren la ventana |
+| RF-2 | `event-panel` | Clic en un evento de la semana abre su detalle en la ventana |
+| RF-3 | `event-panel` | "Editar" cambia al formulario en el mismo sitio y guarda con "Cambios guardados" |
+| RF-4 | `event-modal` | Fondo atenuado y foco atrapado (`<dialog>` modal) |
+| RF-5 | `event-modal` | "Pantalla completa" a 1440 px ocupa 1440×900 |
+| RF-6 | `event-modal` | Escape y "Cerrar" vuelven atrás y devuelven el foco al evento |
+| RF-7 | `event-modal-form` | Cerrar con cambios pide "¿Descartar los cambios?" |
+| RF-8 | `event-actions`, `event-modal-form`, `gone-event` | Guardar y borrar cierran la ventana en la misma vista y fecha |
+| RF-9 | `event-actions`, `event-modal-form` | Error de validación: la ventana sigue abierta con lo escrito |
+| RF-10 | `new-event-query`, `event-modal` | Recargar `/dashboard/events/<id>` da la página completa; un id ajeno, 404 |
+| RF-11 | `event-actions` | Mismas acciones, validaciones y RLS que la página completa |
+| RF-12 | `event-modal` | Título de la ventana anunciado (`aria-labelledby`), todo con teclado |
+| RF-13 | `time-options`, `time-field` | Lista de 00:00 a 23:30 al enfocar la hora |
+| RF-14 | `time-field` | Elegir una hora la escribe y cierra la lista |
+| RF-15 | `time-field` | Escape con la lista abierta solo cierra la lista, no la ventana |
+| RF-16 | `time-options`, `time-field` | "19:45" escrita a mano se guarda |
+| RF-17 | `time-options`, `event-form` | Inicio 18:00 → fin 19:00 automáticamente |
+| RF-18 | `event-form` | Tras tocar el fin, ya no se mueve |
+| RF-19 | `month-view`, `calendar-workspace` | Día vacío del mes → evento de día completo ("Excursión al campo", "Puente") |
+| RF-20 | `slots`, `slot-layer` | Clic a las 19:12 → 19:00–20:00 |
+| RF-21 | `month-view` | El número del día sigue llevando a la vista día |
+| RF-22 | `slot-layer`, `month-view` | Botón "Crear evento el <día>" alcanzable con Tab |
+| RF-23 | `agenda-view` | "Hora actual" siempre visible (fijo arriba al desplazar) |
+| RF-24 | `agenda-view` | Desde otro periodo lleva a la agenda de hoy con `#ahora` |
+| RF-25 | `profile-last-view` (db), `view-toolbar`, `use-calendar-shortcuts` | Elegir "Mes" lo guarda en el perfil |
+| RF-26 | `ranges` | `/dashboard/calendar` sin vista abre el mes guardado |
+| RF-27 | `ranges` | `?view=` manda sobre la vista guardada |
+| RF-28 | `event-form`, `event-modal`, `quick-create` | Foco en Título al abrir el alta (ventana grande y rápida) |
+| RF-29 | `event-modal` | A 390 px la ventana ocupa 390×844, sin botón de pantalla completa |
+| RF-30 | `time-options`, `slots`, `new-event-query` | Inicio 23:30 → fin 23:59 |
+| RF-31 | `shortcuts`, `use-calendar-shortcuts` | N, T, ← y → probados; escribir "mds" en el título no cambia de vista |
+| RF-32 | `toast` | "Evento creado", "Cambios guardados" y "Evento borrado" abajo, se anuncian |
+| RF-33 | `calendar-skeleton` | Esqueleto con la forma de la vista en la carga inicial |
+| RF-34 | `use-refresh-on-focus` | Solo con test (volver a primer plano no se puede simular fielmente con `playwright-cli`) |
+| RF-35 | `event-panel`, `new-event-query` | "Duplicar" abre el alta con los datos del evento |
+| RF-36 | `event-panel`, `shortcuts`, `month-view`, `calendar-workspace`, `day-view` | Solo con test (el usuario de prueba no tenía calendarios de solo lectura) |
+| RF-37 | `quick-create`, `calendar-workspace` | Ventana rápida junto al hueco con título, día, horas y calendario |
+| RF-38 | `quick-create`, `event-actions` | "Guardar" crea el evento y avisa |
+| RF-39 | `quick-create`, `new-event-query` | "Más opciones" pasa título, día completo y calendario al formulario completo |
+| RF-40 | `month-view`, `day-view`, `calendar-workspace` | Bloque discontinuo con el título que se escribe |
+| RF-41 | `quick-create` | A 390 px, hoja anclada abajo a todo el ancho |
+| RF-42 | `slots`, `slot-layer` | Arrastre con ratón de 16:00 a 17:30 y de 10:00 a 12:00 |
+| RF-43 | `slots`, `slot-layer` | Arrastre hacia arriba, mínimo 15 min |
+| RF-44 | `slot-layer` | Escape durante el arrastre (test); Escape con la ventana rápida la cierra (navegador) |
+| RF-45 | `slot-layer` | Solo con test (sin pantalla táctil real) |
+| RF-46 | `shortcuts`, `view-toolbar` | A, M, S y D cambian de vista; los botones muestran la tecla |
+| RF-47 | `time-grid` | La rejilla llega a 877 px de 900 en escritorio |
+| RF-48 | `event-chip`, `month-view`, `palette` | Punto para eventos con hora, barra pastel para día completo; dos calendarios con su color |
+| RF-49 | `time-options`, `time-field` | "10:00 (1 h)", "10:30 (1 h 30 min)"… en la lista de fin |
+
+Varios calendarios a la vez: se creó "Trabajo" (Coral) junto a "Mi calendario"; el evento arrastrado se guardó en "Trabajo" eligiéndolo en la ventana rápida, se ve con su color en semana y mes, y ocultar "Trabajo" en el panel lo quita de la rejilla.
+
+Checklist P8 completo en verde: `typecheck`, `lint`, `format:check`, `npm test` (124 archivos, 1051 tests), `build` y `npm run test:db -- --no-file-parallelism` (26 archivos, 226 tests, 2026-10-24).
+
+Fallos encontrados y corregidos durante la implementación, cada uno con su test:
+
+- Next reutiliza la ruta interceptada oculta (Activity) al volver a la misma URL: un diálogo modal oculto seguía abierto (página inerte), el éxito anterior volvía a cerrar la ventana y el detalle reaparecía en modo edición. `EventModal` cierra el diálogo y remonta su contenido al ocultarse, y los formularios atienden cada resultado una sola vez (`event-modal`, `event-modal-form`).
+- Borrar desde la ventana daba 404 en toda la página: la revalidación volvía a pintar la ruta interceptada de un evento ya borrado. Ahora esa ruta cierra la ventana y avisa (`gone-event`).
+- `showModal()` quitaba el foco del título: la ventana enfoca el campo marcado con `data-autofocus` (`event-modal`).
+- La lista de horas desplazaba la ventana entera; ahora solo se desplaza la lista.
+- Títulos largos del mes en dos líneas: `not-sr-only` devolvía el salto de línea; ahora una línea con puntos suspensivos.
 
 - [ ] T23 Actualizar la documentación
   Pasos: tras el commit del desarrollo, actualizar `AGENTS.md` (estado, funciones nuevas, rutas `@modal`, patrones y trampas), `docs/constitution.md` (enmienda de P9 de D9 y tabla de specs) y marcar el estado de spec, plan y tareas.
