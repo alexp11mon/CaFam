@@ -17,6 +17,7 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 005-identidad-visual | Rediseño de todas las pantallas existentes con la identidad visual propia (sección "Identidad visual y diseño de interfaz") y elección del color de acento por el usuario |
 | 006-gestion-de-cuenta | Recuperación de contraseña, cambio de email, borrado de cuenta (requiere SMTP gratuito) |
 | 007-sincronizacion-oauth | Fase 2 (futura): sincronización bidireccional con APIs vía OAuth 2.0 |
+| 008-mejoras-de-experiencia | Calendario al estilo de Google Calendar (analizado con REA): alta y detalle en una ventana sobre el calendario, ventana rápida junto al hueco, arrastrar para crear, selector de hora, atajos de teclado, vista recordada |
 
 Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": desde el 2026-10-22 son la 006 y la 007 (las specs cerradas no se editan).
 
@@ -75,6 +76,7 @@ La interfaz deja de ser la plantilla por defecto (azul sobre blanco) y adopta un
 - **Fondo piedra cálido y paneles un tono más claros.** La pantalla es un plano de color piedra; la barra lateral y los paneles se separan por un escalón de tono, no por sombras. Tinta casi negra para el texto y gris cálido para lo secundario.
 - **El número del día como protagonista.** En la vista de agenda/día, la fecha se compone con un número enorme y muy grueso (el gesto distintivo de la referencia) con el día de la semana pequeño y en el color de acento al lado. Es la única excepción a la escala tipográfica contenida de una app.
 - **Eventos como filas de texto, no como bloques de color.** Hora en negrita con la hora de fin en gris, una barra vertical fina con el color del calendario o de la categoría, título en negrita y el lugar o la nota en gris. El color identifica, no rellena.
+  - **Excepción (enmienda del 2026-10-23, spec 008 plan D9, aprobada por el usuario):** en la **vista mes**, los eventos de día completo y de varios días son una barra **rellena** con el color pastel del calendario, con el texto en tinta y un contorno `ink/15`, como en Google Calendar; los eventos con hora del mes son un **punto** del color + hora + título, sin relleno. Toda la paleta tiene un contraste ≥ 4,5:1 con la tinta (`palette.test.ts`). Fuera de esa barra el color sigue siendo solo una marca.
 - **Un único color de acento para "ahora" y "hoy":** el día de hoy en el mini calendario (cuadrado relleno), la línea de la hora actual, las abreviaturas de los días y el elemento seleccionado. En nada más.
 - **Botones de acción en negro**, totalmente redondos (píldora o círculo), con texto blanco; los secundarios, sin relleno o en el tono del panel. El botón flotante "+" (crear evento) es un círculo negro.
 - **Mini calendario mensual** compacto con puntos de color bajo los días que tienen eventos (un punto por calendario, máximo tres).
@@ -110,6 +112,17 @@ Degradados; sombras en lo que está en reposo (solo en lo que flota: diálogos, 
 - Los componentes de `src/components/ui/` son la única fuente de botones, campos y avisos; una variante nueva se añade ahí, no en la página.
 - Para diseñar o revisar pantallas se usan las skills `design-taste-frontend` (reglas de pantallas de aplicación, `references/app-screens.md`), `frontend-design` y `web-design-guidelines`.
 - Ninguna librería de componentes, iconos o animación sin aprobación en la spec que la introduce (P6); los iconos se dibujan como SVG propios en línea, de trazo fino y un solo estilo.
+
+### Interacción del calendario (spec 008)
+
+El calendario se comporta como Google Calendar para que quien lo conozca lo entienda sin explicación. Se estudió con REA (`specs/008-mejoras-de-experiencia/analisis-google-calendar.md`) **solo su comportamiento**: no se copia código, estilos, iconos ni imágenes de Google, y su aspecto sigue siendo el de esta sección.
+
+- **Crear sin salir del calendario.** Un hueco vacío (o un arrastre con ratón en semana y día) abre una **ventana rápida** junto al hueco (título, día y horas, calendario); "Más opciones" lleva al formulario completo con lo escrito. El alta, el detalle y la edición se abren en una **ventana sobre el calendario**, a pantalla completa en el móvil; el enlace o la recarga muestran la página completa.
+- **Atajos sin modificadores** (N, T, ←, →, A, M, S, D), nunca mientras se escribe ni con una ventana abierta, y visibles en los botones de vista.
+- **Horas como combobox**: se escriben o se eligen de una lista de 30 en 30 minutos; la de fin muestra la duración y sigue a la de inicio.
+- **Aviso breve** abajo tras guardar, borrar o duplicar, que se anuncia a los lectores de pantalla. Sin "Deshacer".
+- Lo que flota y lleva sombra: la ventana de evento, la ventana rápida, la lista de horas y el aviso (además de diálogos, la hoja "Más" y los tooltips). La guardia `design-tokens.test.ts` mantiene la lista.
+- Fuera de alcance hasta su spec: mover o redimensionar eventos arrastrando.
 
 ## Verificación obligatoria
 

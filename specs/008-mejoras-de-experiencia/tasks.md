@@ -1,6 +1,6 @@
 # Tasks 008 - Mejoras de experiencia de uso
 
-> Estado: **Aprobadas** por el usuario (2026-10-23). Implementación en curso.
+> Estado: **Aprobadas** por el usuario (2026-10-23). Implementadas T1–T23; pendiente de producción y cierre.
 > Spec: `specs/008-mejoras-de-experiencia/spec.md`. Plan: `specs/008-mejoras-de-experiencia/plan.md`. Análisis: `analisis-google-calendar.md`.
 > Reglas: una tarea cada vez, test primero (rojo → verde). Al cerrar cada tarea se ejecuta y reporta `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, y `npm run test:db -- <filtro>` si toca esquema o acceso a datos. Si toca interfaz, prueba en el navegador con `playwright-cli` y capturas a 390, 768 y 1440 px con los acentos rojo y amarillo (P9). Un commit por tarea citándola, en la rama `008-mejoras-de-experiencia`.
 > Sin dependencias nuevas (P6). Una sola migración (T10).
@@ -165,7 +165,7 @@ Fallos encontrados y corregidos durante la implementación, cada uno con su test
 - La lista de horas desplazaba la ventana entera; ahora solo se desplaza la lista.
 - Títulos largos del mes en dos líneas: `not-sr-only` devolvía el salto de línea; ahora una línea con puntos suspensivos.
 
-- [ ] T23 Actualizar la documentación
+- [x] T23 Actualizar la documentación
   Pasos: tras el commit del desarrollo, actualizar `AGENTS.md` (estado, funciones nuevas, rutas `@modal`, patrones y trampas), `docs/constitution.md` (enmienda de P9 de D9 y tabla de specs) y marcar el estado de spec, plan y tareas.
   Hecho cuando: `npm run format:check` en verde y commit de la documentación hecho. Cubre: todos | Módulo: documentación
 

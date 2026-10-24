@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-23, al validar en producción la spec 006 (gestión de cuenta).
+> Última actualización: 2026-10-23, al terminar la implementación de la spec 008 (mejoras de experiencia al estilo Google Calendar), pendiente de producción y de cierre.
 
 ## 1. Qué es
 
@@ -33,7 +33,8 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
 | 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Cerrada** (2026-10-22), T1–T13 hechas |
 | 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Cerrada** (2026-10-23), T1–T26 hechas; aplicada y validada en producción |
-| 007-sincronizacion-oauth | Sincronización bidireccional por OAuth 2.0 (futura) | Pendiente |
+| 007-sincronizacion-oauth | Sincronización por OAuth 2.0 | Spec, plan y tareas en su rama `007-sincronizacion-oauth` (no en `main`); sin implementar |
+| 008-mejoras-de-experiencia | Calendario al estilo Google Calendar (analizado con REA): ventana de evento sobre el calendario, ventana rápida, arrastrar para crear, selector de hora, atajos, vista recordada, avisos y esqueletos | **Implementada** (2026-10-23) en la rama `008-mejoras-de-experiencia`, T1–T22 hechas; falta aplicar la migración en producción, desplegar y la aprobación del usuario para cerrar |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -76,7 +77,17 @@ Añadido por la spec 006:
 - **Autor del evento**: el detalle muestra "Creado por <nombre>", "Cuenta borrada" si el autor ya no existe y "un antiguo miembro" si salió del calendario.
 - **Correo**: Brevo (plan gratuito, 300 al día). Auth envía recuperación y cambio de email por SMTP; los avisos de cuenta salen de Postgres con `pg_net` a la API de Brevo, con la clave en Vault.
 
-**No hay** eventos recurrentes propios (spec futura sin número), sincronización ni actualización de lo importado.
+Añadido por la spec 008 (comportamiento estudiado en Google Calendar con REA; análisis en `specs/008-mejoras-de-experiencia/analisis-google-calendar.md`):
+
+- **Ventana de evento sobre el calendario** (rutas interceptadas `@modal`): "+ Evento", "Nuevo evento", "Crear" de la agenda y la tecla N abren el alta; pulsar un evento abre su detalle con **Editar**, **Duplicar** y **Borrar**. Botón de pantalla completa (siempre a pantalla completa a ≤ 768 px), Escape y "Cerrar" vuelven atrás, y si hay cambios sin guardar se pide confirmación. Guardar o borrar cierra la ventana en la misma vista y fecha. Una recarga o un enlace a `/dashboard/events/...` muestran la página completa.
+- **Ventana rápida junto al hueco**: pulsar un día vacío del **mes** crea un evento de **día completo** (con "Añadir hora"); pulsar una franja de **semana o día** propone esa media hora y 1 h; **arrastrar con el ratón** dibuja el intervalo en pasos de 15 min (Escape cancela; con el dedo no se arrastra, un toque es un clic). Lleva título, día, horas y calendario (con su color), "Guardar" y "Más opciones" (pasa lo escrito al formulario completo). En el móvil es una hoja inferior. Mientras está abierta, el hueco se marca con un bloque discontinuo con el título que se escribe.
+- **Horas con lista** (`TimeField`): de 00:00 a 23:30 cada 30 min, se pueden escribir a mano; la de fin empieza en la de inicio, muestra la duración ("11:00 (1 h)") y se mueve con el inicio hasta que se toca a mano, sin pasar de las 23:59.
+- **Atajos**: N (nuevo), T (hoy), ← → (periodo), A, M, S, D (vistas); nunca con modificadores, escribiendo o con una ventana abierta. Los botones de vista muestran su tecla.
+- **Vista recordada** en `profiles.last_view`: `/dashboard/calendar` sin `?view` abre la última vista con la fecha de hoy.
+- **Mes al estilo Google**: eventos con hora como punto + hora + título; de día completo o varios días como barra rellena del color pastel (enmienda de P9). **Rejilla** de semana y día a toda la altura de la pantalla.
+- **Agenda**: botón fijo "Hora actual". **Avisos** breves ("Evento creado", "Cambios guardados", "Evento borrado"), **esqueleto** con la forma de la vista mientras carga y **actualización** al volver a la app tras más de 60 s.
+
+**No hay** eventos recurrentes propios (spec futura sin número), mover o redimensionar eventos arrastrando, sincronización ni actualización de lo importado.
 
 ## 3. Reglas de trabajo (obligatorias)
 
@@ -137,11 +148,12 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   │   ├── forgot-password/ # pedir enlace + actions.ts (requestRecovery) — spec 006
 │   │   │   └── reset-password/  # contraseña nueva + actions.ts (resetPassword) — spec 006
 │   │   ├── auth/confirm/route.ts  # verifica el token_hash de los correos de Auth (spec 006)
-│   │   ├── dashboard/         # layout.tsx (marco con el acento), page.tsx (redirige al calendario); protegido por getRouteAccess
-│   │   │   ├── calendar/      # vistas agenda/mes/semana/día (?view=&date=) + preferences-actions.ts + mini-month-actions.ts
+│   │   ├── dashboard/         # layout.tsx (marco con el acento + slot `modal`), page.tsx (redirige al calendario); protegido por getRouteAccess
+│   │   │   ├── @modal/        # spec 008: default.tsx y [...catchAll] (null), (.)events/new y (.)events/[id] (ventana sobre el calendario)
+│   │   │   ├── calendar/      # vistas agenda/mes/semana/día (?view=&date=) + preferences-actions.ts (incl. saveLastView) + mini-month-actions.ts
 │   │   │   ├── calendars/     # page.tsx ("Mis calendarios"), new, [id]/edit, [id]/categories, merge + actions.ts (calendarios y juntar)
 │   │   │   ├── settings/      # Ajustes: acento + actions.ts (setAccent) y cuenta + account-actions.ts (spec 006)
-│   │   │   └── events/        # new, [id] (detalle + edición + borrado) + actions.ts
+│   │   │   └── events/        # new, [id] (página completa) + actions.ts (modo `modal`) + load-new-event.ts y load-event.ts (carga compartida con la ventana)
 │   │   ├── dashboard/join/    # "Unirme con código" (ID y PIN) + actions.ts
 │   │   ├── dashboard/import/  # "Importar calendario" (.ics) + actions.ts (`maxDuration` 60)
 │   │   ├── dashboard/calendars/[id]/share/    # invitaciones y ID/PIN (solo propietario) + actions.ts
@@ -150,7 +162,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── offline/page.tsx   # "Sin conexión" + "Reintentar" (estática, la precachea el SW)
 │   │   └── api/cron/keep-alive/route.ts  # GET protegido por CRON_SECRET
 │   ├── components/
-│   │   ├── ui/                # button (variantes), link-button, text-field, text-area, select, form-alert (solo tokens)
+│   │   ├── ui/                # button (variantes), link-button, text-field, text-area, select, form-alert, time-field (combobox de horas), toast (avisos) (solo tokens)
 │   │   ├── shell/             # app-frame, side-rail, bottom-bar, more-sheet, bar-styles, icons (SVG propios)
 │   │   ├── brand/             # logo (LogoMark y Logo)
 │   │   ├── settings/          # accent-picker
@@ -158,17 +170,17 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── people/            # avatar
 │   │   ├── auth/              # auth-card, login-form, signup-form (Client Components con useActionState)
 │   │   ├── dashboard/         # calendar-list
-│   │   ├── calendar/          # formularios, vistas (agenda-view, event-row, month/week/day, time-grid), mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog…
+│   │   ├── calendar/          # formularios, vistas (agenda-view, event-row, month/week/day, time-grid, slot-layer), event-modal, event-panel, quick-create, gone-event, calendar-skeleton, mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog…
 │   │   ├── sharing/           # invite-form, copy-button, invite-list, access-code-panel, member-list, join-code-form, invite-join-card
 │   │   ├── import/            # import-form, import-summary
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
 │   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts, next-path.ts (destino tras login: solo /invite/<token>)
-│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, agenda, month-marks, next-event, grouping, format, schemas, error-messages; queries.ts (lecturas con RLS)
+│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, agenda, month-marks, next-event, grouping, format, schemas, error-messages, time-options, slots, popover, shortcuts, new-event-query, draft; queries.ts (lecturas con RLS)
 │   │   ├── theme/             # accents.ts: los seis acentos y los neutros (fuente de los valores de globals.css)
 │   │   ├── shell/             # nav.ts: destinos y sección activa
 │   │   ├── people/            # avatar.ts: iniciales y tintes
-│   │   ├── hooks/             # use-now.ts: reloj compartido (30 s y al volver a primer plano)
+│   │   ├── hooks/             # use-now.ts (reloj compartido), use-calendar-shortcuts.ts, use-refresh-on-focus.ts
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
@@ -179,7 +191,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon.svg (maestro) → icon-192, icon-512, icon-512-maskable (letras al 85 %), apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
@@ -214,11 +226,11 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/` | pública | Portada; con sesión redirige a `/dashboard/calendar` (lo hace la página, no el proxy) |
 | `/signup`, `/login` | solo sin sesión (con sesión → `/dashboard/calendar`) | Formularios; aceptan `?next=`, que solo se sigue si es `/invite/<token>` (campo oculto leído en el cliente) |
 | `/dashboard` y subrutas | solo con sesión (sin sesión → `/login`) | Todas dentro del marco (`dashboard/layout.tsx`). `/dashboard` redirige a `/dashboard/calendar` |
-| `/dashboard/calendar` | con sesión | Vistas `?view=agenda\|month\|week\|day&date=YYYY-MM-DD` (valores inválidos → agenda desde hoy) |
+| `/dashboard/calendar` | con sesión | Vistas `?view=agenda\|month\|week\|day&date=YYYY-MM-DD`. Sin `view`, la guardada en `profiles.last_view` (o agenda); una `view` inválida → agenda desde hoy |
 | `/dashboard/calendars` | con sesión | "Mis calendarios": la lista con crear, importar, unirme y juntar |
 | `/dashboard/settings` | con sesión | Ajustes: color de acento, perfil, email, contraseña y borrar cuenta (spec 006); `?confirm=invalid` avisa de un enlace de cambio de email no válido |
 | `/dashboard/calendars/new`, `/[id]/edit`, `/[id]/categories`, `/merge` | con sesión | Calendarios, categorías y juntar. `edit` solo propietario, `categories` propietario o editor; otros → 404 |
-| `/dashboard/events/new`, `/dashboard/events/[id]` | con sesión | Alta (`?calendar=&date=`) y detalle con edición y borrado |
+| `/dashboard/events/new`, `/dashboard/events/[id]` | con sesión | Alta (`?calendar=&date=&start=&end=&allDay=1&title=&from=<id para duplicar>`) y detalle con editar, duplicar y borrar. Navegando dentro de la app se abren en la ventana (`@modal`); recarga o enlace, página completa |
 | `/dashboard/calendars/[id]/share` | solo propietario (otros → 404) | Invitaciones por enlace e ID y PIN |
 | `/dashboard/calendars/[id]/members` | cualquier miembro (ajeno → 404) | Lista de miembros; controles según el rol |
 | `/dashboard/join` | con sesión | Unirme con ID y PIN |
@@ -282,6 +294,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `pg_cron`: `account-apply-orphans` (03:00 UTC), `account-send-emails` (cada 15 min) y `account-purge-recovery` (04:00 UTC). `pg_net` es asíncrono: un correo se marca enviado cuando una ejecución posterior lee un 2xx en `net._http_response`; hasta 5 intentos. Nunca envía a direcciones `.test`.
   - Vault: `brevo_api_key` y `brevo_sender_email` (los crea el usuario en el SQL Editor de cada proyecto).
 - Añadido por la spec 005: `profiles.accent` (`text`, por defecto `'red'`, `check` en `red|blue|green|yellow|purple|gray`). La protegen las políticas de `profiles` (solo el propio); `visible_people()` y `calendar_members_with_names` no la exponen.
+- Añadido por la spec 008: `profiles.last_view` (`text` anulable, `check` en `agenda|month|week|day`; nulo = nunca elegida). La escribe `saveLastView` al elegir una vista con botón o atajo, sin revalidar; la protegen las mismas políticas de `profiles`.
 - Añadido por la spec 004: `import_calendar(p_name, p_color, p_events jsonb)` (`SECURITY INVOKER`, una transacción): crea el calendario del llamante y sus eventos desde un array de 1 a 2.000 elementos (`22023` si no) y, si un evento viola una restricción, no deja nada. No hay tablas ni columnas nuevas: el calendario importado no guarda nada de su origen.
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, …) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
@@ -386,6 +399,13 @@ npm run db:types       # regenera src/types/database.ts
   - Los de componentes usan Testing Library por rol o etiqueta, con los textos en español.
   - Los de Route Handlers usan `// @vitest-environment node` y mockean `@supabase/supabase-js`.
   - Los de integración crean y borran usuarios con `tests/integration/helpers.ts`.
+- **Ventana de evento (spec 008):** las rutas `/dashboard/events/new` y `/dashboard/events/[id]` tienen una copia interceptada en `src/app/dashboard/@modal/(.)events/…` que pinta lo mismo dentro de `EventModal`. Los datos salen de `load-new-event.ts` y `load-event.ts`, compartidos con las páginas completas; un cambio en lo que muestra el alta o el detalle va **ahí**, no en cada página. Para cerrar se usa `router.back()`. Un enlace a otra página cierra la ventana gracias a `@modal/[...catchAll]`.
+- **Formularios dentro de la ventana:** `useEventModal()` devuelve la API de la ventana, o `null` en una página completa. Con ventana, `EventForm` envía el campo oculto `mode=modal`; `createEvent`, `updateEvent` y `deleteEvent(id, "modal")` devuelven entonces `{ done }` en vez de redirigir, y el formulario llama a `finish(done)`, que muestra el aviso, vuelve atrás y hace `router.refresh()`. Cualquier escritura nueva desde la ventana sigue ese patrón.
+- **Resultados de acciones que cierran algo:** atiéndelos **una sola vez por objeto de estado** (`handled` con `useRef`), porque Activity vuelve a ejecutar los efectos al mostrar la ruta otra vez (ver trampas).
+- **Foco al abrir un `<dialog>`:** `showModal()` enfoca el primer control. Para empezar en otro campo, márcalo con `data-autofocus`; `EventModal` y `QuickCreate` lo enfocan tras abrir.
+- **Crear desde la rejilla:** el workspace guarda el borrador (`Draft`), las vistas reciben `onCreate`/`draft` solo si `canCreate`, y `QuickCreate` es estado del cliente, no una ruta. La lógica de posiciones vive en `lib/calendar/slots.ts` y `popover.ts` (pura y testeada).
+- **Avisos:** `useToast().show(texto)` dentro del marco de la app (`ToastProvider` en `AppFrame`).
+- **Atajos:** se añaden en `KEYS` de `lib/calendar/shortcuts.ts` (con su test) y se atienden en `use-calendar-shortcuts.ts`.
 - **Commits:** Conventional Commits en español con la tarea: `feat: registro de usuario (T7)`.
 
 ## 10. Trampas conocidas
@@ -418,21 +438,33 @@ npm run db:types       # regenera src/types/database.ts
 - **Cookie de un usuario borrado**: `getClaims()` valida el JWT sin consultar la base de datos, así que en `playwright-cli` sigues "con sesión" tras borrar el usuario de prueba. Limpia las cookies (`page.context().clearCookies()`) antes de registrar otro.
 - **Icono de la app instalada**: iOS no lo cambia hasta volver a añadir la app a la pantalla de inicio; Android lo actualiza cuando revisa el manifest. Lo que sí se renueva al publicar es lo que guarda el service worker (`CACHE_NAME`).
 - **La carpeta `.playwright-cli/`** (capturas de la herramienta) no está ignorada: bórrala al terminar o `format:check` falla.
+- **Rutas interceptadas + Activity (spec 008):** al cerrar la ventana, Next guarda la ruta interceptada **oculta** en el DOM y, si se vuelve a abrir la misma URL, muestra **esa misma instancia**, con su estado y repitiendo sus efectos. Esto causó tres fallos: un `<dialog>` modal oculto pero abierto dejaba la página inerte; el éxito del guardado anterior volvía a cerrar la ventana nada más abrirla; y el detalle reaparecía en modo edición. Por eso `EventModal` cierra el diálogo y remonta su contenido (`key`) en la limpieza del efecto, y los formularios atienden cada resultado una sola vez. Cualquier ventana nueva basada en rutas necesita lo mismo.
+- **Borrar desde la ventana:** `revalidatePath` vuelve a pintar la ruta interceptada del evento recién borrado. Un `notFound()` ahí convierte **toda la página** en 404, así que la ruta interceptada devuelve `<GoneEvent />` (cierra y avisa) y solo la página completa hace `notFound()`.
+- **`setState` en el cuerpo de un efecto lo prohíbe el lint** (`react-hooks/set-state-in-effect`). Si hay que reiniciar estado cuando Activity oculta una ruta, hazlo en la **limpieza** del efecto, que el lint permite.
+- **jsdom:** no lanza `cancel` en un `<dialog>` al pulsar Escape (dispárale `new Event("cancel", { cancelable: true })`), no tiene `scrollIntoView` (sobrescríbelo en `HTMLElement.prototype`), ni layout (simula `getBoundingClientRect`). La región de avisos (`role="status"`) siempre existe: en los tests espera al **texto** (`findByText`), no a la región.
+- **`scrollIntoView` desplaza todos los contenedores**, incluida la ventana que envuelve el formulario: para mover solo una lista ajusta su `scrollTop`.
+- **`not-sr-only` vuelve a permitir el salto de línea** (`white-space: normal`): si el texto debe quedar en una línea, añade `truncate` en la misma variante (`sm:truncate`).
+- **Límite de Supabase Auth en `test:db`:** muchas ejecuciones seguidas, o tras pruebas en el navegador, dan `AuthApiError: Request rate limit reached` en los `beforeAll`. No es un fallo del código: espera unos minutos y lanza `npm run test:db -- --no-file-parallelism`.
+- **Editar ficheros con Python en Windows:** abre con `newline=''` o escribirá CRLF y `format:check` fallará.
 - **Tailwind 4 solo busca clases en `src/`** (`@import "tailwindcss" source("..")` en `globals.css`). Sin eso escanea todo el repositorio y convierte en CSS los ejemplos de la documentación (así se coló el azul antiguo `bg-[#…]` en producción).
 
 ## 11. Fuera de alcance hasta su spec
 
-Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), arrastrar y soltar eventos, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social y OAuth (007), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
+Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), mover o redimensionar eventos ya creados arrastrando (crear arrastrando sí existe desde la 008), "Deshacer" en los avisos, vistas de año y de 4 días, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social y OAuth (007), notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
 
 ## 12. Cómo continuar
 
-La 006 está cerrada y en producción (2026-10-23): migraciones aplicadas, correo y Vault configurados en prod, desplegada desde `main` y validada por el usuario, cambio de email incluido.
+La 006 está cerrada y en producción (2026-10-23).
 
-La siguiente es la **008 (mejoras de experiencia)**: su `spec.md` está aprobada en `specs/008-mejoras-de-experiencia/` (todavía sin commit) y le faltan plan y tareas:
+La **008 (mejoras de experiencia)** está implementada en la rama `008-mejoras-de-experiencia` (T1–T22, un commit por tarea; validación RF por RF en `specs/008-mejoras-de-experiencia/tasks.md`). Para cerrarla:
 
-1. Crea la rama `008-mejoras-de-experiencia` desde `main` y haz commit de su spec.
-2. Redacta `plan.md` con `plan-generator` y espera la aprobación del usuario; después `tasks.md` con `tasks-generator`.
-3. Implementa tarea a tarea con el test primero, el checklist de verificación y un commit por tarea.
-4. Valida en producción y pide al usuario la aprobación para cerrar.
+1. El usuario aplica la migración `20261025100000_profile_last_view.sql` en producción:
+   ```
+   npx supabase link --project-ref yznbdoskvtxeasujtirk
+   npx supabase db push
+   npx supabase link --project-ref uthubyzhonrtrmbcqcjh   # volver a dev inmediatamente
+   ```
+2. El usuario sube la rama e integra en `main` (`git push`, `git checkout main && git merge --ff-only 008-mejoras-de-experiencia && git push`). Primero la migración, después el código: el calendario lee `profiles.last_view`.
+3. Prueba manual en producción (móvil y escritorio) y aprobación explícita del usuario para cerrar la spec.
 
-La 007 (OAuth) sigue pendiente.
+La **007 (OAuth)** tiene spec, plan y tareas aprobados en su rama `007-sincronizacion-oauth`, sin implementar. Esa rama salió de `main` antes de la 008: al retomarla, rebásala sobre `main` y fusiona su `AGENTS.md` con este.
