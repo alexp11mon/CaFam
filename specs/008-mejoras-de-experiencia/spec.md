@@ -1,6 +1,6 @@
 # Spec 008 — Mejoras de experiencia de uso
 
-> Estado: **Aprobada** por el usuario (2026-10-22), ampliada y aprobada de nuevo (2026-10-23). Implementada (2026-10-23); pendiente de producción y cierre. Constitución: `docs/constitution.md` (P9 para lo visual). Parte de las specs 001 a 005 (cerradas).
+> Estado: **Cerrada** (2026-10-24) por decisión del usuario. T1–T23 hechas. Aplicada en producción y validada por el usuario. Constitución: `docs/constitution.md` (P9 para lo visual). Parte de las specs 001 a 005 (cerradas).
 > Numeración: se usa el 008 porque los números 006 (gestión de cuenta) y 007 (OAuth) están reservados en `AGENTS.md` para specs ya planificadas.
 > Actualización (2026-10-22): dudas resueltas por el usuario (ver al final) y añadido el bloque "Uso diario" (RF-31 a RF-36), elegido por el usuario entre varias propuestas.
 > Decisiones de la entrevista (2026-10-22):

@@ -1,6 +1,6 @@
 # Plan 008 — Mejoras de experiencia de uso
 
-> Estado: **Aprobado** por el usuario (2026-10-23), incluida la enmienda de P9 (D9).
+> Estado: **Cerrada** (2026-10-24) por decisión del usuario. T1–T23 hechas. Aplicada en producción y validada por el usuario.
 > Spec de origen: `specs/008-mejoras-de-experiencia/spec.md` (aprobada el 2026-10-22 y ampliada el 2026-10-23 tras el análisis `analisis-google-calendar.md`). Constitución: `docs/constitution.md` (P3, P6, P8, P9). Parte del código de las specs 002, 005 y 006.
 
 ## Resumen de arquitectura

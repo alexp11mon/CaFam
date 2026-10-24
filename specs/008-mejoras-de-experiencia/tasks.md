@@ -1,6 +1,6 @@
 # Tasks 008 - Mejoras de experiencia de uso
 
-> Estado: **Aprobadas** por el usuario (2026-10-23). Implementadas T1–T23; pendiente de producción y cierre.
+> Estado: **Cerrada** (2026-10-24) por decisión del usuario. T1–T23 hechas. Aplicada en producción y validada por el usuario.
 > Spec: `specs/008-mejoras-de-experiencia/spec.md`. Plan: `specs/008-mejoras-de-experiencia/plan.md`. Análisis: `analisis-google-calendar.md`.
 > Reglas: una tarea cada vez, test primero (rojo → verde). Al cerrar cada tarea se ejecuta y reporta `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, y `npm run test:db -- <filtro>` si toca esquema o acceso a datos. Si toca interfaz, prueba en el navegador con `playwright-cli` y capturas a 390, 768 y 1440 px con los acentos rojo y amarillo (P9). Un commit por tarea citándola, en la rama `008-mejoras-de-experiencia`.
 > Sin dependencias nuevas (P6). Una sola migración (T10).

@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-23, al terminar la implementación de la spec 008 (mejoras de experiencia al estilo Google Calendar), pendiente de producción y de cierre.
+> Última actualización: 2026-10-24, al cerrar la spec 008 (mejoras de experiencia al estilo Google Calendar) tras validarla en producción.
 
 ## 1. Qué es
 
@@ -34,7 +34,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Cerrada** (2026-10-22), T1–T13 hechas |
 | 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Cerrada** (2026-10-23), T1–T26 hechas; aplicada y validada en producción |
 | 007-sincronizacion-oauth | Sincronización por OAuth 2.0 | Spec, plan y tareas en su rama `007-sincronizacion-oauth` (no en `main`); sin implementar |
-| 008-mejoras-de-experiencia | Calendario al estilo Google Calendar (analizado con REA): ventana de evento sobre el calendario, ventana rápida, arrastrar para crear, selector de hora, atajos, vista recordada, avisos y esqueletos | **Implementada** (2026-10-23) en la rama `008-mejoras-de-experiencia`, T1–T22 hechas; falta aplicar la migración en producción, desplegar y la aprobación del usuario para cerrar |
+| 008-mejoras-de-experiencia | Calendario al estilo Google Calendar (analizado con REA): ventana de evento sobre el calendario, ventana rápida, arrastrar para crear, selector de hora, atajos, vista recordada, avisos y esqueletos | **Cerrada** (2026-10-24), T1–T23 hechas; aplicada y validada en producción |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -454,17 +454,8 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 ## 12. Cómo continuar
 
-La 006 está cerrada y en producción (2026-10-23).
+La 006 y la 008 están cerradas y en producción (2026-10-23 y 2026-10-24). La 008 añadió la migración `profile_last_view`, ya aplicada en prod.
 
-La **008 (mejoras de experiencia)** está implementada en la rama `008-mejoras-de-experiencia` (T1–T22, un commit por tarea; validación RF por RF en `specs/008-mejoras-de-experiencia/tasks.md`). Para cerrarla:
-
-1. El usuario aplica la migración `20261025100000_profile_last_view.sql` en producción:
-   ```
-   npx supabase link --project-ref yznbdoskvtxeasujtirk
-   npx supabase db push
-   npx supabase link --project-ref uthubyzhonrtrmbcqcjh   # volver a dev inmediatamente
-   ```
-2. El usuario sube la rama e integra en `main` (`git push`, `git checkout main && git merge --ff-only 008-mejoras-de-experiencia && git push`). Primero la migración, después el código: el calendario lee `profiles.last_view`.
-3. Prueba manual en producción (móvil y escritorio) y aprobación explícita del usuario para cerrar la spec.
+No hay ninguna spec en curso. El usuario decide la siguiente.
 
 La **007 (OAuth)** tiene spec, plan y tareas aprobados en su rama `007-sincronizacion-oauth`, sin implementar. Esa rama salió de `main` antes de la 008: al retomarla, rebásala sobre `main` y fusiona su `AGENTS.md` con este.
