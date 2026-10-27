@@ -59,9 +59,9 @@ function event(id: string, title: string, day = "02") {
 beforeAll(async () => {
   owner = await createTestUser({ display_name: "Owner" });
   const { data, error } = await owner.client.rpc("connect_account", {
-    p_provider: "microsoft",
+    p_provider: "google",
     p_subject: "worker",
-    p_email: "worker@outlook.test",
+    p_email: "worker@gmail.test",
     p_refresh_token: "rt-start",
   });
   if (error) throw error;
@@ -386,7 +386,7 @@ describe("revoked (RF-31)", () => {
       .single();
     expect(data?.status).toBe("needs_reauth");
     expect(await noticesOf("sync_revoked")).toEqual([
-      { calendar_name: "worker@outlook.test" },
+      { calendar_name: "worker@gmail.test" },
     ]);
   });
 });

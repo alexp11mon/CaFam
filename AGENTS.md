@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-24, al cerrar la spec 008 (mejoras de experiencia al estilo Google Calendar) tras validarla en producción.
+> Última actualización: 2026-10-27, al cerrar la iteración 1 de la spec 007 (T1–T5) y quitar Microsoft de su alcance (Enmienda 1).
 
 ## 1. Qué es
 
@@ -33,7 +33,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
 | 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Cerrada** (2026-10-22), T1–T13 hechas |
 | 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Cerrada** (2026-10-23), T1–T26 hechas; aplicada y validada en producción |
-| 007-sincronizacion-oauth | Sincronización de solo lectura (proveedor → CaFam) con Google y Microsoft por OAuth 2.0, actualización automática y manual, y grupos de calendarios. La bidireccional queda para una versión futura | Spec, plan y tareas **aprobados** (2026-10-23), 15 tareas en tres iteraciones; implementación en curso en la rama `007-sincronizacion-oauth` |
+| 007-sincronizacion-oauth | Sincronización de solo lectura (proveedor → CaFam) con **Google** por OAuth 2.0, actualización automática y manual, y grupos de calendarios. Microsoft se quitó el 2026-10-27 (Enmienda 1: exige tarjeta); la bidireccional y Microsoft quedan para una versión futura | Spec, plan y tareas **aprobados** (2026-10-23) y enmendados (2026-10-27). Iteración 1 (T1–T5) **hecha** en la rama `007-sincronizacion-oauth`; siguiente, T6 |
 | 008-mejoras-de-experiencia | Calendario al estilo Google Calendar (analizado con REA): ventana de evento sobre el calendario, ventana rápida, arrastrar para crear, selector de hora, atajos, vista recordada, avisos y esqueletos | **Cerrada** (2026-10-24), T1–T23 hechas; aplicada y validada en producción |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
@@ -87,7 +87,7 @@ Añadido por la spec 008 (comportamiento estudiado en Google Calendar con REA; a
 - **Mes al estilo Google**: eventos con hora como punto + hora + título; de día completo o varios días como barra rellena del color pastel (enmienda de P9). **Rejilla** de semana y día a toda la altura de la pantalla.
 - **Agenda**: botón fijo "Hora actual". **Avisos** breves ("Evento creado", "Cambios guardados", "Evento borrado"), **esqueleto** con la forma de la vista mientras carga y **actualización** al volver a la app tras más de 60 s.
 
-**No hay** eventos recurrentes propios (spec futura sin número), mover o redimensionar eventos arrastrando, sincronización ni actualización de lo importado.
+**No hay** eventos recurrentes propios (spec futura sin número), mover o redimensionar eventos arrastrando, sincronización ni actualización de lo importado. La sincronización de Google (spec 007) tiene ya su base de datos y su lógica pura en dev (iteración 1), pero aún no tiene rutas ni pantallas.
 
 ## 3. Reglas de trabajo (obligatorias)
 
@@ -184,6 +184,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
+│   │   ├── sync/              # spec 007 (pura y testeada): limits, window, limit-events, nearest-color, event-row, google-events
 │   │   └── supabase/          # env.ts, server.ts, client.ts, proxy.ts
 │   └── types/database.ts      # GENERADO con `npm run db:types`; no editar a mano
 ├── public/
@@ -191,10 +192,11 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon.svg (maestro) → icon-192, icon-512, icon-512-maskable (letras al 85 %), apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
+│   ├── fixtures/sync/         # respuestas sintéticas de la API de Google Calendar (spec 007)
 │   ├── unit/                  # *.test.ts(x): lógica pura, formularios, vistas, filtros, sw-no-data, no-secrets…
 │   └── integration/           # schema, rls, signup, login, calendars-events, merge-calendars, preferences, profile-accent, remove-old-blue, range-performance contra Supabase dev + helpers.ts
 ├── vercel.json                # cron "0 6 * * *" → /api/cron/keep-alive
@@ -296,6 +298,14 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 - Añadido por la spec 005: `profiles.accent` (`text`, por defecto `'red'`, `check` en `red|blue|green|yellow|purple|gray`). La protegen las políticas de `profiles` (solo el propio); `visible_people()` y `calendar_members_with_names` no la exponen.
 - Añadido por la spec 008: `profiles.last_view` (`text` anulable, `check` en `agenda|month|week|day`; nulo = nunca elegida). La escribe `saveLastView` al elegir una vista con botón o atajo, sin revalidar; la protegen las mismas políticas de `profiles`.
 - Añadido por la spec 004: `import_calendar(p_name, p_color, p_events jsonb)` (`SECURITY INVOKER`, una transacción): crea el calendario del llamante y sus eventos desde un array de 1 a 2.000 elementos (`22023` si no) y, si un evento viola una restricción, no deja nada. No hay tablas ni columnas nuevas: el calendario importado no guarda nada de su origen.
+- Añadido por la spec 007 (iteración 1, solo en dev hasta la T14):
+  - Tablas con RLS: `calendar_connections` (cuenta de Google conectada: proveedor, `account_subject`, correo y estado `active | needs_reauth`; la lee solo su dueño), `calendar_connection_secrets` (solo el id del secreto de Vault; nadie la lee) y `synced_calendars` (calendario traído: id externo, estado `active | missing`, fallos y último resumen; la leen los miembros, sin el correo de la cuenta). Ningún cliente escribe en ellas. Borrar la conexión borra `synced_calendars` y deja el calendario como normal; un trigger borra el token de Vault.
+  - `events.external_id`, único por calendario cuando no es nulo. `account_notices.kind` admite `sync_revoked` y `sync_failing`.
+  - **Solo lectura:** las políticas de `events` exigen `not is_synced_calendar(calendar_id)` para crear, modificar, borrar o mover, también para el propietario. `merge_calendars` falla con `22023` si algún calendario es traído.
+  - Funciones del usuario: `connect_account` (token a Vault; misma cuenta → reemplaza el token y la reactiva; sexta cuenta → `CF429`), `select_synced_calendars` (un calendario por elemento nuevo; más de 20 → `CF429`), `detach_synced_calendars` y `disconnect_account` (conservar o borrar). `CF404` = conexión ajena.
+  - Funciones de sincronización `sync_claim_due`, `sync_claim_connection` (manual: `too_soon` antes de 5 minutos), `sync_get_token`, `sync_store_token`, `sync_apply_events` (reconcilia por `external_id` y guarda `{added, changed, removed, skipped, omitted}`) y `sync_fail` (`transient` → aviso al 3.er fallo; `revoked` → `needs_reauth` y aviso; `missing`). Reciben `p_secret`, que se compara con `cron_secret` de Vault (`42501` si no coincide), y se conceden a `anon`: así el motor no necesita la clave `service_role` (P4).
+  - `pg_cron` `sync-run-due` (cada hora) llama a `sync_trigger()`, que solo si hay algo pendiente hace `net.http_post` a `sync_app_url || '/api/sync/run'` con `Authorization: Bearer <cron_secret>`. Vault: `cron_secret` (igual que `CRON_SECRET`) y `sync_app_url`, que crea el usuario en cada proyecto (dev: `http://localhost:3000`).
+  - Ayudas de test solo para `service_role`: `vault_secret_matches` y `sync_scheduled_jobs`. `provider` admite `'microsoft'` en los `check`, pero desde la Enmienda 1 no se usa.
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, …) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
@@ -353,7 +363,15 @@ Variables (documentadas en `.env.example`):
 |----------|-------|-------|
 | `NEXT_PUBLIC_SUPABASE_URL` | `.env.local`, `.env.test.local`, Vercel | Pública |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `.env.local`, `.env.test.local`, Vercel | Pública (`sb_publishable_…`) |
-| `CRON_SECRET` | Solo Vercel | Secreto del servidor |
+| `CRON_SECRET` | Vercel, `.env.local` y `.env.test.local` | Secreto del servidor. Desde la spec 007 debe ser igual que `cron_secret` en Vault (los tests de `sync-worker` lo usan) |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `.env.local` y Vercel | Cliente OAuth de Google (spec 007), solo servidor. En dev, con la URI `http://localhost:3000/api/oauth/google/callback` |
+
+**Permisos registrados en Google** (pantalla de consentimiento, proyecto `CaFam`), todos con el prefijo `https://www.googleapis.com/auth/`:
+
+- Para usos futuros: `calendar.calendarlist`, `calendar.calendars`, `calendar.calendars.readonly`, `calendar.events` y `calendar.events.readonly`.
+- Registrar un permiso no lo concede: el usuario solo autoriza los que la app pide en la URL de autorización.
+- La 007 pide únicamente los de solo lectura (`openid email calendar.calendarlist.readonly calendar.events.readonly`, RF-2).
+- Los de escritura (`calendar.events`, `calendar.calendars`, `calendar.calendarlist`) quedan para una futura sincronización bidireccional, con su propia spec.
 | `SUPABASE_SECRET_KEY` | **Solo `.env.test.local`** | Crea y borra usuarios en `test:db`. Nunca en Vercel ni en `src/` |
 
 `.env.local` y `.env.test.local` apuntan a **dev** y están ignorados por git. No los leas ni los muestres en la salida.
@@ -445,7 +463,9 @@ npm run db:types       # regenera src/types/database.ts
 - **`scrollIntoView` desplaza todos los contenedores**, incluida la ventana que envuelve el formulario: para mover solo una lista ajusta su `scrollTop`.
 - **`not-sr-only` vuelve a permitir el salto de línea** (`white-space: normal`): si el texto debe quedar en una línea, añade `truncate` en la misma variante (`sm:truncate`).
 - **Límite de Supabase Auth en `test:db`:** muchas ejecuciones seguidas, o tras pruebas en el navegador, dan `AuthApiError: Request rate limit reached` en los `beforeAll`. No es un fallo del código: espera unos minutos y lanza `npm run test:db -- --no-file-parallelism`.
-- **Editar ficheros con Python en Windows:** abre con `newline=''` o escribirá CRLF y `format:check` fallará.
+- **Editar ficheros con Python en Windows:** abre con `encoding='utf-8', newline=''`. Sin `newline=''` escribe CRLF y `format:check` falla; sin `encoding` usa cp1252 y estropea las tildes (pasó en el `plan.md` de la 007).
+- **Tablas temporales en funciones `SECURITY DEFINER` con `search_path = ''`:** cualifícalas como `pg_temp.nombre` y créalas `on commit drop`.
+- **Microsoft Entra no admite cuentas personales sin directorio** (`AADSTS16000`), y crearlo exige una suscripción de Azure con tarjeta. Por eso la 007 quitó Microsoft (Enmienda 1).
 - **Tailwind 4 solo busca clases en `src/`** (`@import "tailwindcss" source("..")` en `globals.css`). Sin eso escanea todo el repositorio y convierte en CSS los ejemplos de la documentación (así se coló el azul antiguo `bg-[#…]` en producción).
 
 ## 11. Fuera de alcance hasta su spec
@@ -456,4 +476,7 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 La 006 y la 008 están cerradas y en producción (2026-10-23 y 2026-10-24). La 008 añadió la migración `profile_last_view`, ya aplicada en prod.
 
-La **007 (sincronización OAuth, solo lectura)** está en curso en la rama `007-sincronizacion-oauth` (rebasada sobre `main` el 2026-10-27). Decisiones: Google y Microsoft (cuentas personales y de trabajo), Google **publicado sin verificar** (aviso de "app no verificada" y tope de 100 usuarios, sin dominio propio), grupos para todos los calendarios, los calendarios traídos no se juntan y sin dependencias nuevas. Se implementa por `specs/007-sincronizacion-oauth/tasks.md` desde T1, que necesita al usuario en las consolas de Google y Microsoft.
+La **007 (sincronización OAuth, solo lectura)** está en curso en la rama `007-sincronizacion-oauth` (rebasada sobre `main` el 2026-10-27). La iteración 1 (T1–T5) está hecha: migraciones aplicadas **solo en dev** y lógica pura en `src/lib/sync/`. Decisiones: **solo Google** (Enmienda 1 del 2026-10-27: Microsoft exige tarjeta), Google sin verificar (aviso de "app no verificada" y tope de 100 usuarios), grupos para todos los calendarios, los calendarios traídos no se juntan y sin dependencias nuevas.
+
+- **Siguiente:** iteración 2, desde la T6 (cliente de Google), por `specs/007-sincronizacion-oauth/tasks.md`.
+- **Pendiente antes de la T14:** la app de Google está en **"Prueba"** (solo usuarios de prueba; la autorización caduca a los 7 días). Para publicarla, Google exige URL de página principal y de política de privacidad, así que hace falta otra enmienda de la spec. La propuesta es una página pública `/privacy` en CaFam y la URL de Vercel como página principal (ver "Comprobaciones de la T1" en `plan.md`).

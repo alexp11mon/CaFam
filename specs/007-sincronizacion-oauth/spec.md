@@ -1,20 +1,22 @@
-# Spec 007 — Sincronización de calendarios externos (Google y Microsoft)
+# Spec 007 — Sincronización de calendarios externos (Google)
 
-> Estado: **Aprobada** por el usuario (2026-10-23), con las dudas resueltas en la entrevista. Constitución: `docs/constitution.md` (P9 para lo visual). Parte de las specs 001 a 006 (cerradas) y es independiente de la 008 (mejoras de experiencia).
+> Estado: **Aprobada** por el usuario (2026-10-23), con las dudas resueltas en la entrevista. **Enmendada** el 2026-10-27 (ver "Enmienda 1").
+>
+> **Enmienda 1 (2026-10-27, decisión del usuario tras la T1):** se quita Microsoft. Registrar la aplicación exige un directorio de Microsoft Entra, y con una cuenta personal solo se consigue con una suscripción de Azure que pide tarjeta (P2). Microsoft pasa a "Fuera de alcance" (versión futura). Los RF conservan su número: RF-30 deja la parte de Microsoft y el requisito "Cuentas admitidas" queda solo con Google. Constitución: `docs/constitution.md` (P9 para lo visual). Parte de las specs 001 a 006 (cerradas) y es independiente de la 008 (mejoras de experiencia).
 > Numeración: AGENTS.md y la constitución reservaban el 007 para OAuth; la 008 se redactó antes. Las specs 001 a 004 citan OAuth como "spec 006": hoy es esta.
 > Decisiones de la entrevista (2026-10-23):
 >
-> - Proveedores: **Google Calendar y Microsoft (Outlook)**. Apple/iCloud queda fuera (no ofrece OAuth para calendarios).
+> - Proveedores: **Google Calendar y Microsoft (Outlook)**. Apple/iCloud queda fuera (no ofrece OAuth para calendarios). *(Enmienda 1: solo Google.)*
 > - Dirección: **solo traer** (proveedor → CaFam). La sincronización bidireccional queda para una versión futura del proyecto, con su propia spec.
 > - Frecuencia: **automática y con botón "Actualizar ahora"**.
 > - Alcance: el usuario **elige qué calendarios** de su cuenta trae; cada uno es un calendario de CaFam. Además hay **grupos de calendarios** que se ordenan y se ocultan o muestran de golpe.
 > - Al desconectar: **el usuario elige** conservar los calendarios (como normales y editables) o borrarlos.
 > - Rango: de **6 meses atrás a 1 año adelante**; los eventos repetidos se traen como eventos sueltos.
-> - Resolución de dudas (2026-10-23): Google se publica **sin pasar la verificación** (decisión del 2026-10-23, que sustituye a la anterior): gratis y sin dominio propio, con el aviso de "aplicación no verificada" de Google y su tope de 100 usuarios en total; se admiten cuentas de Microsoft **personales y de trabajo o escuela**; se aceptan las cifras propuestas (5 cuentas, 20 calendarios, 6 horas, 5 minutos, 3 fallos); los grupos valen para **todos los calendarios** que ve el usuario, también los sin propietario; un calendario traído **no se puede juntar**; **no entran dependencias nuevas** salvo que el plan demuestre que son necesarias.
+> - Resolución de dudas (2026-10-23): Google se publica **sin pasar la verificación** (decisión del 2026-10-23, que sustituye a la anterior): gratis y sin dominio propio, con el aviso de "aplicación no verificada" de Google y su tope de 100 usuarios en total; se admiten cuentas de Microsoft **personales y de trabajo o escuela** (anulado por la Enmienda 1); se aceptan las cifras propuestas (5 cuentas, 20 calendarios, 6 horas, 5 minutos, 3 fallos); los grupos valen para **todos los calendarios** que ve el usuario, también los sin propietario; un calendario traído **no se puede juntar**; **no entran dependencias nuevas** salvo que el plan demuestre que son necesarias.
 
 ## Contexto y objetivo
 
-Hoy un calendario externo entra en CaFam solo con la importación única de un `.ics` (spec 004): se queda congelado y hay que repetirla a mano para ver los cambios. Esta spec permite conectar una cuenta de Google o de Microsoft con su autorización, elegir qué calendarios traer y mantenerlos al día sin tocar nada. Así la familia ve en un solo sitio, junto a los calendarios propios de CaFam, lo que ya organiza en Google u Outlook. La sincronización es de un solo sentido: CaFam nunca escribe en la cuenta externa.
+Hoy un calendario externo entra en CaFam solo con la importación única de un `.ics` (spec 004): se queda congelado y hay que repetirla a mano para ver los cambios. Esta spec permite conectar una cuenta de Google con su autorización, elegir qué calendarios traer y mantenerlos al día sin tocar nada. Así la familia ve en un solo sitio, junto a los calendarios propios de CaFam, lo que ya organiza en Google. La sincronización es de un solo sentido: CaFam nunca escribe en la cuenta externa.
 
 Además, al poder haber muchos más calendarios en el panel, se añaden grupos para ordenarlos y mostrarlos u ocultarlos juntos.
 
@@ -22,11 +24,11 @@ Además, al poder haber muchos más calendarios en el panel, se añaden grupos p
 
 - **Propietario:** conecta la cuenta, elige los calendarios, los actualiza, los desconecta y decide cómo se agrupan en su panel.
 - **Miembro (Editor o Lector) de un calendario traído:** lo ve y, si el propietario lo ha compartido, lo usa como cualquier calendario compartido, pero no puede cambiar sus eventos.
-- **Proveedor externo (Google, Microsoft):** origen de los datos; puede revocar el permiso o dejar de responder.
+- **Proveedor externo (Google):** origen de los datos; puede revocar el permiso o dejar de responder.
 
 ## Historias de usuario
 
-- H1: Como usuario quiero conectar mi cuenta de Google o de Microsoft para traer mis calendarios a CaFam.
+- H1: Como usuario quiero conectar mi cuenta de Google para traer mis calendarios a CaFam.
 - H2: Como usuario quiero elegir qué calendarios de la cuenta se traen y cambiar esa elección más tarde.
 - H3: Como usuario quiero que los calendarios traídos se actualicen solos para no repetir ninguna importación.
 - H4: Como usuario quiero un botón para actualizar ahora cuando acabo de cambiar algo en el proveedor.
@@ -38,7 +40,7 @@ Además, al poder haber muchos más calendarios en el panel, se añaden grupos p
 
 ### Conectar una cuenta
 
-- RF-1: CUANDO el usuario pide conectar una cuenta y elige Google o Microsoft, EL SISTEMA le llevará a la pantalla de autorización del proveedor.
+- RF-1: CUANDO el usuario pide conectar una cuenta de Google, EL SISTEMA le llevará a la pantalla de autorización de Google.
 - RF-2: EL SISTEMA solicitará al proveedor únicamente permiso de lectura de calendarios, y nunca de escritura.
 - RF-3: CUANDO el usuario autoriza, EL SISTEMA volverá a CaFam, mostrará la cuenta conectada (proveedor y dirección de correo de la cuenta) y le pedirá elegir calendarios.
 - RF-4: SI el usuario cancela o rechaza la autorización en el proveedor, ENTONCES EL SISTEMA volverá a CaFam sin conectar nada e informará de ello.
@@ -83,7 +85,7 @@ Además, al poder haber muchos más calendarios en el panel, se añaden grupos p
 - RF-27: CUANDO el usuario desconecta una cuenta, EL SISTEMA le preguntará, indicando cuántos calendarios afecta y cuáles están compartidos y con cuántas personas, si quiere **conservar** los calendarios traídos como calendarios normales y editables, o **borrarlos**.
 - RF-28: CUANDO el usuario elige conservar, EL SISTEMA dejará los calendarios y sus eventos tal como están, sin conexión, y a partir de ese momento serán editables.
 - RF-29: CUANDO el usuario elige borrar, EL SISTEMA eliminará los calendarios traídos y sus eventos, incluidos los de los demás miembros con quienes estuvieran compartidos.
-- RF-30: CUANDO el usuario desconecta una cuenta, EL SISTEMA eliminará los datos de autorización que guardaba y, en Google, revocará además el permiso en el proveedor; en Microsoft, que no ofrece esa revocación, indicará al usuario cómo retirar el acceso desde su cuenta de Microsoft.
+- RF-30: CUANDO el usuario desconecta una cuenta, EL SISTEMA eliminará los datos de autorización que guardaba y revocará además el permiso en Google.
 - RF-31: SI el proveedor revoca el permiso o este caduca y no se puede renovar, ENTONCES EL SISTEMA dejará de actualizar esa cuenta, conservará los calendarios traídos sin cambios, avisará al usuario en la aplicación y le ofrecerá volver a conectar.
 - RF-32: CUANDO el usuario vuelve a conectar una cuenta cuyo permiso ha caducado, EL SISTEMA reanudará la actualización de los calendarios que ya tenía, sin duplicarlos.
 - RF-33: SI una actualización falla de forma temporal (el proveedor no responde o limita las peticiones), ENTONCES EL SISTEMA conservará los datos anteriores, lo reintentará en la siguiente actualización automática y mostrará en la cuenta que la última actualización falló.
@@ -105,9 +107,9 @@ Además, al poder haber muchos más calendarios en el panel, se añaden grupos p
 ## Requisitos no funcionales
 
 - **Privacidad y seguridad:** la autorización del proveedor solo se guarda en el servidor y nunca llega al navegador ni a otros usuarios (P3 y P4 de la constitución). Ningún usuario puede ver ni usar la conexión de otro.
-- **Solo lectura:** el permiso pedido nunca permite modificar nada en Google ni en Microsoft (RF-2).
+- **Solo lectura:** el permiso pedido nunca permite modificar nada en Google (RF-2).
 - **Coste cero:** solo capas gratuitas (P1 y P6). La frecuencia y los límites de esta spec tienen que poder cumplirse sin pagar ningún servicio, y no se contrata ningún dominio ni servicio de pago para Google.
-- **Cuentas admitidas:** Google (cuentas personales) y Microsoft (cuentas personales y de trabajo o escuela). SI una cuenta de trabajo o escuela exige la aprobación de un administrador, ENTONCES EL SISTEMA lo explicará con un mensaje en español en lugar de un error técnico.
+- **Cuentas admitidas:** Google (cuentas personales). (Enmienda 1: Microsoft queda fuera.)
 - **Dependencias:** esta spec no introduce dependencias de producción nuevas; si el plan demuestra que alguna es imprescindible, necesitará aprobación expresa del usuario (P6).
 - **Identidad visual (P9):** las pantallas nuevas siguen la identidad de la spec 005, con capturas a 390, 768 y 1440 px.
 - **Idioma:** textos y errores en español; el tratamiento de errores del proveedor no muestra mensajes técnicos al usuario.
@@ -131,13 +133,14 @@ Además, al poder haber muchos más calendarios en el panel, se añaden grupos p
 ## Fuera de alcance
 
 - Sincronización bidireccional: escribir, editar o borrar eventos en el proveedor desde CaFam (versión futura, con su propia spec).
-- Apple/iCloud (CalDAV) y otros proveedores distintos de Google y Microsoft.
+- Microsoft (Outlook): registrar la aplicación exige un directorio de Entra que no se crea sin tarjeta con una cuenta personal (Enmienda 1; versión futura).
+- Apple/iCloud (CalDAV) y otros proveedores distintos de Google.
 - Eventos recurrentes propios de CaFam (los repetidos del proveedor llegan sueltos).
 - Invitaciones, asistentes, respuestas (acepto/rechazo), recordatorios, archivos adjuntos, videollamadas y colores de evento del proveedor.
 - Traer tareas, contactos, salas, calendarios de otras personas a las que no se ha dado acceso, ni calendarios "delegados" de cuentas de empresa.
 - Notificaciones push o por correo cuando un calendario cambia.
 - Actualización en tiempo real (el cambio llega en la siguiente actualización, automática o manual).
-- Iniciar sesión en CaFam con Google o Microsoft (login social); esta spec solo conecta calendarios.
+- Iniciar sesión en CaFam con Google (login social); esta spec solo conecta calendarios.
 - Sustituir la importación `.ics` de la spec 004, que sigue igual.
 - Juntar calendarios traídos mientras la cuenta esté conectada (RF-44).
 - Exportar calendarios.
@@ -146,7 +149,7 @@ Además, al poder haber muchos más calendarios en el panel, se añaden grupos p
 
 - Todos los RF con test en verde y la verificación de P8 (`typecheck`, `lint`, `format:check`, `test`, `build` y `test:db`).
 - La aplicación de Google está publicada (no en modo de pruebas) sin verificar, y un usuario que no está en ninguna lista de pruebas puede conectar su cuenta de Google pasando por el aviso de "aplicación no verificada".
-- Demo manual en producción, con una cuenta real de cada proveedor: conectar, elegir dos calendarios, ver los eventos, cambiar un evento en el proveedor y comprobar que llega con "Actualizar ahora", compartir uno con otra persona, desconectar conservando uno y borrando otro.
+- Demo manual en producción, con una cuenta real de Google: conectar, elegir dos calendarios, ver los eventos, cambiar un evento en el proveedor y comprobar que llega con "Actualizar ahora", compartir uno con otra persona, desconectar conservando uno y borrando otro.
 - Demo manual de grupos: crear un grupo, meter calendarios, reordenar, ocultar y mostrar el grupo.
 - Revisión visual a 390, 768 y 1440 px con el acento rojo y el amarillo (P9).
 - Comprobación de que ningún secreto ni autorización del proveedor llega al navegador (`no-secrets` y revisión del diff).

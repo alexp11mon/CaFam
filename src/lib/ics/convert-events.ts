@@ -23,7 +23,7 @@ export const MAX_LOCATION = 200;
 const knownZones = new Map<string, boolean>();
 
 /** Whether `Intl` knows the zone: IANA names yes, Windows names such as "Romance Standard Time" no. */
-export function isKnownTimeZone(timeZone: string): boolean {
+function isKnownTimeZone(timeZone: string): boolean {
   let known = knownZones.get(timeZone);
   if (known === undefined) {
     try {

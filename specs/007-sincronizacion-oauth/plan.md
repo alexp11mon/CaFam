@@ -1,7 +1,7 @@
-# Plan 007 — Sincronización de calendarios externos (Google y Microsoft)
+# Plan 007 — Sincronización de calendarios externos (Google)
 
-> Spec de origen: `specs/007-sincronizacion-oauth/spec.md` (aprobada, 2026-10-23). Constitución: `docs/constitution.md`. Estado: **Aprobado** por el usuario (2026-10-23), con RF-30 y RF-47 reformulados en la spec.
-> Fuentes consultadas el 2026-10-23: Google (`support.google.com/cloud/answer/7454865`, `developers.google.com/identity/protocols/oauth2`, `developers.google.com/workspace/calendar/api/auth`) y Microsoft Learn (`event: delta`). Lo que no pude confirmar está en "Dudas abiertas".
+> Spec de origen: `specs/007-sincronizacion-oauth/spec.md` (aprobada, 2026-10-23). Constitución: `docs/constitution.md`. Estado: **Aprobado** por el usuario (2026-10-23), con RF-30 y RF-47 reformulados en la spec. **Enmendado** el 2026-10-27 con la Enmienda 1 de la spec: se quita Microsoft (ver "Comprobaciones de la T1"); lo que solo servía a Microsoft se borra del plan.
+> Fuentes consultadas el 2026-10-23: Google (`support.google.com/cloud/answer/7454865`, `developers.google.com/identity/protocols/oauth2`, `developers.google.com/workspace/calendar/api/auth`) y Microsoft Learn (`event: delta`, ya sin uso tras la Enmienda 1). Lo que no pude confirmar está en "Dudas abiertas".
 
 ## Resumen de arquitectura
 
@@ -30,8 +30,8 @@ No cambian: las políticas de `calendars`, `calendar_members` y `event_categorie
 
 - `limits.ts`: constantes (5 cuentas, 20 calendarios, 2.000 eventos, ventana de −6 y +12 meses, 5 minutos, 3 fallos, 6 horas). Cubre: RF-8, RF-14, RF-15, RF-19, RF-22, RF-24, RF-34.
 - `window.ts`: calcula el rango `[hoy−6 meses, hoy+12 meses]` en UTC. Cubre: RF-15.
-- `providers/google.ts` y `providers/microsoft.ts`: construyen la URL de autorización (PKCE), intercambian el código, renuevan el token, listan calendarios, leen eventos del rango y, en Google, revocan el token. Reciben `fetch` por parámetro para probarse sin red. Cubren: RF-1 a RF-3, RF-9, RF-12, RF-15, RF-16, RF-30.
-- `google-events.ts` y `microsoft-events.ts`: convierten la respuesta de cada proveedor al tipo `EventRow` que ya usa la importación `.ics`. Descartan cancelados y eventos inválidos y cuentan lo omitido. Cubren: RF-16 a RF-18.
+- `providers/google.ts`: construye la URL de autorización (PKCE), intercambia el código, renueva el token, lista calendarios, lee eventos del rango y revoca el token. Recibe `fetch` por parámetro para probarse sin red. Cubren: RF-1 a RF-3, RF-9, RF-12, RF-15, RF-16, RF-30.
+- `google-events.ts`: convierte la respuesta de Google al tipo `EventRow` que ya usa la importación `.ics`. Descarta cancelados y eventos inválidos y cuenta lo omitido. Cubren: RF-16 a RF-18.
 - `limit-events.ts`: si hay más de 2.000, se queda con los más cercanos a hoy y devuelve cuántos omitió. Cubre: RF-19.
 - `nearest-color.ts`: elige el color de la paleta de la spec 002 más cercano al del proveedor. Cubre: RF-10.
 - `oauth-state.ts`: genera y valida `state` y el verificador PKCE, guardados en una cookie `httpOnly`, `secure`, `sameSite=lax` de 10 minutos. Cubre: RF-1, RF-4, RF-5.
@@ -49,7 +49,7 @@ No cambian: las políticas de `calendars`, `calendar_members` y `event_categorie
 
 ### Páginas y componentes
 
-- `/dashboard/connections` (lista de cuentas, botones Google y Microsoft, errores de la vuelta de OAuth), `/dashboard/connections/new` (aviso de RF-48 antes de ir al proveedor) y `/dashboard/connections/[id]` (calendarios de la cuenta con casillas, estado, "Actualizar ahora", desconectar). Enlace desde "Más" y desde "Mis calendarios". Cubre: RF-1, RF-3, RF-9, RF-12, RF-14, RF-23, RF-26, RF-27, RF-48.
+- `/dashboard/connections` (lista de cuentas, botón Google, errores de la vuelta de OAuth), `/dashboard/connections/new` (aviso de RF-48 antes de ir al proveedor) y `/dashboard/connections/[id]` (calendarios de la cuenta con casillas, estado, "Actualizar ahora", desconectar). Enlace desde "Más" y desde "Mis calendarios". Cubre: RF-1, RF-3, RF-9, RF-12, RF-14, RF-23, RF-26, RF-27, RF-48.
 - `src/components/connections/`: `connection-list`, `provider-notice`, `calendar-picker`, `sync-status`, `sync-now-button`, `disconnect-dialog` (reutiliza `ConfirmDialog`). Cubren: las mismas rutas.
 - `src/components/groups/`: `group-section` (cabecera con interruptor de visibilidad y estado parcial), `group-form`, `assign-group-select`. Se integran en `calendar-list` y en el panel de filtros. Cubren: RF-35 a RF-41, RF-46.
 - `src/lib/calendar/organize-groups.ts` (pura): devuelve las secciones del usuario (grupos con sus calendarios, luego el agrupado por persona de los que no tienen grupo, que ya hace `grouping.ts`), el estado de visibilidad de cada grupo y la marca "Sin propietario". Cubre: RF-36, RF-37, RF-40, RF-42, RF-46.
@@ -61,7 +61,7 @@ No hacen: ninguna de estas piezas escribe en el proveedor, guarda contactos ni a
 
 Todas las tablas nuevas con RLS, `created_at` y las convenciones de la constitución.
 
-- `calendar_connections { id uuid pk, owner_id → profiles on delete cascade, provider ('google'|'microsoft'), account_subject text, account_email text, status ('active'|'needs_reauth'), last_synced_at timestamptz null, created_at, updated_at }`. Único `(owner_id, provider, account_subject)` (RF-6). Lectura solo del propietario; sin políticas de escritura.
+- `calendar_connections { id uuid pk, owner_id → profiles on delete cascade, provider ('google'|'microsoft'; tras la Enmienda 1 solo se usa 'google', y 'microsoft' se queda en el `check` de la migración ya aplicada para una versión futura), account_subject text, account_email text, status ('active'|'needs_reauth'), last_synced_at timestamptz null, created_at, updated_at }`. Único `(owner_id, provider, account_subject)` (RF-6). Lectura solo del propietario; sin políticas de escritura.
 - `calendar_connection_secrets { connection_id pk → calendar_connections on delete cascade, vault_secret_id uuid }`. RLS activado sin políticas. El token de renovación está en Vault (`vault.secrets`), nunca en una tabla de `public`.
 - `synced_calendars { calendar_id pk → calendars on delete cascade, connection_id → calendar_connections on delete cascade, provider, external_id text, state ('active'|'missing'), last_attempt_at, last_synced_at null, consecutive_failures int default 0, last_error text null, last_summary jsonb null, sync_started_at null }`. Único `(connection_id, external_id)`. Lectura para los miembros del calendario (sin correo de la cuenta); escritura solo por funciones. Si se borra la conexión, la fila desaparece y el calendario queda como normal (la conservación del RF-28 y del caso "propietario borra la cuenta").
 - `events.external_id text null`, con índice único parcial `(calendar_id, external_id) where external_id is not null`. Se vacía al conservar.
@@ -84,7 +84,7 @@ De usuario:
 De sincronización:
 - `sync_claim_due(p_secret, p_limit) returns table(calendar_id, connection_id, provider, external_id)`: calendarios `active` de conexiones `active` con `last_attempt_at` de hace más de 5 horas y sin `sync_started_at` reciente; marca intento e inicio (RF-22).
 - `sync_claim_connection(p_secret, p_connection_id, p_manual) returns jsonb`: si es manual y la conexión se actualizó hace menos de 5 minutos, devuelve `{status:"too_soon", next_at}` (RF-24); si no, `{status:"ok", calendars:[…]}`.
-- `sync_get_token(p_secret, p_connection_id) returns text` y `sync_store_token(p_secret, p_connection_id, p_token)` (rotación de Microsoft).
+- `sync_get_token(p_secret, p_connection_id) returns text` y `sync_store_token(p_secret, p_connection_id, p_token)` (por si Google devuelve un token de renovación nuevo al renovar).
 - `sync_apply_events(p_secret, p_calendar_id, p_events jsonb, p_skipped int, p_omitted int) returns jsonb`: en una transacción y con el calendario bloqueado, inserta los nuevos, modifica solo los que cambian, borra los que ya no llegan y guarda `last_summary` con `{added, changed, removed, skipped, omitted}`; reinicia fallos (RF-23, RF-25). Los eventos se identifican por `external_id`, sin duplicados.
 - `sync_fail(p_secret, p_calendar_id, p_kind)`: `transient` suma un fallo y, al llegar a 3, crea el aviso `sync_failing` una vez (RF-33, RF-34); `revoked` pone la conexión en `needs_reauth` y crea `sync_revoked` (RF-31); `missing` marca `state = 'missing'` (RF-13).
 - `sync_trigger()` (solo `postgres`): si hay algo pendiente y existen los secretos, hace `net.http_post` a `sync_app_url || '/api/sync/run'` con `timeout_milliseconds = 60000`. `cron.schedule('sync-run-due', '0 * * * *', …)`.
@@ -94,9 +94,9 @@ HTTP:
 - `GET /api/oauth/[provider]/callback` → 307 a `/dashboard/connections/<id>` si va bien, o a `/dashboard/connections?error=cancelled|failed|limit|max` (RF-4, RF-5, RF-8, RF-47).
 - `POST /api/sync/run` → `200 {"ok":true,"calendars":n}`, `401` sin secreto, `500` si falla.
 
-Variables nuevas (en `.env.example`, sin valores): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` (solo servidor, Vercel y `.env.local`) y `CRON_SECRET` en `.env.test.local` con el mismo valor que Vault, para los tests de base de datos.
+Variables nuevas (en `.env.example`, sin valores): `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (solo servidor, Vercel y `.env.local`) y `CRON_SECRET` en `.env.test.local` con el mismo valor que Vault, para los tests de base de datos.
 
-Permisos pedidos (solo lectura, RF-2): Google `openid email https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events.readonly`; Microsoft `openid email offline_access Calendars.Read`.
+Permisos pedidos (solo lectura, RF-2): Google `openid email https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events.readonly`.
 
 ## Flujo principal paso a paso
 
@@ -118,8 +118,8 @@ Caso central: conectar Google, traer un calendario y verlo actualizarse.
 - D4: Secretos de la sincronización en funciones protegidas por `cron_secret` (Vault y Vercel), sin clave `service_role`. Descartado: la clave secreta en la aplicación (P4 y `no-secrets.test.ts` lo prohíben). Motivo: la frontera de seguridad sigue en Postgres. Riesgo: la función depende de un secreto y no de una identidad (R2). Cubre: RF-20, RF-22 a RF-25, RF-31.
 - D5: El botón "Actualizar ahora" comprueba la propiedad por RLS y ejecuta el mismo motor con el secreto del servidor. Descartado: un camino de escritura distinto para el usuario. Motivo: un solo código para manual y automático. Cubre: RF-23, RF-24.
 - D6: El token de renovación se guarda en Vault, escrito por `connect_account` y leído por funciones de sincronización. Descartado: cifrarlo en la aplicación con una clave propia (otra variable, rotación de clave y más código). Motivo: Vault ya se usa en la 006 y no añade claves. El token nunca está en tablas de `public` ni llega al navegador. Cubre: RF-3, RF-30, requisito de privacidad.
-- D7: Cada actualización relee toda la ventana y reconcilia por `external_id`. Descartado: sincronización incremental (`syncToken` de Google, `delta` de Graph), que obliga a guardar estado por calendario y a manejar tokens que caducan (410). Motivo: con un máximo de 2.000 eventos es más simple y correcta. Cubre: RF-15, RF-25.
-- D8: Los repetidos los expande el proveedor (`singleEvents=true` en Google, `calendarView` en Microsoft Graph). Descartado: reutilizar `ical.js` sobre un `.ics`, que solo existe de forma pública. Motivo: ya respetan excepciones y cancelados y no hay dependencia nueva. Cubre: RF-16.
+- D7: Cada actualización relee toda la ventana y reconcilia por `external_id`. Descartado: sincronización incremental (`syncToken` de Google), que obliga a guardar estado por calendario y a manejar tokens que caducan (410). Motivo: con un máximo de 2.000 eventos es más simple y correcta. Cubre: RF-15, RF-25.
+- D8: Los repetidos los expande el proveedor (`singleEvents=true` en Google). Descartado: reutilizar `ical.js` sobre un `.ics`, que solo existe de forma pública. Motivo: ya respetan excepciones y cancelados y no hay dependencia nueva. Cubre: RF-16.
 - D9: Permisos mínimos de solo lectura (apartado "Contratos"). Descartado: `calendar.readonly`, que además permitiría descargar otros datos. Motivo: RF-2. Cubre: RF-2.
 - D10: OAuth con código de autorización, PKCE y `state` en cookie `httpOnly`, escrito con `fetch` y `node:crypto`. Descartado: una librería OAuth (P6). Motivo: dos proveedores con flujo estándar. Cubre: RF-1, RF-4, RF-5.
 - D11: Solo lectura por política RLS (`is_synced_calendar`) y no por la interfaz. Descartado: ocultar los botones sin política. Motivo: P3, la base de datos decide. Cubre: RF-20.
@@ -129,29 +129,28 @@ Caso central: conectar Google, traer un calendario y verlo actualizarse.
 - D15: Los avisos reutilizan `account_notices` con dos tipos nuevos. Descartado: una tabla propia. Motivo: ya sobreviven al cierre de sesión y tienen lectura propia. Cubre: RF-31, RF-34.
 - D16: El color del calendario es el de la paleta más cercano al del proveedor, y el nombre y color solo se copian al crear. Descartado: seguir al proveedor en cada actualización, que pisaría los cambios del propietario (casos límite de la spec). Cubre: RF-10, RF-21.
 - D17: Límite de 2.000 eventos con los más cercanos a hoy, leyendo como mucho 10.000 del proveedor. Descartado: fallar o traer el principio de la lista. Motivo: RF-19 y que una cuenta enorme no agote los 60 s. Cubre: RF-19.
-- D18: Microsoft se registra como aplicación multiusuario con autoridad `common`, para admitir cuentas personales y de trabajo o escuela. Descartado: dos registros. Cubre: requisito de cuentas admitidas.
 - D19: Un solo `maxDuration` de 60 s y hasta 4 calendarios en paralelo; lo que no llega se retoma en la siguiente ejecución. Descartado: colas o varias invocaciones encadenadas. Motivo: coste cero y simplicidad. Cubre: RF-22, requisito de rendimiento.
 
 ## Trazabilidad RF -> módulo
 
-- RF-1 -> `oauth/start`, `providers/*`, `oauth-state`, `connection-list`, `provider-notice`
-- RF-2 -> `providers/*` (permisos), `oauth/start`
+- RF-1 -> `oauth/start`, `providers/google`, `oauth-state`, `connection-list`, `provider-notice`
+- RF-2 -> `providers/google` (permisos), `oauth/start`
 - RF-3 -> `oauth/callback`, `connect_account`, `/connections/[id]`
 - RF-4 -> `oauth/callback`, `oauth-state`, `error-messages`
 - RF-5 -> `oauth/callback`, `error-messages`
 - RF-6 -> `calendar_connections` (único), `connect_account`
 - RF-7 -> `calendar_connections` (único por usuario)
 - RF-8 -> `connect_account`, `limits`
-- RF-9 -> `providers/*` (listar), `calendar-picker`
+- RF-9 -> `providers/google` (listar), `calendar-picker`
 - RF-10 -> `select_synced_calendars`, `nearest-color`, `saveSelection`
 - RF-11 -> `detach_synced_calendars`, `calendar-picker`, `disconnect-dialog`
-- RF-12 -> `providers/*` (listar en cada visita), `/connections/[id]`
+- RF-12 -> `providers/google` (listar en cada visita), `/connections/[id]`
 - RF-13 -> `sync_fail` (`missing`), `sync-status`
 - RF-14 -> `select_synced_calendars`, `limits`
-- RF-15 -> `window`, `providers/*`
-- RF-16 -> `providers/*` (expansión), `google-events`, `microsoft-events`
-- RF-17 -> `google-events`, `microsoft-events`
-- RF-18 -> `google-events`, `microsoft-events`, `summary`
+- RF-15 -> `window`, `providers/google`
+- RF-16 -> `providers/google` (expansión), `google-events`
+- RF-17 -> `google-events`
+- RF-18 -> `google-events`, `summary`
 - RF-19 -> `limit-events`, `summary`
 - RF-20 -> política de eventos, `is_synced_calendar`, formularios y detalle de evento
 - RF-21 -> políticas de `calendars` sin cambios, ficha del calendario
@@ -163,7 +162,7 @@ Caso central: conectar Google, traer un calendario y verlo actualizarse.
 - RF-27 -> `disconnect-dialog`, `disconnectAccount`
 - RF-28 -> `detach_synced_calendars`, `disconnect_account`
 - RF-29 -> `detach_synced_calendars`, `disconnect_account`
-- RF-30 -> `providers/google` (revocar), `disconnect_account` (borra el token). (en Microsoft, borrar el token y explicar cómo retirar el acceso)
+- RF-30 -> `providers/google` (revocar), `disconnect_account` (borra el token)
 - RF-31 -> `sync_fail` (`revoked`), `notice-list`
 - RF-32 -> `connect_account` (reemplaza el token), `callback`
 - RF-33 -> `sync_fail` (`transient`), `run-sync`
@@ -187,7 +186,8 @@ Caso central: conectar Google, traer un calendario y verlo actualizarse.
 
 - (d) En dev, con una transacción revertida: una función `SECURITY DEFINER` con `search_path = ''` lee `vault.decrypted_secrets` (devolvió 2 filas); `net.http_post` tiene la firma `url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer`; `pg_cron` 1.6.4 activo con los 3 trabajos de la spec 006; `pg_net` 0.20.4 y `supabase_vault` 0.3.1 instalados.
 - (a) Google: proyecto `CaFam` y cliente web con la URI `http://localhost:3000/api/oauth/google/callback` creados **sin pedir tarjeta** (no se activa la prueba de 300 $ del banner). Credenciales en `.env.local`. **Hallazgo:** Google exige URL de página principal y URL de **política de privacidad** para pasar a "En producción" aunque no se verifique, en contra de lo que daba por resuelto la spec. Mientras tanto la app queda en **"Prueba"** con usuarios de prueba (la autorización caduca a los 7 días), suficiente para desarrollar. Antes de la T14 hay que enmendar la spec: propuesta, una página pública `/privacy` en CaFam y la URL de Vercel como página principal (sin comprobar aún que Google acepte un dominio `vercel.app`).
-- (b) Microsoft: **bloqueado**. Una cuenta personal (`live.com`) no tiene directorio de Entra (`AADSTS16000`) y crearlo exige una suscripción de Azure con **tarjeta** (P2), salvo Azure for Students o una cuenta de trabajo o universidad. Decisión del usuario (2026-10-27): **seguir solo con Google**; Microsoft queda pendiente y hay que enmendar la spec (y las tareas T6–T15 que lo citan) antes de la T6.
+- (b) Microsoft: **bloqueado**. Una cuenta personal (`live.com`) no tiene directorio de Entra (`AADSTS16000`) y crearlo exige una suscripción de Azure con **tarjeta** (P2), salvo Azure for Students o una cuenta de trabajo o universidad. Decisión del usuario (2026-10-27): **seguir solo con Google**; Microsoft queda fuera: spec, plan y tareas enmendados el mismo día (Enmienda 1).
+- (a bis) Permisos registrados en la pantalla de consentimiento de Google (Acceso a los datos), añadidos por el usuario el 2026-10-27 para usos futuros: `calendar.calendarlist` (consultar, agregar y quitar calendarios suscritos), `calendar.calendars` (consultar y modificar propiedades de calendarios y crear calendarios secundarios), `calendar.calendars.readonly` (consultar título, descripción, zona horaria y otras propiedades), `calendar.events` (ver y editar eventos) y `calendar.events.readonly` (ver eventos), todos con el prefijo `https://www.googleapis.com/auth/`. Registrarlos **no** los concede: Google solo pide al usuario los que la aplicación incluye en la URL de autorización, y esta spec pide únicamente los de solo lectura del apartado "Contratos" (RF-2). Los de escritura (`calendar.events`, `calendar.calendars`, `calendar.calendarlist`) quedan disponibles para la sincronización bidireccional de una versión futura, con su propia spec.
 - (c) `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en `.env.local`; las de Microsoft no existen.
 - (e) `cron_secret` y `sync_app_url` (`http://localhost:3000`) en Vault de dev y `CRON_SECRET` en `.env.local` y `.env.test.local`: los crea el usuario con un script que no muestra el secreto.
 
@@ -195,12 +195,9 @@ Caso central: conectar Google, traer un calendario y verlo actualizarse.
 
 - R1: La primera petición de `pg_net` a Vercel tras un arranque en frío o una ejecución larga se corta -> mitigación: `timeout_milliseconds = 60000`, procesamiento por calendario con `sync_started_at` para no solaparse y reintento en la siguiente hora.
 - R2: Las funciones de sincronización dependen de un secreto compartido y no de una sesión -> mitigación: secreto aleatorio de al menos 32 bytes en Vault y Vercel, `42501` si no coincide, funciones sin devolver más que lo necesario y tests que comprueban que sin secreto no se puede leer ni escribir nada.
-- R3: Microsoft rota el refresh token en cada uso; si se pierde la respuesta, se pierde la cuenta -> mitigación: `sync_store_token` se llama antes de usar el token nuevo; si falla, la conexión pasa a `needs_reauth` (RF-31).
-- R4: Los secretos de cliente de Microsoft caducan como máximo a los 24 meses -> mitigación: anotarlo en `AGENTS.md` con la fecha y avisar en cuanto un intercambio falle con `invalid_client`.
-- R5: Las cuentas de trabajo o escuela pueden exigir que un administrador apruebe aplicaciones de un editor no verificado -> mitigación: mensaje claro (requisito de la spec); las cuentas personales no se ven afectadas.
+- R3: Si Google devuelve un token de renovación nuevo y se pierde, se pierde la cuenta -> mitigación: `sync_store_token` se llama antes de usar el token nuevo; si falla, la conexión pasa a `needs_reauth` (RF-31).
 - R6: Google limita a 100 usuarios nuevos las aplicaciones sin verificar y a 100 tokens de renovación por cuenta y aplicación -> mitigación: aviso en RF-48 y en la documentación; el uso familiar queda lejos.
 - R7: Un calendario muy grande agota los 60 s -> mitigación: tope de 10.000 eventos leídos, paralelismo de 4 y continuación en la ejecución siguiente.
-- R8: La zona horaria de los eventos de Microsoft de día completo puede llegar desplazada -> mitigación: se pide `Prefer: outlook.timezone="UTC"` y un test con fixture comprueba la convención de día completo de la spec 002.
 - R9: Quien borra su cuenta de CaFam no revoca el permiso en el proveedor, porque ya no queda token que usar -> mitigación: `delete_own_account` no cambia; el diálogo de borrado de cuenta sugiere desconectar antes las cuentas y se documenta cómo retirarlo desde el proveedor.
 - R10: Los textos de los proveedores (título, descripción, lugar) pueden superar los límites de la base de datos -> mitigación: se recortan a 100, 2.000 y 200 caracteres antes de enviarlos, y se rechaza el evento solo si sigue sin ser válido.
 
