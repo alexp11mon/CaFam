@@ -12,8 +12,9 @@
 
 ### Iteración 1 — Comprobaciones, base de datos y lógica pura
 
-- [ ] T1 Comprobar en dev y en los proveedores lo que el plan da por supuesto (coste cero, Vault, pg_net)
+- [x] T1 Comprobar en dev y en los proveedores lo que el plan da por supuesto (coste cero, Vault, pg_net)
   Pasos (el usuario hace los pasos de las consolas de Google y Microsoft; no se pegan secretos en el chat): (a) crear el proyecto de Google con la pantalla de consentimiento externa, **publicada**, con los permisos del plan y la URI de retorno `http://localhost:3000/api/oauth/google/callback`, comprobando que no pide tarjeta; (b) registrar la aplicación de Microsoft multiusuario (cuentas personales y de trabajo o escuela) con `Calendars.Read` y `offline_access` y la URI equivalente, comprobando que no pide tarjeta; (c) guardar las cuatro credenciales en `.env.local`; (d) en dev, con SQL de prueba: una función `SECURITY DEFINER` con `search_path = ''` lee `vault.decrypted_secrets`, `net.http_post` acepta `timeout_milliseconds` y `pg_cron` está activo; (e) crear en Vault de dev `cron_secret` y `sync_app_url`, y poner el mismo `CRON_SECRET` en `.env.local` y `.env.test.local`. Los resultados se anotan en `plan.md`.
+  Resultado (2026-10-27): Google sin tarjeta, en "Prueba" hasta tener política de privacidad; Microsoft bloqueado (exige tarjeta) y el usuario decide seguir solo con Google. Detalle en `plan.md`, "Comprobaciones de la T1".
   Hecho cuando: `plan.md` anota la salida de (d) y la confirmación de coste cero de (a) y (b), y `.env.example` lista las variables nuevas sin valores. Si (a) o (b) exigen tarjeta, se detiene la implementación y se vuelve al usuario. Cubre: requisitos de coste cero y de cuentas admitidas | Módulo: comprobación
 
 - [x] T2 Crear el esquema de conexiones y calendarios traídos, con RLS y solo lectura de eventos

@@ -183,6 +183,14 @@ Caso central: conectar Google, traer un calendario y verlo actualizarse.
 - RF-47 -> `oauth/callback`, `error-messages`. (solo si Google devuelve el rechazo)
 - RF-48 -> `provider-notice`, `/connections/new`
 
+## Comprobaciones de la T1 (2026-10-27)
+
+- (d) En dev, con una transacción revertida: una función `SECURITY DEFINER` con `search_path = ''` lee `vault.decrypted_secrets` (devolvió 2 filas); `net.http_post` tiene la firma `url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer`; `pg_cron` 1.6.4 activo con los 3 trabajos de la spec 006; `pg_net` 0.20.4 y `supabase_vault` 0.3.1 instalados.
+- (a) Google: proyecto `CaFam` y cliente web con la URI `http://localhost:3000/api/oauth/google/callback` creados **sin pedir tarjeta** (no se activa la prueba de 300 $ del banner). Credenciales en `.env.local`. **Hallazgo:** Google exige URL de página principal y URL de **política de privacidad** para pasar a "En producción" aunque no se verifique, en contra de lo que daba por resuelto la spec. Mientras tanto la app queda en **"Prueba"** con usuarios de prueba (la autorización caduca a los 7 días), suficiente para desarrollar. Antes de la T14 hay que enmendar la spec: propuesta, una página pública `/privacy` en CaFam y la URL de Vercel como página principal (sin comprobar aún que Google acepte un dominio `vercel.app`).
+- (b) Microsoft: **bloqueado**. Una cuenta personal (`live.com`) no tiene directorio de Entra (`AADSTS16000`) y crearlo exige una suscripción de Azure con **tarjeta** (P2), salvo Azure for Students o una cuenta de trabajo o universidad. Decisión del usuario (2026-10-27): **seguir solo con Google**; Microsoft queda pendiente y hay que enmendar la spec (y las tareas T6–T15 que lo citan) antes de la T6.
+- (c) `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en `.env.local`; las de Microsoft no existen.
+- (e) `cron_secret` y `sync_app_url` (`http://localhost:3000`) en Vault de dev y `CRON_SECRET` en `.env.local` y `.env.test.local`: los crea el usuario con un script que no muestra el secreto.
+
 ## Riesgos y mitigaciones
 
 - R1: La primera petición de `pg_net` a Vercel tras un arranque en frío o una ejecución larga se corta -> mitigación: `timeout_milliseconds = 60000`, procesamiento por calendario con `sync_started_at` para no solaparse y reintento en la siguiente hora.
