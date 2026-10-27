@@ -130,6 +130,73 @@ export type Database = {
           },
         ]
       }
+      calendar_connection_secrets: {
+        Row: {
+          connection_id: string
+          vault_secret_id: string
+        }
+        Insert: {
+          connection_id: string
+          vault_secret_id: string
+        }
+        Update: {
+          connection_id?: string
+          vault_secret_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_connection_secrets_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: true
+            referencedRelation: "calendar_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_connections: {
+        Row: {
+          account_email: string
+          account_subject: string
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          owner_id: string
+          provider: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_email: string
+          account_subject: string
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          owner_id: string
+          provider: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_email?: string
+          account_subject?: string
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          owner_id?: string
+          provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_connections_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_invites: {
         Row: {
           calendar_id: string
@@ -414,6 +481,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           ends_at: string
+          external_id: string | null
           id: string
           location: string | null
           starts_at: string
@@ -429,6 +497,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           ends_at: string
+          external_id?: string | null
           id?: string
           location?: string | null
           starts_at: string
@@ -444,6 +513,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           ends_at?: string
+          external_id?: string | null
           id?: string
           location?: string | null
           starts_at?: string
@@ -572,6 +642,66 @@ export type Database = {
         }
         Relationships: []
       }
+      synced_calendars: {
+        Row: {
+          calendar_id: string
+          connection_id: string
+          consecutive_failures: number
+          created_at: string
+          external_id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          last_summary: Json | null
+          last_synced_at: string | null
+          provider: string
+          state: string
+          sync_started_at: string | null
+        }
+        Insert: {
+          calendar_id: string
+          connection_id: string
+          consecutive_failures?: number
+          created_at?: string
+          external_id: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_summary?: Json | null
+          last_synced_at?: string | null
+          provider: string
+          state?: string
+          sync_started_at?: string | null
+        }
+        Update: {
+          calendar_id?: string
+          connection_id?: string
+          consecutive_failures?: number
+          created_at?: string
+          external_id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_summary?: Json | null
+          last_synced_at?: string | null
+          provider?: string
+          state?: string
+          sync_started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synced_calendars_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: true
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synced_calendars_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -635,6 +765,7 @@ export type Database = {
         Returns: string
       }
       is_calendar_member: { Args: { p_calendar_id: string }; Returns: boolean }
+      is_synced_calendar: { Args: { p_calendar_id: string }; Returns: boolean }
       join_with_code: {
         Args: { p_code: string; p_pin: string }
         Returns: {
