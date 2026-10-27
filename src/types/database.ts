@@ -822,6 +822,73 @@ export type Database = {
         }
         Returns: string
       }
+      sync_apply_events: {
+        Args: {
+          p_calendar_id: string
+          p_events: Json
+          p_omitted?: number
+          p_secret: string
+          p_skipped?: number
+        }
+        Returns: Json
+      }
+      sync_check_secret: { Args: { p_secret: string }; Returns: undefined }
+      sync_claim_connection: {
+        Args: { p_connection_id: string; p_manual: boolean; p_secret: string }
+        Returns: Json
+      }
+      sync_claim_due: {
+        Args: { p_limit?: number; p_secret: string }
+        Returns: {
+          calendar_id: string
+          connection_id: string
+          external_id: string
+          provider: string
+        }[]
+      }
+      sync_due_calendars: {
+        Args: never
+        Returns: {
+          calendar_id: string
+          connection_id: string
+          consecutive_failures: number
+          created_at: string
+          external_id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          last_summary: Json | null
+          last_synced_at: string | null
+          provider: string
+          state: string
+          sync_started_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "synced_calendars"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      sync_fail: {
+        Args: { p_calendar_id: string; p_kind: string; p_secret: string }
+        Returns: undefined
+      }
+      sync_get_token: {
+        Args: { p_connection_id: string; p_secret: string }
+        Returns: string
+      }
+      sync_scheduled_jobs: {
+        Args: never
+        Returns: {
+          jobname: string
+          schedule: string
+        }[]
+      }
+      sync_store_token: {
+        Args: { p_connection_id: string; p_secret: string; p_token: string }
+        Returns: undefined
+      }
+      sync_trigger: { Args: { p_dry_run?: boolean }; Returns: Json }
       vault_secret_matches: {
         Args: { p_id: string; p_value: string }
         Returns: boolean
