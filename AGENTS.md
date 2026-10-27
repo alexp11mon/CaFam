@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-27, al cerrar la iteración 1 de la spec 007 (T1–T5) y quitar Microsoft de su alcance (Enmienda 1).
+> Última actualización: 2026-10-27, al cerrar la iteración 2 de la spec 007 (T6–T11, rutas OAuth, motor y pantallas de cuentas conectadas).
 
 ## 1. Qué es
 
@@ -33,7 +33,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
 | 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Cerrada** (2026-10-22), T1–T13 hechas |
 | 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Cerrada** (2026-10-23), T1–T26 hechas; aplicada y validada en producción |
-| 007-sincronizacion-oauth | Sincronización de solo lectura (proveedor → CaFam) con **Google** por OAuth 2.0, actualización automática y manual, y grupos de calendarios. Microsoft se quitó el 2026-10-27 (Enmienda 1: exige tarjeta); la bidireccional y Microsoft quedan para una versión futura | Spec, plan y tareas **aprobados** (2026-10-23) y enmendados (2026-10-27). Iteración 1 (T1–T5) **hecha** en la rama `007-sincronizacion-oauth`; siguiente, T6 |
+| 007-sincronizacion-oauth | Sincronización de solo lectura (proveedor → CaFam) con **Google** por OAuth 2.0, actualización automática y manual, y grupos de calendarios. Microsoft se quitó el 2026-10-27 (Enmienda 1: exige tarjeta); la bidireccional y Microsoft quedan para una versión futura | Spec, plan y tareas **aprobados** (2026-10-23) y enmendados (2026-10-27). Iteraciones 1 (T1–T5) y 2 (T6–T11) **hechas** en la rama `007-sincronizacion-oauth` (subida a GitHub); siguiente, T12 |
 | 008-mejoras-de-experiencia | Calendario al estilo Google Calendar (analizado con REA): ventana de evento sobre el calendario, ventana rápida, arrastrar para crear, selector de hora, atajos, vista recordada, avisos y esqueletos | **Cerrada** (2026-10-24), T1–T23 hechas; aplicada y validada en producción |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
@@ -87,7 +87,13 @@ Añadido por la spec 008 (comportamiento estudiado en Google Calendar con REA; a
 - **Mes al estilo Google**: eventos con hora como punto + hora + título; de día completo o varios días como barra rellena del color pastel (enmienda de P9). **Rejilla** de semana y día a toda la altura de la pantalla.
 - **Agenda**: botón fijo "Hora actual". **Avisos** breves ("Evento creado", "Cambios guardados", "Evento borrado"), **esqueleto** con la forma de la vista mientras carga y **actualización** al volver a la app tras más de 60 s.
 
-**No hay** eventos recurrentes propios (spec futura sin número), mover o redimensionar eventos arrastrando, sincronización ni actualización de lo importado. La sincronización de Google (spec 007) tiene ya su base de datos y su lógica pura en dev (iteración 1), pero aún no tiene rutas ni pantallas.
+**No hay** eventos recurrentes propios (spec futura sin número), mover o redimensionar eventos arrastrando, sincronización ni actualización de lo importado. La sincronización de Google (spec 007) funciona en la rama y contra dev, pero **aún no está en producción** (falta la T14). Lo que hay en la rama (iteraciones 1 y 2):
+
+- **Cuentas conectadas** (`/dashboard/connections`, en "Más" y en "Mis calendarios"): lista de cuentas con su estado; "Conectar Google" pasa por un aviso previo (`/new`, explica la pantalla de "app no verificada") y luego por el OAuth. Hasta 5 cuentas.
+- **Ficha de la cuenta** (`/dashboard/connections/[id]`): elegir hasta 20 calendarios con casillas (al desmarcar uno se pide conservarlo o borrarlo), estado de cada calendario traído (última actualización correcta, último resumen, fallo o "ya no existe en la cuenta"), **Actualizar ahora** (como mucho cada 5 minutos) y **Desconectar** (revoca el permiso en Google y pide conservar o borrar sus calendarios, nombrando los compartidos).
+- **Actualización automática** cada hora: `pg_cron` llama a `/api/sync/run`, que reconcilia los eventos desde 6 meses atrás hasta 12 meses adelante.
+- **Solo lectura en la interfaz**: los calendarios traídos no se ofrecen como destino al crear, editar o duplicar; el detalle de sus eventos no tiene botones y explica que vienen de Google; no se pueden juntar. En "Mis calendarios" todos los miembros ven la última actualización y solo el propietario la cuenta de origen.
+- **Avisos** en "Mis calendarios": Google retiró el permiso (`sync_revoked`, con "Volver a conectar") y 3 fallos seguidos (`sync_failing`).
 
 ## 3. Reglas de trabajo (obligatorias)
 
@@ -153,6 +159,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   │   ├── calendar/      # vistas agenda/mes/semana/día (?view=&date=) + preferences-actions.ts (incl. saveLastView) + mini-month-actions.ts
 │   │   │   ├── calendars/     # page.tsx ("Mis calendarios"), new, [id]/edit, [id]/categories, merge + actions.ts (calendarios y juntar)
 │   │   │   ├── settings/      # Ajustes: acento + actions.ts (setAccent) y cuenta + account-actions.ts (spec 006)
+│   │   │   ├── connections/   # spec 007: page.tsx (lista), new (aviso previo), [id] (elegir calendarios, estado, actualizar, desconectar; `maxDuration` 60) + actions.ts (saveSelection, syncNow, disconnectAccount)
 │   │   │   └── events/        # new, [id] (página completa) + actions.ts (modo `modal`) + load-new-event.ts y load-event.ts (carga compartida con la ventana)
 │   │   ├── dashboard/join/    # "Unirme con código" (ID y PIN) + actions.ts
 │   │   ├── dashboard/import/  # "Importar calendario" (.ics) + actions.ts (`maxDuration` 60)
@@ -160,6 +167,8 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── dashboard/calendars/[id]/members/  # lista de miembros (cualquier miembro) + actions.ts
 │   │   ├── invite/[token]/    # vista previa y "Unirme" (ruta pública a nivel de proxy) + actions.ts
 │   │   ├── offline/page.tsx   # "Sin conexión" + "Reintentar" (estática, la precachea el SW)
+│   │   ├── api/oauth/[provider]/start, callback  # spec 007: inicio y vuelta del OAuth (estado en la cookie `cafam_oauth`)
+│   │   ├── api/sync/run/route.ts  # spec 007: POST con Bearer CRON_SECRET; actualiza lo pendiente (`maxDuration` 60)
 │   │   └── api/cron/keep-alive/route.ts  # GET protegido por CRON_SECRET
 │   ├── components/
 │   │   ├── ui/                # button (variantes), link-button, text-field, text-area, select, form-alert, time-field (combobox de horas), toast (avisos) (solo tokens)
@@ -173,6 +182,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── calendar/          # formularios, vistas (agenda-view, event-row, month/week/day, time-grid, slot-layer), event-modal, event-panel, quick-create, gone-event, calendar-skeleton, mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog…
 │   │   ├── sharing/           # invite-form, copy-button, invite-list, access-code-panel, member-list, join-code-form, invite-join-card
 │   │   ├── import/            # import-form, import-summary
+│   │   ├── connections/       # spec 007: connection-list, provider-notice, calendar-picker, sync-status, sync-now-button, disconnect-dialog
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
 │   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts, next-path.ts (destino tras login: solo /invite/<token>)
@@ -184,7 +194,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
-│   │   ├── sync/              # spec 007 (pura y testeada): limits, window, limit-events, nearest-color, event-row, google-events
+│   │   ├── sync/              # spec 007. Puras y testeadas: limits, window, limit-events, nearest-color, event-row, google-events, oauth-state, summary, error-messages, schemas, read-only (canWriteEvents, canMerge). Con red o BD: providers/google.ts (único cliente HTTP de Google), google-config, run-sync (motor con dependencias inyectadas), engine.ts (entrada del servidor), queries.ts (lecturas con RLS)
 │   │   └── supabase/          # env.ts, server.ts, client.ts, proxy.ts
 │   └── types/database.ts      # GENERADO con `npm run db:types`; no editar a mano
 ├── public/
@@ -237,6 +247,9 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/dashboard/calendars/[id]/members` | cualquier miembro (ajeno → 404) | Lista de miembros; controles según el rol |
 | `/dashboard/join` | con sesión | Unirme con ID y PIN |
 | `/dashboard/import` | con sesión | Importar un `.ics` (enlace o archivo) a un calendario nuevo |
+| `/dashboard/connections`, `/new?provider=google`, `/[id]` | con sesión (`[id]` ajeno → 404) | Cuentas conectadas (spec 007). `?error=cancelled\|failed\|max` muestra el fallo de la vuelta del OAuth |
+| `/api/oauth/google/start`, `/api/oauth/google/callback` | con sesión | OAuth de Google: `start` guarda estado y verificador PKCE en la cookie y redirige a Google; `callback` los comprueba, guarda la cuenta (`connect_account`) y lleva a `/dashboard/connections/[id]` |
+| `/api/sync/run` | `Authorization: Bearer ${CRON_SECRET}` (POST) | Lo llama `sync_trigger()` desde `pg_cron`; actualiza tandas de 4 calendarios durante como mucho 50 s |
 | `/invite/[token]` | sin sesión → `/login?next=/invite/<token>`; con sesión, vista previa | Cabeceras `Referrer-Policy: no-referrer` y `X-Robots-Tag: noindex` |
 | `/offline` | pública | Pantalla sin conexión |
 | `/forgot-password` | pública | Pedir el enlace de recuperación (spec 006); `?expired=1` avisa de un enlace caducado |
@@ -365,6 +378,7 @@ Variables (documentadas en `.env.example`):
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `.env.local`, `.env.test.local`, Vercel | Pública (`sb_publishable_…`) |
 | `CRON_SECRET` | Vercel, `.env.local` y `.env.test.local` | Secreto del servidor. Desde la spec 007 debe ser igual que `cron_secret` en Vault (los tests de `sync-worker` lo usan) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `.env.local` y Vercel | Cliente OAuth de Google (spec 007), solo servidor. En dev, con la URI `http://localhost:3000/api/oauth/google/callback` |
+| `SUPABASE_SECRET_KEY` | **Solo `.env.test.local`** | Crea y borra usuarios en `test:db`. Nunca en Vercel ni en `src/` |
 
 **Permisos registrados en Google** (pantalla de consentimiento, proyecto `CaFam`), todos con el prefijo `https://www.googleapis.com/auth/`:
 
@@ -372,7 +386,6 @@ Variables (documentadas en `.env.example`):
 - Registrar un permiso no lo concede: el usuario solo autoriza los que la app pide en la URL de autorización.
 - La 007 pide únicamente los de solo lectura (`openid email calendar.calendarlist.readonly calendar.events.readonly`, RF-2).
 - Los de escritura (`calendar.events`, `calendar.calendars`, `calendar.calendarlist`) quedan para una futura sincronización bidireccional, con su propia spec.
-| `SUPABASE_SECRET_KEY` | **Solo `.env.test.local`** | Crea y borra usuarios en `test:db`. Nunca en Vercel ni en `src/` |
 
 `.env.local` y `.env.test.local` apuntan a **dev** y están ignorados por git. No los leas ni los muestres en la salida.
 
@@ -424,6 +437,8 @@ npm run db:types       # regenera src/types/database.ts
 - **Crear desde la rejilla:** el workspace guarda el borrador (`Draft`), las vistas reciben `onCreate`/`draft` solo si `canCreate`, y `QuickCreate` es estado del cliente, no una ruta. La lógica de posiciones vive en `lib/calendar/slots.ts` y `popover.ts` (pura y testeada).
 - **Avisos:** `useToast().show(texto)` dentro del marco de la app (`ToastProvider` en `AppFrame`).
 - **Atajos:** se añaden en `KEYS` de `lib/calendar/shortcuts.ts` (con su test) y se atienden en `use-calendar-shortcuts.ts`.
+- **Sincronización (spec 007):** el servidor nunca usa `service_role`. `engineDeps()` crea un cliente con la clave publicable y pasa `CRON_SECRET` como `p_secret` a las funciones `sync_*`. Antes de llamar al motor desde una acción o página, comprueba con la sesión (RLS) que la conexión es del usuario (`getConnection`). Las llamadas a Google van solo en `providers/google.ts` y sus fallos son `ProviderError` con `kind` `revoked | missing | transient`.
+- **Calendarios traídos:** `CalendarRecord.synced` (de `getMyCalendars`/`getCalendar`) es `null` en los normales. Para decidir qué ofrece la interfaz usa `canWriteEvents` y `canMerge` de `lib/sync/read-only.ts`, nunca `role !== "viewer"` a secas. La base de datos lo impone igualmente.
 - **Commits:** Conventional Commits en español con la tarea: `feat: registro de usuario (T7)`.
 
 ## 10. Trampas conocidas
@@ -465,6 +480,8 @@ npm run db:types       # regenera src/types/database.ts
 - **Límite de Supabase Auth en `test:db`:** muchas ejecuciones seguidas, o tras pruebas en el navegador, dan `AuthApiError: Request rate limit reached` en los `beforeAll`. No es un fallo del código: espera unos minutos y lanza `npm run test:db -- --no-file-parallelism`.
 - **Editar ficheros con Python en Windows:** abre con `encoding='utf-8', newline=''`. Sin `newline=''` escribe CRLF y `format:check` falla; sin `encoding` usa cp1252 y estropea las tildes (pasó en el `plan.md` de la 007).
 - **Tablas temporales en funciones `SECURITY DEFINER` con `search_path = ''`:** cualifícalas como `pg_temp.nombre` y créalas `on commit drop`.
+- **OAuth de Google en dev solo en el puerto 3000**: es la única URI de retorno registrada. Con `next start -p 3100` las pantallas funcionan, pero conectar una cuenta real no; para probarlas sin Google, siembra la conexión y el calendario con SQL en dev.
+- **Preview de Vercel de la rama 007**: apunta a una base de datos sin las migraciones de la 007 y sin las variables de Google, así que las pantallas de cuentas fallan hasta la T14. No es un fallo del código.
 - **Microsoft Entra no admite cuentas personales sin directorio** (`AADSTS16000`), y crearlo exige una suscripción de Azure con tarjeta. Por eso la 007 quitó Microsoft (Enmienda 1).
 - **Tailwind 4 solo busca clases en `src/`** (`@import "tailwindcss" source("..")` en `globals.css`). Sin eso escanea todo el repositorio y convierte en CSS los ejemplos de la documentación (así se coló el azul antiguo `bg-[#…]` en producción).
 
@@ -476,7 +493,7 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 La 006 y la 008 están cerradas y en producción (2026-10-23 y 2026-10-24). La 008 añadió la migración `profile_last_view`, ya aplicada en prod.
 
-La **007 (sincronización OAuth, solo lectura)** está en curso en la rama `007-sincronizacion-oauth` (rebasada sobre `main` el 2026-10-27). La iteración 1 (T1–T5) está hecha: migraciones aplicadas **solo en dev** y lógica pura en `src/lib/sync/`. Decisiones: **solo Google** (Enmienda 1 del 2026-10-27: Microsoft exige tarjeta), Google sin verificar (aviso de "app no verificada" y tope de 100 usuarios), grupos para todos los calendarios, los calendarios traídos no se juntan y sin dependencias nuevas.
+La **007 (sincronización OAuth, solo lectura)** está en curso en la rama `007-sincronizacion-oauth` (rebasada sobre `main` el 2026-10-27). Las iteraciones 1 (T1–T5) y 2 (T6–T11) están hechas y la rama está en GitHub: migraciones aplicadas **solo en dev**, OAuth, motor, `/api/sync/run`, pantallas de cuentas conectadas, desconexión, avisos y solo lectura en la interfaz. Decisiones: **solo Google** (Enmienda 1 del 2026-10-27: Microsoft exige tarjeta), Google sin verificar (aviso de "app no verificada" y tope de 100 usuarios), grupos para todos los calendarios, los calendarios traídos no se juntan y sin dependencias nuevas.
 
-- **Siguiente:** iteración 2, desde la T6 (cliente de Google), por `specs/007-sincronizacion-oauth/tasks.md`.
+- **Siguiente:** iteración 3, desde la T12 (grupos de calendarios: migración `calendar_groups` y `organize-groups`), por `specs/007-sincronizacion-oauth/tasks.md`. Después T13 (acciones y pantallas de grupos), T14 (secretos, alcance y comandos de producción) y T15 (cierre).
 - **Pendiente antes de la T14:** la app de Google está en **"Prueba"** (solo usuarios de prueba; la autorización caduca a los 7 días). Para publicarla, Google exige URL de página principal y de política de privacidad, así que hace falta otra enmienda de la spec. La propuesta es una página pública `/privacy` en CaFam y la URL de Vercel como página principal (ver "Comprobaciones de la T1" en `plan.md`).
