@@ -47,6 +47,9 @@ async function Calendars() {
         <LinkButton href="/dashboard/join" variant="secondary">
           Unirme con código
         </LinkButton>
+        <LinkButton href="/dashboard/connections" variant="secondary">
+          Cuentas conectadas
+        </LinkButton>
         {ownedCount >= 2 ? (
           <LinkButton href="/dashboard/calendars/merge" variant="secondary">
             Juntar calendarios

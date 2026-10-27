@@ -1,0 +1,79 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
+import type { UpdateSummary } from "./summary";
+
+// Reads with the user's session: RLS shows only own connections and the
+// synced calendars the user is a member of (spec 007, T2).
+
+type Client = SupabaseClient<Database>;
+
+export interface Connection {
+  id: string;
+  email: string;
+  status: "active" | "needs_reauth";
+}
+
+export interface SyncedCalendarView {
+  calendarId: string;
+  externalId?: string;
+  name: string;
+  state: "active" | "missing";
+  lastSyncedAt: string | null;
+  lastError: string | null;
+  lastSummary: UpdateSummary | null;
+}
+
+export async function getConnections(supabase: Client): Promise<Connection[]> {
+  const { data, error } = await supabase
+    .from("calendar_connections")
+    .select("id, account_email, status")
+    .order("created_at");
+  if (error) throw error;
+  return data.map((row) => ({
+    id: row.id,
+    email: row.account_email,
+    status: row.status as Connection["status"],
+  }));
+}
+
+export async function getConnection(
+  supabase: Client,
+  id: string,
+): Promise<Connection | null> {
+  const { data, error } = await supabase
+    .from("calendar_connections")
+    .select("id, account_email, status")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data
+    ? {
+        id: data.id,
+        email: data.account_email,
+        status: data.status as Connection["status"],
+      }
+    : null;
+}
+
+export async function getSyncedCalendars(
+  supabase: Client,
+  connectionId: string,
+): Promise<SyncedCalendarView[]> {
+  const { data, error } = await supabase
+    .from("synced_calendars")
+    .select(
+      "calendar_id, external_id, state, last_synced_at, last_error, last_summary, calendars(name)",
+    )
+    .eq("connection_id", connectionId)
+    .order("created_at");
+  if (error) throw error;
+  return data.map((row) => ({
+    calendarId: row.calendar_id,
+    externalId: row.external_id,
+    name: row.calendars?.name ?? "",
+    state: row.state as SyncedCalendarView["state"],
+    lastSyncedAt: row.last_synced_at,
+    lastError: row.last_error,
+    lastSummary: row.last_summary as UpdateSummary | null,
+  }));
+}

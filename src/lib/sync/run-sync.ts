@@ -56,7 +56,7 @@ async function rpc(
 }
 
 /** One access token per connection; a rotated refresh token is stored first (R3). */
-async function accessToken(deps: SyncDeps, connectionId: string) {
+export async function accessToken(deps: SyncDeps, connectionId: string) {
   const refreshToken = (await rpc(deps, "sync_get_token", {
     p_secret: deps.secret,
     p_connection_id: connectionId,

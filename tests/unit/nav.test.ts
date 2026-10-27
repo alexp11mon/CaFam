@@ -8,6 +8,7 @@ describe("NAV_ITEMS", () => {
     expect(NAV_ITEMS.map(({ label, href }) => [label, href])).toEqual([
       ["Calendario", "/dashboard/calendar"],
       ["Mis calendarios", "/dashboard/calendars"],
+      ["Cuentas conectadas", "/dashboard/connections"],
       ["Unirme con código", "/dashboard/join"],
       ["Importar calendario", "/dashboard/import"],
       ["Ajustes", "/dashboard/settings"],
@@ -23,6 +24,8 @@ describe("activeSection (RF-20)", () => {
     ["/dashboard/calendars", "calendars"],
     ["/dashboard/calendars/new", "calendars"],
     ["/dashboard/calendars/0f6c/share", "calendars"],
+    ["/dashboard/connections", "connections"],
+    ["/dashboard/connections/0f6c", "connections"],
     ["/dashboard/join", "join"],
     ["/dashboard/import", "import"],
     ["/dashboard/settings", "settings"],

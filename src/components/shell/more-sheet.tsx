@@ -6,7 +6,12 @@ import { NAV_ITEMS, type Section } from "@/lib/shell/nav";
 import { BAR_ICON, BAR_ITEM } from "./bar-styles";
 import { MoreIcon, SECTION_ICONS, SignOutIcon } from "./icons";
 
-const SHEET_SECTIONS: readonly Section[] = ["join", "import", "settings"];
+const SHEET_SECTIONS: readonly Section[] = [
+  "connections",
+  "join",
+  "import",
+  "settings",
+];
 
 const ROW =
   "flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-base font-medium text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:bg-stone";

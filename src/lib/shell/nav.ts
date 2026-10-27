@@ -1,7 +1,8 @@
 // Destinations of the side rail and the bottom bar, and which one is current
 // (spec 005 RF-16, RF-18, RF-20; plan nav).
 
-export type Section = "calendar" | "calendars" | "join" | "import" | "settings";
+export type Section =
+  "calendar" | "calendars" | "connections" | "join" | "import" | "settings";
 
 export interface NavItem {
   section: Section;
@@ -15,6 +16,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
     section: "calendars",
     href: "/dashboard/calendars",
     label: "Mis calendarios",
+  },
+  {
+    section: "connections",
+    href: "/dashboard/connections",
+    label: "Cuentas conectadas",
   },
   { section: "join", href: "/dashboard/join", label: "Unirme con código" },
   {
@@ -30,6 +36,7 @@ const PREFIXES: readonly [string, Section][] = [
   ["/dashboard/calendar", "calendar"],
   ["/dashboard/events", "calendar"],
   ["/dashboard/calendars", "calendars"],
+  ["/dashboard/connections", "connections"],
   ["/dashboard/join", "join"],
   ["/dashboard/import", "import"],
   ["/dashboard/settings", "settings"],
