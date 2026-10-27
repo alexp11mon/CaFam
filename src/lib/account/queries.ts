@@ -32,7 +32,12 @@ export async function getProfile(
   return { displayName: data.display_name, timeZone: data.time_zone };
 }
 
-export type NoticeKind = "orphaned" | "kept_copy" | "deleted_calendar";
+export type NoticeKind =
+  | "orphaned"
+  | "kept_copy"
+  | "deleted_calendar"
+  | "sync_revoked"
+  | "sync_failing";
 
 export interface AccountNotice {
   id: string;
@@ -46,6 +51,8 @@ const NOTICE_KINDS = new Set<string>([
   "orphaned",
   "kept_copy",
   "deleted_calendar",
+  "sync_revoked",
+  "sync_failing",
 ]);
 
 /** Unread notices of the user, newest first; RLS only returns the own ones (RF-23). */

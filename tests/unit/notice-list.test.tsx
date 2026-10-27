@@ -63,3 +63,55 @@ describe("NoticeList (RF-23)", () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+// Spec 007, T10: sync notices (RF-31, RF-34).
+describe("NoticeList: sync notices", () => {
+  const SYNC: AccountNotice[] = [
+    {
+      id: "s1",
+      kind: "sync_revoked",
+      personName: "",
+      calendarName: "ana@gmail.com",
+      createdAt: "2026-11-04T10:00:00Z",
+    },
+    {
+      id: "s2",
+      kind: "sync_failing",
+      personName: "",
+      calendarName: "Trabajo",
+      createdAt: "2026-11-05T10:00:00Z",
+    },
+  ];
+
+  it("names the account or the calendar and offers to reconnect", () => {
+    render(<NoticeList notices={SYNC} dismissAction={vi.fn()} />);
+
+    expect(
+      screen.getByText(/Google ha retirado el permiso.*ana@gmail\.com/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/«Trabajo» ha fallado 3 veces seguidas/),
+    ).toBeInTheDocument();
+    const reconnect = screen.getByRole("link", { name: "Volver a conectar" });
+    expect(reconnect).toHaveAttribute(
+      "href",
+      "/dashboard/connections/new?provider=google",
+    );
+    expect(
+      screen.getByRole("link", { name: "Ver cuentas conectadas" }),
+    ).toHaveAttribute("href", "/dashboard/connections");
+  });
+
+  it("can be dismissed", async () => {
+    const dismissAction = vi.fn<(noticeId: string) => Promise<ConfirmState>>(
+      async () => ({}),
+    );
+    render(<NoticeList notices={SYNC} dismissAction={dismissAction} />);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Cerrar aviso sobre «Trabajo»" }),
+    );
+
+    expect(dismissAction.mock.calls[0][0]).toBe("s2");
+  });
+});

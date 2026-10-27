@@ -3,11 +3,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Spec 007, T9: saving the selection and "Actualizar ahora" (plan D5; RF-10,
 // RF-11, RF-14, RF-23, RF-24).
-const { rpc, rows, syncConnection, revalidatePath } = vi.hoisted(() => ({
+const {
+  rpc,
+  rows,
+  syncConnection,
+  revokeConnection,
+  revalidatePath,
+  redirect,
+} = vi.hoisted(() => ({
   rpc: vi.fn(),
   rows: {} as Record<string, unknown[]>,
   syncConnection: vi.fn(),
+  revokeConnection: vi.fn(),
   revalidatePath: vi.fn(),
+  redirect: vi.fn(),
 }));
 
 function query(table: string) {
@@ -27,10 +36,15 @@ vi.mock("@/lib/calendar/queries", () => ({
     userId: "user-1",
   }),
 }));
-vi.mock("@/lib/sync/engine", () => ({ syncConnection }));
+vi.mock("@/lib/sync/engine", () => ({ syncConnection, revokeConnection }));
 vi.mock("next/cache", () => ({ revalidatePath }));
+vi.mock("next/navigation", () => ({ redirect }));
 
-import { saveSelection, syncNow } from "@/app/dashboard/connections/actions";
+import {
+  disconnectAccount,
+  saveSelection,
+  syncNow,
+} from "@/app/dashboard/connections/actions";
 
 const CONNECTION = "6f1c2a9e-1f0e-4c38-9d43-2a3b5c6d7e8f";
 
@@ -173,5 +187,56 @@ describe("syncNow (RF-23, RF-24)", () => {
     const state = await syncNow(CONNECTION);
     expect(state.formError).toMatch(/ya no existe/i);
     expect(syncConnection).not.toHaveBeenCalled();
+  });
+});
+
+describe("disconnectAccount (RF-27 to RF-30)", () => {
+  function decision(value?: string) {
+    const data = new FormData();
+    if (value) data.set("decision", value);
+    return data;
+  }
+
+  it("needs a choice when the account brings calendars", async () => {
+    rows.synced_calendars = [{ calendar_id: "cal-1", external_id: "g1" }];
+    const state = await disconnectAccount(CONNECTION, {}, decision());
+
+    expect(state.formError).toMatch(/conservas o borras/);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("revokes in Google first, then disconnects and goes back to the list", async () => {
+    revokeConnection.mockImplementation(async () => {
+      expect(rpc).not.toHaveBeenCalled();
+    });
+
+    await disconnectAccount(CONNECTION, {}, decision("delete"));
+
+    expect(revokeConnection).toHaveBeenCalledWith(CONNECTION);
+    expect(rpcCalls("disconnect_account")[0][1]).toEqual({
+      p_connection_id: CONNECTION,
+      p_delete: true,
+    });
+    expect(revalidatePath).toHaveBeenCalledWith("/dashboard", "layout");
+    expect(redirect).toHaveBeenCalledWith("/dashboard/connections");
+  });
+
+  it("disconnects even if Google's revocation fails", async () => {
+    revokeConnection.mockRejectedValue(new Error("down"));
+
+    await disconnectAccount(CONNECTION, {}, decision("keep"));
+
+    expect(rpcCalls("disconnect_account")[0][1]).toMatchObject({
+      p_delete: false,
+    });
+  });
+
+  it("does nothing on another user's connection", async () => {
+    rows.calendar_connections = [];
+    const state = await disconnectAccount(CONNECTION, {}, decision("keep"));
+
+    expect(state.formError).toMatch(/ya no existe/i);
+    expect(revokeConnection).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
   });
 });

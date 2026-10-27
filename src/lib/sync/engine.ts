@@ -1,7 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 import type { Database } from "@/types/database";
-import { listCalendars, type ProviderCalendar } from "./providers/google";
+import {
+  listCalendars,
+  revokeToken,
+  type ProviderCalendar,
+} from "./providers/google";
 import {
   accessToken,
   syncCalendars,
@@ -64,4 +68,14 @@ export async function providerCalendars(
 ): Promise<ProviderCalendar[]> {
   const deps = engineDeps();
   return listCalendars(await accessToken(deps, connectionId), deps.fetchFn);
+}
+
+/** Withdraws CaFam's access in Google before disconnecting (RF-30). */
+export async function revokeConnection(connectionId: string): Promise<void> {
+  const deps = engineDeps();
+  const { data } = await deps.supabase.rpc("sync_get_token", {
+    p_secret: deps.secret,
+    p_connection_id: connectionId,
+  });
+  if (typeof data === "string" && data) await revokeToken(data, deps.fetchFn);
 }

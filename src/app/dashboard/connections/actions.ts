@@ -1,9 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { AUTH_MESSAGES } from "@/lib/auth/error-messages";
 import { requireActionUser } from "@/lib/calendar/queries";
-import { syncConnection, type ConnectionSync } from "@/lib/sync/engine";
+import type { ConfirmState } from "@/lib/forms/form-state";
+import {
+  revokeConnection,
+  syncConnection,
+  type ConnectionSync,
+} from "@/lib/sync/engine";
 import { nearestColor } from "@/lib/sync/nearest-color";
 import { connectionIdSchema, selectionSchema } from "@/lib/sync/schemas";
 import { summaryText, SYNC_ERRORS } from "@/lib/sync/summary";
@@ -163,4 +169,49 @@ export async function syncNow(connectionId: string): Promise<SyncState> {
   }
   revalidatePath("/dashboard", "layout");
   return resultText(sync);
+}
+
+/**
+ * Disconnects an account: revokes the token in Google, then keeps or deletes
+ * its calendars (RF-27 to RF-30). Bound with the connection id.
+ */
+export async function disconnectAccount(
+  connectionId: string,
+  _prev: ConfirmState,
+  formData: FormData,
+): Promise<ConfirmState> {
+  if (!connectionIdSchema.safeParse(connectionId).success) {
+    return { formError: GONE };
+  }
+  const user = await requireActionUser();
+  if (!(await ownsConnection(user, connectionId))) return { formError: GONE };
+
+  const decision = formData.get("decision");
+  const { data: synced } = await user.supabase
+    .from("synced_calendars")
+    .select("calendar_id")
+    .eq("connection_id", connectionId);
+  if (
+    (synced ?? []).length > 0 &&
+    decision !== "keep" &&
+    decision !== "delete"
+  ) {
+    return {
+      formError: "Elige si conservas o borras los calendarios de esta cuenta.",
+    };
+  }
+
+  // Disconnecting goes on even if Google does not answer (RF-30).
+  await revokeConnection(connectionId).catch(() => undefined);
+  try {
+    const { error } = await user.supabase.rpc("disconnect_account", {
+      p_connection_id: connectionId,
+      p_delete: decision === "delete",
+    });
+    if (error) return { formError: AUTH_MESSAGES.connection };
+  } catch {
+    return { formError: AUTH_MESSAGES.connection };
+  }
+  revalidatePath("/dashboard", "layout");
+  redirect("/dashboard/connections");
 }

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PageShell } from "@/components/calendar/page-shell";
 import { CalendarPicker } from "@/components/connections/calendar-picker";
+import { DisconnectDialog } from "@/components/connections/disconnect-dialog";
 import { SyncNowButton } from "@/components/connections/sync-now-button";
 import { SyncStatus } from "@/components/connections/sync-status";
 import { FormAlert } from "@/components/ui/form-alert";
@@ -13,10 +14,14 @@ import {
   ProviderError,
   type ProviderCalendar,
 } from "@/lib/sync/providers/google";
-import { getConnection, getSyncedCalendars } from "@/lib/sync/queries";
+import {
+  getConnection,
+  getSharedCounts,
+  getSyncedCalendars,
+} from "@/lib/sync/queries";
 import { connectionIdSchema } from "@/lib/sync/schemas";
 import { SYNC_ERRORS } from "@/lib/sync/summary";
-import { saveSelection, syncNow } from "../actions";
+import { disconnectAccount, saveSelection, syncNow } from "../actions";
 
 export const metadata: Metadata = { title: "Cuenta de Google" };
 
@@ -58,6 +63,10 @@ async function ConnectionDetail({
       : Promise.resolve({ error: SYNC_ERRORS.revoked }),
   ]);
   const syncedIds = new Set(synced.map((c) => c.externalId));
+  const sharedWith = await getSharedCounts(
+    supabase,
+    synced.map((c) => c.calendarId),
+  );
 
   return (
     <>
@@ -109,6 +118,28 @@ async function ConnectionDetail({
             }))}
           />
         )}
+      </section>
+
+      <section
+        aria-labelledby="disconnect-heading"
+        className="flex flex-col gap-3 border-t border-line pt-6"
+      >
+        <h2 id="disconnect-heading" className="text-lg font-semibold text-ink">
+          Desconectar la cuenta
+        </h2>
+        <p className="text-ink">
+          Podrás conservar sus calendarios como normales o borrarlos.
+        </p>
+        <div>
+          <DisconnectDialog
+            email={connection.email}
+            action={disconnectAccount.bind(null, id)}
+            calendars={synced.map((c) => ({
+              name: c.name,
+              sharedWith: sharedWith.get(c.calendarId) ?? 0,
+            }))}
+          />
+        </div>
       </section>
     </>
   );

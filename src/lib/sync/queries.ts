@@ -77,3 +77,22 @@ export async function getSyncedCalendars(
     lastSummary: row.last_summary as UpdateSummary | null,
   }));
 }
+
+/** People other than the owner in each calendar; the owner reads every member (RF-27). */
+export async function getSharedCounts(
+  supabase: Client,
+  calendarIds: string[],
+): Promise<Map<string, number>> {
+  const counts = new Map(calendarIds.map((id) => [id, 0]));
+  if (calendarIds.length === 0) return counts;
+  const { data, error } = await supabase
+    .from("calendar_members")
+    .select("calendar_id")
+    .in("calendar_id", calendarIds)
+    .neq("role", "owner");
+  if (error) throw error;
+  for (const row of data) {
+    counts.set(row.calendar_id, (counts.get(row.calendar_id) ?? 0) + 1);
+  }
+  return counts;
+}
