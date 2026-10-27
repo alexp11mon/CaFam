@@ -25,6 +25,7 @@ import {
   isCalendarView,
   parseViewParams,
 } from "@/lib/calendar/ranges";
+import { canWriteEvents } from "@/lib/sync/read-only";
 import { createEvent } from "../events/actions";
 import { loadMonthMarks } from "./mini-month-actions";
 import {
@@ -96,7 +97,7 @@ async function CalendarContent({
     location: record.location,
     calendarName: names.get(record.calendarId) ?? "",
   }));
-  const canCreate = calendars.some((calendar) => calendar.role !== "viewer");
+  const canCreate = calendars.some(canWriteEvents);
   const nextEvents = upcoming
     .filter((record) => !record.allDay)
     .map((record) => ({
@@ -171,7 +172,7 @@ async function CalendarContent({
         loadMonthMarks={loadMonthMarks}
         saveLastView={saveLastView}
         editableCalendars={calendars
-          .filter((calendar) => calendar.role !== "viewer")
+          .filter(canWriteEvents)
           .map(({ id, name, color }) => ({ id, name, color }))}
         createAction={createEvent}
       />

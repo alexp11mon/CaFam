@@ -11,8 +11,10 @@ import {
   getMyCalendars,
   getPeople,
   getPreferences,
+  getProfileTimeZone,
   requireUser,
 } from "@/lib/calendar/queries";
+import { canMerge } from "@/lib/sync/read-only";
 import { leaveCalendar } from "./[id]/members/actions";
 import { decideOrphanCalendar, dismissNotice } from "./orphan-actions";
 
@@ -21,10 +23,11 @@ export const metadata: Metadata = { title: "Mis calendarios" };
 // Reads the session cookies, so it streams behind <Suspense> (cacheComponents).
 async function Calendars() {
   const { supabase, userId } = await requireUser();
-  const [records, people, preferences] = await Promise.all([
+  const [records, people, preferences, timeZone] = await Promise.all([
     getMyCalendars(supabase, userId),
     getPeople(supabase),
     getPreferences(supabase, userId),
+    getProfileTimeZone(supabase, userId),
   ]);
   // Same order as the filter panel: people, then calendars within each (RF-45).
   const calendars = groupByPerson({
@@ -33,7 +36,7 @@ async function Calendars() {
     calendars: records,
     ...preferences,
   }).flatMap((group) => group.calendars);
-  const ownedCount = calendars.filter((c) => c.role === "owner").length;
+  const ownedCount = calendars.filter(canMerge).length;
 
   return (
     <>
@@ -56,7 +59,11 @@ async function Calendars() {
           </LinkButton>
         ) : null}
       </div>
-      <CalendarList calendars={calendars} leaveAction={leaveCalendar} />
+      <CalendarList
+        calendars={calendars}
+        timeZone={timeZone}
+        leaveAction={leaveCalendar}
+      />
     </>
   );
 }

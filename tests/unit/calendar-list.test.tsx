@@ -8,9 +8,15 @@ import {
 } from "@/components/dashboard/calendar-list";
 
 const CALENDARS: CalendarListItem[] = [
-  { id: "1", name: "Mi calendario", color: "#A0C4FF", role: "owner" },
-  { id: "2", name: "Familia", color: "#16A34A", role: "editor" },
-  { id: "3", name: "Fútbol", color: "#DC2626", role: "viewer" },
+  {
+    id: "1",
+    name: "Mi calendario",
+    color: "#A0C4FF",
+    role: "owner",
+    synced: null,
+  },
+  { id: "2", name: "Familia", color: "#16A34A", role: "editor", synced: null },
+  { id: "3", name: "Fútbol", color: "#DC2626", role: "viewer", synced: null },
 ];
 
 // jsdom does not implement the modal methods of <dialog>.
@@ -27,7 +33,13 @@ const leave = vi.fn<(id: string) => Promise<ConfirmState>>(async () => ({}));
 
 describe("CalendarList", () => {
   it("shows each calendar with its name, color and translated role (RF-13)", () => {
-    render(<CalendarList calendars={CALENDARS} leaveAction={leave} />);
+    render(
+      <CalendarList
+        timeZone="Europe/Madrid"
+        calendars={CALENDARS}
+        leaveAction={leave}
+      />,
+    );
 
     const items = screen.getAllByRole("listitem");
     expect(items).toHaveLength(3);
@@ -49,7 +61,11 @@ describe("CalendarList", () => {
 
   it("keeps the order it receives (RF-45)", () => {
     render(
-      <CalendarList calendars={[...CALENDARS].reverse()} leaveAction={leave} />,
+      <CalendarList
+        timeZone="Europe/Madrid"
+        calendars={[...CALENDARS].reverse()}
+        leaveAction={leave}
+      />,
     );
 
     const names = screen
@@ -59,7 +75,13 @@ describe("CalendarList", () => {
   });
 
   it("offers Editar only to the owner and Categorías to owner and editor (RF-41)", () => {
-    render(<CalendarList calendars={CALENDARS} leaveAction={leave} />);
+    render(
+      <CalendarList
+        timeZone="Europe/Madrid"
+        calendars={CALENDARS}
+        leaveAction={leave}
+      />,
+    );
 
     const [owner, editor, viewer] = screen.getAllByRole("listitem");
 
@@ -79,7 +101,13 @@ describe("CalendarList", () => {
   });
 
   it("the owner sees Compartir y miembros and cannot leave (RF-33)", () => {
-    render(<CalendarList calendars={CALENDARS} leaveAction={leave} />);
+    render(
+      <CalendarList
+        timeZone="Europe/Madrid"
+        calendars={CALENDARS}
+        leaveAction={leave}
+      />,
+    );
 
     const [owner] = screen.getAllByRole("listitem");
 
@@ -90,7 +118,13 @@ describe("CalendarList", () => {
   });
 
   it("editor and viewer see Miembros and Salir with confirmation (RF-34)", async () => {
-    render(<CalendarList calendars={CALENDARS} leaveAction={leave} />);
+    render(
+      <CalendarList
+        timeZone="Europe/Madrid"
+        calendars={CALENDARS}
+        leaveAction={leave}
+      />,
+    );
     const [, editor, viewer] = screen.getAllByRole("listitem");
     const user = userEvent.setup();
 
@@ -117,7 +151,13 @@ describe("CalendarList", () => {
   });
 
   it("shows the empty state with a way to create a calendar (RF-7)", () => {
-    render(<CalendarList calendars={[]} leaveAction={leave} />);
+    render(
+      <CalendarList
+        timeZone="Europe/Madrid"
+        calendars={[]}
+        leaveAction={leave}
+      />,
+    );
 
     expect(
       screen.getByText("Todavía no tienes calendarios."),

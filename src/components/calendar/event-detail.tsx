@@ -18,6 +18,8 @@ export interface EventDetailData {
   categoryName: string | null;
   /** Who created it, or the text for a gone author (spec 006, RF-34 to RF-36). */
   author: string;
+  /** From a connected account: changed only there (spec 007 RF-21). */
+  synced?: boolean;
 }
 
 function Row({
@@ -82,6 +84,11 @@ export function EventDetail({
         <Row label="Calendario">{event.calendarName}</Row>
         <Row label="Creado por">{event.author}</Row>
       </dl>
+      {event.synced ? (
+        <p className="text-sm text-muted">
+          Este evento viene de Google y solo se puede cambiar allí.
+        </p>
+      ) : null}
       {canEdit ? (
         <div className="flex flex-wrap gap-3">
           {actions}

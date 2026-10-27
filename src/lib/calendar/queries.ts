@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_ACCENT, isAccent, type AccentId } from "@/lib/theme/accents";
 import type { CalendarPreference, Person, PersonPreference } from "./grouping";
+import type { SyncedInfo } from "@/lib/sync/read-only";
 import type { Database } from "@/types/database";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
@@ -20,6 +21,8 @@ export interface CalendarRecord {
   ownerId: string | null;
   createdAt: string;
   role: CalendarRole;
+  /** Brought from a connected account: read-only (spec 007 RF-20, RF-26). */
+  synced: SyncedInfo | null;
 }
 
 /** Session for a Server Action or Route Handler; no session means login. */
@@ -38,7 +41,7 @@ export async function requireUser() {
 }
 
 const CALENDAR_SELECT =
-  "role, calendars(id, name, description, color, owner_id, created_at)";
+  "role, calendars(id, name, description, color, owner_id, created_at, synced_calendars(last_synced_at, calendar_connections(account_email)))";
 
 type CalendarRow = {
   role: CalendarRole;
@@ -49,6 +52,10 @@ type CalendarRow = {
     color: string;
     owner_id: string | null;
     created_at: string;
+    synced_calendars: {
+      last_synced_at: string | null;
+      calendar_connections: { account_email: string } | null;
+    } | null;
   } | null;
 };
 
@@ -63,6 +70,14 @@ function toRecord({ role, calendars }: CalendarRow): CalendarRecord[] {
           ownerId: calendars.owner_id,
           createdAt: calendars.created_at,
           role,
+          synced: calendars.synced_calendars
+            ? {
+                lastSyncedAt: calendars.synced_calendars.last_synced_at,
+                accountEmail:
+                  calendars.synced_calendars.calendar_connections
+                    ?.account_email ?? null,
+              }
+            : null,
         },
       ]
     : [];

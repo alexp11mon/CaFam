@@ -9,6 +9,7 @@ import {
   requireUser,
 } from "@/lib/calendar/queries";
 import { getMembers } from "@/lib/sharing/queries";
+import { canMerge } from "@/lib/sync/read-only";
 import { mergeCalendars } from "../actions";
 
 export const metadata: Metadata = { title: "Juntar calendarios" };
@@ -16,10 +17,9 @@ export const metadata: Metadata = { title: "Juntar calendarios" };
 // Reads the session, so it streams behind <Suspense> (cacheComponents).
 async function Merge() {
   const { supabase, userId } = await requireUser();
-  // Only calendars the user owns can be merged (RF-53); the database enforces it too.
-  const owned = (await getMyCalendars(supabase, userId)).filter(
-    (calendar) => calendar.role === "owner",
-  );
+  // Only calendars the user owns can be merged (RF-53), never synced ones
+  // (spec 007 RF-45); the database enforces both too.
+  const owned = (await getMyCalendars(supabase, userId)).filter(canMerge);
 
   if (owned.length < 2) {
     return (

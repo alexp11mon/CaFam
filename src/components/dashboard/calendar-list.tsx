@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
+import { formatWhen } from "@/components/connections/sync-status";
 import { LinkButton } from "@/components/ui/link-button";
 import type { ConfirmState } from "@/lib/forms/form-state";
+import type { SyncedInfo } from "@/lib/sync/read-only";
 import type { Database } from "@/types/database";
 
 type CalendarRole = Database["public"]["Enums"]["calendar_role"];
@@ -11,6 +13,7 @@ export interface CalendarListItem {
   name: string;
   color: string;
   role: CalendarRole;
+  synced: SyncedInfo | null;
 }
 
 const ROLE_LABELS: Record<CalendarRole, string> = {
@@ -25,9 +28,11 @@ const ACTION_LINK =
 /** Calendars the user belongs to, in the order received (RF-13, RF-41, RF-45). */
 export function CalendarList({
   calendars,
+  timeZone,
   leaveAction,
 }: {
   calendars: CalendarListItem[];
+  timeZone: string;
   /** Leaves a calendar that belongs to someone else (RF-27, RF-34). */
   leaveAction: (calendarId: string) => Promise<ConfirmState>;
 }) {
@@ -66,6 +71,17 @@ export function CalendarList({
               {ROLE_LABELS[calendar.role]}
             </span>
           </div>
+          {calendar.synced ? (
+            // Every member sees the last update; only the owner the account (spec 007 RF-26).
+            <p className="text-sm text-muted tabular-nums">
+              {calendar.synced.lastSyncedAt
+                ? `Traído de Google, actualizado el ${formatWhen(calendar.synced.lastSyncedAt, timeZone)}.`
+                : "Traído de Google, todavía no se ha actualizado."}
+              {calendar.synced.accountEmail
+                ? ` Cuenta: ${calendar.synced.accountEmail}.`
+                : null}
+            </p>
+          ) : null}
           <div className="flex flex-wrap items-center gap-x-4">
             {calendar.role === "owner" ? (
               <Link

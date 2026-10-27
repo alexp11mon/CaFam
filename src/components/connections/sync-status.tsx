@@ -2,7 +2,7 @@ import type { SyncedCalendarView } from "@/lib/sync/queries";
 import { summaryText, SYNC_ERRORS } from "@/lib/sync/summary";
 import type { FailureKind } from "@/lib/sync/providers/google";
 
-function formatWhen(iso: string, timeZone: string) {
+export function formatWhen(iso: string, timeZone: string) {
   return new Intl.DateTimeFormat("es-ES", {
     day: "numeric",
     month: "short",

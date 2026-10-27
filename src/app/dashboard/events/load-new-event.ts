@@ -5,6 +5,7 @@ import type {
 } from "@/components/calendar/event-form";
 import { eventToFormDates, todayKey } from "@/lib/calendar/format";
 import { parseNewEventQuery } from "@/lib/calendar/new-event-query";
+import { canWriteEvents } from "@/lib/sync/read-only";
 import {
   getCategoriesForCalendars,
   getEvent,
@@ -34,8 +35,8 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
     getMyCalendars(supabase, userId),
     getProfileTimeZone(supabase, userId),
   ]);
-  // Only calendars where the user can write (RF-27).
-  const editable = calendars.filter((calendar) => calendar.role !== "viewer");
+  // Only calendars where the user can write (RF-27), never synced ones (spec 007 RF-20).
+  const editable = calendars.filter(canWriteEvents);
   if (editable.length === 0) return { kind: "no-calendar" };
 
   const categories = await getCategoriesForCalendars(

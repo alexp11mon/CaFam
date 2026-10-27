@@ -56,7 +56,7 @@
   Pasos: test primero en `tests/unit/disconnect-dialog.test.tsx`, `tests/unit/connection-actions.test.ts` y `tests/unit/notice-list.test.tsx` (ampliar los existentes). Comprueban: el diálogo cuenta los calendarios, nombra los compartidos y con cuántas personas y ofrece Conservar o Borrar sin opción marcada; la acción revoca el token en Google antes de llamar a `disconnect_account` y desconecta igualmente si la revocación falla; sin sesión o de otro usuario no hace nada; los avisos `sync_revoked` y `sync_failing` se muestran con la cuenta o el calendario, una acción "Volver a conectar" y se pueden descartar.
   Hecho cuando: `npm test -- disconnect-dialog connection-actions notice-list design-tokens` en verde y capturas revisadas. Cubre: RF-27, RF-28, RF-29, RF-30, RF-31, RF-34 | Módulo: disconnect-dialog, disconnectAccount, notice-list
 
-- [ ] T11 Aplicar el solo lectura y el origen en la interfaz existente
+- [x] T11 Aplicar el solo lectura y el origen en la interfaz existente
   Pasos: test primero en `tests/unit/synced-calendar-ui.test.tsx`. Comprueba: los formularios de evento no ofrecen calendarios traídos como destino; el detalle de un evento traído no muestra Editar ni Borrar y lo explica; el formulario de juntar los excluye y vuelve a ofrecer el calendario conservado; la ficha del calendario muestra la última actualización a todos los miembros y la cuenta de origen solo al propietario, que sí puede cambiar nombre, descripción, color y compartir.
   Hecho cuando: `npm test -- synced-calendar-ui` en verde y capturas a 390, 768 y 1440 px revisadas. Cubre: RF-20, RF-21, RF-26, RF-44, RF-45 | Módulo: event-form, event-detail, merge-form, calendar ficha
 
