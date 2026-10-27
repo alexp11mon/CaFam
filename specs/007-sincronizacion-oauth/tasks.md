@@ -40,7 +40,7 @@
   Pasos: test primero en `tests/unit/provider-google.test.ts` con `fetch` simulado. Comprueba: la URL de autorización lleva exactamente los permisos de solo lectura del plan, `state`, PKCE (`S256`) y `access_type=offline`; el intercambio del código y la renovación devuelven el token y el correo y `sub` del `id_token` (y el token de renovación nuevo si Google lo envía); el listado de calendarios y de eventos usa el rango de T5 con paginación y tope de 10.000 (`singleEvents=true`); `invalid_grant` → `revoked`, 404 → `missing`, 429 y 5xx → `transient`; la revocación llama al punto de revocación de Google.
   Hecho cuando: `npm test -- provider-google` en verde. Cubre: RF-1, RF-2, RF-9, RF-12, RF-15, RF-16, RF-30 | Módulo: providers/google
 
-- [ ] T7 Implementar las rutas de inicio y de retorno del OAuth
+- [x] T7 Implementar las rutas de inicio y de retorno del OAuth
   Pasos: test primero en `tests/unit/oauth-routes.test.ts` (`// @vitest-environment node`). Comprueba: `start` sin sesión redirige a `/login`, con sesión redirige al proveedor y guarda `state` y PKCE en una cookie `httpOnly`, `secure`, `sameSite=lax` de 10 minutos; `callback` con `state` distinto o sin cookie no conecta; con `error=access_denied` vuelve a `/dashboard/connections?error=cancelled` (con el texto que menciona la posible falta de plazas, RF-47); un fallo del proveedor vuelve con `error=failed`; el sexto intento con `CF429` vuelve con `error=max`; una cuenta repetida vuelve a su pantalla sin duplicar y restaura la conexión caducada; éxito llama a `connect_account` y redirige a `/dashboard/connections/<id>`.
   Hecho cuando: `npm test -- oauth-routes` en verde. Cubre: RF-1, RF-3, RF-4, RF-5, RF-32, RF-47 | Módulo: oauth/start, oauth/callback, oauth-state
 
