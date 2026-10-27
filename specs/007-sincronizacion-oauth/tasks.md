@@ -36,7 +36,7 @@
 
 ### Iteración 2 — Proveedores, motor y pantallas
 
-- [ ] T6 Implementar el cliente de Google
+- [x] T6 Implementar el cliente de Google
   Pasos: test primero en `tests/unit/provider-google.test.ts` con `fetch` simulado. Comprueba: la URL de autorización lleva exactamente los permisos de solo lectura del plan, `state`, PKCE (`S256`) y `access_type=offline`; el intercambio del código y la renovación devuelven el token y el correo y `sub` del `id_token` (y el token de renovación nuevo si Google lo envía); el listado de calendarios y de eventos usa el rango de T5 con paginación y tope de 10.000 (`singleEvents=true`); `invalid_grant` → `revoked`, 404 → `missing`, 429 y 5xx → `transient`; la revocación llama al punto de revocación de Google.
   Hecho cuando: `npm test -- provider-google` en verde. Cubre: RF-1, RF-2, RF-9, RF-12, RF-15, RF-16, RF-30 | Módulo: providers/google
 
