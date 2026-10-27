@@ -729,6 +729,15 @@ export type Database = {
         Args: { p_calendar_id: string }
         Returns: Database["public"]["Enums"]["calendar_role"]
       }
+      connect_account: {
+        Args: {
+          p_email: string
+          p_provider: string
+          p_refresh_token: string
+          p_subject: string
+        }
+        Returns: Json
+      }
       copy_calendar_for_owner: {
         Args: { p_calendar_id: string; p_user_id: string }
         Returns: string
@@ -746,8 +755,20 @@ export type Database = {
         Returns: undefined
       }
       delete_own_account: { Args: never; Returns: undefined }
+      detach_synced_calendars: {
+        Args: {
+          p_calendar_ids: string[]
+          p_connection_id: string
+          p_delete: boolean
+        }
+        Returns: undefined
+      }
       disable_access_code: {
         Args: { p_calendar_id: string }
+        Returns: undefined
+      }
+      disconnect_account: {
+        Args: { p_connection_id: string; p_delete: boolean }
         Returns: undefined
       }
       generate_access_code_id: { Args: never; Returns: string }
@@ -785,6 +806,10 @@ export type Database = {
       }
       request_recovery: { Args: { p_email: string }; Returns: boolean }
       revoke_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      select_synced_calendars: {
+        Args: { p_calendars: Json; p_connection_id: string }
+        Returns: Json
+      }
       send_pending_emails: {
         Args: { p_dry_run?: boolean; p_limit?: number }
         Returns: number[]
@@ -796,6 +821,10 @@ export type Database = {
           p_role: Database["public"]["Enums"]["calendar_role"]
         }
         Returns: string
+      }
+      vault_secret_matches: {
+        Args: { p_id: string; p_value: string }
+        Returns: boolean
       }
       visible_people: {
         Args: never
