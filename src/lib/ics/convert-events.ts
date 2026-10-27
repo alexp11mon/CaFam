@@ -14,16 +14,16 @@ export interface EventRow {
 }
 
 const DAY_MS = 86_400_000;
-const NO_TITLE = "(Sin título)";
+export const NO_TITLE = "(Sin título)";
 // Limits of the events table (spec 002), counted in characters (RF-15).
-const MAX_TITLE = 100;
-const MAX_DESCRIPTION = 2000;
-const MAX_LOCATION = 200;
+export const MAX_TITLE = 100;
+export const MAX_DESCRIPTION = 2000;
+export const MAX_LOCATION = 200;
 
 const knownZones = new Map<string, boolean>();
 
 /** Whether `Intl` knows the zone: IANA names yes, Windows names such as "Romance Standard Time" no. */
-function isKnownTimeZone(timeZone: string): boolean {
+export function isKnownTimeZone(timeZone: string): boolean {
   let known = knownZones.get(timeZone);
   if (known === undefined) {
     try {
@@ -48,7 +48,7 @@ function clean(text: string): string {
 }
 
 /** Cuts to `max` characters (code points, like Postgres), never inside an emoji. */
-function limit(text: string, max: number): string {
+export function limit(text: string, max: number): string {
   const characters = Array.from(clean(text).trim());
   return characters.length > max
     ? characters.slice(0, max).join("").trim()

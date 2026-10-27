@@ -1,0 +1,90 @@
+{
+  "value": [
+    {
+      "id": "AAMk-timed1",
+      "subject": "Reunión",
+      "isCancelled": false,
+      "isAllDay": false,
+      "body": { "contentType": "text", "content": "Orden del día" },
+      "location": { "displayName": "Sala 2" },
+      "start": { "dateTime": "2026-11-02T09:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-11-02T10:30:00.0000000", "timeZone": "UTC" }
+    },
+    {
+      "id": "AAMk-allday1",
+      "subject": "Festivo",
+      "isCancelled": false,
+      "isAllDay": true,
+      "body": { "contentType": "text", "content": "" },
+      "location": { "displayName": "" },
+      "start": { "dateTime": "2026-11-05T00:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-11-06T00:00:00.0000000", "timeZone": "UTC" }
+    },
+    {
+      "id": "AAMk-multi1",
+      "subject": "Congreso",
+      "isCancelled": false,
+      "isAllDay": true,
+      "start": { "dateTime": "2026-12-01T00:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-12-04T00:00:00.0000000", "timeZone": "UTC" }
+    },
+    {
+      "id": "AAMk-notitle1",
+      "subject": "",
+      "isCancelled": false,
+      "isAllDay": false,
+      "start": { "dateTime": "2026-11-03T08:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-11-03T09:00:00.0000000", "timeZone": "UTC" }
+    },
+    {
+      "id": "AAMk-cancelled1",
+      "subject": "Cancelada",
+      "isCancelled": true,
+      "isAllDay": false,
+      "start": { "dateTime": "2026-11-03T08:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-11-03T09:00:00.0000000", "timeZone": "UTC" }
+    },
+    {
+      "id": "AAMk-backwards1",
+      "subject": "Al revés",
+      "isCancelled": false,
+      "isAllDay": false,
+      "start": { "dateTime": "2026-11-04T10:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-11-04T09:00:00.0000000", "timeZone": "UTC" }
+    },
+    {
+      "id": "AAMk-unknownzone1",
+      "subject": "Zona rara",
+      "isCancelled": false,
+      "isAllDay": false,
+      "start": {
+        "dateTime": "2026-11-04T10:00:00.0000000",
+        "timeZone": "Romance Standard Time"
+      },
+      "end": {
+        "dateTime": "2026-11-04T11:00:00.0000000",
+        "timeZone": "Romance Standard Time"
+      }
+    },
+    {
+      "id": "AAMk-occ-1",
+      "seriesMasterId": "AAMk-series",
+      "type": "occurrence",
+      "subject": "Clase",
+      "isCancelled": false,
+      "isAllDay": false,
+      "start": { "dateTime": "2026-11-09T09:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-11-09T10:00:00.0000000", "timeZone": "UTC" }
+    },
+    {
+      "id": "AAMk-occ-2",
+      "seriesMasterId": "AAMk-series",
+      "type": "exception",
+      "subject": "Clase (cambiada)",
+      "isCancelled": false,
+      "isAllDay": false,
+      "start": { "dateTime": "2026-11-16T11:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-11-16T12:00:00.0000000", "timeZone": "UTC" }
+    }
+  ]
+}

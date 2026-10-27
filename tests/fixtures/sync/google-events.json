@@ -1,0 +1,67 @@
+{
+  "kind": "calendar#events",
+  "items": [
+    {
+      "id": "timed1",
+      "status": "confirmed",
+      "summary": "Dentista",
+      "description": "Revisión anual",
+      "location": "Calle Mayor 1",
+      "start": {
+        "dateTime": "2026-11-02T10:00:00+01:00",
+        "timeZone": "Europe/Madrid"
+      },
+      "end": {
+        "dateTime": "2026-11-02T11:00:00+01:00",
+        "timeZone": "Europe/Madrid"
+      }
+    },
+    {
+      "id": "allday1",
+      "status": "confirmed",
+      "summary": "Cumpleaños de Ana",
+      "start": { "date": "2026-11-05" },
+      "end": { "date": "2026-11-06" }
+    },
+    {
+      "id": "multi1",
+      "status": "confirmed",
+      "summary": "Vacaciones",
+      "start": { "date": "2026-12-22" },
+      "end": { "date": "2026-12-27" }
+    },
+    {
+      "id": "notitle1",
+      "status": "tentative",
+      "start": { "dateTime": "2026-11-03T08:00:00Z" },
+      "end": { "dateTime": "2026-11-03T09:00:00Z" }
+    },
+    {
+      "id": "cancelled1",
+      "status": "cancelled"
+    },
+    {
+      "id": "backwards1",
+      "status": "confirmed",
+      "summary": "Al revés",
+      "start": { "dateTime": "2026-11-04T10:00:00Z" },
+      "end": { "dateTime": "2026-11-04T09:00:00Z" }
+    },
+    {
+      "id": "weekly_20261109T090000Z",
+      "recurringEventId": "weekly",
+      "status": "confirmed",
+      "summary": "Clase",
+      "start": { "dateTime": "2026-11-09T10:00:00+01:00" },
+      "end": { "dateTime": "2026-11-09T11:00:00+01:00" }
+    },
+    {
+      "id": "weekly_20261116T090000Z",
+      "recurringEventId": "weekly",
+      "status": "confirmed",
+      "summary": "Clase (cambiada)",
+      "start": { "dateTime": "2026-11-16T12:00:00+01:00" },
+      "end": { "dateTime": "2026-11-16T13:00:00+01:00" }
+    }
+  ]
+}
