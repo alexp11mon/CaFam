@@ -29,12 +29,15 @@ export interface PanelCalendar extends GroupableCalendar {
   color: string;
 }
 
-type Group = PersonGroup<PanelCalendar>;
+/** A person, the group without owner, or one of the user's groups (`groupId`, spec 007 RF-36). */
+export type FilterSection = PersonGroup<PanelCalendar> & { groupId?: string };
+type Group = FilterSection;
 type Result = { error?: string };
 type Direction = "up" | "down";
 
 export interface SavedOrder {
   people: string[];
+  groups: string[];
   calendars: Record<string, string[]>;
 }
 
@@ -42,8 +45,10 @@ function orderOf(groups: Group[]): SavedOrder {
   return {
     // The group without owner is not a person: its position is never saved (spec 006 RF-22).
     people: groups
+      .filter((group) => !group.groupId)
       .map((group) => group.person.id)
       .filter((id) => id !== ORPHAN_GROUP_ID),
+    groups: groups.flatMap((group) => (group.groupId ? [group.groupId] : [])),
     calendars: Object.fromEntries(
       groups.map((group) => [
         group.person.id,
@@ -51,6 +56,29 @@ function orderOf(groups: Group[]): SavedOrder {
       ]),
     ),
   };
+}
+
+/** Swaps a section with the next one of its own kind: groups move among groups, people among people. */
+function swapSection(
+  sections: Group[],
+  index: number,
+  direction: Direction,
+): Group[] {
+  const sameKind = (section: Group) =>
+    Boolean(section.groupId) === Boolean(sections[index]?.groupId) &&
+    section.person.id !== ORPHAN_GROUP_ID;
+  const step = direction === "up" ? -1 : 1;
+  let target = index + step;
+  while (
+    target >= 0 &&
+    target < sections.length &&
+    !sameKind(sections[target]!)
+  )
+    target += step;
+  if (target < 0 || target >= sections.length) return sections;
+  const next = [...sections];
+  [next[index], next[target]] = [next[target]!, next[index]!];
+  return next;
 }
 
 function swap<T>(items: T[], index: number, direction: Direction): T[] {
@@ -78,6 +106,7 @@ export function CalendarWorkspace({
   categories,
   setCalendarVisibility,
   setPersonVisibility,
+  setGroupVisibility: setUserGroupVisibility,
   saveOrder,
   nextEvents,
   loadedAt,
@@ -99,6 +128,8 @@ export function CalendarWorkspace({
   categories: FilterCategory[];
   setCalendarVisibility: (id: string, visible: boolean) => Promise<Result>;
   setPersonVisibility: (id: string, visible: boolean) => Promise<Result>;
+  /** Shows or hides every calendar of one of the user's groups (spec 007 RF-39). */
+  setGroupVisibility?: (id: string, visible: boolean) => Promise<Result>;
   saveOrder: (order: SavedOrder) => Promise<Result>;
   /** Timed events of the next 48 h and when they were read (spec 005 RF-45, plan D12). */
   nextEvents?: NextEventItem[];
@@ -191,6 +222,9 @@ export function CalendarWorkspace({
   }
 
   function togglePerson(personId: string, visible: boolean) {
+    const groupId = groups.find(
+      (group) => group.person.id === personId,
+    )?.groupId;
     void apply(
       groups.map((group) =>
         group.person.id === personId
@@ -203,14 +237,16 @@ export function CalendarWorkspace({
             }
           : group,
       ),
-      personId === ORPHAN_GROUP_ID
-        ? () => setGroupVisibility(personId, visible)
-        : () => setPersonVisibility(personId, visible),
+      groupId && setUserGroupVisibility
+        ? () => setUserGroupVisibility(groupId, visible)
+        : personId === ORPHAN_GROUP_ID
+          ? () => setOrphanVisibility(personId, visible)
+          : () => setPersonVisibility(personId, visible),
     );
   }
 
   // The group without owner has no person to filter by: save each calendar (spec 006 RF-22).
-  async function setGroupVisibility(
+  async function setOrphanVisibility(
     groupId: string,
     visible: boolean,
   ): Promise<Result> {
@@ -236,7 +272,7 @@ export function CalendarWorkspace({
   function move(kind: "person" | "calendar", id: string, direction: Direction) {
     const next =
       kind === "person"
-        ? swap(
+        ? swapSection(
             groups,
             groups.findIndex((group) => group.person.id === id),
             direction,

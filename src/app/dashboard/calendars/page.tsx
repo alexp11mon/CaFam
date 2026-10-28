@@ -2,20 +2,35 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { NoticeList } from "@/components/account/notice-list";
 import { OrphanCalendarItem } from "@/components/account/orphan-calendar-item";
-import { CalendarList } from "@/components/dashboard/calendar-list";
+import {
+  CalendarList,
+  type CalendarListItem,
+} from "@/components/dashboard/calendar-list";
+import { GroupForm } from "@/components/groups/group-form";
+import { GroupList } from "@/components/groups/group-list";
 import { LinkButton } from "@/components/ui/link-button";
 import { daysLeftNow } from "@/lib/account/orphan";
 import { getNotices, getOrphanCalendars } from "@/lib/account/queries";
-import { groupByPerson } from "@/lib/calendar/grouping";
+import { organizeGroups } from "@/lib/calendar/organize-groups";
 import {
+  getGroups,
   getMyCalendars,
   getPeople,
   getPreferences,
   getProfileTimeZone,
   requireUser,
+  type CalendarRecord,
 } from "@/lib/calendar/queries";
 import { canMerge } from "@/lib/sync/read-only";
+import { saveOrder } from "../calendar/preferences-actions";
 import { leaveCalendar } from "./[id]/members/actions";
+import {
+  assignToGroup,
+  createGroup,
+  deleteGroup,
+  renameGroup,
+  setGroupVisibility,
+} from "./group-actions";
 import { decideOrphanCalendar, dismissNotice } from "./orphan-actions";
 
 export const metadata: Metadata = { title: "Mis calendarios" };
@@ -23,20 +38,39 @@ export const metadata: Metadata = { title: "Mis calendarios" };
 // Reads the session cookies, so it streams behind <Suspense> (cacheComponents).
 async function Calendars() {
   const { supabase, userId } = await requireUser();
-  const [records, people, preferences, timeZone] = await Promise.all([
+  const [records, people, preferences, timeZone, groups] = await Promise.all([
     getMyCalendars(supabase, userId),
     getPeople(supabase),
     getPreferences(supabase, userId),
     getProfileTimeZone(supabase, userId),
+    getGroups(supabase, userId),
   ]);
-  // Same order as the filter panel: people, then calendars within each (RF-45).
-  const calendars = groupByPerson({
+  // The user's groups first, then the rest in the filter panel's order:
+  // people, then calendars within each (RF-45, spec 007 RF-36, RF-37).
+  const organized = organizeGroups({
     currentUserId: userId,
     people,
+    groups,
     calendars: records,
     ...preferences,
-  }).flatMap((group) => group.calendars);
-  const ownedCount = calendars.filter(canMerge).length;
+  });
+  const groupOf = new Map(
+    preferences.calendarPreferences.map((p) => [p.calendarId, p.groupId]),
+  );
+  const item = (calendar: CalendarRecord): CalendarListItem => ({
+    ...calendar,
+    orphan: calendar.ownerId === null,
+    groupId: groupOf.get(calendar.id) ?? null,
+  });
+  const sections = organized.groups.map((section) => ({
+    group: { id: section.group.id, name: section.group.name },
+    visibility: section.visibility,
+    calendars: section.calendars.map(item),
+  }));
+  const ungrouped = organized.people.flatMap((group) =>
+    group.calendars.map(item),
+  );
+  const ownedCount = records.filter(canMerge).length;
 
   return (
     <>
@@ -59,11 +93,29 @@ async function Calendars() {
           </LinkButton>
         ) : null}
       </div>
-      <CalendarList
-        calendars={calendars}
+      <GroupForm action={createGroup} />
+      <GroupList
+        sections={sections}
         timeZone={timeZone}
         leaveAction={leaveCalendar}
+        assignAction={assignToGroup}
+        renameAction={renameGroup}
+        deleteAction={deleteGroup}
+        setVisibility={setGroupVisibility}
+        saveOrder={saveOrder}
       />
+      {sections.length > 0 && ungrouped.length > 0 ? (
+        <h2 className="text-lg font-semibold text-ink">Sin grupo</h2>
+      ) : null}
+      {sections.length === 0 || ungrouped.length > 0 ? (
+        <CalendarList
+          calendars={ungrouped}
+          timeZone={timeZone}
+          leaveAction={leaveCalendar}
+          groups={sections.map((section) => section.group)}
+          assignAction={assignToGroup}
+        />
+      ) : null}
     </>
   );
 }

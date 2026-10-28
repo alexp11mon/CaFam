@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
 import { formatWhen } from "@/components/connections/sync-status";
+import { AssignGroupSelect } from "@/components/groups/assign-group-select";
 import { LinkButton } from "@/components/ui/link-button";
 import type { ConfirmState } from "@/lib/forms/form-state";
 import type { SyncedInfo } from "@/lib/sync/read-only";
@@ -14,6 +15,9 @@ export interface CalendarListItem {
   color: string;
   role: CalendarRole;
   synced: SyncedInfo | null;
+  /** Without owner, shown inside one of the user's groups (spec 007 RF-46). */
+  orphan?: boolean;
+  groupId?: string | null;
 }
 
 const ROLE_LABELS: Record<CalendarRole, string> = {
@@ -30,9 +34,17 @@ export function CalendarList({
   calendars,
   timeZone,
   leaveAction,
+  groups,
+  assignAction,
 }: {
   calendars: CalendarListItem[];
   timeZone: string;
+  /** The user's groups, to move each calendar to one (spec 007 RF-36). */
+  groups?: { id: string; name: string }[];
+  assignAction?: (
+    calendarId: string,
+    groupId: string | null,
+  ) => Promise<{ error?: string }>;
   /** Leaves a calendar that belongs to someone else (RF-27, RF-34). */
   leaveAction: (calendarId: string) => Promise<ConfirmState>;
 }) {
@@ -67,6 +79,11 @@ export function CalendarList({
             >
               {calendar.name}
             </span>
+            {calendar.orphan ? (
+              <span className="shrink-0 rounded-full bg-stone px-2.5 py-0.5 text-sm font-medium text-ink">
+                Sin propietario
+              </span>
+            ) : null}
             <span className="shrink-0 rounded-full bg-stone px-2.5 py-0.5 text-sm font-medium text-ink">
               {ROLE_LABELS[calendar.role]}
             </span>
@@ -81,6 +98,14 @@ export function CalendarList({
                 ? ` Cuenta: ${calendar.synced.accountEmail}.`
                 : null}
             </p>
+          ) : null}
+          {groups && groups.length > 0 && assignAction ? (
+            <AssignGroupSelect
+              calendarName={calendar.name}
+              groupId={calendar.groupId ?? null}
+              groups={groups}
+              action={assignAction.bind(null, calendar.id)}
+            />
           ) : null}
           <div className="flex flex-wrap items-center gap-x-4">
             {calendar.role === "owner" ? (

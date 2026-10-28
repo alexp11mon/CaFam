@@ -47,6 +47,9 @@ export const calendarSchema = z.object({
 
 export const categorySchema = z.object({ name: nameField(40) });
 
+// Group of calendars, private to the user (spec 007 RF-35).
+export const groupSchema = z.object({ name: nameField(40) });
+
 // Event (RF-15..RF-21) ---------------------------------------------------------
 
 export type EventField =

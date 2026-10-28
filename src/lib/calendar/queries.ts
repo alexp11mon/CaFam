@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_ACCENT, isAccent, type AccentId } from "@/lib/theme/accents";
 import type { CalendarPreference, Person, PersonPreference } from "./grouping";
+import type { CalendarGroup } from "./organize-groups";
 import type { SyncedInfo } from "@/lib/sync/read-only";
 import type { Database } from "@/types/database";
 
@@ -337,7 +338,7 @@ export async function getPreferences(
   const [calendars, people] = await Promise.all([
     supabase
       .from("calendar_preferences")
-      .select("calendar_id, visible, position")
+      .select("calendar_id, visible, position, group_id")
       .eq("user_id", userId),
     supabase
       .from("person_preferences")
@@ -351,12 +352,26 @@ export async function getPreferences(
       calendarId: row.calendar_id,
       visible: row.visible,
       position: row.position,
+      groupId: row.group_id,
     })),
     personPreferences: (people.data ?? []).map((row) => ({
       personId: row.person_id,
       position: row.position,
     })),
   };
+}
+
+/** The user's own calendar groups; RLS shows no one else's (spec 007 RF-42). */
+export async function getGroups(
+  supabase: Client,
+  userId: string,
+): Promise<CalendarGroup[]> {
+  const { data, error } = await supabase
+    .from("calendar_groups")
+    .select("id, name, position")
+    .eq("user_id", userId);
+  if (error) throw error;
+  return data;
 }
 
 /** Number of events of each calendar, for the merge summary (RF-52). */

@@ -3,9 +3,9 @@
 import { useId } from "react";
 import { Avatar } from "@/components/people/avatar";
 import { Button } from "@/components/ui/button";
-import { ORPHAN_GROUP_ID, type PersonGroup } from "@/lib/calendar/grouping";
+import { ORPHAN_GROUP_ID } from "@/lib/calendar/grouping";
 import { assignTints } from "@/lib/people/avatar";
-import type { PanelCalendar } from "./calendar-workspace";
+import type { FilterSection } from "./calendar-workspace";
 
 export interface FilterCategory {
   id: string;
@@ -67,7 +67,8 @@ function PersonCheckbox({
   onChange,
 }: {
   name: string;
-  tint: string;
+  /** A person's avatar tint; a group of the user has no avatar (spec 007 RF-36). */
+  tint?: string;
   calendars: { visible: boolean }[];
   onChange: (visible: boolean) => void;
 }) {
@@ -87,7 +88,7 @@ function PersonCheckbox({
         onChange={() => onChange(!all)}
         className="size-5 shrink-0 accent-ink"
       />
-      <Avatar name={name} tint={tint} />
+      {tint ? <Avatar name={name} tint={tint} /> : null}
       <span className="min-w-0 break-words">{name}</span>
     </label>
   );
@@ -106,9 +107,7 @@ export function CalendarFilters({
   onToggleCategory,
   onMove,
 }: {
-  groups: (PersonGroup<PanelCalendar> & {
-    calendars: { visible: boolean }[];
-  })[];
+  groups: FilterSection[];
   categories: FilterCategory[];
   hiddenCategories: ReadonlySet<string>;
   onToggleCalendar: (calendarId: string, visible: boolean) => void;
@@ -123,12 +122,15 @@ export function CalendarFilters({
   const headingId = useId();
   // With nobody else sharing, the person level would only repeat my own name.
   const showPeople = groups.length > 1;
+  const people = groups.filter((group) => !group.groupId);
   // Same tint for a person everywhere, whatever the saved order (spec 005 RF-28).
-  const tints = assignTints(groups.map((group) => group.person.id));
-  // The group without owner stays last: only real people move (spec 006 RF-22).
-  const movableCount = groups.filter(
+  const tints = assignTints(people.map((group) => group.person.id));
+  // Groups move among groups and people among people; the group without
+  // owner stays last (spec 006 RF-22, spec 007 RF-38).
+  const userGroups = groups.filter((group) => group.groupId);
+  const movablePeople = people.filter(
     (group) => group.person.id !== ORPHAN_GROUP_ID,
-  ).length;
+  );
 
   return (
     <section
@@ -139,13 +141,13 @@ export function CalendarFilters({
         Calendarios
       </h2>
       <ul className="flex flex-col gap-3">
-        {groups.map((group, groupIndex) => (
+        {groups.map((group) => (
           <li key={group.person.id} className="flex flex-col">
             {showPeople ? (
               <div className="flex items-center justify-between gap-2">
                 <PersonCheckbox
                   name={group.person.displayName}
-                  tint={tints.get(group.person.id)!}
+                  tint={group.groupId ? undefined : tints.get(group.person.id)}
                   calendars={group.calendars}
                   onChange={(visible) =>
                     onTogglePerson(group.person.id, visible)
@@ -156,8 +158,10 @@ export function CalendarFilters({
                     kind="person"
                     id={group.person.id}
                     name={group.person.displayName}
-                    index={groupIndex}
-                    count={movableCount}
+                    index={(group.groupId ? userGroups : movablePeople).indexOf(
+                      group,
+                    )}
+                    count={(group.groupId ? userGroups : movablePeople).length}
                     onMove={onMove}
                   />
                 )}

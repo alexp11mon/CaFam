@@ -14,6 +14,7 @@ interface UpsertCall {
 
 const state = vi.hoisted(() => ({
   upserts: [] as UpsertCall[],
+  updates: [] as { table: string; values: unknown; id: unknown }[],
   upsertError: null as { code: string } | null,
   ownedCalendars: [] as { id: string }[],
 }));
@@ -28,6 +29,12 @@ function fakeSupabase() {
         },
         select: () => ({
           eq: async () => ({ data: state.ownedCalendars, error: null }),
+        }),
+        update: (values: unknown) => ({
+          eq: async (_column: string, id: unknown) => {
+            state.updates.push({ table, values, id });
+            return { error: null };
+          },
         }),
       };
     },
@@ -46,6 +53,7 @@ const { saveOrder, setCalendarVisibility, setPersonVisibility } =
 
 beforeEach(() => {
   state.upserts = [];
+  state.updates = [];
   state.upsertError = null;
   state.ownedCalendars = [];
 });
@@ -148,6 +156,28 @@ describe("saveOrder (RF-45)", () => {
       rows: [{ user_id: ME, calendar_id: UUID_A, position: 0 }],
       options: { onConflict: "user_id,calendar_id" },
     });
+  });
+
+  it("saves the order of the user's groups and of the calendars inside them (spec 007 RF-38)", async () => {
+    const result = await saveOrder({
+      people: [],
+      groups: [UUID_C, UUID_B],
+      calendars: { [UUID_C]: [UUID_A] },
+    });
+
+    expect(result).toEqual({});
+    // Only the position: the group's name and its calendars' visibility stay.
+    expect(state.updates).toEqual([
+      { table: "calendar_groups", values: { position: 0 }, id: UUID_C },
+      { table: "calendar_groups", values: { position: 1 }, id: UUID_B },
+    ]);
+    expect(state.upserts).toEqual([
+      {
+        table: "calendar_preferences",
+        rows: [{ user_id: ME, calendar_id: UUID_A, position: 0 }],
+        options: { onConflict: "user_id,calendar_id" },
+      },
+    ]);
   });
 
   it("rejects malformed ids", async () => {

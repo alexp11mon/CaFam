@@ -16,7 +16,9 @@ const PERSON_CONFLICT = { onConflict: "user_id,person_id" };
 
 const orderSchema = z.object({
   people: z.array(z.uuid()),
-  // Keyed by group: a person id, or the group without owner (spec 006 RF-22).
+  // The user's own groups, in order (spec 007 RF-38).
+  groups: z.array(z.uuid()).optional(),
+  // Keyed by section: a person id, a group id or the group without owner (spec 006 RF-22).
   // Only the calendar ids are written.
   calendars: z.record(z.string(), z.array(z.uuid())),
 });
@@ -94,7 +96,7 @@ export async function setPersonVisibility(
 export async function saveOrder(order: SavedOrder): Promise<Result> {
   const parsed = orderSchema.safeParse(order);
   if (!parsed.success) return { error: CALENDAR_MESSAGES.invalidData };
-  const { people, calendars } = parsed.data;
+  const { people, groups = [], calendars } = parsed.data;
   const { supabase, userId } = await requireActionUser();
 
   try {
@@ -107,6 +109,15 @@ export async function saveOrder(order: SavedOrder): Promise<Result> {
         })),
         PERSON_CONFLICT,
       );
+      if (error) return { error: getCalendarErrorMessage(error) };
+    }
+
+    // Only the position: RLS limits the update to the user's own groups.
+    for (const [position, id] of groups.entries()) {
+      const { error } = await supabase
+        .from("calendar_groups")
+        .update({ position })
+        .eq("id", id);
       if (error) return { error: getCalendarErrorMessage(error) };
     }
 

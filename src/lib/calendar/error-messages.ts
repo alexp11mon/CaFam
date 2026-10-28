@@ -2,6 +2,8 @@ import { AUTH_MESSAGES } from "@/lib/auth/error-messages";
 
 export const CALENDAR_MESSAGES = {
   duplicateCategory: "Ya existe una categoría con ese nombre.",
+  duplicateGroup: "Ya tienes un grupo con ese nombre.",
+  groupGone: "Ese grupo ya no existe.",
   forbidden: "No tienes permiso para hacer esto.",
   forbiddenMerge: "Solo puedes juntar calendarios de los que eres propietario.",
   foreignCategory: "Esa categoría no existe en el calendario elegido.",

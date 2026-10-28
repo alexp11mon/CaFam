@@ -6,7 +6,7 @@ import { CalendarWorkspace } from "@/components/calendar/calendar-workspace";
 import { ViewToolbar } from "@/components/calendar/view-toolbar";
 import { LinkButton } from "@/components/ui/link-button";
 import { todayKey } from "@/lib/calendar/format";
-import { groupByPerson } from "@/lib/calendar/grouping";
+import { organizeGroups } from "@/lib/calendar/organize-groups";
 import { monthMarks } from "@/lib/calendar/month-marks";
 import { nextEventsWindow } from "@/lib/calendar/next-event";
 import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
@@ -16,6 +16,7 @@ import {
   getLastView,
   getMyCalendars,
   getPeople,
+  getGroups,
   getPreferences,
   getProfileTimeZone,
   requireUser,
@@ -34,6 +35,7 @@ import {
   setCalendarVisibility,
   setPersonVisibility,
 } from "./preferences-actions";
+import { setGroupVisibility } from "../calendars/group-actions";
 
 export const metadata: Metadata = { title: "Calendario" };
 
@@ -58,17 +60,25 @@ async function CalendarContent({
   const monthRange = getVisibleRange("month", date, timeZone);
   const upcomingWindow = nextEventsWindow();
 
-  const [calendars, records, monthRecords, upcoming, people, preferences] =
-    await Promise.all([
-      getMyCalendars(supabase, userId),
-      getEventsInRange(supabase, range.from, range.to),
-      view === "month"
-        ? null
-        : getEventsInRange(supabase, monthRange.from, monthRange.to),
-      getEventsInRange(supabase, upcomingWindow.from, upcomingWindow.to),
-      getPeople(supabase),
-      getPreferences(supabase, userId),
-    ]);
+  const [
+    calendars,
+    records,
+    monthRecords,
+    upcoming,
+    people,
+    preferences,
+    userGroups,
+  ] = await Promise.all([
+    getMyCalendars(supabase, userId),
+    getEventsInRange(supabase, range.from, range.to),
+    view === "month"
+      ? null
+      : getEventsInRange(supabase, monthRange.from, monthRange.to),
+    getEventsInRange(supabase, upcomingWindow.from, upcomingWindow.to),
+    getPeople(supabase),
+    getPreferences(supabase, userId),
+    getGroups(supabase, userId),
+  ]);
 
   if (calendars.length === 0) {
     return (
@@ -115,9 +125,11 @@ async function CalendarContent({
     calendars.map((calendar) => calendar.id),
   );
   // People, calendars and their saved order and visibility (RF-42, RF-45, RF-46).
-  const groups = groupByPerson({
+  // The user's groups come first, as in "Mis calendarios" (spec 007 RF-36).
+  const organized = organizeGroups({
     currentUserId: userId,
     people,
+    groups: userGroups,
     calendars: calendars.map(({ id, name, ownerId, createdAt, color }) => ({
       id,
       name,
@@ -127,6 +139,18 @@ async function CalendarContent({
     })),
     ...preferences,
   });
+  const groups = [
+    ...organized.groups.map((section) => ({
+      person: {
+        id: section.group.id,
+        displayName: section.group.name,
+        isMe: false,
+      },
+      groupId: section.group.id,
+      calendars: section.calendars,
+    })),
+    ...organized.people,
+  ];
 
   return (
     <>
@@ -161,6 +185,7 @@ async function CalendarContent({
         categories={categories}
         setCalendarVisibility={setCalendarVisibility}
         setPersonVisibility={setPersonVisibility}
+        setGroupVisibility={setGroupVisibility}
         saveOrder={saveOrder}
         nextEvents={nextEvents}
         loadedAt={upcomingWindow.loadedAt}

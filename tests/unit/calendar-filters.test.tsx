@@ -304,6 +304,7 @@ describe("order (RF-45)", () => {
     ]);
     expect(saveOrder).toHaveBeenCalledWith({
       people: ["me", "ana"],
+      groups: [],
       calendars: { me: ["c2", "c1"], ana: ["c3"] },
     });
     // At the end of its list "Bajar" is disabled, so the focus follows to "Subir".
@@ -320,6 +321,7 @@ describe("order (RF-45)", () => {
 
     expect(saveOrder).toHaveBeenCalledWith({
       people: ["ana", "me"],
+      groups: [],
       calendars: { me: ["c1", "c2"], ana: ["c3"] },
     });
     expect(labels().indexOf("Ana")).toBeLessThan(labels().indexOf("Yo"));
