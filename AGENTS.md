@@ -319,6 +319,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - Funciones de sincronización `sync_claim_due`, `sync_claim_connection` (manual: `too_soon` antes de 5 minutos), `sync_get_token`, `sync_store_token`, `sync_apply_events` (reconcilia por `external_id` y guarda `{added, changed, removed, skipped, omitted}`) y `sync_fail` (`transient` → aviso al 3.er fallo; `revoked` → `needs_reauth` y aviso; `missing`). Reciben `p_secret`, que se compara con `cron_secret` de Vault (`42501` si no coincide), y se conceden a `anon`: así el motor no necesita la clave `service_role` (P4).
   - `pg_cron` `sync-run-due` (cada hora) llama a `sync_trigger()`, que solo si hay algo pendiente hace `net.http_post` a `sync_app_url || '/api/sync/run'` con `Authorization: Bearer <cron_secret>`. Vault: `cron_secret` (igual que `CRON_SECRET`) y `sync_app_url`, que crea el usuario en cada proyecto (dev: `http://localhost:3000`).
   - Ayudas de test solo para `service_role`: `vault_secret_matches` y `sync_scheduled_jobs`. `provider` admite `'microsoft'` en los `check`, pero desde la Enmienda 1 no se usa.
+  - **Grupos** (migración `calendar_groups`): tabla `calendar_groups (user_id, name, position)` con RLS propia (solo su dueño la lee y escribe), nombre de 1 a 40 único por usuario ignorando mayúsculas y espacios exteriores, y `calendar_preferences.group_id` con FK compuesta `(group_id, user_id)`: no se puede asignar un grupo ajeno y borrar el grupo solo pone `group_id` a nulo. Un calendario, un grupo (clave primaria). La visibilidad del grupo no se guarda: se calcula de la de sus calendarios (`organizeGroups`, plan D14).
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, …) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
@@ -363,6 +364,7 @@ Reglas completas en la constitución ("Identidad visual y diseño de interfaz", 
   npx supabase db push
   npx supabase link --project-ref uthubyzhonrtrmbcqcjh   # volver a dev inmediatamente
   ```
+- **Sincronización (spec 007)**, también a mano y por el usuario: URI de retorno de producción en Google, `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` en Vercel, migraciones a prod y `cron_secret` y `sync_app_url` en Vault de prod. Los comandos exactos están en `specs/007-sincronizacion-oauth/plan.md`, "Pasos de producción".
 - **Correo (spec 006)**, configurado a mano en cada proyecto de Supabase (dev y prod ya lo tienen):
   - Authentication → Emails → SMTP: Brevo, `smtp-relay.brevo.com`, puerto `587`; usuario el login SMTP de Brevo (`…@smtp-brevo.com`) y contraseña una **clave SMTP** (`xsmtpsib-…`), no la clave API. Remitente el email verificado en Brevo.
   - Plantillas *Reset password* y *Change email address*: el enlace es `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery` (o `type=email_change`). Site URL correcta, notificación *Email address changed* activa y límite de correos por hora subido.

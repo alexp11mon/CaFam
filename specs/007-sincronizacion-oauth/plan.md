@@ -191,6 +191,28 @@ Caso central: conectar Google, traer un calendario y verlo actualizarse.
 - (c) `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en `.env.local`; las de Microsoft no existen.
 - (e) `cron_secret` y `sync_app_url` (`http://localhost:3000`) en Vault de dev y `CRON_SECRET` en `.env.local` y `.env.test.local`: los crea el usuario con un script que no muestra el secreto.
 
+## Pasos de producción (T14, los ejecuta el usuario)
+
+En este orden. Ninguno muestra un secreto en pantalla si se pega desde un gestor de contraseñas; no los escribas en el chat.
+
+1. **Google Cloud** (proyecto `CaFam` → Credenciales → cliente web): añadir la URI de retorno `https://calendario-familia-five.vercel.app/api/oauth/google/callback` sin quitar la de `localhost`. En la pantalla de consentimiento, mientras la app siga en **"Prueba"**, añadir como **usuarios de prueba** las cuentas de Google que se vayan a conectar en la T15 (la autorización caduca a los 7 días). Publicarla exige la enmienda pendiente de la página de privacidad (ver "Comprobaciones de la T1").
+2. **Vercel** (Project → Settings → Environment Variables, entorno *Production*): `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (los mismos del cliente web) y comprobar que `CRON_SECRET` ya existe (lo usa el keep-alive desde la spec 001). Ninguna con `NEXT_PUBLIC_`.
+3. **Migraciones a prod** (desde la raíz del repo):
+   ```
+   npx supabase link --project-ref yznbdoskvtxeasujtirk
+   npx supabase db push
+   npx supabase link --project-ref uthubyzhonrtrmbcqcjh
+   ```
+   Aplica `sync_schema`, `sync_readonly`, `sync_connect_functions`, `sync_worker_functions` y `calendar_groups`. El último comando vuelve a enlazar dev: no lo saltes.
+4. **Vault de prod** (Supabase → `calendario-prod` → SQL Editor), con el **mismo valor** que `CRON_SECRET` de Vercel:
+   ```sql
+   select vault.create_secret('<valor de CRON_SECRET>', 'cron_secret');
+   select vault.create_secret('https://calendario-familia-five.vercel.app', 'sync_app_url');
+   ```
+   Comprobación sin mostrar el valor: `select name from vault.secrets where name in ('cron_secret', 'sync_app_url');` debe devolver 2 filas.
+5. **Desplegar**: integrar la rama en `main` (`git checkout main && git merge --ff-only 007-sincronizacion-oauth && git push origin main`). Vercel despliega solo.
+6. **Comprobar** el trabajo programado en prod: `select jobname, schedule from cron.job where jobname = 'sync-run-due';` (cada hora, `0 * * * *`). Tras conectar una cuenta y esperar a la hora en punto, `select status_code from net._http_response order by created desc limit 5;` debe mostrar `200` de `/api/sync/run`.
+
 ## Riesgos y mitigaciones
 
 - R1: La primera petición de `pg_net` a Vercel tras un arranque en frío o una ejecución larga se corta -> mitigación: `timeout_milliseconds = 60000`, procesamiento por calendario con `sync_started_at` para no solaparse y reintento en la siguiente hora.
