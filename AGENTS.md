@@ -35,6 +35,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Cerrada** (2026-10-23), T1–T26 hechas; aplicada y validada en producción |
 | 007-sincronizacion-oauth | Sincronización de solo lectura (proveedor → CaFam) con **Google** por OAuth 2.0, actualización automática y manual, y grupos de calendarios. Microsoft se quitó el 2026-10-27 (Enmienda 1: exige tarjeta); la bidireccional y Microsoft quedan para una versión futura | **Cerrada** (2026-10-28), T1–T15 hechas; aplicada y validada en producción con la aplicación de Google en "Prueba" (Enmienda 2) |
 | 008-mejoras-de-experiencia | Calendario al estilo Google Calendar (analizado con REA): ventana de evento sobre el calendario, ventana rápida, arrastrar para crear, selector de hora, atajos, vista recordada, avisos y esqueletos | **Cerrada** (2026-10-24), T1–T23 hechas; aplicada y validada en producción |
+| 009-sincronizacion-bidireccional | Escribir en Google lo que se crea, cambia, mueve o borra en los calendarios traídos (propietario y Editores), renombrar, crear y subir calendarios, política de privacidad y publicar la aplicación de Google | Spec **aprobada** (2026-10-28); plan sin empezar, en la rama `009-sincronizacion-bidireccional` |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -492,7 +493,7 @@ npm run db:types       # regenera src/types/database.ts
 
 ## 11. Fuera de alcance hasta su spec
 
-Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), mover o redimensionar eventos ya creados arrastrando (crear arrastrando sí existe desde la 008), "Deshacer" en los avisos, vistas de año y de 4 días, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, escritura en Google (009, sin aprobar), Microsoft, notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
+Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), mover o redimensionar eventos ya creados arrastrando (crear arrastrando sí existe desde la 008), "Deshacer" en los avisos, vistas de año y de 4 días, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, escritura en Google (009, sin plan aprobado), Microsoft, notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
 
 ## 12. Cómo continuar
 
@@ -500,5 +501,5 @@ La 006 y la 008 están cerradas y en producción (2026-10-23 y 2026-10-24). La 0
 
 La **007 (sincronización de Google, solo lectura, y grupos)** está cerrada y en producción (2026-10-28), con la aplicación de Google en **"Prueba"** (Enmienda 2): para que alguien conecte su cuenta hay que añadirlo como usuario de prueba en Google Cloud (proyecto `CaFam` → Público). En producción usa el cliente web `CaFamWeb`; en dev, `CaFam Local`.
 
-- **Siguiente:** spec **009, sincronización bidireccional con Google** (escribir en Google lo que se crea, cambia o borra en CaFam), empezando por la entrevista de requisitos con la skill `spec-generator`. Incluye la página pública `/privacy` y la publicación de la aplicación de Google fuera de "Prueba". Nada de código hasta tener spec, plan y tareas aprobados.
+- **Siguiente:** plan de la spec **009, sincronización bidireccional con Google** (`specs/009-sincronizacion-bidireccional/spec.md`, aprobada el 2026-10-28), con la skill `plan-generator`, cuando el usuario lo pida. La spec incluye la política de privacidad pública y la publicación de la aplicación de Google fuera de "Prueba". Nada de código hasta tener plan y tareas aprobados.
 - En dev quedan unos 196 usuarios `@calenderfam.test` antiguos de pruebas; no se han borrado sin permiso del usuario.

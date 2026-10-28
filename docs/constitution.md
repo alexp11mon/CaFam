@@ -18,6 +18,7 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 006-gestion-de-cuenta | Recuperación de contraseña, cambio de email, borrado de cuenta (requiere SMTP gratuito) |
 | 007-sincronizacion-oauth | Fase 2: sincronización de solo lectura (proveedor → CaFam) con Google vía OAuth 2.0, actualización automática y manual, y grupos de calendarios. Microsoft se quitó el 2026-10-27 (registrar la aplicación exige tarjeta, P2). Cerrada el 2026-10-28 con la aplicación de Google en "Prueba" (Enmienda 2). La sincronización bidireccional pasa a la 009; Microsoft queda para una versión futura con su propia spec |
 | 008-mejoras-de-experiencia | Calendario al estilo de Google Calendar (analizado con REA): alta y detalle en una ventana sobre el calendario, ventana rápida junto al hueco, arrastrar para crear, selector de hora, atajos de teclado, vista recordada |
+| 009-sincronizacion-bidireccional | Fase 3: sincronización en los dos sentidos con Google (crear, cambiar, mover y borrar eventos de los calendarios traídos, renombrar, crear y subir calendarios), política de privacidad pública y publicación de la aplicación de Google sin verificar |
 
 Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": desde el 2026-10-22 son la 006 y la 007 (las specs cerradas no se editan).
 
