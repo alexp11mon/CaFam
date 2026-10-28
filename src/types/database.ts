@@ -197,6 +197,41 @@ export type Database = {
           },
         ]
       }
+      calendar_groups: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          position: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          position?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_groups_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_invites: {
         Row: {
           calendar_id: string
@@ -327,6 +362,7 @@ export type Database = {
         Row: {
           calendar_id: string
           created_at: string
+          group_id: string | null
           position: number | null
           updated_at: string
           user_id: string
@@ -335,6 +371,7 @@ export type Database = {
         Insert: {
           calendar_id: string
           created_at?: string
+          group_id?: string | null
           position?: number | null
           updated_at?: string
           user_id: string
@@ -343,6 +380,7 @@ export type Database = {
         Update: {
           calendar_id?: string
           created_at?: string
+          group_id?: string | null
           position?: number | null
           updated_at?: string
           user_id?: string
@@ -355,6 +393,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "calendars"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_preferences_group_fkey"
+            columns: ["group_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_groups"
+            referencedColumns: ["id", "user_id"]
           },
           {
             foreignKeyName: "calendar_preferences_user_id_fkey"

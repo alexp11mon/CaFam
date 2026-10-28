@@ -18,6 +18,8 @@ export interface CalendarPreference {
   calendarId: string;
   visible: boolean;
   position: number | null;
+  /** Group of the user it is in, if any (spec 007 RF-37). */
+  groupId?: string | null;
 }
 
 export interface PersonPreference {
@@ -40,7 +42,7 @@ export const ORPHAN_GROUP_ID = "orphan";
 const ORPHAN_GROUP_NAME = "Sin propietario";
 
 /** Saved positions first (ascending); anything without one goes after, ordered by `fallback`. */
-function byPosition<T>(
+export function byPosition<T>(
   position: (item: T) => number | null | undefined,
   fallback: (a: T, b: T) => number,
 ) {

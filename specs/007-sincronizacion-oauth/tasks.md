@@ -62,7 +62,7 @@
 
 ### Iteración 3 — Grupos, producción y cierre
 
-- [ ] T12 Crear los grupos de calendarios: esquema y organización
+- [x] T12 Crear los grupos de calendarios: esquema y organización
   Pasos: test primero en `tests/integration/calendar-groups.test.ts` y `tests/unit/organize-groups.test.ts`. Comprueban: un usuario crea, lee, renombra y borra solo sus grupos (RLS); nombre de 1 a 40 caracteres y sin duplicados ignorando mayúsculas y espacios exteriores; asignar un calendario a un grupo ajeno falla por la clave compuesta; un calendario tiene un solo grupo; borrar el grupo deja los calendarios sin grupo y sin borrarlos; el trigger de salida y el borrado del calendario limpian la asignación; se puede agrupar un calendario compartido y uno sin propietario; `organize-groups` devuelve primero los grupos del usuario con sus calendarios en su orden y después el agrupado por persona de los que no tienen grupo, sin repetir ninguno, con el estado mostrado, oculto o parcial de cada grupo y la marca "Sin propietario". Migración `calendar_groups`.
   Hecho cuando: `npm run test:db -- calendar-groups preferences rls` y `npm test -- organize-groups grouping` en verde y `src/types/database.ts` contiene `calendar_groups` y `group_id`. Cubre: RF-35, RF-36, RF-37, RF-40, RF-41, RF-42, RF-43, RF-46 | Módulo: calendar_groups, organize-groups
 
