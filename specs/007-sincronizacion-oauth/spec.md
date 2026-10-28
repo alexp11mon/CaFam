@@ -1,8 +1,10 @@
 # Spec 007 — Sincronización de calendarios externos (Google)
 
-> Estado: **Aprobada** por el usuario (2026-10-23), con las dudas resueltas en la entrevista. **Enmendada** el 2026-10-27 (ver "Enmienda 1").
+> Estado: **Cerrada** (2026-10-28) por decisión del usuario. Aprobada el 2026-10-23, con las dudas resueltas en la entrevista. **Enmendada** el 2026-10-27 ("Enmienda 1") y el 2026-10-28 ("Enmienda 2").
 >
 > **Enmienda 1 (2026-10-27, decisión del usuario tras la T1):** se quita Microsoft. Registrar la aplicación exige un directorio de Microsoft Entra, y con una cuenta personal solo se consigue con una suscripción de Azure que pide tarjeta (P2). Microsoft pasa a "Fuera de alcance" (versión futura). Los RF conservan su número: RF-30 deja la parte de Microsoft y el requisito "Cuentas admitidas" queda solo con Google. Constitución: `docs/constitution.md` (P9 para lo visual). Parte de las specs 001 a 006 (cerradas) y es independiente de la 008 (mejoras de experiencia).
+>
+> **Enmienda 2 (2026-10-28, decisión del usuario al cerrar la T15):** la spec se cierra con la aplicación de Google en modo **"Prueba"**: solo conectan las cuentas añadidas como usuarios de prueba (hasta 100) y la autorización caduca a los 7 días (la conexión pasa a "Volver a conectar", RF-31 y RF-32). Publicarla exige una página pública de política de privacidad; esa página y la publicación pasan a la spec 009 (sincronización bidireccional con Google), que el usuario decide empezar a continuación. El criterio de finalización "aplicación publicada" queda sustituido por este.
 > Numeración: AGENTS.md y la constitución reservaban el 007 para OAuth; la 008 se redactó antes. Las specs 001 a 004 citan OAuth como "spec 006": hoy es esta.
 > Decisiones de la entrevista (2026-10-23):
 >
@@ -148,7 +150,7 @@ Además, al poder haber muchos más calendarios en el panel, se añaden grupos p
 ## Criterios de finalización
 
 - Todos los RF con test en verde y la verificación de P8 (`typecheck`, `lint`, `format:check`, `test`, `build` y `test:db`).
-- La aplicación de Google está publicada (no en modo de pruebas) sin verificar, y un usuario que no está en ninguna lista de pruebas puede conectar su cuenta de Google pasando por el aviso de "aplicación no verificada".
+- *(Sustituido por la Enmienda 2: se cierra con la aplicación en "Prueba".)* La aplicación de Google está publicada (no en modo de pruebas) sin verificar, y un usuario que no está en ninguna lista de pruebas puede conectar su cuenta de Google pasando por el aviso de "aplicación no verificada".
 - Demo manual en producción, con una cuenta real de Google: conectar, elegir dos calendarios, ver los eventos, cambiar un evento en el proveedor y comprobar que llega con "Actualizar ahora", compartir uno con otra persona, desconectar conservando uno y borrando otro.
 - Demo manual de grupos: crear un grupo, meter calendarios, reordenar, ocultar y mostrar el grupo.
 - Revisión visual a 390, 768 y 1440 px con el acento rojo y el amarillo (P9).

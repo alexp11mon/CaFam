@@ -1,6 +1,6 @@
 # Tasks 007 - Sincronización de calendarios externos (Google)
 
-> Estado: **Aprobadas** por el usuario (2026-10-23). **Enmendadas** el 2026-10-27 con la Enmienda 1 de la spec (se quita Microsoft); los números de tarea no cambian. Implementación sin empezar. 15 tareas (límite fijado por el usuario) en tres iteraciones: T1–T5, T6–T11 y T12–T15; no se empieza una sin cerrar la anterior.
+> Estado: **Cerrada** (2026-10-28) por decisión del usuario. T1–T15 hechas; en producción, con la aplicación de Google en "Prueba" (Enmienda 2 de la spec). Aprobadas por el usuario (2026-10-23). **Enmendadas** el 2026-10-27 con la Enmienda 1 de la spec (se quita Microsoft); los números de tarea no cambian. 15 tareas (límite fijado por el usuario) en tres iteraciones: T1–T5, T6–T11 y T12–T15; no se empieza una sin cerrar la anterior.
 > Spec: `specs/007-sincronizacion-oauth/spec.md` (aprobada). Plan: `specs/007-sincronizacion-oauth/plan.md` (aprobado, 2026-10-23).
 > Reglas: una tarea cada vez, test primero (rojo → verde). Al cerrar cada tarea se ejecuta y reporta `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, y `npm run test:db -- <filtro>` si toca esquema, RLS o acceso a datos. Si toca interfaz, capturas a 390, 768 y 1440 px con acento rojo y amarillo (P9). Un commit por tarea citándola, en la rama `007-sincronizacion-oauth` (creada desde `main`; el primer commit lleva `spec.md`, `plan.md` y `tasks.md`).
 > Sin dependencias nuevas (P6): ninguna tarea toca `package.json`. Los proveedores se llaman con `fetch` y los tests lo sustituyen por un doble.
@@ -74,9 +74,10 @@
   Pasos: test primero en `tests/unit/no-secrets.test.ts` (ampliar): `src/` no contiene `NEXT_PUBLIC_` junto a `GOOGLE_CLIENT_SECRET` o `CRON_SECRET`, ni importa esas variables desde código de cliente, y ningún token de renovación aparece en `src/` fuera de los clientes de proveedor. Revisar el diff contra "Fuera de alcance" de la spec. Actualizar `.env.example` y los apartados de entornos de `AGENTS.md`. Dejar en `plan.md` los comandos exactos para producción, que ejecuta el usuario: URI de retorno `https://calendario-familia-five.vercel.app/api/oauth/google/callback` en Google, las tres variables (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `CRON_SECRET`) en Vercel, `cron_secret` y `sync_app_url` en Vault de prod con el mismo valor que `CRON_SECRET`, y `npx supabase link --project-ref yznbdoskvtxeasujtirk`, `npx supabase db push` y volver a enlazar dev.
   Hecho cuando: `npm test -- no-secrets` en verde; una lista confirma que no hay escritura al proveedor, inicio de sesión social, tiempo real, notificaciones, recurrentes propios ni CalDAV, y que `package.json` no cambia respecto a `main`; y `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run test:db` están en verde. Cubre: requisitos de seguridad, coste cero y Fuera de alcance | Módulo: seguridad, documentación y despliegue
 
-- [ ] T15 Validar RF por RF en producción con cuentas reales
+- [x] T15 Validar RF por RF en producción con cuentas reales
   Pasos: el usuario confirma que ejecutó los pasos de producción de T14. Checklist RF-1 a RF-48 con el test que cubre cada uno (tabla del final) y demo manual del usuario: conectar Google, elegir dos calendarios, ver sus eventos, cambiar un evento en Google y traerlo con "Actualizar ahora", comprobar la espera de 5 minutos, compartir uno con otra persona, desconectar conservando uno y borrando otro; crear un grupo, meter calendarios, reordenar, ocultar y mostrar; comprobar que la ejecución horaria llega a `/api/sync/run`. Revisar `AGENTS.md` y `docs/constitution.md` y actualizarlos.
   Hecho cuando: la checklist está completa con la salida de cada comprobación anotada, el usuario confirma la demo y aprueba cerrar la spec. Cubre: todos | Módulo: validación
+  Estado (2026-10-28): hecha. El usuario aplicó los pasos de producción, hizo la demo completa en producción y aprobó cerrar la spec con la aplicación de Google en "Prueba" (Enmienda 2). Validación en la sección "Validación RF por RF".
 
 ## Trazabilidad RF -> Tareas
 
@@ -132,4 +133,63 @@
 ## Dudas abiertas
 
 - Ninguna que bloquee: las del plan están resueltas por el usuario (2026-10-23). T1 detuvo Microsoft porque exige tarjeta (P2) y el usuario lo quitó (Enmienda 1, 2026-10-27).
-- Pendiente antes de la T14: Google exige URL de página principal y de política de privacidad para publicar la aplicación (hallazgo de la T1). Hace falta otra enmienda de la spec.
+- (Resuelta 2026-10-28 con la Enmienda 2: se cierra en "Prueba"; la página de privacidad y la publicación pasan a la spec 009.)
+
+## Validación RF por RF (T15, 2026-10-28)
+
+Producción: el usuario aplicó los pasos de la T14 (URI de retorno y usuarios de prueba en Google; `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en Vercel; `CRON_SECRET` renovado y redesplegado; `npx supabase db push` a prod con las 5 migraciones `sync_schema`, `sync_readonly`, `sync_connect_functions`, `sync_worker_functions` y `calendar_groups`, y vuelta a enlazar dev; `cron_secret` y `sync_app_url` en Vault de prod; `main` avanzado por fast-forward a `842f38c`). Demo en producción hecha y confirmada por el usuario: conectar Google, elegir dos calendarios, ver sus eventos, cambiar uno en Google y traerlo con "Actualizar ahora", espera de 5 minutos, compartir, desconectar conservando y borrando, grupos (crear, asignar, reordenar, ocultar y mostrar) y ejecución horaria.
+
+Verificación P8 sobre `842f38c` (el código no cambia en la T15): `typecheck`, `lint`, `format:check`, `npm test` (138 archivos, 1184 tests), `build` y `test:db` completo (31 archivos, 287 tests) en verde, ejecutados en la T14.
+
+| RF | Tests | Demo en producción |
+|----|-------|--------------------|
+| RF-1 | `oauth-routes`, `provider-google`, `connection-list` | Conectar Google |
+| RF-2 | `provider-google` (alcances de solo lectura) | Pantalla de consentimiento |
+| RF-3 | `oauth-routes`, `connection-list` | Vuelta a la ficha de la cuenta |
+| RF-4 | `oauth-routes`, `connection-list` | — |
+| RF-5 | `oauth-routes`, `connection-list` | — |
+| RF-6 | `sync-schema`, `sync-connect` | — |
+| RF-7 | `sync-schema`, `sync-connect`, `calendar-list` | — |
+| RF-8 | `sync-connect`, `oauth-routes`, `connection-list`, `sync-core` | — |
+| RF-9 | `connection-page`, `provider-google` | Lista de calendarios de la cuenta |
+| RF-10 | `sync-connect`, `connection-actions`, `sync-core` | Elegir dos calendarios |
+| RF-11 | `sync-connect`, `connection-actions`, `connection-page` | — |
+| RF-12 | `connection-page`, `provider-google` | — |
+| RF-13 | `sync-worker`, `run-sync`, `connection-page`, `calendar-list` | — |
+| RF-14 | `sync-connect`, `connection-actions`, `connection-page`, `sync-core` | — |
+| RF-15 | `sync-core`, `provider-google` | Eventos del rango |
+| RF-16 | `google-events`, `provider-google` | — |
+| RF-17 | `google-events` | Eventos visibles |
+| RF-18 | `google-events`, `run-sync` | — |
+| RF-19 | `run-sync`, `sync-core` | — |
+| RF-20 | `sync-readonly`, `synced-calendar-ui` | — |
+| RF-21 | `synced-calendar-ui` | — |
+| RF-22 | `sync-worker`, `run-sync`, `sync-run-route` | Ejecución horaria |
+| RF-23 | `sync-worker`, `run-sync`, `connection-actions`, `connection-page` | "Actualizar ahora" |
+| RF-24 | `sync-worker`, `connection-actions`, `connection-page` | Espera de 5 minutos |
+| RF-25 | `sync-worker`, `run-sync` | Evento cambiado en Google |
+| RF-26 | `sync-schema`, `connection-page`, `synced-calendar-ui` | — |
+| RF-27 | `sync-connect`, `connection-actions`, `disconnect-dialog` | Desconectar |
+| RF-28 | `sync-connect`, `notice-list` | Conservar uno |
+| RF-29 | `sync-connect`, `disconnect-dialog`, `notice-list` | Borrar otro |
+| RF-30 | `sync-connect`, `connection-actions`, `provider-google` | Desconectar |
+| RF-31 | `sync-worker`, `run-sync`, `notice-list` | — |
+| RF-32 | `sync-connect`, `oauth-routes` | — |
+| RF-33 | `sync-worker`, `run-sync`, `calendar-list` | — |
+| RF-34 | `sync-worker`, `notice-list`, `calendar-list` | — |
+| RF-35 | `calendar-groups`, `group-actions`, `group-section` | Crear un grupo |
+| RF-36 | `group-actions`, `group-section`, `organize-groups` | Meter calendarios |
+| RF-37 | `calendar-groups`, `group-actions`, `group-section`, `organize-groups` | — |
+| RF-38 | `group-section`, `preferences-actions` | Reordenar |
+| RF-39 | `group-actions`, `group-section` | Ocultar y mostrar |
+| RF-40 | `group-section`, `organize-groups` | — |
+| RF-41 | `calendar-groups`, `group-actions`, `group-section`, `calendar-list` | — |
+| RF-42 | `calendar-groups`, `organize-groups` | — |
+| RF-43 | `calendar-groups`, `preferences-actions` | — |
+| RF-44 | `sync-readonly`, `synced-calendar-ui`, `preferences-actions` | — |
+| RF-45 | `sync-connect`, `synced-calendar-ui`, `calendar-list` | — |
+| RF-46 | `calendar-groups`, `group-section`, `organize-groups` | — |
+| RF-47 | `oauth-routes`, `connection-list` | — |
+| RF-48 | `connection-list` | Aviso previo de "app no verificada" |
+
+Criterios de finalización: todos cumplidos salvo "aplicación publicada", sustituido por la Enmienda 2 (cierre en "Prueba"). Sin probar en producción: RF-31 y RF-32 con una caducidad real de 7 días, y RF-13, RF-33 y RF-34 con un fallo real de Google (cubiertos por tests).

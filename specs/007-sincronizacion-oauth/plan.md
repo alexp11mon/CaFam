@@ -1,6 +1,6 @@
 # Plan 007 — Sincronización de calendarios externos (Google)
 
-> Spec de origen: `specs/007-sincronizacion-oauth/spec.md` (aprobada, 2026-10-23). Constitución: `docs/constitution.md`. Estado: **Aprobado** por el usuario (2026-10-23), con RF-30 y RF-47 reformulados en la spec. **Enmendado** el 2026-10-27 con la Enmienda 1 de la spec: se quita Microsoft (ver "Comprobaciones de la T1"); lo que solo servía a Microsoft se borra del plan.
+> Spec de origen: `specs/007-sincronizacion-oauth/spec.md` (aprobada, 2026-10-23). Constitución: `docs/constitution.md`. Estado: **Aprobado** por el usuario (2026-10-23), con RF-30 y RF-47 reformulados en la spec. **Enmendado** el 2026-10-27 con la Enmienda 1 de la spec: se quita Microsoft (ver "Comprobaciones de la T1"); lo que solo servía a Microsoft se borra del plan. Spec **cerrada** el 2026-10-28 con la Enmienda 2 (aplicación de Google en "Prueba").
 > Fuentes consultadas el 2026-10-23: Google (`support.google.com/cloud/answer/7454865`, `developers.google.com/identity/protocols/oauth2`, `developers.google.com/workspace/calendar/api/auth`) y Microsoft Learn (`event: delta`, ya sin uso tras la Enmienda 1). Lo que no pude confirmar está en "Dudas abiertas".
 
 ## Resumen de arquitectura
