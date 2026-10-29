@@ -1,4 +1,4 @@
-import { ProviderError } from "./providers/google";
+import type { FailureKind } from "./providers/google";
 
 // Why a write to Google failed, in Spanish and never with Google's own text
 // (RF-22 to RF-26, RF-30).
@@ -15,8 +15,12 @@ export const WRITE_ERRORS: Record<WriteFailure, string> = {
 };
 
 /** Anything unexpected counts as Google not answering: the user can retry. */
+// By name, not instanceof, so client screens can import the texts without the
+// Google client.
 export function writeFailureOf(error: unknown): WriteFailure {
-  if (!(error instanceof ProviderError)) return "transient";
-  if (error.kind === "missing") return "gone";
-  return error.kind;
+  if (!(error instanceof Error) || error.name !== "ProviderError") {
+    return "transient";
+  }
+  const kind = (error as Error & { kind: FailureKind }).kind;
+  return kind === "missing" ? "gone" : kind;
 }

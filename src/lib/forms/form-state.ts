@@ -13,7 +13,8 @@ export interface FormState<Field extends string> {
   done?: Done;
 }
 
-export type Done = "created" | "updated" | "deleted";
+/** "gone": deleted in Google while it was being changed (spec 009 RF-25). */
+export type Done = "created" | "updated" | "deleted" | "gone";
 
 /** Result of a confirm-and-act Server Action (delete, merge): only an error comes back. */
 export interface ConfirmState {

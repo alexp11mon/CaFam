@@ -15,7 +15,11 @@ import {
   requireUser,
 } from "@/lib/calendar/queries";
 import { getMembers } from "@/lib/sharing/queries";
-import { canWriteEvents } from "@/lib/sync/read-only";
+import {
+  canWriteEvents,
+  moveTargets,
+  readOnlyReason,
+} from "@/lib/sync/read-only";
 
 export interface EventData {
   detail: EventDetailData;
@@ -43,7 +47,8 @@ export async function loadEvent(id: string): Promise<EventData | null> {
   const canEdit = canWriteEvents(calendar);
   const timeZone = await getProfileTimeZone(supabase, userId);
   const myCalendars = canEdit ? await getMyCalendars(supabase, userId) : [];
-  const editable = myCalendars.filter(canWriteEvents);
+  // A synced event only moves inside its Google account (spec 009 RF-19, RF-20).
+  const editable = moveTargets(calendar, myCalendars);
   const categories = await getCategoriesForCalendars(
     supabase,
     canEdit ? editable.map((c) => c.id) : [event.calendarId],
@@ -65,7 +70,7 @@ export async function loadEvent(id: string): Promise<EventData | null> {
       calendarColor: calendar.color,
       categoryName: category?.name ?? null,
       author: authorLabel(event.createdBy, members),
-      synced: calendar.synced !== null,
+      readOnly: readOnlyReason(calendar.synced),
     },
     timeZone,
     canEdit,

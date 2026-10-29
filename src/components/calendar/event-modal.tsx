@@ -17,6 +17,7 @@ import { CloseIcon, ExpandIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import type { Done } from "@/lib/forms/form-state";
+import { WRITE_ERRORS } from "@/lib/sync/write-errors";
 
 const ICON_BUTTON =
   "inline-flex size-11 shrink-0 items-center justify-center rounded-full text-ink transition-colors hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
@@ -25,6 +26,7 @@ const DONE_MESSAGES: Record<Done, string> = {
   created: "Evento creado",
   updated: "Cambios guardados",
   deleted: "Evento borrado",
+  gone: WRITE_ERRORS.gone,
 };
 
 interface EventModalApi {

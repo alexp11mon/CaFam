@@ -18,9 +18,16 @@ export interface EventDetailData {
   categoryName: string | null;
   /** Who created it, or the text for a gone author (spec 006, RF-34 to RF-36). */
   author: string;
-  /** From a connected account: changed only there (spec 007 RF-21). */
-  synced?: boolean;
+  /** Why a synced event cannot be changed from CaFam, if it cannot (spec 009 RF-8). */
+  readOnly?: "google" | "reconnect" | null;
 }
+
+const READ_ONLY_TEXT = {
+  google:
+    "La cuenta de Google solo puede ver este calendario, así que este evento solo se puede cambiar en Google.",
+  reconnect:
+    "Este evento viene de Google. Para cambiarlo desde CaFam, el propietario tiene que volver a conectar la cuenta.",
+};
 
 function Row({
   label,
@@ -84,10 +91,8 @@ export function EventDetail({
         <Row label="Calendario">{event.calendarName}</Row>
         <Row label="Creado por">{event.author}</Row>
       </dl>
-      {event.synced ? (
-        <p className="text-sm text-muted">
-          Este evento viene de Google y solo se puede cambiar allí.
-        </p>
+      {event.readOnly ? (
+        <p className="text-sm text-muted">{READ_ONLY_TEXT[event.readOnly]}</p>
       ) : null}
       {canEdit ? (
         <div className="flex flex-wrap gap-3">

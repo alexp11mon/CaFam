@@ -103,7 +103,7 @@
   `engine.ts` añade `writeEngineDeps()` con el cliente de la sesión del usuario.
   Hecho cuando: `npm test -- write-event` en verde. Cubre: RF-10, RF-11, RF-12, RF-14, RF-17, RF-19, RF-21, RF-22, RF-23, RF-24, RF-25, RF-27, requisito de tiempo de respuesta | Módulo: write-event, engine
 
-- [ ] T8 Escribir eventos en calendarios traídos desde las acciones y la interfaz
+- [x] T8 Escribir eventos en calendarios traídos desde las acciones y la interfaz
   Pasos: test primero, ampliando los tests de las acciones de evento y de `event-form`, `quick-create` y el detalle. Comprueba:
   - `createEvent`, `updateEvent` y `deleteEvent` usan el motor cuando el origen o el destino es traído y el camino de siempre si no.
   - Un error devuelve `formError` en español y `values`.

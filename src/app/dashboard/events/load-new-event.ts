@@ -35,7 +35,8 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
     getMyCalendars(supabase, userId),
     getProfileTimeZone(supabase, userId),
   ]);
-  // Only calendars where the user can write (RF-27), never synced ones (spec 007 RF-20).
+  // Only calendars where the user can write (RF-27), synced ones included when
+  // their account writes (spec 009 RF-9).
   const editable = calendars.filter(canWriteEvents);
   if (editable.length === 0) return { kind: "no-calendar" };
 

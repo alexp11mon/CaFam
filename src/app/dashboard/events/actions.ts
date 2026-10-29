@@ -23,6 +23,13 @@ import {
   type ConfirmState,
   type FormState,
 } from "@/lib/forms/form-state";
+import { writeEngineDeps } from "@/lib/sync/engine";
+import { WRITE_ERRORS } from "@/lib/sync/write-errors";
+import {
+  writeEvent,
+  type WriteRequest,
+  type WriteResult,
+} from "@/lib/sync/write-event";
 
 type EventFormState = FormState<EventFormField>;
 
@@ -85,6 +92,39 @@ function failure(error: unknown, values: EventFormValues): EventFormState {
   return { formError: getCalendarErrorMessage(error), values };
 }
 
+type Supabase = Awaited<ReturnType<typeof requireActionUser>>["supabase"];
+
+/**
+ * Synced calendars write in Google first (spec 009 plan D3, D4); for normal
+ * ones the engine answers "normal" and the action writes as always.
+ */
+function syncedWrite(
+  supabase: Supabase,
+  request: WriteRequest,
+): Promise<WriteResult> {
+  return writeEvent(request, writeEngineDeps(supabase));
+}
+
+/** The event as it is now: its calendar and what Google gets compared with (RF-14). */
+async function currentEvent(supabase: Supabase, id: string) {
+  const { data, error } = await supabase
+    .from("events")
+    .select(
+      "calendar_id, title, description, location, starts_at, ends_at, all_day",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/** Deleted in Google meanwhile: CaFam already removed it (spec 009 RF-25). */
+function gone(formData: FormData, values: EventFormValues): EventFormState {
+  refresh();
+  if (inWindow(formData)) return { done: "gone", values };
+  return { formError: WRITE_ERRORS.gone, values };
+}
+
 function parseForm(values: EventFormValues, timeZone: string) {
   return parseEventInput(
     { ...values, allDay: values.allDay === "on" },
@@ -108,13 +148,25 @@ export async function createEvent(
     );
     if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values };
 
-    const { data, error } = await supabase
-      .from("events")
-      .insert({ ...toRow(parsed.data), created_by: userId })
-      .select("id")
-      .single();
-    if (error) return failure(error, values);
-    id = data.id;
+    const synced = await syncedWrite(supabase, {
+      op: "create",
+      row: toRow(parsed.data),
+    });
+    if (synced.status === "failed") {
+      return { formError: WRITE_ERRORS[synced.failure], values };
+    }
+    if (synced.status === "dbError") return failure(synced.error, values);
+    if (synced.status === "done") {
+      id = synced.eventId;
+    } else {
+      const { data, error } = await supabase
+        .from("events")
+        .insert({ ...toRow(parsed.data), created_by: userId })
+        .select("id")
+        .single();
+      if (error) return failure(error, values);
+      id = data.id;
+    }
   } catch (error) {
     return failure(error, values);
   }
@@ -142,21 +194,38 @@ export async function updateEvent(
     );
     if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values };
 
-    // Changing calendar is checked by RLS on both sides (RF-27).
-    const { data, error } = await supabase
-      .from("events")
-      .update(toRow(parsed.data))
-      .eq("id", id)
-      .select("id");
-    if (error) return failure(error, values);
-    if (!data || data.length === 0) {
-      // RLS hides rows without an error (RF-25).
-      return {
-        formError: (await canSeeEvent(supabase, id))
-          ? CALENDAR_MESSAGES.forbidden
-          : CALENDAR_MESSAGES.notFound,
-        values,
-      };
+    const before = await currentEvent(supabase, id);
+    if (!before) return { formError: CALENDAR_MESSAGES.notFound, values };
+    const synced = await syncedWrite(supabase, {
+      op: "update",
+      eventId: id,
+      calendarId: before.calendar_id,
+      before,
+      row: toRow(parsed.data),
+    });
+    if (synced.status === "failed") {
+      return { formError: WRITE_ERRORS[synced.failure], values };
+    }
+    if (synced.status === "dbError") return failure(synced.error, values);
+    if (synced.status === "gone") return gone(formData, values);
+
+    if (synced.status === "normal") {
+      // Changing calendar is checked by RLS on both sides (RF-27).
+      const { data, error } = await supabase
+        .from("events")
+        .update(toRow(parsed.data))
+        .eq("id", id)
+        .select("id");
+      if (error) return failure(error, values);
+      if (!data || data.length === 0) {
+        // RLS hides rows without an error (RF-25).
+        return {
+          formError: (await canSeeEvent(supabase, id))
+            ? CALENDAR_MESSAGES.forbidden
+            : CALENDAR_MESSAGES.notFound,
+          values,
+        };
+      }
     }
   } catch (error) {
     return failure(error, values);
@@ -179,18 +248,40 @@ export async function deleteEvent(
   const { supabase } = await requireActionUser();
 
   try {
-    const { data, error } = await supabase
-      .from("events")
-      .delete()
-      .eq("id", id)
-      .select("id");
-    if (error) return { formError: getCalendarErrorMessage(error) };
-    if (!data || data.length === 0) {
-      return {
-        formError: (await canSeeEvent(supabase, id))
-          ? CALENDAR_MESSAGES.forbidden
-          : CALENDAR_MESSAGES.notFound,
-      };
+    const current = await currentEvent(supabase, id);
+    if (!current) return { formError: CALENDAR_MESSAGES.notFound };
+    const synced = await syncedWrite(supabase, {
+      op: "delete",
+      eventId: id,
+      calendarId: current.calendar_id,
+    });
+    if (synced.status === "failed") {
+      return { formError: WRITE_ERRORS[synced.failure] };
+    }
+    if (synced.status === "dbError") {
+      return { formError: getCalendarErrorMessage(synced.error) };
+    }
+    if (synced.status === "gone") {
+      refresh();
+      return mode === "modal"
+        ? { done: "gone" }
+        : { formError: WRITE_ERRORS.gone };
+    }
+
+    if (synced.status === "normal") {
+      const { data, error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", id)
+        .select("id");
+      if (error) return { formError: getCalendarErrorMessage(error) };
+      if (!data || data.length === 0) {
+        return {
+          formError: (await canSeeEvent(supabase, id))
+            ? CALENDAR_MESSAGES.forbidden
+            : CALENDAR_MESSAGES.notFound,
+        };
+      }
     }
   } catch (error) {
     return { formError: getCalendarErrorMessage(error) };

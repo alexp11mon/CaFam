@@ -32,8 +32,11 @@ describe("canMerge (RF-45)", () => {
   });
 });
 
-describe("EventDetail of a synced event (RF-21)", () => {
-  it("has no buttons and says why", () => {
+describe("EventDetail of a read-only synced event (spec 009 RF-8)", () => {
+  it.each([
+    ["reconnect", /volver a conectar/i],
+    ["google", /solo puede ver este calendario/i],
+  ] as const)("has no buttons and says why (%s)", (readOnly, text) => {
     render(
       <EventDetail
         event={{
@@ -49,7 +52,7 @@ describe("EventDetail of a synced event (RF-21)", () => {
           calendarColor: "#A0C4FF",
           categoryName: null,
           author: "Ana",
-          synced: true,
+          readOnly,
         }}
         timeZone="Europe/Madrid"
         canEdit={false}
@@ -58,7 +61,7 @@ describe("EventDetail of a synced event (RF-21)", () => {
     );
 
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
-    expect(screen.getByText(/viene de google/i)).toBeInTheDocument();
+    expect(screen.getByText(text)).toBeInTheDocument();
   });
 });
 
