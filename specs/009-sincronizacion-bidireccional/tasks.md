@@ -52,7 +52,7 @@
   Migración `sync_write_functions`.
   Hecho cuando: `npm run test:db -- sync-write sync-readonly` en verde. Cubre: RF-6, RF-7, RF-10, RF-11, RF-12, RF-16, RF-19, RF-20, RF-25, RF-29, RF-31, RF-32, RF-33, RF-34, RF-36, RF-38 | Módulo: sync_write_functions
 
-- [ ] T4 Hacer que la actualización horaria respete el último cambio y los eventos solo de CaFam
+- [x] T4 Hacer que la actualización horaria respete el último cambio y los eventos solo de CaFam
   Pasos: test primero, ampliando `tests/integration/sync-worker.test.ts`. Comprueba:
   - Con `p_read_at` anterior al `updated_at` de un evento cambiado en CaFam, `sync_apply_events` no lo modifica ni lo borra. Con `p_read_at` posterior, aplica lo de Google.
   - Un evento recién creado con `sync_commit_event` no se borra aunque no llegue en esa lectura.

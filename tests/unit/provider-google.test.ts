@@ -180,13 +180,20 @@ describe("listEvents (RF-15, RF-16)", () => {
 
   it("expands repetitions in the window and follows pages", async () => {
     const fn = fakeFetch(
-      json({ items: [{ id: "a" }], nextPageToken: "p2" }),
-      json({ items: [{ id: "b" }] }),
+      json({ items: [{ id: "a" }], nextPageToken: "p2", accessRole: "writer" }),
+      json({ items: [{ id: "b" }], accessRole: "writer" }),
     );
 
-    const events = await listEvents("at", "fam@group", range, fn);
+    const { events, accessRole } = await listEvents(
+      "at",
+      "fam@group",
+      range,
+      fn,
+    );
 
     expect(events.map((e) => e.id)).toEqual(["a", "b"]);
+    // The permission of the account over the calendar (spec 009 RF-8, D10).
+    expect(accessRole).toBe("writer");
     const url = calledUrl(fn);
     expect(url.pathname).toBe("/calendar/v3/calendars/fam%40group/events");
     expect(Object.fromEntries(url.searchParams)).toMatchObject({
@@ -204,9 +211,10 @@ describe("listEvents (RF-15, RF-16)", () => {
       });
     const fn = fakeFetch(page(1), page(2), page(3), page(4), page(5));
 
-    const events = await listEvents("at", "big", range, fn);
+    const { events, accessRole } = await listEvents("at", "big", range, fn);
 
     expect(events).toHaveLength(10_000);
+    expect(accessRole).toBeNull();
     expect(fn).toHaveBeenCalledTimes(4);
   });
 

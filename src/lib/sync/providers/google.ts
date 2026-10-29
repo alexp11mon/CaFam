@@ -177,6 +177,7 @@ async function getJson(fetchFn: Fetch, url: URL, accessToken: string) {
   return (await response.json()) as {
     items?: unknown[];
     nextPageToken?: string;
+    accessRole?: string;
   };
 }
 
@@ -204,14 +205,28 @@ export async function listCalendars(
   return calendars;
 }
 
-/** Events of the window, one per repetition, up to 10,000 (RF-15, RF-16, plan D17). */
+/** What the account may do in a calendar; only owner and writer write (spec 009 RF-8). */
+export type GoogleAccess = "owner" | "writer" | "reader";
+
+/** freeBusyReader sees less than a reader: both are read-only in CaFam. */
+export function accessOf(role: unknown): GoogleAccess | null {
+  if (role === "owner" || role === "writer") return role;
+  if (role === "reader" || role === "freeBusyReader") return "reader";
+  return null;
+}
+
+/**
+ * Events of the window, one per repetition, up to 10,000, and the access of
+ * the account over the calendar (RF-15, RF-16, plan D17; spec 009 D10).
+ */
 export async function listEvents(
   accessToken: string,
   calendarId: string,
   range: { from: Date; to: Date },
   fetchFn: Fetch = fetch,
-): Promise<GoogleEvent[]> {
+): Promise<{ events: GoogleEvent[]; accessRole: GoogleAccess | null }> {
   const events: GoogleEvent[] = [];
+  let accessRole: GoogleAccess | null = null;
   let pageToken: string | undefined;
   do {
     const url = new URL(
@@ -226,9 +241,10 @@ export async function listEvents(
     if (pageToken) url.searchParams.set("pageToken", pageToken);
     const page = await getJson(fetchFn, url, accessToken);
     events.push(...((page.items ?? []) as GoogleEvent[]));
+    accessRole ??= accessOf(page.accessRole);
     pageToken = page.nextPageToken;
   } while (pageToken && events.length < MAX_FETCHED_EVENTS);
-  return events.slice(0, MAX_FETCHED_EVENTS);
+  return { events: events.slice(0, MAX_FETCHED_EVENTS), accessRole };
 }
 
 /** Withdraws CaFam's access in Google (RF-30). */

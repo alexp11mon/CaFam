@@ -71,6 +71,7 @@ describe("syncCalendars", () => {
     fetchFn.mockImplementation(async (input) => {
       if (String(input) === TOKEN_URL) return json({ access_token: "at" });
       return json({
+        accessRole: "owner",
         items: [
           googleEvent("ok"),
           {
@@ -95,6 +96,9 @@ describe("syncCalendars", () => {
       p_calendar_id: "cal-1",
       p_skipped: 1,
       p_omitted: 0,
+      // Read time and Google access (spec 009 T4, plan D5, D10).
+      p_read_at: "2026-10-27T12:00:00.000Z",
+      p_access: "owner",
     });
     expect(
       (apply.p_events as { external_id: string }[]).map((e) => e.external_id),

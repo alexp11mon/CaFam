@@ -884,9 +884,11 @@ export type Database = {
       }
       sync_apply_events: {
         Args: {
+          p_access?: string
           p_calendar_id: string
           p_events: Json
           p_omitted?: number
+          p_read_at?: string
           p_secret: string
           p_skipped?: number
         }
@@ -996,6 +998,10 @@ export type Database = {
           jobname: string
           schedule: string
         }[]
+      }
+      sync_set_access: {
+        Args: { p_connection_id: string; p_items: Json; p_secret: string }
+        Returns: undefined
       }
       sync_store_token: {
         Args: { p_connection_id: string; p_secret: string; p_token: string }

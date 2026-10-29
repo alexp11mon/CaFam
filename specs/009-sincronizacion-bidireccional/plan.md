@@ -157,6 +157,7 @@ Todas las funciones nuevas son `SECURITY DEFINER` con `search_path = ''` y se co
   - `p_mapping` es `[{event_id, external_id}]` y fija `external_id` en esos eventos.
   - Crea la fila de `synced_calendars` con `google_access = 'owner'`. Miembros, categorías, colores y el resto de eventos quedan como estaban (RF-34, RF-36, RF-42).
 - `sync_apply_events(p_secret, p_calendar_id, p_events jsonb, p_skipped int default 0, p_omitted int default 0, p_read_at timestamptz default now(), p_access text default null) returns jsonb`. Es la misma función de la 007 con los tres cambios de la migración `sync_apply_events_v2`.
+- `sync_set_access(p_secret, p_connection_id, p_items jsonb)` (añadida en la T4): guarda el `accessRole` de cada calendario de la lista que la ficha de la cuenta lee en cada visita. Así una cuenta que se vuelve a conectar escribe en cuanto se abre su ficha, sin esperar a la actualización horaria (RF-4, RF-8). Solo con el secreto, como las de la 007.
 - `connect_account(p_provider, p_subject, p_email, p_refresh_token, p_can_write boolean default false) returns jsonb`. Hace lo mismo que en la 007 y además guarda `can_write`.
 
 Google: los permisos pedidos son `openid email https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendars` (RF-1, D1). Las llamadas nuevas son estas:

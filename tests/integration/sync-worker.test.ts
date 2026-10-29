@@ -215,6 +215,117 @@ describe("sync_apply_events (RF-23, RF-25)", () => {
   });
 });
 
+// Spec 009, T4: the last change wins and CaFam-only events stay (plan D5, D9;
+// RF-8, RF-16, RF-27, RF-28, RF-42).
+describe("sync_apply_events with writes from CaFam", () => {
+  let calendarId: string;
+
+  beforeAll(async () => {
+    calendarId = await newSynced("Escritura", "write-cal");
+  });
+
+  async function apply(events: object[], extra: Record<string, unknown> = {}) {
+    const { data, error } = await engine.rpc("sync_apply_events", {
+      p_secret: SECRET,
+      p_calendar_id: calendarId,
+      p_events: events as never,
+      ...extra,
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  async function rowOf(externalId: string) {
+    const { data } = await admin
+      .from("events")
+      .select("title, color, category_id, updated_at")
+      .eq("calendar_id", calendarId)
+      .eq("external_id", externalId)
+      .maybeSingle();
+    return data;
+  }
+
+  it("does not overwrite or remove what changed in CaFam after reading (RF-27)", async () => {
+    await apply([event("w1", "Google"), event("w2", "Otro")]);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await admin
+      .from("events")
+      .update({ title: "CaFam", color: "#FFADAD" })
+      .eq("calendar_id", calendarId)
+      .eq("external_id", "w1");
+    // Database clock: the read happened just before the CaFam change.
+    const changedAt = Date.parse((await rowOf("w1"))!.updated_at);
+    const before = new Date(changedAt - 1).toISOString();
+
+    await apply([event("w1", "Google viejo")], { p_read_at: before });
+    expect((await rowOf("w1"))?.title).toBe("CaFam");
+    // w2 was not touched after the read either, so it goes.
+    expect(await rowOf("w2")).toBeNull();
+  });
+
+  it("applies a Google change read after the CaFam one (RF-28) and keeps color and category (RF-16)", async () => {
+    const later = new Date(Date.now() + 3_600_000).toISOString();
+    await apply([event("w1", "Google nuevo")], { p_read_at: later });
+    const row = await rowOf("w1");
+    expect(row?.title).toBe("Google nuevo");
+    expect(row?.color).toBe("#FFADAD");
+  });
+
+  it("keeps an event just created in CaFam that the read did not see", async () => {
+    const before = new Date(Date.now() - 3_600_000).toISOString();
+    await admin.from("events").insert({
+      calendar_id: calendarId,
+      external_id: "fresh",
+      title: "Recién creado",
+      starts_at: "2026-11-05T10:00:00Z",
+      ends_at: "2026-11-05T11:00:00Z",
+      created_by: owner.id,
+    });
+    await apply([event("w1", "Google nuevo")], { p_read_at: before });
+    expect((await rowOf("fresh"))?.title).toBe("Recién creado");
+  });
+
+  it("never removes events without external_id (RF-42)", async () => {
+    await admin.from("events").insert({
+      calendar_id: calendarId,
+      title: "Solo CaFam",
+      starts_at: "2020-01-01T10:00:00Z",
+      ends_at: "2020-01-01T11:00:00Z",
+      created_by: owner.id,
+    });
+    await apply([]);
+    const { count } = await admin
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("calendar_id", calendarId)
+      .is("external_id", null);
+    expect(count).toBe(1);
+  });
+
+  it("stores the Google access (RF-8)", async () => {
+    await apply([], { p_access: "reader" });
+    expect((await syncedRow(calendarId)).google_access).toBe("reader");
+    await apply([], { p_access: "bogus" });
+    expect((await syncedRow(calendarId)).google_access).toBe("reader");
+  });
+
+  it("sync_set_access stores the access from the calendar list (RF-4)", async () => {
+    const wrong = await engine.rpc("sync_set_access", {
+      p_secret: "wrong",
+      p_connection_id: connectionId,
+      p_items: [],
+    });
+    expect(wrong.error?.code).toBe("42501");
+    const { error } = await engine.rpc("sync_set_access", {
+      p_secret: SECRET,
+      p_connection_id: connectionId,
+      p_items: [{ external_id: "write-cal", access: "writer" }],
+    });
+    expect(error).toBeNull();
+    expect((await syncedRow(calendarId)).google_access).toBe("writer");
+  });
+});
+
 describe("sync_fail (RF-13, RF-31, RF-33, RF-34)", () => {
   async function fail(calendarId: string, kind: string) {
     const { error } = await engine.rpc("sync_fail", {

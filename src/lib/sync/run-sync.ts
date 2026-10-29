@@ -86,9 +86,10 @@ async function syncOne(
   calendar: ClaimedCalendar,
   token: Promise<string>,
 ): Promise<SyncResult> {
+  // Taken before reading: CaFam changes after it win (spec 009 RF-27, plan D5).
   const now = deps.now?.() ?? new Date();
   try {
-    const items = await listEvents(
+    const { events: items, accessRole } = await listEvents(
       await token,
       calendar.external_id,
       syncWindow(now),
@@ -102,6 +103,8 @@ async function syncOne(
       p_events: events,
       p_skipped: converted.skipped,
       p_omitted: omitted,
+      p_read_at: now.toISOString(),
+      p_access: accessRole,
     })) as UpdateSummary;
     return { calendarId: calendar.calendar_id, summary };
   } catch (error) {
