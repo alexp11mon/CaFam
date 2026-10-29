@@ -5,11 +5,12 @@ import { EmailForm } from "@/components/account/email-form";
 import { PasswordForm } from "@/components/account/password-form";
 import { ProfileForm } from "@/components/account/profile-form";
 import { AccentPicker } from "@/components/settings/accent-picker";
+import { ThemePicker } from "@/components/settings/theme-picker";
 import { FormAlert } from "@/components/ui/form-alert";
 import { getConfirmNotice } from "@/lib/account/confirm-type";
 import { getAccountEmails, getProfile } from "@/lib/account/queries";
 import { getAppearance, requireUser } from "@/lib/calendar/queries";
-import { setAccent } from "./actions";
+import { setAccent, setTheme } from "./actions";
 import {
   changePassword,
   deleteAccount,
@@ -22,10 +23,15 @@ export const metadata: Metadata = { title: "Ajustes" };
 type SearchParams = Promise<{ confirm?: string }>;
 
 // Each section reads the session, so it streams behind <Suspense> (cacheComponents).
-async function AccentSection() {
+async function AppearanceSection() {
   const { supabase, userId } = await requireUser();
-  const { accent } = await getAppearance(supabase, userId);
-  return <AccentPicker current={accent} setAccent={setAccent} />;
+  const { accent, theme } = await getAppearance(supabase, userId);
+  return (
+    <>
+      <ThemePicker current={theme} setTheme={setTheme} />
+      <AccentPicker current={accent} setAccent={setAccent} />
+    </>
+  );
 }
 
 async function ProfileSection() {
@@ -82,7 +88,7 @@ function Section({
 
 const LOADING = <p className="text-muted">Cargando…</p>;
 
-/** Ajustes: interface accent (spec 005) and the account (spec 006). */
+/** Ajustes: theme (spec 011), interface accent (spec 005) and the account (spec 006). */
 export default function SettingsPage({
   searchParams,
 }: {
@@ -94,10 +100,10 @@ export default function SettingsPage({
       <Suspense fallback={null}>
         <ConfirmNotice searchParams={searchParams} />
       </Suspense>
-      {/* AccentPicker brings its own heading. */}
-      <section className="rounded-3xl bg-paper p-5 sm:p-6">
+      {/* ThemePicker and AccentPicker bring their own headings. */}
+      <section className="flex flex-col gap-8 rounded-3xl bg-paper p-5 sm:p-6">
         <Suspense fallback={LOADING}>
-          <AccentSection />
+          <AppearanceSection />
         </Suspense>
       </section>
       <Section id="settings-profile" title="Perfil">

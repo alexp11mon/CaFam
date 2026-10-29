@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   },
   throws: false,
   revalidated: [] as unknown[][],
+  cookies: [] as unknown[][],
 }));
 
 function fakeSupabase() {
@@ -41,17 +42,25 @@ vi.mock("next/cache", () => ({
   revalidatePath: (...args: unknown[]) => state.revalidated.push(args),
 }));
 
+vi.mock("next/headers", () => ({
+  cookies: async () => ({
+    set: (...args: unknown[]) => state.cookies.push(args),
+  }),
+}));
+
 vi.mock("@/lib/calendar/queries", () => ({
   requireActionUser: async () => ({ supabase: fakeSupabase(), userId: ME }),
 }));
 
-const { setAccent } = await import("@/app/dashboard/settings/actions");
+const { setAccent, setTheme } =
+  await import("@/app/dashboard/settings/actions");
 
 beforeEach(() => {
   state.updates = [];
   state.result = { data: [{ id: ME }], error: null };
   state.throws = false;
   state.revalidated = [];
+  state.cookies = [];
 });
 
 describe("setAccent (RF-8)", () => {
@@ -99,6 +108,59 @@ describe("setAccent errors (RF-12)", () => {
     state.throws = true;
 
     const result = await setAccent("blue");
+
+    expect(result.error).toBe(
+      "No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.",
+    );
+  });
+});
+
+// Spec 011, T7: the theme is saved like the accent and copied to the device
+// cookie (RF-4; plan "Contratos e interfaces").
+describe("setTheme (RF-4)", () => {
+  it.each(["light", "dark", "system"])(
+    "saves %s in the user's own row, writes the cookie and refreshes the frame",
+    async (theme) => {
+      const result = await setTheme(theme);
+
+      expect(result).toEqual({});
+      expect(state.updates).toEqual([
+        { table: "profiles", values: { theme }, eq: ["id", ME] },
+      ]);
+      expect(state.cookies).toEqual([
+        [
+          "cafam-theme",
+          theme,
+          expect.objectContaining({ path: "/", httpOnly: false }),
+        ],
+      ]);
+      expect(state.revalidated).toEqual([["/dashboard", "layout"]]);
+    },
+  );
+
+  it("rejects another value without touching the database", async () => {
+    const result = await setTheme("sepia");
+
+    expect(result.error).toBe("Elige uno de los temas disponibles.");
+    expect(state.updates).toEqual([]);
+    expect(state.cookies).toEqual([]);
+  });
+
+  it("explains that nothing was saved and keeps the cookie", async () => {
+    state.result = { data: [], error: null };
+
+    const result = await setTheme("dark");
+
+    expect(result.error).toBe(
+      "No se ha podido guardar el tema. Inténtalo de nuevo.",
+    );
+    expect(state.cookies).toEqual([]);
+  });
+
+  it("uses the connection message on a network failure", async () => {
+    state.throws = true;
+
+    const result = await setTheme("dark");
 
     expect(result.error).toBe(
       "No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.",

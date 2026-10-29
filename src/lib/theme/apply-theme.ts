@@ -37,3 +37,15 @@ export function paintTheme(theme: ThemeId) {
     });
   writeThemeCookie(theme);
 }
+
+/** A theme picked in the browser: a fade where it can, at once with reduced motion (RF-21, RF-23, RF-24). */
+export function applyTheme(theme: ThemeId) {
+  const reduced = window.matchMedia?.(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  if (document.startViewTransition && !reduced) {
+    document.startViewTransition(() => paintTheme(theme));
+  } else {
+    paintTheme(theme);
+  }
+}

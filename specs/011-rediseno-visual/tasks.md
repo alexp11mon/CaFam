@@ -100,7 +100,7 @@
 
 ### Iteración 2 — Interfaz, movimiento y validación
 
-- [ ] T7 Elegir el tema en Ajustes y aplicarlo al momento con un fundido
+- [x] T7 Elegir el tema en Ajustes y aplicarlo al momento con un fundido
   Pasos:
   - Primero, en rojo:
     - `theme-picker.test.tsx`: tres opciones con etiqueta visible; elegir una llama a `applyTheme` y a `setTheme`; si `setTheme` falla, vuelve al tema anterior y muestra el error;
@@ -109,6 +109,7 @@
   - Después, `theme-apply`, `theme-picker` y la sección "Tema" en Ajustes.
 
   Hecho cuando: `npm test -- theme-picker apply-theme settings` en verde, `npm run test:db -- profile-theme` en verde, y en el navegador el cambio se ve sin recargar y "Como el sistema" sigue el cambio de `prefers-color-scheme` emulado. Cubre: RF-1, RF-3, RF-4, RF-5, RF-21 | Módulo: theme-apply, theme-picker
+  Evidencia (2026-10-29): rojo (`theme-picker` y `apply-theme` inexistentes, `setTheme` sin exportar). `theme-picker apply-theme settings` 4 archivos y 21 tests en verde; `test:db -- profile-theme` 6 tests en verde. En `next start` (390 px): Oscuro, Como el sistema y Claro cambian el fondo sin recargar; con "Como el sistema" el fondo sigue a `prefers-color-scheme` emulado; tras recargar se conserva. Capturas de Ajustes a 390, 768 y 1440 px en claro y oscuro con el acento rojo y el amarillo.
 
 - [ ] T8 Añadir el acceso directo de tema a la barra lateral y a la hoja "Más"
   Pasos:

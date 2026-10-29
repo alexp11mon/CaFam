@@ -20,6 +20,13 @@ export const THEME_COLOR: Record<EffectiveTheme, string> = {
   dark: DARK_NEUTRALS.stone,
 };
 
+/** The options of Ajustes, in this order (RF-1). */
+export const THEME_OPTIONS: readonly { id: ThemeId; label: string }[] = [
+  { id: "light", label: "Claro" },
+  { id: "dark", label: "Oscuro" },
+  { id: "system", label: "Como el sistema" },
+];
+
 export const themeSchema = z.enum(THEME_IDS, {
   error: "Elige uno de los temas disponibles.",
 });
