@@ -8,7 +8,7 @@ describe("web app manifest (RF-21, RNF-9)", () => {
 
   it("has the app identity and display settings", () => {
     expect(result).toMatchObject({
-      name: "CalenderFam",
+      name: "CaFam",
       short_name: "CaFam",
       // Stone, the ground of the new identity (spec 005 RF-53).
       theme_color: "#E8E5DD",

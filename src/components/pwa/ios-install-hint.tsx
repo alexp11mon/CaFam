@@ -25,9 +25,8 @@ export function IosInstallHint() {
 
   return (
     <p className="rounded-2xl bg-paper px-4 py-3 text-sm text-ink">
-      Para instalar CalenderFam en tu iPhone o iPad, pulsa{" "}
-      <strong>Compartir</strong> y después{" "}
-      <strong>Añadir a pantalla de inicio</strong>.
+      Para instalar CaFam en tu iPhone o iPad, pulsa <strong>Compartir</strong>{" "}
+      y después <strong>Añadir a pantalla de inicio</strong>.
     </p>
   );
 }

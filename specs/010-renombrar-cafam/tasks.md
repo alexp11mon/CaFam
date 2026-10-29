@@ -27,7 +27,7 @@
   Hecho cuando: `npm test -- rename-migration` y `npm run test:db -- account` en verde, y `src/types/database.ts` sin cambios. Cubre: RF-7, RF-8, RF-9, RF-19 (en dev) | Módulo: mail-rename
   Evidencia (2026-10-29): rojo antes de la migración (archivo inexistente; `body` sin "de CaFam."). `diff` con las versiones anteriores: solo las 3 líneas del nombre, la cabecera y los `grant`. Migración aplicada en dev, tipos sin cambios. `rename-migration` 2/2, `test:db -- account` 10 archivos y 62 tests, typecheck, lint y format en verde, `npm test` 146 archivos y 1281 tests, y build correcto.
 
-- [ ] T2 Mostrar CaFam en la interfaz, la PWA y la descarga `.ics`
+- [x] T2 Mostrar CaFam en la interfaz, la PWA y la descarga `.ics`
   Pasos:
   - Primero, en rojo:
     - `manifest.test.ts`: `name` y `short_name` "CaFam".
@@ -37,6 +37,7 @@
   - Después, los archivos del módulo `brand-text`, más `public/sw.js` y `src/lib/ics/fetch-ics.ts` (`CaFam-import`), incluidos sus comentarios.
 
   Hecho cuando: `npm test -- manifest side-rail brand-icons smoke ics` en verde, y `git grep -i -E` con los nombres antiguos sin resultados en `src/` ni en `public/`. Cubre: RF-2, RF-3, RF-4, RF-5, RF-6 | Módulo: brand-text, sw-cache, ics-agent
+  Evidencia (2026-10-29): rojo en 3 tests (manifest, side-rail, brand-icons). Después: 14 archivos y 218 tests en verde con el filtro; sin nombres antiguos en `src/` ni en `public/`; typecheck, lint y format en verde; `npm test` 146 archivos y 1281 tests; build correcto.
 
 - [ ] T3 Poner el nombre técnico `cafam` en la configuración del repositorio
   Pasos:

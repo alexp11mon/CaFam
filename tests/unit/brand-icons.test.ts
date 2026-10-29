@@ -36,7 +36,7 @@ describe("service worker version (RF-54, plan D18)", () => {
   const code = readFileSync("public/sw.js", "utf8");
 
   it("uses a new cache name so installed apps drop the old icons", () => {
-    expect(code).toMatch(/const CACHE_NAME = "calenderfam-v2";/);
+    expect(code).toMatch(/const CACHE_NAME = "cafam-v3";/);
   });
 
   it("deletes every cache with another name when it activates", () => {

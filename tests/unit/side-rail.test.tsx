@@ -23,9 +23,10 @@ describe("SideRail (RF-16)", () => {
   it("shows the brand and every destination by name", () => {
     const { nav } = renderRail();
 
-    expect(
-      within(nav).getByRole("link", { name: /CalenderFam/ }),
-    ).toHaveAttribute("href", "/dashboard/calendar");
+    expect(within(nav).getByRole("link", { name: /CaFam/ })).toHaveAttribute(
+      "href",
+      "/dashboard/calendar",
+    );
     for (const [name, href] of [
       ["Calendario", "/dashboard/calendar"],
       ["Mis calendarios", "/dashboard/calendars"],

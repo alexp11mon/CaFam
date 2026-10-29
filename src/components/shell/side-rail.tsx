@@ -31,7 +31,7 @@ export function SideRail({
         className="rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         <LogoMark />
-        <span className="sr-only">CalenderFam</span>
+        <span className="sr-only">CaFam</span>
       </Link>
       <ul className="flex flex-1 flex-col items-center gap-2">
         {NAV_ITEMS.map((item) => {

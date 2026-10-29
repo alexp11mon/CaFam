@@ -1,4 +1,4 @@
-// The CalenderFam mark: "CF" in stone on ink, the same drawing as
+// The CaFam mark: "CF" in stone on ink, the same drawing as
 // public/icons/icon.svg (spec 005 RF-51, plan D14). It never takes the accent.
 
 export function LogoMark({ className = "size-12" }: { className?: string }) {
@@ -30,7 +30,7 @@ export function Logo() {
     <span className="inline-flex items-center gap-3">
       <LogoMark className="size-10" />
       <span className="text-xl font-extrabold tracking-tight text-ink">
-        CalenderFam
+        CaFam
       </span>
     </span>
   );

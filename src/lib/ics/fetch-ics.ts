@@ -72,7 +72,7 @@ const httpsTransport: Transport = (url, signal) =>
         method: "GET",
         headers: {
           accept: "text/calendar, text/plain;q=0.9, */*;q=0.5",
-          "user-agent": "CalenderFam-import",
+          "user-agent": "CaFam-import",
         },
         lookup: guardedLookup as never,
         signal,

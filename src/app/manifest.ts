@@ -4,7 +4,7 @@ import { NEUTRALS } from "@/lib/theme/accents";
 /** Installable PWA manifest (RF-21, RNF-9); stone and the new icons from spec 005 (RF-52, RF-53). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "CalenderFam",
+    name: "CaFam",
     short_name: "CaFam",
     description: "Calendario compartido para familia y amigos.",
     lang: "es",

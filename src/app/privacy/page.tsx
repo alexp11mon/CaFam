@@ -28,7 +28,7 @@ function Section({
 export default function PrivacyPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-10">
-      <Link href="/" aria-label="CalenderFam, inicio" className="self-start">
+      <Link href="/" aria-label="CaFam, inicio" className="self-start">
         <Logo />
       </Link>
       <article className="flex flex-col gap-6 rounded-3xl bg-paper p-4 text-ink sm:p-8">
@@ -40,10 +40,10 @@ export default function PrivacyPage() {
         </header>
 
         <p>
-          CalenderFam (CaFam) es un calendario compartido para uso personal
-          entre familia y amigos, sin ánimo de lucro, sin publicidad y sin
-          analítica. Esta página explica qué hace CaFam con los datos de tu
-          cuenta de Google si decides conectarla.
+          CaFam es un calendario compartido para uso personal entre familia y
+          amigos, sin ánimo de lucro, sin publicidad y sin analítica. Esta
+          página explica qué hace CaFam con los datos de tu cuenta de Google si
+          decides conectarla.
         </p>
 
         <Section title="Qué datos de Google lee CaFam">

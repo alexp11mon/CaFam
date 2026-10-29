@@ -1,10 +1,10 @@
-// CalenderFam service worker (plan D7; RF-21, RF-23).
+// CaFam service worker (plan D7; RF-21, RF-23).
 // Caches only the offline page, icons and hashed static assets. HTML pages
 // and Supabase responses are never cached, so no user data stays on the
 // device (plan R6).
 
 // Bump the version to drop old caches after a change (plan R5).
-const CACHE_NAME = "calenderfam-v2";
+const CACHE_NAME = "cafam-v3";
 const OFFLINE_URL = "/offline";
 const PRECACHE_URLS = [
   OFFLINE_URL,

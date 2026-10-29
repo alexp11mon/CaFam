@@ -11,7 +11,7 @@ const interTight = Inter_Tight({
 });
 
 export const metadata: Metadata = {
-  title: { default: "CalenderFam", template: "%s · CalenderFam" },
+  title: { default: "CaFam", template: "%s · CaFam" },
   // iOS ignores the manifest icons and name (RF-22, plan R7).
   appleWebApp: { capable: true, title: "CaFam", statusBarStyle: "default" },
   // The favicon is linked explicitly: the file convention alone left no <link> in the HTML.
