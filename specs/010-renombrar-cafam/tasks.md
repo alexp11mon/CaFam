@@ -89,7 +89,7 @@
   Hecho cuando: `npm test -- project-name` en verde después de haber fallado con esa lista, y `invite-url.test.ts` sin cambios con la URL de Vercel (RF-11). Cubre: RF-10, RF-11, RF-12, RF-14 | Módulo: name-guard, docs-rename
   Evidencia (2026-10-29): la guardia falló primero con `README.md`, `docs/constitution.md` y las specs 001, 003, 004 y 005 (25 líneas). `git diff --word-diff` solo muestra cambios de nombre (y la frase de la constitución de D6). Después, `project-name` e `invite-url` en verde, con `invite-url.test.ts` sin cambios.
 
-- [ ] T8 Validar el cambio de nombre en el navegador y preparar los pasos externos
+- [x] T8 Validar el cambio de nombre en el navegador y preparar los pasos externos
   Pasos:
   - Ejecutar `npm run build` y `npx next start -p 3100` y comprobar con `playwright-cli`:
     - `<title>` "CaFam" en `/` y "Ajustes · CaFam" en `/dashboard/settings` (RF-1, D11);
@@ -104,7 +104,7 @@
   Evidencia del agente (2026-10-29): con `next start -p 3100`, `<title>` "CaFam" en `/`, "Iniciar sesión · CaFam", "Política de privacidad · CaFam" y, con sesión, "Ajustes · CaFam"; enlace de inicio de la barra lateral "CaFam"; manifest `name`/`short_name` "CaFam"; `sw.js` con `cafam-v3`; ningún nombre antiguo en el HTML. Capturas a 390, 768 y 1440 px de la portada, `/privacy` y el calendario con el acento rojo y el amarillo (en el scratchpad, no versionadas). Usuario de prueba borrado y `.playwright-cli/` eliminada. Verificación: typecheck, lint y format en verde, `npm test` 147 archivos y 1282 tests, build correcto; `test:db` según la evidencia de la T4.
   Confirmado por el usuario (2026-10-29): paso 1, fusionado en `main` (`bef1dfd`) y publicado; paso 2, `rename_cafam` aplicada en prod y la CLI enlazada de nuevo a dev (RF-19); paso 3, la consulta de prod da 0 usuarios del dominio antiguo (RF-17).
   Confirmado por el usuario (2026-10-29): paso 4, paneles de Supabase Auth (plantillas y remitente SMTP) revisados en dev y en prod (RF-20).
-  Pendiente del usuario: paso 5, renombrar el repositorio (RF-18). El paso 6 es opcional.
+  Confirmado (2026-10-29): paso 5, repositorio renombrado a `alexp11mon/CaFam` en la web de GitHub (`gh` no está instalado); remoto local actualizado y `git ls-remote` devuelve `main` y `010-renombrar-cafam` en `bef1dfd` (RF-18). Producción sirve `<title>CaFam</title>`, el manifest con `name` "CaFam" y `sw.js` con `cafam-v3`. El paso 6 (carpeta local) es opcional y queda a elección del usuario.
 
 ## Trazabilidad RF -> Tareas
 
