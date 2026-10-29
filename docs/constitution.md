@@ -1,8 +1,10 @@
-# Constitution - CalendarioFamilia
+# Constitution - CaFam
 
 ## Contexto y objetivo
 
-CalendarioFamilia es una aplicación web progresiva (PWA) de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso estrictamente personal entre familia y amigos. Cada usuario se registra, gestiona sus calendarios desde un panel, crea eventos y los comparte con otras personas asignándoles un rol (Lector o Editor). También puede importar calendarios externos (Google, iCloud, Outlook) desde un enlace o un archivo iCal/.ics, que se convierten en calendarios propios editables y compartibles.
+CaFam es una aplicación web progresiva (PWA) de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso estrictamente personal entre familia y amigos. Cada usuario se registra, gestiona sus calendarios desde un panel, crea eventos (también repetidos, con imágenes y comentarios) y los comparte con otras personas asignándoles un rol (Lector o Editor). También puede importar o sincronizar calendarios externos y preguntar a un asistente de chat por sus eventos y por la disponibilidad común.
+
+**Nombre:** el proyecto se llama **CaFam** en todas partes (marca, PWA, documentación, specs, configuración, comentarios e identificadores; `cafam` en minúsculas donde haga falta). Los nombres antiguos ("CalendarioFamilia", "CalenderFam") no se usan, salvo en la URL de producción de Vercel, que se conserva, y en las migraciones ya aplicadas, que no se editan (enmienda 3, 2026-10-29).
 
 Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, analítica de terceros, multi-organización o funcionalidades de equipo/empresa, y cualquier servicio que tenga coste económico.
 
@@ -19,29 +21,37 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 007-sincronizacion-oauth | Fase 2: sincronización de solo lectura (proveedor → CaFam) con Google vía OAuth 2.0, actualización automática y manual, y grupos de calendarios. Microsoft se quitó el 2026-10-27 (registrar la aplicación exige tarjeta, P2). Cerrada el 2026-10-28 con la aplicación de Google en "Prueba" (Enmienda 2). La sincronización bidireccional pasa a la 009; Microsoft queda para una versión futura con su propia spec |
 | 008-mejoras-de-experiencia | Calendario al estilo de Google Calendar (analizado con REA): alta y detalle en una ventana sobre el calendario, ventana rápida junto al hueco, arrastrar para crear, selector de hora, atajos de teclado, vista recordada |
 | 009-sincronizacion-bidireccional | Fase 3: sincronización en los dos sentidos con Google (crear, cambiar, mover y borrar eventos de los calendarios traídos, renombrar, crear y subir calendarios), política de privacidad pública y publicación de la aplicación de Google sin verificar |
+| 010-renombrar-cafam | Renombrar todo el proyecto a CaFam (código, configuración, documentación, specs cerradas y repositorio) |
+| 011-rediseno-visual | Modo oscuro con selector, transparencias (glassmorphism), animaciones, microinteracciones y transiciones entre vistas y calendarios |
+| 012-imagenes-en-eventos | Adjuntar imágenes a los eventos (también en calendarios traídos de Google) con Supabase Storage |
+| 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie |
+| 014-comentarios-en-eventos | Notas y comentarios en los eventos por cualquier miembro del calendario, Lectores incluidos |
+| 015-asistente-de-chat | Asistente de chat en lenguaje natural que consulta los eventos y la disponibilidad común entre usuarios, con un proveedor LLM gratuito |
 
-Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": desde el 2026-10-22 son la 006 y la 007 (las specs cerradas no se editan).
+Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": desde el 2026-10-22 son la 006 y la 007. Las specs cerradas no se editan, con una única excepción: el cambio de nombre a CaFam de la spec 010, que solo sustituye el nombre y no toca requisitos, decisiones ni evidencias (enmienda 3).
 
 ## Principios innegociables
 
-- P1: Uso personal sin ánimo de lucro: el proyecto no incluye publicidad, venta de datos, tracking ni analítica de terceros. Se verifica revisando `package.json` y los imports en cada diff: no puede aparecer ningún SDK de ads, analytics o tracking.
-- P2: Coste cero: todo servicio usado funciona en su capa gratuita (Supabase Free, Vercel Hobby, GitHub Free) y ningún servicio tiene tarjeta de pago asociada al proyecto. Se verifica revisando en la spec que cada servicio nuevo indica su plan gratuito y sus límites.
-- P3: Privado por defecto: ningún dato de un calendario es visible para quien no sea su propietario o un miembro invitado con rol explícito, y toda tabla del esquema `public` tiene Row Level Security activado. Se verifica con `npm run test:db` en verde (matriz de permisos) y con el test que comprueba que ninguna tabla de `public` tiene RLS desactivado.
-- P4: Los secretos solo viven en el servidor: ninguna clave secreta (`service_role`/secret key de Supabase, `CRON_SECRET`, tokens OAuth) lleva prefijo `NEXT_PUBLIC_`, se importa desde código de cliente ni se sube a git. Se verifica con `git check-ignore .env.local` y buscando `NEXT_PUBLIC_.*SECRET` y `service_role` en el diff (cero resultados en `src/`).
+- P1: Uso personal sin ánimo de lucro: el proyecto no incluye publicidad, venta de datos, tracking ni analítica de terceros. El único tercero que puede recibir datos de calendario para procesarlos es el proveedor LLM del asistente de chat: solo recibe lo necesario para responder a la pregunta del usuario que lo usa, está declarado en `/privacy` y nunca recibe datos de Google Calendar si sus condiciones le permiten entrenar con ellos (política de datos de usuario de las APIs de Google). Se verifica revisando `package.json` y los imports en cada diff (ningún SDK de ads, analytics o tracking) y, en la spec 015, las condiciones del proveedor elegido.
+- P2: Coste cero: todo servicio usado funciona en su capa gratuita (Supabase Free, incluido Storage, Vercel Hobby, GitHub Free, Brevo y el proveedor LLM del asistente) y ningún servicio tiene tarjeta de pago asociada al proyecto. Se verifica revisando en la spec que cada servicio nuevo indica su plan gratuito, sus límites y cómo se respetan (cuotas de imágenes, límite de preguntas al asistente).
+- P3: Privado por defecto: ningún dato de un calendario (eventos, imágenes, comentarios, disponibilidad) es visible para quien no sea su propietario o un miembro invitado con rol explícito, toda tabla del esquema `public` tiene Row Level Security activado y todo bucket de Storage es privado con políticas en `storage.objects`. El asistente de chat consulta con la sesión del usuario, así que nunca ve más que él; la disponibilidad de otra persona solo se usa si esa persona lo ha consentido. Se verifica con `npm run test:db` en verde (matriz de permisos, también de Storage) y con el test que comprueba que ninguna tabla de `public` tiene RLS desactivado.
+- P4: Los secretos solo viven en el servidor: ninguna clave secreta (`service_role`/secret key de Supabase, `CRON_SECRET`, tokens OAuth, clave del proveedor LLM) lleva prefijo `NEXT_PUBLIC_`, se importa desde código de cliente ni se sube a git. Se verifica con `git check-ignore .env.local` y buscando `NEXT_PUBLIC_.*SECRET` y `service_role` en el diff (cero resultados en `src/`).
 - P5: PWA mobile-first: toda pantalla se usa sin scroll horizontal entre 360 px y 1920 px de ancho y la app es instalable (manifest + service worker válidos). Se verifica en Chrome DevTools > Application (manifest sin errores, service worker activo) y con prueba manual en móvil y escritorio.
 - P6: Stack cerrado: solo se usan lenguajes, dependencias, servicios y herramientas listados en "Stack permitido"; cualquier otro exige aprobación explícita registrada en la spec que lo introduce. Se verifica comparando `package.json` y los imports con esta constitución y la spec activa.
 - P7: Flujo SDD obligatorio: no se escribe código sin spec, plan y tareas aprobados explícitamente por el usuario, en ese orden, y cada tarea se implementa de una en una con su test primero. Se verifica comprobando que cada cambio de código cita una tarea `Tn` de un `tasks.md` aprobado.
 - P8: Ninguna tarea se da por hecha sin ejecutar y reportar la verificación obligatoria. Se verifica con el checklist de "Verificación obligatoria" completo y su salida reportada al cerrar cada tarea.
-- P9: Identidad visual propia y accesible: toda pantalla sigue las reglas de "Identidad visual y diseño de interfaz", usa solo los tokens de diseño definidos en `src/app/globals.css` (nunca colores, tamaños o radios sueltos) y cumple WCAG 2.2 AA (texto 4,5:1, elementos gráficos 3:1, objetivos táctiles de 44 px, foco visible, todo usable con teclado). Se verifica en cada tarea que toca interfaz con capturas a 390, 768 y 1440 px revisadas contra la lista de prohibiciones de esa sección y con la comprobación de contraste de cada color de acento.
+- P9: Identidad visual propia y accesible: toda pantalla sigue las reglas de "Identidad visual y diseño de interfaz", usa solo los tokens de diseño definidos en `src/app/globals.css` (nunca colores, tamaños o radios sueltos) y cumple WCAG 2.2 AA en el tema claro y en el oscuro (texto 4,5:1, elementos gráficos 3:1, objetivos táctiles de 44 px, foco visible, todo usable con teclado, también sobre superficies transparentes). Se verifica en cada tarea que toca interfaz con capturas a 390, 768 y 1440 px en los dos temas revisadas contra la lista de prohibiciones de esa sección y con la comprobación de contraste de cada color de acento en los dos temas.
 
 ## Stack permitido
 
 - Lenguaje y versión: TypeScript 5.x en modo `strict`, sobre Node.js 24 LTS (mínimo Node 20.9, requisito de Next.js 16).
 - Frontend: Next.js 16 (App Router, Turbopack, Server Components y Server Actions), React 19, Tailwind CSS 4.
-- Backend / BaaS: Supabase Free (PostgreSQL con RLS, Supabase Auth email/contraseña). Región de datos en la UE.
+- Backend / BaaS: Supabase Free (PostgreSQL con RLS, Supabase Auth email/contraseña, Supabase Storage para las imágenes de los eventos, `pg_cron`, `pg_net` y Vault). Región de datos en la UE.
 - Hosting: Vercel Hobby (incluye su Cron Job diario) con repositorio en GitHub (privado).
 - PWA: nativa de Next.js (`app/manifest.ts`) + service worker propio en `public/sw.js`, sin librerías PWA.
-- Dependencias de producción aceptadas: `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`, y las que genera `create-next-app` por defecto.
+- Servicios externos aceptados: Google Calendar API (OAuth, spec 007 y 009), Brevo (correo, spec 006) y un proveedor LLM con capa gratuita sin tarjeta para el asistente de chat, que elige y aprueba la spec 015 (Gemini queda descartado porque su capa gratuita no puede usarse con usuarios de la UE). El proveedor LLM se llama con `fetch` desde el servidor, sin SDK.
+- Dependencias de producción aceptadas: `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `ical.js` (aprobada en la spec 004 para leer `.ics`; desde la enmienda 3 también se usa para expandir reglas de repetición, en módulos de `src/lib/` del servidor o puros) y las que genera `create-next-app` por defecto.
+- Animación: solo CSS (transiciones, `@keyframes`) y APIs nativas del navegador (View Transitions API); ninguna librería de animación.
 - Dependencias de desarrollo aceptadas: `typescript`, `@types/*`, `tailwindcss`, `@tailwindcss/postcss`, `eslint`, `eslint-config-next`, `eslint-config-prettier`, `prettier`, `vitest`, `@vitejs/plugin-react`, `vite-tsconfig-paths`, `jsdom`, `@testing-library/react`, `@testing-library/dom`, `@testing-library/user-event`, `@testing-library/jest-dom`, `supabase` (CLI para migraciones y generación de tipos).
 - Herramientas obligatorias: npm como gestor de paquetes (con `package-lock.json` versionado), git, Vitest para tests, ESLint + Prettier para lint y formato, Supabase CLI para migraciones.
 
@@ -87,14 +97,14 @@ La interfaz deja de ser la plantilla por defecto (azul sobre blanco) y adopta un
 
 ### Qué se ignora de la referencia
 
-Su contenido y sus funciones, que no existen en la app ni están en su alcance: el "Ai Assistant" y cualquier panel de IA (P1, P2), notas de voz, temporizador, documentos, tareas, integraciones con terceros, videollamadas y fotos de perfil. También sus restos de plantilla: emojis como iconos, textos en inglés y la marca "SAI".
+Su contenido y sus funciones, que no existen en la app ni están en su alcance: notas de voz, temporizador, documentos, tareas, integraciones con terceros, videollamadas y fotos de perfil. También sus restos de plantilla: emojis como iconos, textos en inglés y la marca "SAI".
 
 ### Color
 
 - Tokens orientativos medidos sobre la referencia (el plan de la spec 005 fija los valores finales y comprueba su contraste): fondo `stone` ≈ `#E8E5DD`, panel `paper` ≈ `#F2F0EA`, tinta `ink` ≈ `#141414`, texto secundario `muted` lo bastante oscuro para 4,5:1 sobre `paper` (≈ `#66635D`), líneas `line` ≈ `#DAD6CC`.
 - **Color de acento elegido por el usuario** entre seis: rojo (el de la referencia, por defecto), azul, verde, amarillo, morado y gris. Cada acento define a la vez su relleno, el color del texto que va encima y su variante para texto o líneas sobre el fondo, de modo que los seis cumplen P9 (el amarillo, por ejemplo, nunca se usa como texto sobre fondo claro y lleva tinta encima).
 - El acento de la interfaz y los **colores de los calendarios** (paleta pastel cerrada de la spec 002) son cosas distintas: los calendarios colorean datos (barras, puntos, avatares); el acento marca "hoy", "ahora" y la selección. La información nunca depende solo del color (hoy también va en negrita o con relleno; los estados llevan texto).
-- Sin tema oscuro (sigue fuera de alcance).
+- **Tema claro y tema oscuro** (enmienda 3): el usuario elige claro, oscuro o "como el sistema" desde la interfaz, y la elección se guarda por usuario. Cada token neutro y cada acento tiene su valor en los dos temas, con el contraste de P9 comprobado en un test. Los colores pastel de los calendarios se conservan en los dos temas; en el oscuro, el texto que va sobre ellos sigue en tinta oscura.
 
 ### Tipografía, forma y espacio
 
@@ -102,11 +112,12 @@ Su contenido y sus funciones, que no existen en la app ni están en su alcance: 
 - Escala corta: pocas tallas visibles (orientativo 12/14/16/20/28) más el número del día gigante. Títulos de pantalla de 20 a 32 px; mayúsculas solo al inicio de frase.
 - Radios decididos una vez: paneles con radio medio (≈ 16 px), controles y botones totalmente redondos.
 - Márgenes laterales de 16 px en móvil y una rejilla única en escritorio; el espacio entre bloques es mayor que el espacio dentro de ellos.
-- Movimiento solo como respuesta (pulsar, foco, abrir un diálogo), con alternativa para `prefers-reduced-motion`.
+- **Movimiento** (enmienda 3): microinteracciones en botones y controles (pulsar, pasar por encima, foco), apertura y cierre de ventanas y hojas, y transiciones al cambiar de vista (agenda, mes, semana, día), de periodo, de calendario visible y de tema. Cada animación dura como mucho 400 ms, solo anima `transform`, `opacity` o `filter`, y con `prefers-reduced-motion: reduce` se sustituye por un cambio inmediato o un fundido.
+- **Transparencias y profundidad** (enmienda 3): los contenedores principales (barra lateral, barra inferior, paneles, ventanas, hojas y avisos) pueden ser superficies translúcidas con desenfoque de fondo (`backdrop-filter`), borde fino y sombra suave, definidas como tokens. Debajo del cristal el contraste del texto se mide contra el peor fondo posible y cumple P9; sin soporte de `backdrop-filter`, la superficie es opaca. Se permiten degradados suaves como fondo de la pantalla o de esas superficies, también como tokens.
 
 ### Prohibido en la interfaz
 
-Degradados; sombras en lo que está en reposo (solo en lo que flota: diálogos, menús); cristal o desenfoque de fondo; brillos; emojis; iconos dentro de cuadrados o círculos de color; filas de tarjetas idénticas con icono encima; etiquetas pequeñas en mayúsculas con espaciado; etiquetas o "píldoras" encima de un título; textos de relleno (lorem ipsum, "Usuario 1"); el acento en todos los botones o en la navegación; más de un color de acento en pantalla; y paletas violeta/índigo como base (el morado solo existe como acento elegido por el usuario).
+Colores, sombras, desenfoques o degradados sueltos que no sean tokens; texto sobre cristal o degradado sin contraste comprobado; emojis; iconos dentro de cuadrados o círculos de color; filas de tarjetas idénticas con icono encima; etiquetas pequeñas en mayúsculas con espaciado; etiquetas o "píldoras" encima de un título; textos de relleno (lorem ipsum, "Usuario 1"); el acento en todos los botones o en la navegación; más de un color de acento en pantalla; y paletas violeta/índigo como base (el morado solo existe como acento elegido por el usuario).
 
 ### Cómo se trabaja la interfaz
 
@@ -122,7 +133,7 @@ El calendario se comporta como Google Calendar para que quien lo conozca lo enti
 - **Atajos sin modificadores** (N, T, ←, →, A, M, S, D), nunca mientras se escribe ni con una ventana abierta, y visibles en los botones de vista.
 - **Horas como combobox**: se escriben o se eligen de una lista de 30 en 30 minutos; la de fin muestra la duración y sigue a la de inicio.
 - **Aviso breve** abajo tras guardar, borrar o duplicar, que se anuncia a los lectores de pantalla. Sin "Deshacer".
-- Lo que flota y lleva sombra: la ventana de evento, la ventana rápida, la lista de horas y el aviso (además de diálogos, la hoja "Más" y los tooltips). La guardia `design-tokens.test.ts` mantiene la lista.
+- Lo que flota (la ventana de evento, la ventana rápida, la lista de horas, el aviso, los diálogos, la hoja "Más" y los tooltips) lleva la sombra de "flotante"; las superficies en reposo, como mucho la sombra suave de las transparencias. La guardia `design-tokens.test.ts` mantiene los tokens de sombra.
 - Fuera de alcance hasta su spec: mover o redimensionar eventos arrastrando.
 
 ## Verificación obligatoria
@@ -136,10 +147,12 @@ Checklist que cierra cada tarea (se reporta la salida de cada comando):
 - [ ] Tests de base de datos y permisos en verde: `npm run test:db` (obligatorio si la tarea toca esquema, RLS o acceso a datos; ver P3)
 - [ ] Build de producción sin errores: `npm run build`
 - [ ] Prueba manual en móvil (≤ 768 px) y escritorio si la tarea toca interfaz (ver P5)
-- [ ] Si la tarea toca interfaz: capturas a 390, 768 y 1440 px revisadas contra "Identidad visual y diseño de interfaz" y contraste comprobado con los seis acentos (ver P9)
+- [ ] Si la tarea toca interfaz: capturas a 390, 768 y 1440 px en tema claro y oscuro revisadas contra "Identidad visual y diseño de interfaz", contraste comprobado con los seis acentos en los dos temas y movimiento revisado con `prefers-reduced-motion` (ver P9)
 - [ ] Aprobación explícita del usuario antes de pasar de fase (spec → plan → tareas → implementación) y al cerrar cada spec
 
 ## Dudas abiertas
 
 - Las decisiones de stack de esta versión (Next.js 16 + Supabase Free + Vercel Hobby + Tailwind CSS 4) fueron confirmadas por el usuario en la spec 001.
 - Resueltas en la spec 005: la tipografía es Inter Tight; los valores de los seis acentos y de los neutros están en `src/lib/theme/accents.ts` (con su contraste comprobado en `accents.test.ts`); y el acento se guarda por usuario en `profiles.accent`, así que se ve igual en todos sus dispositivos.
+- Enmienda 3 (2026-10-29, aprobada por el usuario): nombre CaFam en todas partes, tema oscuro, transparencias, sombras, degradados y animaciones, Supabase Storage, `ical.js` para repeticiones, asistente de chat con un proveedor LLM gratuito y excepción de cambio de nombre en las specs cerradas. Las enmiendas 1 y 2 están en la spec 007.
+- [NECESITA ACLARACION: en la spec 015, cómo consiente una persona que el asistente use su disponibilidad (propuesta: un ajuste desactivado por defecto)]
