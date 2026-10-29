@@ -4,74 +4,383 @@
 @import "tailwindcss" source("..");
 
 /* Design tokens (constitution "Identidad visual y diseño de interfaz", P9;
-   spec 005 plan "Modelo de datos"). Values mirror src/lib/theme/accents.ts and
-   accents.test.ts keeps them equal; design-tokens.test.ts keeps every screen
-   on them. */
-@theme {
-  --color-stone: #e8e5dd;
-  --color-paper: #f2f0ea;
-  --color-ink: #141414;
-  --color-muted: #66635d;
-  --color-line: #d6d1c4;
-  --color-control: #857f75;
-  --color-danger: #b42318;
-  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
-}
-
-/* The user's accent switches with data-accent on the app frame (plan D2). */
+   spec 005 and 011 plan "Modelo de datos"). Values mirror
+   src/lib/theme/accents.ts and theme-css.test.ts keeps them equal;
+   design-tokens.test.ts keeps every screen on them. Each theme block below
+   sets the raw variables and the classes read them (spec 011 plan D2). */
 @theme inline {
+  --color-stone: var(--stone);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-control: var(--control);
+  --color-danger: var(--danger);
+  --color-on-ink: var(--on-ink);
+  --color-pastel-ink: var(--pastel-ink);
+  --color-mark: var(--mark);
+  --color-on-mark: var(--on-mark);
+  /* The user's accent switches with data-accent on the app frame (spec 005 D2). */
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
   --color-accent-ink: var(--accent-ink);
   --color-accent-edge: var(--accent-edge);
+  --shadow-soft: var(--elevation-soft);
+  --shadow-float: var(--elevation-float);
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Red without a session (RF-11). */
+/* Light theme, also the default before the boot script runs (RF-5). */
+:root {
+  color-scheme: light;
+  --stone: #e8e5dd;
+  --paper: #f2f0ea;
+  --ink: #141414;
+  --muted: #66635d;
+  --line: #d6d1c4;
+  --control: #857f75;
+  --danger: #b42318;
+  --on-ink: #ffffff;
+  --pastel-ink: #141414;
+  --mark: #141414;
+  --on-mark: #e8e5dd;
+  --glass-bg: #f2f0eaed;
+  --glass-edge: rgb(255 255 255 / 0.6);
+  --backdrop: radial-gradient(120% 80% at 50% 0%, #e8e5dd 0%, #e4e0d7 100%);
+  --elevation-soft: 0 1px 2px rgb(20 20 20 / 0.06);
+  --elevation-float: 0 12px 32px rgb(20 20 20 / 0.16);
+  /* Motion (RF-22): never more than 400 ms. */
+  --motion-fast: 150ms;
+  --motion-base: 220ms;
+  --motion-slow: 400ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  --motion-distance: 12px;
+  --press-scale: 0.97;
+  --press-lift: -1px;
+}
+
+/* Dark theme picked by the user (RF-1). */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --stone: #171612;
+  --paper: #211f1b;
+  --ink: #f2f0ea;
+  --muted: #a9a59c;
+  --line: #36332d;
+  --control: #7f796f;
+  --danger: #f97066;
+  --on-ink: #141414;
+  --pastel-ink: #141414;
+  --mark: #141414;
+  --on-mark: #e8e5dd;
+  --glass-bg: #211f1beb;
+  --glass-edge: rgb(255 255 255 / 0.06);
+  --backdrop: radial-gradient(120% 80% at 50% 0%, #171612 0%, #0f0e0b 100%);
+  --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.3);
+  --elevation-float: 0 12px 32px rgb(0 0 0 / 0.5);
+}
+
+/* "system" (or no cookie) follows the device unless light was picked (RF-5). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --stone: #171612;
+    --paper: #211f1b;
+    --ink: #f2f0ea;
+    --muted: #a9a59c;
+    --line: #36332d;
+    --control: #7f796f;
+    --danger: #f97066;
+    --on-ink: #141414;
+    --pastel-ink: #141414;
+    --mark: #141414;
+    --on-mark: #e8e5dd;
+    --glass-bg: #211f1beb;
+    --glass-edge: rgb(255 255 255 / 0.06);
+    --backdrop: radial-gradient(120% 80% at 50% 0%, #171612 0%, #0f0e0b 100%);
+    --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.3);
+    --elevation-float: 0 12px 32px rgb(0 0 0 / 0.5);
+  }
+}
+
+/* Each accent carries its ink and edge for both themes (RF-9); red without a
+   session (spec 005 RF-11). */
 :root,
 [data-accent="red"] {
   --accent: #d92d20;
   --on-accent: #ffffff;
-  --accent-ink: #b42318;
-  --accent-edge: #d92d20;
+  --accent-ink-light: #b42318;
+  --accent-edge-light: #d92d20;
+  --accent-ink-dark: #f97066;
+  --accent-edge-dark: #d92d20;
 }
 
 [data-accent="blue"] {
   --accent: #1d4ed8;
   --on-accent: #ffffff;
-  --accent-ink: #1e40af;
-  --accent-edge: #1d4ed8;
+  --accent-ink-light: #1e40af;
+  --accent-edge-light: #1d4ed8;
+  --accent-ink-dark: #8ab4ff;
+  --accent-edge-dark: #8ab4ff;
 }
 
 [data-accent="green"] {
   --accent: #1f7a4a;
   --on-accent: #ffffff;
-  --accent-ink: #186a3f;
-  --accent-edge: #1f7a4a;
+  --accent-ink-light: #186a3f;
+  --accent-edge-light: #1f7a4a;
+  --accent-ink-dark: #4fd18b;
+  --accent-edge-dark: #1f7a4a;
 }
 
-/* Yellow fades into stone (1.3:1), so filled shapes get a dark edge (plan R6). */
+/* Yellow fades into stone (1.3:1), so filled shapes get a dark edge (spec 005 R6). */
 [data-accent="yellow"] {
   --accent: #f5c518;
   --on-accent: #141414;
-  --accent-ink: #7a5c00;
-  --accent-edge: #7a5c00;
+  --accent-ink-light: #7a5c00;
+  --accent-edge-light: #7a5c00;
+  --accent-ink-dark: #f5c518;
+  --accent-edge-dark: #f5c518;
 }
 
 [data-accent="purple"] {
   --accent: #7c4dcc;
   --on-accent: #ffffff;
-  --accent-ink: #6b3fbf;
-  --accent-edge: #7c4dcc;
+  --accent-ink-light: #6b3fbf;
+  --accent-edge-light: #7c4dcc;
+  --accent-ink-dark: #b794f6;
+  --accent-edge-dark: #b794f6;
 }
 
 [data-accent="gray"] {
   --accent: #5f5c55;
   --on-accent: #ffffff;
-  --accent-ink: #5f5c55;
-  --accent-edge: #5f5c55;
+  --accent-ink-light: #5f5c55;
+  --accent-edge-light: #5f5c55;
+  --accent-ink-dark: #b3afa6;
+  --accent-edge-dark: #b3afa6;
+}
+
+/* var() resolves on the element that declares it, so the pick is repeated on
+   every [data-accent] and not only inherited from <html>. */
+:root,
+[data-accent] {
+  --accent-ink: var(--accent-ink-light);
+  --accent-edge: var(--accent-edge-light);
+}
+
+[data-theme="dark"],
+[data-theme="dark"] [data-accent] {
+  --accent-ink: var(--accent-ink-dark);
+  --accent-edge: var(--accent-edge-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]),
+  :root:not([data-theme="light"]) [data-accent] {
+    --accent-ink: var(--accent-ink-dark);
+    --accent-edge: var(--accent-edge-dark);
+  }
 }
 
 body {
-  background: var(--color-stone);
-  color: var(--color-ink);
+  background-color: var(--stone);
+  background-image: var(--backdrop);
+  color: var(--ink);
+}
+
+/* Glass at rest (RF-12) and what floats over it; opaque paper where the
+   browser cannot blur (RF-14, plan D6). The edge is an inset shadow so it
+   never changes the layout. */
+@utility glass {
+  background-color: var(--glass-bg);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--elevation-soft);
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
+    background-color: var(--paper);
+  }
+}
+
+@utility glass-float {
+  background-color: var(--glass-bg);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--elevation-float);
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
+    background-color: var(--paper);
+  }
+}
+
+@utility bg-backdrop {
+  background-color: var(--stone);
+  background-image: var(--backdrop);
+}
+
+/* Microinteraction of buttons and controls (RF-16, plan D13). */
+@utility press {
+  transition-property:
+    scale, translate, color, background-color, border-color, box-shadow;
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--motion-ease);
+  &:active:not(:disabled) {
+    scale: var(--press-scale);
+  }
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      translate: 0 var(--press-lift);
+    }
+  }
+}
+
+/* Dialogs fade and rise in and out (RF-20, plan D10). In the base layer so a
+   dialog's own translate or opacity utilities still win. */
+@layer base {
+  dialog {
+    opacity: 0;
+    translate: 0 8px;
+    transition-property: opacity, translate, display, overlay;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease);
+    transition-behavior: allow-discrete;
+  }
+
+  dialog[open] {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  dialog::backdrop {
+    opacity: 0;
+    transition-property: opacity, display, overlay;
+    transition-duration: var(--motion-base);
+    transition-behavior: allow-discrete;
+  }
+
+  dialog[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+      translate: 0 8px;
+    }
+
+    dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
+/* View transitions (RF-17..RF-19, RF-24, plan D8): the page stays clickable
+   while they run (RF-25). */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--motion-base);
+}
+
+::view-transition-old(.cal-view),
+::view-transition-old(.cal-filter) {
+  animation: cal-fade-out var(--motion-fast) var(--motion-ease) both;
+}
+
+::view-transition-new(.cal-view) {
+  animation: cal-rise-in var(--motion-base) var(--motion-ease) both;
+}
+
+::view-transition-new(.cal-filter) {
+  animation: cal-fade-in var(--motion-base) var(--motion-ease) both;
+}
+
+::view-transition-old(.cal-next) {
+  animation: cal-out-start var(--motion-base) var(--motion-ease) both;
+}
+
+::view-transition-new(.cal-next) {
+  animation: cal-in-end var(--motion-base) var(--motion-ease) both;
+}
+
+::view-transition-old(.cal-prev) {
+  animation: cal-out-end var(--motion-base) var(--motion-ease) both;
+}
+
+::view-transition-new(.cal-prev) {
+  animation: cal-in-start var(--motion-base) var(--motion-ease) both;
+}
+
+@keyframes cal-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes cal-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes cal-rise-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--motion-distance);
+  }
+}
+
+@keyframes cal-in-end {
+  from {
+    opacity: 0;
+    translate: var(--motion-distance) 0;
+  }
+}
+
+@keyframes cal-in-start {
+  from {
+    opacity: 0;
+    translate: calc(var(--motion-distance) * -1) 0;
+  }
+}
+
+@keyframes cal-out-start {
+  to {
+    opacity: 0;
+    translate: calc(var(--motion-distance) * -1) 0;
+  }
+}
+
+@keyframes cal-out-end {
+  to {
+    opacity: 0;
+    translate: var(--motion-distance) 0;
+  }
+}
+
+/* Reduced motion keeps only short fades (RF-23). */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-distance: 0;
+    --motion-base: 150ms;
+    --press-scale: 1;
+    --press-lift: 0;
+  }
+
+  @layer base {
+    dialog,
+    dialog[open] {
+      translate: none;
+    }
+  }
 }

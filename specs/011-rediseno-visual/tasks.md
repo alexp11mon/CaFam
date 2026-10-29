@@ -59,7 +59,7 @@
   Hecho cuando: `npm test -- accents palette` en verde, con los valores finales anotados en `plan.md`. Cubre: RF-9, RF-10, RF-15 | Módulo: palette
   Evidencia (2026-10-29): rojo (falta `contrast.ts`); después 8 fallos reales que obligaron a subir el alfa del cristal a 0,93/0,92 y aclarar el segundo tono del degradado claro. `accents palette theme` 3 archivos y 63 tests en verde. Valores finales en `plan.md`. `THEME_COLOR.dark` ya sale de `DARK_NEUTRALS` (se quita el `shortcut:` de la T2).
 
-- [ ] T4 Pasar `globals.css` a tokens por tema, con cristal, fondo, sombras y movimiento
+- [x] T4 Pasar `globals.css` a tokens por tema, con cristal, fondo, sombras y movimiento
   Pasos:
   - Primero, en rojo, un test que lee `globals.css` (`tests/unit/theme-css.test.ts`) y comprueba:
     - los tres bloques de tema existen y coinciden con `accents.ts` (D2);

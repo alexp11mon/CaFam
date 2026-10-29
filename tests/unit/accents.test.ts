@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   CALENDAR_COLORS,
@@ -20,20 +18,6 @@ import { composite } from "@/lib/theme/contrast";
 
 // Spec 005, T2: the six accents, their contrast and their CSS tokens
 // (RF-3, RF-6, RF-10, RF-11, RF-14; plan "Modelo de datos", D2).
-const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
-
-function block(selector: string): string {
-  const start = css.indexOf(selector);
-  expect(start, `missing ${selector}`).toBeGreaterThanOrEqual(0);
-  return css.slice(start, css.indexOf("}", start));
-}
-
-function variable(source: string, name: string): string | undefined {
-  return source
-    .match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`))?.[1]
-    ?.toUpperCase();
-}
-
 describe("accents", () => {
   it("are the six of the spec, in Spanish, with red by default (RF-6, RF-10)", () => {
     expect(ACCENTS.map((accent) => [accent.id, accent.label])).toEqual([
@@ -186,29 +170,5 @@ describe("composite", () => {
     expect(composite("#FFFFFF", 1, "#000000")).toBe("#FFFFFF");
     expect(composite("#FFFFFF", 0, "#000000")).toBe("#000000");
     expect(composite("#FFFFFF", 0.5, "#000000")).toBe("#808080");
-  });
-});
-
-describe("globals.css", () => {
-  it("defines every neutral as a theme color", () => {
-    const theme = block("@theme {");
-    for (const [name, value] of Object.entries(NEUTRALS)) {
-      expect(variable(theme, `color-${name}`), name).toBe(value);
-    }
-  });
-
-  it("paints red on :root, for pages without a session (RF-11)", () => {
-    const root = block(":root");
-    const red = ACCENTS.find((accent) => accent.id === DEFAULT_ACCENT)!;
-    expect(variable(root, "accent")).toBe(red.fill);
-    expect(variable(root, "accent-ink")).toBe(red.ink);
-  });
-
-  it.each(ACCENTS)("has the same values as accents.ts for $id", (accent) => {
-    const rules = block(`[data-accent="${accent.id}"]`);
-    expect(variable(rules, "accent")).toBe(accent.fill);
-    expect(variable(rules, "on-accent")).toBe(accent.onFill);
-    expect(variable(rules, "accent-ink")).toBe(accent.ink);
-    expect(variable(rules, "accent-edge")).toBe(accent.edge);
   });
 });
