@@ -20,7 +20,7 @@ export function BottomBar({
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-stone px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 glass px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden"
     >
       <ul className="mx-auto flex max-w-md items-center justify-between gap-2">
         {NAV_ITEMS.filter((item) => BAR_SECTIONS.includes(item.section)).map(

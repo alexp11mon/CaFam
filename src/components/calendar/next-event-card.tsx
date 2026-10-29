@@ -61,7 +61,7 @@ export function NextEventCard({
     return (
       <section
         aria-label="Próximo evento"
-        className="flex min-h-24 flex-col justify-center gap-1 rounded-3xl bg-paper px-5 py-4"
+        className="flex min-h-24 flex-col justify-center gap-1 rounded-3xl glass px-5 py-4"
       >
         <h2 className="text-sm font-semibold text-muted">Próximo evento</h2>
         {now === null ? null : (

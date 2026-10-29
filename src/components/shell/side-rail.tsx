@@ -25,7 +25,7 @@ export function SideRail({
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-y-0 left-0 z-30 hidden w-20 flex-col items-center gap-6 border-r border-line bg-stone py-5 lg:flex"
+      className="fixed inset-y-0 left-0 z-30 hidden w-20 flex-col items-center gap-6 glass py-5 lg:flex"
     >
       <Link
         href="/dashboard/calendar"

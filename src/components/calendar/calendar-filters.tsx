@@ -135,7 +135,7 @@ export function CalendarFilters({
   return (
     <section
       aria-labelledby={headingId}
-      className="flex flex-col gap-3 rounded-3xl bg-paper p-3"
+      className="flex flex-col gap-3 rounded-3xl glass p-3"
     >
       <h2 id={headingId} className="text-base font-semibold text-ink">
         Calendarios

@@ -119,12 +119,13 @@
   Hecho cuando: `npm test -- theme-toggle side-rail more-sheet` en verde. Cubre: RF-6 | Módulo: theme-toggle
   Evidencia (2026-10-29): rojo (`theme-toggle` inexistente; el botón no estaba en la barra ni en la hoja). Las pruebas de la hoja "Más" viven en `bottom-bar.test.tsx`. `theme-toggle side-rail bottom-bar` 19 tests en verde. El botón guarda con `setTheme` como Ajustes (si no, `ThemeSync` lo desharía en la siguiente navegación) y, si falla, vuelve al tema de la cookie y lo avisa. En `next start`: barra lateral a 1440 px (claro → oscuro, se conserva al recargar) y hoja "Más" a 390 px (oscuro → claro). `npm test` 154 archivos y 1374 tests, build correcto.
 
-- [ ] T9 Poner las superficies translúcidas en los contenedores principales
+- [x] T9 Poner las superficies translúcidas en los contenedores principales
   Pasos:
   - Primero, un test en rojo (`glass-surfaces.test.ts`, que lee los archivos de `glass-surfaces`) que comprueba que cada contenedor de RF-12 usa `glass` o `glass-float`, y que `glass-float` solo aparece en lo que flota.
   - Después, el cambio de clases. Revisión en el navegador con Chrome emulando la falta de `backdrop-filter`: la superficie es opaca y se ve igual de color (RF-14).
 
   Hecho cuando: `npm test -- glass-surfaces design-tokens` en verde, más capturas a 390, 768 y 1440 px en los dos temas de calendario, Ajustes, hoja "Más", ventana de evento y diálogo. Cubre: RF-12, RF-13, RF-14, RF-15 | Módulo: glass-surfaces
+  Evidencia (2026-10-29): rojo (12 fallos). `glass` en la barra lateral, la barra inferior, los paneles del calendario (próximo evento, mini mes, filtros) y las secciones de Ajustes; `glass-float` en la hoja "Más", la ventana de evento, la ventana rápida, los diálogos y el aviso (que pasa de tinta a cristal con texto `ink`). `page-shell` no tiene panel propio: no cambia. El build deja `@supports not (backdrop-filter…) { .glass { background-color: var(--paper) } }`; forzando la superficie opaca en Chrome, el color medio cambia menos de 2/255 (RF-14). Capturas a 390, 768 y 1440 px en claro y oscuro de calendario, ventana de evento, diálogo de borrar, hoja "Más" (390 y 768) y Ajustes. `npm test` 155 archivos y 1398 tests, build correcto.
 
 - [ ] T10 Añadir las microinteracciones a botones y controles
   Pasos:

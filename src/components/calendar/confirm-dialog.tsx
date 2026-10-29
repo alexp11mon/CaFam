@@ -59,7 +59,7 @@ export function ConfirmDialog({
       <dialog
         ref={dialog}
         aria-labelledby={titleId}
-        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-paper p-6 text-ink shadow-float backdrop:bg-scrim/50"
+        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl glass-float p-6 text-ink backdrop:bg-scrim/50"
       >
         <form action={formAction} className="flex flex-col gap-4">
           <h2 id={titleId} className="text-lg font-bold">

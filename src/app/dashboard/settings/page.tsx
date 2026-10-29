@@ -76,7 +76,7 @@ function Section({
   return (
     <section
       aria-labelledby={id}
-      className="flex flex-col gap-4 rounded-3xl bg-paper p-5 sm:p-6"
+      className="flex flex-col gap-4 rounded-3xl glass p-5 sm:p-6"
     >
       <h2 id={id} className="text-lg font-semibold text-ink">
         {title}
@@ -101,7 +101,7 @@ export default function SettingsPage({
         <ConfirmNotice searchParams={searchParams} />
       </Suspense>
       {/* ThemePicker and AccentPicker bring their own headings. */}
-      <section className="flex flex-col gap-8 rounded-3xl bg-paper p-5 sm:p-6">
+      <section className="flex flex-col gap-8 rounded-3xl glass p-5 sm:p-6">
         <Suspense fallback={LOADING}>
           <AppearanceSection />
         </Suspense>

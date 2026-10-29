@@ -124,7 +124,7 @@ export function EventModal({
         else requestClose();
       }}
       // Up to 768 px the window is always full screen (RF-29).
-      className={`flex-col overflow-hidden bg-paper p-0 text-ink shadow-float backdrop:bg-scrim/40 open:flex max-[48.0625rem]:m-0 max-[48.0625rem]:h-full max-[48.0625rem]:max-h-none max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-none ${fullscreen ? "m-0 h-full max-h-none w-full max-w-none rounded-none" : "m-auto max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-2xl rounded-3xl"}`}
+      className={`flex-col overflow-hidden glass-float p-0 text-ink backdrop:bg-scrim/40 open:flex max-[48.0625rem]:m-0 max-[48.0625rem]:h-full max-[48.0625rem]:max-h-none max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-none ${fullscreen ? "m-0 h-full max-h-none w-full max-w-none rounded-none" : "m-auto max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-2xl rounded-3xl"}`}
     >
       <header className="flex items-center gap-2 border-b border-line px-4 py-2 sm:px-6">
         <h2

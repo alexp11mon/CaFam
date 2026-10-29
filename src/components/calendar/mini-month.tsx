@@ -100,7 +100,7 @@ export function MiniMonth({
   return (
     <section
       aria-label="Mini calendario"
-      className="flex flex-col gap-2 rounded-3xl bg-paper p-2 sm:p-3"
+      className="flex flex-col gap-2 rounded-3xl glass p-2 sm:p-3"
     >
       <div className="flex items-center justify-between gap-2">
         <h2

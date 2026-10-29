@@ -134,7 +134,7 @@ export function QuickCreate({
           : undefined
       }
       // Up to 768 px it is a sheet anchored to the bottom (RF-41).
-      className={`max-h-[calc(100dvh-2rem)] w-96 overflow-y-auto rounded-3xl bg-paper p-0 text-ink shadow-float backdrop:bg-scrim/10 ${place ? "m-0 left-(--quick-left) top-(--quick-top)" : "m-auto"} max-[48.0625rem]:inset-x-0 max-[48.0625rem]:top-auto max-[48.0625rem]:bottom-0 max-[48.0625rem]:m-0 max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-b-none`}
+      className={`max-h-[calc(100dvh-2rem)] w-96 overflow-y-auto rounded-3xl glass-float p-0 text-ink backdrop:bg-scrim/10 ${place ? "m-0 left-(--quick-left) top-(--quick-top)" : "m-auto"} max-[48.0625rem]:inset-x-0 max-[48.0625rem]:top-auto max-[48.0625rem]:bottom-0 max-[48.0625rem]:m-0 max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-b-none`}
     >
       <form action={formAction} noValidate className="flex flex-col gap-4 p-5">
         <h2 id={headingId} className="sr-only">
