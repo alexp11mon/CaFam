@@ -15,22 +15,29 @@ vi.mock("next/navigation", () => ({
 }));
 
 // jsdom cannot run view transitions: a stand-in shows what the area gets.
+const transitionTypes = vi.hoisted(() => [] as string[]);
 vi.mock("react", async (importOriginal) => {
   const react = await importOriginal<typeof import("react")>();
+  const keys = (types?: Record<string, string>) =>
+    Object.keys(types ?? {})
+      .filter((type) => type !== "default")
+      .join(" ");
   return {
     ...react,
+    addTransitionType: (type: string) => transitionTypes.push(type),
     ViewTransition: ({
       children,
       enter,
+      update,
     }: {
       children: React.ReactNode;
       enter?: Record<string, string>;
+      update?: Record<string, string>;
     }) => (
       <div
         data-view-transition=""
-        data-enter={Object.keys(enter ?? {})
-          .filter((type) => type !== "default")
-          .join(" ")}
+        data-enter={keys(enter)}
+        data-update={keys(update)}
       >
         {children}
       </div>
@@ -155,5 +162,27 @@ describe("CalendarWorkspace view motion", () => {
     const area = document.querySelector("[data-view-transition]");
     expect(area).not.toBeNull();
     expect(area).toHaveAttribute("data-enter", "cal-view cal-next cal-prev");
+  });
+});
+
+// Spec 011, T12: showing or hiding a calendar fades its events (people and
+// categories go through the same fadeFilters)
+// (RF-19; plan view-motion, flow step 8).
+describe("CalendarWorkspace filter motion", () => {
+  it("updates the view area with the cal-filter type", async () => {
+    transitionTypes.length = 0;
+    setup();
+    expect(document.querySelector("[data-view-transition]")).toHaveAttribute(
+      "data-update",
+      "cal-filter",
+    );
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "Familia" }));
+    expect(transitionTypes).toEqual(["cal-filter"]);
+
+    await userEvent.click(
+      screen.getByRole("checkbox", { name: "Mi calendario" }),
+    );
+    expect(transitionTypes).toEqual(["cal-filter", "cal-filter"]);
   });
 });

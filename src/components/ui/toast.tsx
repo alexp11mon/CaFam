@@ -11,6 +11,8 @@ import {
 } from "react";
 
 const DURATION_MS = 4000;
+// The last part of it fades the notice out (spec 011 RF-20, plan overlay-motion).
+const LEAVING_MS = 200;
 
 const ToastContext = createContext<{ show: (text: string) => void }>({
   show: () => {},
@@ -23,18 +25,30 @@ export function useToast() {
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   // A new id restarts the countdown even when the text repeats.
-  const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
+  const [toast, setToast] = useState<{
+    id: number;
+    text: string;
+    leaving?: boolean;
+  } | null>(null);
   const show = useCallback(
     (text: string) => setToast({ id: Date.now(), text }),
     [],
   );
+  const id = toast?.id;
   const value = useMemo(() => ({ show }), [show]);
 
   useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [toast]);
+    if (id === undefined) return;
+    const leave = setTimeout(
+      () => setToast((current) => current && { ...current, leaving: true }),
+      DURATION_MS - LEAVING_MS,
+    );
+    const remove = setTimeout(() => setToast(null), DURATION_MS);
+    return () => {
+      clearTimeout(leave);
+      clearTimeout(remove);
+    };
+  }, [id]);
 
   return (
     <ToastContext value={value}>
@@ -48,6 +62,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toast ? (
           <p
             key={toast.id}
+            data-toast=""
+            data-leaving={toast.leaving ? "" : undefined}
             className="rounded-full glass-float px-5 py-3 text-sm font-semibold text-ink"
           >
             {toast.text}

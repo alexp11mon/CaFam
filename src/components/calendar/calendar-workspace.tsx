@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  addTransitionType,
+  startTransition,
   useCallback,
   useEffect,
   useId,
@@ -21,7 +23,7 @@ import {
   type PersonGroup,
 } from "@/lib/calendar/grouping";
 import type { CalendarView } from "@/lib/calendar/ranges";
-import { VIEW_MOTION } from "@/lib/calendar/transition-types";
+import { CAL_FILTER, VIEW_MOTION } from "@/lib/calendar/transition-types";
 import { AgendaView, type AgendaEvent } from "./agenda-view";
 import type { MonthMarks } from "@/lib/calendar/month-marks";
 import { CalendarFilters, type FilterCategory } from "./calendar-filters";
@@ -201,9 +203,22 @@ export function CalendarWorkspace({
     (find(direction) ?? find(direction === "up" ? "down" : "up"))?.focus();
   }, [groups]);
 
-  async function apply(next: Group[], persist: () => Promise<Result>) {
+  // Showing or hiding fades the events in and out (spec 011 RF-19, plan D8).
+  function fadeFilters(update: () => void) {
+    startTransition(() => {
+      addTransitionType(CAL_FILTER);
+      update();
+    });
+  }
+
+  async function apply(
+    next: Group[],
+    persist: () => Promise<Result>,
+    fade = false,
+  ) {
     const previous = groups;
-    setGroups(next);
+    if (fade) fadeFilters(() => setGroups(next));
+    else setGroups(next);
     setError(undefined);
     let result: Result;
     try {
@@ -226,6 +241,7 @@ export function CalendarWorkspace({
         ),
       })),
       () => setCalendarVisibility(calendarId, visible),
+      true,
     );
   }
 
@@ -250,6 +266,7 @@ export function CalendarWorkspace({
         : personId === ORPHAN_GROUP_ID
           ? () => setOrphanVisibility(personId, visible)
           : () => setPersonVisibility(personId, visible),
+      true,
     );
   }
 
@@ -269,12 +286,14 @@ export function CalendarWorkspace({
   }
 
   function toggleCategory(categoryId: string, visible: boolean) {
-    setHiddenCategories((current) => {
-      const next = new Set(current);
-      if (visible) next.delete(categoryId);
-      else next.add(categoryId);
-      return next;
-    });
+    fadeFilters(() =>
+      setHiddenCategories((current) => {
+        const next = new Set(current);
+        if (visible) next.delete(categoryId);
+        else next.add(categoryId);
+        return next;
+      }),
+    );
   }
 
   function move(kind: "person" | "calendar", id: string, direction: Direction) {
@@ -393,6 +412,7 @@ export function CalendarWorkspace({
         key={`${view}-${date}`}
         enter={VIEW_MOTION}
         exit={VIEW_MOTION}
+        update={{ [CAL_FILTER]: CAL_FILTER, default: "none" }}
         default="none"
       >
         <div className="min-w-0 flex-1">

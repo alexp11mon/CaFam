@@ -154,7 +154,7 @@
   Cubre: RF-17, RF-18, RF-22, RF-23, RF-24, RF-25 | Módulo: view-motion
   Evidencia (2026-10-29): rojo (6 fallos y `transition-types` inexistente). `transition-types view-toolbar use-calendar-shortcuts calendar-workspace` 26 tests en verde; "Hoy" va hacia hoy (`todayType`) y sin tipo si ya está en hoy. En Chrome (`next start`, envolviendo `startViewTransition`): siguiente `[cal-next]` cal-out-start/cal-in-end 220 ms, anterior `[cal-prev]`, vista `[cal-view]` cal-fade-out 150 ms/cal-rise-in 220 ms, y la flecha del teclado lleva su tipo; con movimiento reducido, 150 ms y `--motion-distance: 0` (solo fundido). Cinco "Día siguiente" seguidos acaban en el día 20 sin animaciones vivas; un clic con 5 animaciones en curso navega. Borrando `startViewTransition`: mes siguiente, agenda y → funcionan igual. Los clics antes de que llegue la navegación repiten el mismo destino (el enlace aún no ha cambiado), como antes de la spec. `npm test` 159 archivos y 1416 tests, build correcto.
 
-- [ ] T12 Animar los filtros, las ventanas y los avisos
+- [x] T12 Animar los filtros, las ventanas y los avisos
   Pasos:
   - Primero, en rojo:
     - el test de `calendar-workspace`: mostrar u ocultar un calendario, un grupo o una persona actualiza dentro de `startTransition` con el tipo `cal-filter`;
@@ -163,6 +163,7 @@
   - Después, la parte de filtros de `view-motion` y `overlay-motion`.
 
   Hecho cuando: `npm test -- calendar-workspace toast event-modal quick-create confirm-dialog more-sheet` en verde, más una revisión en Chrome de que los eventos aparecen y desaparecen con un fundido y de que las ventanas, la hoja y el aviso entran y salen animados (y sin animación con movimiento reducido). Cubre: RF-19, RF-20, RF-22, RF-23 | Módulo: view-motion, overlay-motion
+  Evidencia (2026-10-29): rojo (2 fallos: sin `update` de `cal-filter` y sin `data-leaving`). Calendarios, personas y categorías cambian dentro de `startTransition` + `addTransitionType("cal-filter")` (ordenar no se anima). El aviso pasa a `data-leaving` 200 ms antes de quitarse y entra con `@starting-style`. `calendar-workspace toast event-modal quick-create confirm-dialog bottom-bar theme-css` 73 tests en verde (la hoja "Más" vive en `bottom-bar`). En Chrome: el filtro lanza `[cal-filter]` cal-fade-out 150 ms / cal-fade-in 220 ms y el evento desaparece y vuelve; la ventana de evento, el diálogo de borrar, la hoja y el aviso entran con opacity + translate 220 ms; la hoja sale con display/overlay `allow-discrete`; el aviso visible ~3,8 s, sale en 200 ms. Con movimiento reducido: solo opacity 150 ms. `npm test` 159 archivos y 1418 tests, build correcto.
 
 - [ ] T13 Validar el rediseño en todas las pantallas y preparar el paso a producción
   Pasos:

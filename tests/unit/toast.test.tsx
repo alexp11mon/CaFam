@@ -76,3 +76,23 @@ describe("toast", () => {
     ).not.toThrow();
   });
 });
+
+// Spec 011, T12: the notice fades out for 200 ms before it goes (RF-20).
+describe("toast leaving", () => {
+  it("marks the notice as leaving 200 ms before removing it", () => {
+    render(
+      <ToastProvider>
+        <Trigger text="Evento creado" />
+      </ToastProvider>,
+    );
+    act(() => screen.getByRole("button", { name: "Avisar" }).click());
+    const notice = screen.getByText("Evento creado");
+    expect(notice).not.toHaveAttribute("data-leaving");
+
+    act(() => vi.advanceTimersByTime(3800));
+    expect(screen.getByText("Evento creado")).toHaveAttribute("data-leaving");
+
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  });
+});
