@@ -178,6 +178,8 @@
 
   Hecho cuando: capturas revisadas sin incumplimientos de P9, fps ≥ 60 (o el ajuste de R1 aplicado y anotado), Lighthouse sin errores de contraste, la verificación obligatoria completa en verde con su salida, y el usuario confirma la migración en prod. Cubre: RF-26, requisitos no funcionales | Módulo: validation
 
+  Evidencia (2026-10-29): 186 capturas (`next start -p 3100`): 7 públicas × 2 temas × 3 anchuras y 12 del panel × claro/oscuro × rojo/amarillo × 3 anchuras, revisadas sin incumplimientos de P9. Accesibilidad con axe-core (el motor de Lighthouse), WCAG 2 A y AA, en 62 pantallas a 1440 px: 0 infracciones, contraste incluido. fps con 4× CPU en Chrome (CDP): reposo y desplazamiento de la agenda 144 fps; cambio de periodo y de vista 124–137 fps de media, peor fotograma ~60 ms, igual sin `backdrop-filter` (es el render de la vista, no el desenfoque): R1 sin ajuste. Movimiento reducido revisado en T10–T12. Usuarios de prueba borrados y `.playwright-cli/` eliminada. typecheck, lint y format:check en verde; `npm test` 159 archivos y 1418 tests; build correcto; `test:db` por tandas 329 de 330 (falla solo `invites.test.ts` "returns a 43 character token", el desfase de reloj conocido). Pendiente: confirmación del usuario de la migración `profile_theme` en prod.
+
 ## Trazabilidad RF -> Tareas
 
 - RF-1 -> T7
