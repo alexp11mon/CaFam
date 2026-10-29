@@ -2,7 +2,7 @@
 // plan theme-core, D3). The choice lives in profiles.theme and, on each
 // device, in the cafam-theme cookie that the boot script reads before paint.
 import { z } from "zod";
-import { NEUTRALS } from "./accents";
+import { DARK_NEUTRALS, NEUTRALS } from "./accents";
 
 export const THEME_IDS = ["light", "dark", "system"] as const;
 
@@ -17,8 +17,7 @@ export const THEME_COOKIE = "cafam-theme";
 /** The system bar color of each theme (RF-11): the stone ground. */
 export const THEME_COLOR: Record<EffectiveTheme, string> = {
   light: NEUTRALS.stone,
-  // shortcut: provisional dark stone until T3 fixes the dark palette, then read it from accents.ts.
-  dark: "#171612",
+  dark: DARK_NEUTRALS.stone,
 };
 
 export const themeSchema = z.enum(THEME_IDS, {

@@ -66,6 +66,13 @@ CalendarWorkspace ─ <ViewTransition key=vista+fecha> + tipos cal-view / cal-ne
   - **Fondo:** `backdrop` es un degradado radial suave de dos tonos cercanos a `stone`, distinto en cada tema.
   - **Movimiento:** `motion-fast` 150 ms, `motion-base` 220 ms, `motion-slow` 400 ms (el máximo, RF-22), `motion-ease` y `motion-distance` 12 px, que pasa a 0 con movimiento reducido.
 
+- **Valores finales (T3, 2026-10-29)**, comprobados en `accents.test.ts`:
+  - Los neutros oscuros y las variantes oscuras de `accent-ink` son los de la tabla.
+  - `accent-edge` en oscuro: rojo `#D92D20`, verde `#1F7A4A` y amarillo `#F5C518` (el relleno, ≥ 3:1). Azul `#8AB4FF`, morado `#B794F6` y gris `#B3AFA6` (la tinta, porque su relleno queda por debajo de 3:1 sobre `paper` oscuro).
+  - Cristal: alfa 0,93 en claro y 0,92 en oscuro. Peor texto sobre cristal: 4,57:1 en claro y 4,68:1 en oscuro, con la tinta o un pastel detrás. Con valores más bajos (0,72 a 0,9) el texto secundario baja de 4,5:1.
+  - Degradado de fondo: claro de `#E8E5DD` a `#E4E0D7` (el `#DDD9CE` propuesto dejaba `muted` en 4,24:1); oscuro de `#171612` a `#0F0E0B`.
+  - El contraste lo calcula `contrastRatio` de `lib/calendar/palette.ts`, que ya existía; `lib/theme/contrast.ts` solo añade `composite`.
+
 ## Contratos e interfaces
 
 - `setTheme(theme: string): Promise<{ error?: string }>`, Server Action en `settings/actions.ts`:

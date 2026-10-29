@@ -1,14 +1,22 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { contrastRatio } from "@/lib/calendar/palette";
+import {
+  CALENDAR_COLORS,
+  contrastRatio as ratio,
+} from "@/lib/calendar/palette";
 import {
   ACCENTS,
+  BACKDROP,
+  DARK_NEUTRALS,
   DEFAULT_ACCENT,
+  GLASS,
   NEUTRALS,
+  THEME_INKS,
   accentSchema,
   isAccent,
 } from "@/lib/theme/accents";
+import { composite } from "@/lib/theme/contrast";
 
 // Spec 005, T2: the six accents, their contrast and their CSS tokens
 // (RF-3, RF-6, RF-10, RF-11, RF-14; plan "Modelo de datos", D2).
@@ -62,11 +70,9 @@ describe("accents", () => {
   });
 
   it.each(ACCENTS)("$id reaches 4.5:1 for text (RF-14)", (accent) => {
-    expect(contrastRatio(accent.onFill, accent.fill)).toBeGreaterThanOrEqual(
-      4.5,
-    );
+    expect(ratio(accent.onFill, accent.fill)).toBeGreaterThanOrEqual(4.5);
     for (const surface of [NEUTRALS.stone, NEUTRALS.paper]) {
-      expect(contrastRatio(accent.ink, surface)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(accent.ink, surface)).toBeGreaterThanOrEqual(4.5);
     }
   });
 
@@ -74,28 +80,112 @@ describe("accents", () => {
     "$id fills stay 3:1 apart from the surface, or draw an edge (RF-14, plan R6)",
     (accent) => {
       const faint = [NEUTRALS.stone, NEUTRALS.paper].some(
-        (surface) => contrastRatio(accent.fill, surface) < 3,
+        (surface) => ratio(accent.fill, surface) < 3,
       );
       expect(accent.edge).toBe(faint ? accent.ink : accent.fill);
-      expect(contrastRatio(accent.edge, NEUTRALS.stone)).toBeGreaterThanOrEqual(
-        3,
-      );
+      expect(ratio(accent.edge, NEUTRALS.stone)).toBeGreaterThanOrEqual(3);
     },
   );
 
   it("neutral text keeps 4.5:1 and control borders 3:1 on both surfaces", () => {
     for (const surface of [NEUTRALS.stone, NEUTRALS.paper]) {
-      expect(contrastRatio(NEUTRALS.ink, surface)).toBeGreaterThanOrEqual(4.5);
-      expect(contrastRatio(NEUTRALS.muted, surface)).toBeGreaterThanOrEqual(
-        4.5,
-      );
-      expect(contrastRatio(NEUTRALS.danger, surface)).toBeGreaterThanOrEqual(
-        4.5,
-      );
-      expect(contrastRatio(NEUTRALS.control, surface)).toBeGreaterThanOrEqual(
-        3,
-      );
+      expect(ratio(NEUTRALS.ink, surface)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(NEUTRALS.muted, surface)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(NEUTRALS.danger, surface)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(NEUTRALS.control, surface)).toBeGreaterThanOrEqual(3);
     }
+  });
+});
+
+// Spec 011, T3: the dark theme and the glass keep P9 in both themes (RF-9,
+// RF-10, RF-15; plan "Modelo de datos", D5, D7).
+type AccentValue = (typeof ACCENTS)[number];
+
+/** In the light theme ink and edge are the accent's own values. */
+function onSurface(accent: AccentValue, theme: "light" | "dark") {
+  return theme === "light" ? accent : accent.dark;
+}
+
+const THEMES = [
+  { name: "light", neutrals: NEUTRALS, theme: "light" as const },
+  { name: "dark", neutrals: DARK_NEUTRALS, theme: "dark" as const },
+];
+
+describe.each(THEMES)("the $name theme", ({ neutrals, theme }) => {
+  const surfaces = [neutrals.stone, neutrals.paper, ...BACKDROP[theme]];
+
+  it("keeps neutral text at 4.5:1 and borders at 3:1 on every surface", () => {
+    for (const surface of surfaces) {
+      expect(ratio(neutrals.ink, surface)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(neutrals.muted, surface)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(neutrals.danger, surface)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(neutrals.control, surface)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("keeps the text of the ink button at 4.5:1 (D5)", () => {
+    expect(ratio(THEME_INKS[theme].onInk, neutrals.ink)).toBeGreaterThanOrEqual(
+      4.5,
+    );
+    expect(ratio(neutrals.ink, neutrals.stone)).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each(ACCENTS)("keeps $id readable (RF-9)", (accent) => {
+    const { ink, edge } = onSurface(accent, theme);
+    expect(ratio(accent.onFill, accent.fill)).toBeGreaterThanOrEqual(4.5);
+    for (const surface of [neutrals.stone, neutrals.paper]) {
+      expect(ratio(ink, surface)).toBeGreaterThanOrEqual(4.5);
+    }
+    const faint = [neutrals.stone, neutrals.paper].some(
+      (surface) => ratio(accent.fill, surface) < 3,
+    );
+    expect(edge).toBe(faint ? ink : accent.fill);
+  });
+
+  it("keeps the text on glass at 4.5:1 over the worst background (RF-15, D7)", () => {
+    const behind = [
+      ...surfaces,
+      neutrals.ink,
+      ...ACCENTS.map((accent) => accent.fill),
+      ...CALENDAR_COLORS.map((color) => color.value),
+    ];
+    const texts = [
+      neutrals.ink,
+      neutrals.muted,
+      ...ACCENTS.map((accent) => onSurface(accent, theme).ink),
+    ];
+    for (const back of behind) {
+      const glass = composite(GLASS[theme].bg, GLASS[theme].alpha, back);
+      for (const text of texts) {
+        expect(ratio(text, glass), `${text} on ${back}`).toBeGreaterThanOrEqual(
+          4.5,
+        );
+      }
+    }
+  });
+});
+
+describe("pastel ink (RF-10)", () => {
+  it("is the same dark ink in both themes and reads on every pastel", () => {
+    expect(THEME_INKS.light.pastelInk).toBe(THEME_INKS.dark.pastelInk);
+    for (const color of CALENDAR_COLORS) {
+      expect(
+        ratio(THEME_INKS.dark.pastelInk, color.value),
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("keeps the brand mark the same in both themes (D5)", () => {
+    expect(THEME_INKS.light.mark).toBe(THEME_INKS.dark.mark);
+    expect(THEME_INKS.light.onMark).toBe(THEME_INKS.dark.onMark);
+  });
+});
+
+describe("composite", () => {
+  it("mixes a color over another with its alpha", () => {
+    expect(composite("#FFFFFF", 1, "#000000")).toBe("#FFFFFF");
+    expect(composite("#FFFFFF", 0, "#000000")).toBe("#000000");
+    expect(composite("#FFFFFF", 0.5, "#000000")).toBe("#808080");
   });
 });
 

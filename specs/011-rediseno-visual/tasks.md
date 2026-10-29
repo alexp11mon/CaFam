@@ -47,7 +47,7 @@
   Hecho cuando: `npm test -- theme` en verde. Cubre: RF-2, RF-6, RF-7, RF-8 | Módulo: theme-core
   Evidencia (2026-10-29): rojo (módulo inexistente). `theme.test.ts` con 10 tests en verde. El oscuro de `THEME_COLOR` es provisional hasta la T3 (comentario `shortcut:`). typecheck, lint y format en verde, `npm test` 148 archivos y 1292 tests, build correcto.
 
-- [ ] T3 Definir la paleta oscura con el contraste comprobado, también sobre cristal
+- [x] T3 Definir la paleta oscura con el contraste comprobado, también sobre cristal
   Pasos:
   - Primero, ampliar `tests/unit/accents.test.ts` en rojo, con `contrast.ts`, que se extrae del propio test:
     - en los dos temas: `ink` y `muted` sobre `stone` y `paper` ≥ 4,5:1; `control`, `line` como borde de campo y `danger` ≥ 3:1 donde se usan; `on-ink` sobre `ink` ≥ 4,5:1;
@@ -57,6 +57,7 @@
   - Después, `NEUTRALS` y `ACCENTS` por tema y los tokens nuevos en `accents.ts`, ajustando los valores de partida del plan hasta que pasen.
 
   Hecho cuando: `npm test -- accents palette` en verde, con los valores finales anotados en `plan.md`. Cubre: RF-9, RF-10, RF-15 | Módulo: palette
+  Evidencia (2026-10-29): rojo (falta `contrast.ts`); después 8 fallos reales que obligaron a subir el alfa del cristal a 0,93/0,92 y aclarar el segundo tono del degradado claro. `accents palette theme` 3 archivos y 63 tests en verde. Valores finales en `plan.md`. `THEME_COLOR.dark` ya sale de `DARK_NEUTRALS` (se quita el `shortcut:` de la T2).
 
 - [ ] T4 Pasar `globals.css` a tokens por tema, con cristal, fondo, sombras y movimiento
   Pasos:
