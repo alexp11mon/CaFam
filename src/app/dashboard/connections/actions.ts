@@ -3,13 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AUTH_MESSAGES } from "@/lib/auth/error-messages";
-import { requireActionUser } from "@/lib/calendar/queries";
-import type { ConfirmState } from "@/lib/forms/form-state";
+import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
+import { getProfileTimeZone, requireActionUser } from "@/lib/calendar/queries";
+import { calendarSchema } from "@/lib/calendar/schemas";
+import {
+  fieldErrorsFromZod,
+  readString,
+  type ConfirmState,
+  type FormState,
+} from "@/lib/forms/form-state";
 import {
   revokeConnection,
   syncConnection,
+  writeEngineDeps,
   type ConnectionSync,
 } from "@/lib/sync/engine";
+import { createSyncedCalendar } from "@/lib/sync/write-calendar";
+import { WRITE_ERRORS } from "@/lib/sync/write-errors";
 import { nearestColor } from "@/lib/sync/nearest-color";
 import { connectionIdSchema, selectionSchema } from "@/lib/sync/schemas";
 import { summaryText, SYNC_ERRORS } from "@/lib/sync/summary";
@@ -215,4 +225,41 @@ export async function disconnectAccount(
   }
   revalidatePath("/dashboard", "layout");
   redirect("/dashboard/connections");
+}
+
+/** A new calendar in the Google account, brought to CaFam (spec 009 RF-32, RF-33). */
+export async function createGoogleCalendar(
+  connectionId: string,
+  _prevState: FormState<"name">,
+  formData: FormData,
+): Promise<FormState<"name">> {
+  const values = { name: readString(formData, "name") };
+  const parsed = calendarSchema.pick({ name: true }).safeParse(values);
+  if (!parsed.success) {
+    return { fieldErrors: fieldErrorsFromZod<"name">(parsed.error), values };
+  }
+  if (!connectionIdSchema.safeParse(connectionId).success) {
+    return { formError: GONE, values };
+  }
+
+  const { supabase, userId } = await requireActionUser();
+  const result = await createSyncedCalendar(writeEngineDeps(supabase), {
+    connectionId,
+    name: parsed.data.name,
+    timeZone: await getProfileTimeZone(supabase, userId),
+  });
+  if (result.status === "failed") {
+    return { formError: WRITE_ERRORS[result.failure], values };
+  }
+  if (result.status === "limit") return { formError: LIMIT, values };
+  if (result.status === "notFound") return { formError: GONE, values };
+  if (result.status === "forbidden") {
+    return { formError: CALENDAR_MESSAGES.forbidden, values };
+  }
+  if (result.status === "dbError") {
+    return { formError: AUTH_MESSAGES.connection, values };
+  }
+
+  revalidatePath("/dashboard", "layout");
+  redirect(`/dashboard/connections/${connectionId}`);
 }

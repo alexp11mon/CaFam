@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PageShell } from "@/components/calendar/page-shell";
 import { CalendarPicker } from "@/components/connections/calendar-picker";
+import { CreateCalendarForm } from "@/components/connections/create-calendar-form";
 import { DisconnectDialog } from "@/components/connections/disconnect-dialog";
 import { ReconnectNotice } from "@/components/connections/reconnect-notice";
 import { SyncNowButton } from "@/components/connections/sync-now-button";
@@ -23,7 +24,12 @@ import {
 import { connectionIdSchema } from "@/lib/sync/schemas";
 import { missingFromQuery } from "@/lib/sync/scopes";
 import { SYNC_ERRORS } from "@/lib/sync/summary";
-import { disconnectAccount, saveSelection, syncNow } from "../actions";
+import {
+  createGoogleCalendar,
+  disconnectAccount,
+  saveSelection,
+  syncNow,
+} from "../actions";
 
 export const metadata: Metadata = { title: "Cuenta de Google" };
 
@@ -133,6 +139,21 @@ async function ConnectionDetail({
           />
         )}
       </section>
+
+      {connection.status === "active" && connection.canWrite ? (
+        <section
+          aria-labelledby="create-heading"
+          className="flex flex-col gap-3"
+        >
+          <h2 id="create-heading" className="text-lg font-semibold text-ink">
+            Crear un calendario en Google
+          </h2>
+          <p className="text-ink">
+            Se crea en esta cuenta de Google y se trae a CaFam.
+          </p>
+          <CreateCalendarForm action={createGoogleCalendar.bind(null, id)} />
+        </section>
+      ) : null}
 
       <section
         aria-labelledby="disconnect-heading"

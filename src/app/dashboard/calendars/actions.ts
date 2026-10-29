@@ -20,6 +20,9 @@ import {
   type ConfirmState,
   type FormState,
 } from "@/lib/forms/form-state";
+import { writeEngineDeps } from "@/lib/sync/engine";
+import { renameSyncedCalendar } from "@/lib/sync/write-calendar";
+import { WRITE_ERRORS } from "@/lib/sync/write-errors";
 
 type CalendarFormState = FormState<CalendarField>;
 
@@ -86,16 +89,38 @@ export async function updateCalendar(
     return { formError: CALENDAR_MESSAGES.notFound, values };
   }
 
-  const { supabase } = await requireActionUser();
+  const { supabase, userId } = await requireActionUser();
   try {
-    const { data, error } = await supabase
-      .from("calendars")
-      .update(parsed.data)
-      .eq("id", id)
-      .select("id");
-    if (error) return { formError: getCalendarErrorMessage(error), values };
-    if (!data || data.length === 0) {
-      return { formError: await explainMissing(supabase, id), values };
+    // A new name of a synced calendar goes to Google first (spec 009 RF-29, RF-30).
+    const synced = await renameSyncedCalendar(writeEngineDeps(supabase), {
+      userId,
+      calendarId: id,
+      name: parsed.data.name,
+      description: parsed.data.description,
+      color: parsed.data.color,
+    });
+    if (synced.status === "failed") {
+      return { formError: WRITE_ERRORS[synced.failure], values };
+    }
+    if (synced.status === "forbidden") {
+      return { formError: CALENDAR_MESSAGES.forbidden, values };
+    }
+    if (synced.status === "notFound") {
+      return { formError: CALENDAR_MESSAGES.notFound, values };
+    }
+    if (synced.status === "dbError") {
+      return { formError: getCalendarErrorMessage(synced.error), values };
+    }
+    if (synced.status === "normal") {
+      const { data, error } = await supabase
+        .from("calendars")
+        .update(parsed.data)
+        .eq("id", id)
+        .select("id");
+      if (error) return { formError: getCalendarErrorMessage(error), values };
+      if (!data || data.length === 0) {
+        return { formError: await explainMissing(supabase, id), values };
+      }
     }
   } catch (error) {
     return { formError: getCalendarErrorMessage(error), values };

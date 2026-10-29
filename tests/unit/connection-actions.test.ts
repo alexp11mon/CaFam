@@ -10,7 +10,9 @@ const {
   revokeConnection,
   revalidatePath,
   redirect,
+  createSyncedCalendar,
 } = vi.hoisted(() => ({
+  createSyncedCalendar: vi.fn(),
   rpc: vi.fn(),
   rows: {} as Record<string, unknown[]>,
   syncConnection: vi.fn(),
@@ -35,12 +37,19 @@ vi.mock("@/lib/calendar/queries", () => ({
     supabase: { from: query, rpc },
     userId: "user-1",
   }),
+  getProfileTimeZone: async () => "Europe/Madrid",
 }));
-vi.mock("@/lib/sync/engine", () => ({ syncConnection, revokeConnection }));
+vi.mock("@/lib/sync/engine", () => ({
+  syncConnection,
+  revokeConnection,
+  writeEngineDeps: () => ({}),
+}));
+vi.mock("@/lib/sync/write-calendar", () => ({ createSyncedCalendar }));
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("next/navigation", () => ({ redirect }));
 
 import {
+  createGoogleCalendar,
   disconnectAccount,
   saveSelection,
   syncNow,
@@ -240,5 +249,47 @@ describe("disconnectAccount (RF-27 to RF-30)", () => {
     expect(state.formError).toMatch(/ya no existe/i);
     expect(revokeConnection).not.toHaveBeenCalled();
     expect(rpc).not.toHaveBeenCalled();
+  });
+});
+
+// Spec 009, T10: a new calendar in Google (RF-32, RF-33).
+describe("createGoogleCalendar", () => {
+  const named = (name: string) => {
+    const data = new FormData();
+    data.set("name", name);
+    return data;
+  };
+  const empty = { values: { name: "" } };
+
+  it("validates the name before calling Google", async () => {
+    const state = await createGoogleCalendar(CONNECTION, empty, named(" "));
+    expect(state.fieldErrors?.name).toBeTruthy();
+    expect(createSyncedCalendar).not.toHaveBeenCalled();
+  });
+
+  it("creates it and opens the account page", async () => {
+    createSyncedCalendar.mockResolvedValue({ status: "done", calendarId: "c" });
+    await createGoogleCalendar(CONNECTION, empty, named("Cole"));
+    expect(createSyncedCalendar.mock.calls[0][1]).toEqual({
+      connectionId: CONNECTION,
+      name: "Cole",
+      timeZone: "Europe/Madrid",
+    });
+    expect(revalidatePath).toHaveBeenCalledWith("/dashboard", "layout");
+    expect(redirect).toHaveBeenCalledWith(
+      `/dashboard/connections/${CONNECTION}`,
+    );
+  });
+
+  it.each([
+    [{ status: "limit" }, /máximo 20/],
+    [{ status: "failed", failure: "transient" }, /Google no responde/],
+    [{ status: "failed", failure: "rejected" }, /Google no ha permitido/],
+  ])("explains %o and keeps the name", async (result, text) => {
+    createSyncedCalendar.mockResolvedValue(result);
+    const state = await createGoogleCalendar(CONNECTION, empty, named("Cole"));
+    expect(state.formError).toMatch(text);
+    expect(state.values.name).toBe("Cole");
+    expect(redirect).not.toHaveBeenCalled();
   });
 });

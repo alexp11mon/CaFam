@@ -124,7 +124,7 @@
 
   Hecho cuando: `npm test -- oauth-routes reconnect-notice connection-page` en verde, capturas de P9 de "Mis calendarios" y de la ficha con el aviso, y prueba manual en dev: volver a conectar una cuenta de la 007 conserva sus calendarios y permite escribir. Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RF-8 | Módulo: oauth/callback, reconnect-notice, ficha de la cuenta, calendar-list
 
-- [ ] T10 Renombrar calendarios traídos y crear calendarios en Google
+- [x] T10 Renombrar calendarios traídos y crear calendarios en Google
   Pasos: test primero, ampliando los tests de `calendars/actions` y `connections/actions` y el de la ficha de la cuenta. Comprueba:
   - `updateCalendar` sobre un calendario traído con el nombre cambiado llama a `patchCalendar` y después a `sync_update_calendar`. Si Google falla, no cambia nada y muestra el mensaje de RF-22 a RF-24. Sin cambio de nombre, el color y la descripción no van a Google.
   - `createGoogleCalendar` valida el nombre, falla antes de llamar a Google si ya hay 20, crea el calendario y lo trae, y si `sync_attach_created` falla borra el creado en Google.
