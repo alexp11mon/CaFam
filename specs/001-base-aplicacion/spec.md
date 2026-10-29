@@ -4,7 +4,7 @@
 
 ## Contexto y objetivo
 
-CalendarioFamilia necesita unos cimientos antes de construir calendarios, eventos y compartición: que una persona pueda crearse una cuenta, entrar y salir de forma segura, ver un panel con sus calendarios e instalar la aplicación en el móvil o el escritorio. Esta spec entrega además el modelo de permisos base (Propietario, Editor y Lector) para que la privacidad por defecto (constitución P3) quede garantizada desde el primer día y las specs siguientes (002 calendarios y eventos, 003 compartición) solo tengan que construir interfaz sobre reglas ya probadas. Al terminar, la app está desplegada en una URL pública, gratis (P2), y sigue disponible aunque nadie la use durante días.
+CaFam necesita unos cimientos antes de construir calendarios, eventos y compartición: que una persona pueda crearse una cuenta, entrar y salir de forma segura, ver un panel con sus calendarios e instalar la aplicación en el móvil o el escritorio. Esta spec entrega además el modelo de permisos base (Propietario, Editor y Lector) para que la privacidad por defecto (constitución P3) quede garantizada desde el primer día y las specs siguientes (002 calendarios y eventos, 003 compartición) solo tengan que construir interfaz sobre reglas ya probadas. Al terminar, la app está desplegada en una URL pública, gratis (P2), y sigue disponible aunque nadie la use durante días.
 
 ## Usuarios / actores
 
@@ -66,7 +66,7 @@ CalendarioFamilia necesita unos cimientos antes de construir calendarios, evento
 
 ### PWA y plataformas
 
-- RF-21: DONDE el navegador ofrezca instalación de aplicaciones web (Chrome o Edge en Android, Windows y macOS), EL SISTEMA será instalable y se abrirá en ventana propia con el nombre "CalenderFam" y su icono.
+- RF-21: DONDE el navegador ofrezca instalación de aplicaciones web (Chrome o Edge en Android, Windows y macOS), EL SISTEMA será instalable y se abrirá en ventana propia con el nombre "CaFam" y su icono.
 - RF-22: CUANDO un usuario añade la app a la pantalla de inicio desde Safari en iOS/iPadOS, EL SISTEMA se abrirá a pantalla completa sin barra del navegador, con su icono y el nombre corto "CaFam".
 - RF-23: SI la app se abre o se navega sin conexión a una página no disponible, ENTONCES EL SISTEMA mostrará una pantalla "Sin conexión" en español con un botón "Reintentar".
 - RF-24: EL SISTEMA mostrará todas sus pantallas sin scroll horizontal y con todos los controles accesibles en anchos de 360 px a 1920 px.
@@ -85,7 +85,7 @@ CalendarioFamilia necesita unos cimientos antes de construir calendarios, evento
 - RNF-6 Rendimiento: la pantalla de login carga en menos de 3 s en un móvil con conexión 4G simulada (Chrome DevTools, perfil "Fast 4G") en el despliegue de producción.
 - RNF-7 Accesibilidad: todos los campos de formulario tienen etiqueta visible, los errores se anuncian al lector de pantalla y todo el flujo de registro, login y logout se puede completar solo con teclado.
 - RNF-8 Comunicaciones: toda la comunicación usa HTTPS.
-- RNF-9 Identidad visual: nombre de la app "CalenderFam" y nombre corto "CaFam" (título de las pestañas, manifest e instalación). Color principal #2563EB (botones de acción, enlaces, barra de la app instalada y color por defecto de los calendarios); colores secundarios #A6E1FA (fondos y resaltados suaves) y #0D160B (texto principal). Toda combinación de texto y fondo cumple un contraste mínimo de 4,5:1 (WCAG AA).
+- RNF-9 Identidad visual: nombre de la app "CaFam" y nombre corto "CaFam" (título de las pestañas, manifest e instalación). Color principal #2563EB (botones de acción, enlaces, barra de la app instalada y color por defecto de los calendarios); colores secundarios #A6E1FA (fondos y resaltados suaves) y #0D160B (texto principal). Toda combinación de texto y fondo cumple un contraste mínimo de 4,5:1 (WCAG AA).
 
 ## Casos límite
 
@@ -137,5 +137,5 @@ CalendarioFamilia necesita unos cimientos antes de construir calendarios, evento
 - Tailwind CSS para estilos: confirmado.
 - Alojamiento en Vercel: confirmado.
 - Registro abierto a cualquiera que tenga la URL; los datos siguen siendo privados por P3 y, si aparece abuso, se restringe en una spec posterior (RF-27).
-- Nombre de la app "CalenderFam", nombre corto "CaFam"; color principal #2563EB y secundarios #A6E1FA y #0D160B (RNF-9, RF-21, RF-22).
+- Nombre de la app "CaFam", nombre corto "CaFam"; color principal #2563EB y secundarios #A6E1FA y #0D160B (RNF-9, RF-21, RF-22).
 - Zona horaria de los nuevos usuarios detectada del navegador, con "Europe/Madrid" como respaldo (RF-26).

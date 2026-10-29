@@ -4,7 +4,7 @@
 
 ## Contexto y objetivo
 
-CalenderFam es un calendario compartido para familia y amigos, pero hasta ahora cada calendario tiene un único miembro: su propietario. Esta spec permite que el propietario de un calendario invite a otras personas con cuenta como Lector o Editor, por dos vías (un enlace de invitación y un ID de calendario con PIN), y gestione después quién forma parte de él. Los roles y la privacidad ya existen desde la spec 001 (nadie sin invitación ve nada, un Lector no modifica nada); aquí se construye la forma de incorporar, ver, cambiar y quitar miembros, sin perder el control del propietario. Resuelve también la duda que dejó la spec 002 sobre qué pasa al juntar calendarios que tienen miembros.
+CaFam es un calendario compartido para familia y amigos, pero hasta ahora cada calendario tiene un único miembro: su propietario. Esta spec permite que el propietario de un calendario invite a otras personas con cuenta como Lector o Editor, por dos vías (un enlace de invitación y un ID de calendario con PIN), y gestione después quién forma parte de él. Los roles y la privacidad ya existen desde la spec 001 (nadie sin invitación ve nada, un Lector no modifica nada); aquí se construye la forma de incorporar, ver, cambiar y quitar miembros, sin perder el control del propietario. Resuelve también la duda que dejó la spec 002 sobre qué pasa al juntar calendarios que tienen miembros.
 
 ## Usuarios / actores
 

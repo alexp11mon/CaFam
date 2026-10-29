@@ -4,7 +4,7 @@
 
 CaFam es una aplicación web progresiva (PWA) de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso estrictamente personal entre familia y amigos. Cada usuario se registra, gestiona sus calendarios desde un panel, crea eventos (también repetidos, con imágenes y comentarios) y los comparte con otras personas asignándoles un rol (Lector o Editor). También puede importar o sincronizar calendarios externos y preguntar a un asistente de chat por sus eventos y por la disponibilidad común.
 
-**Nombre:** el proyecto se llama **CaFam** en todas partes (marca, PWA, documentación, specs, configuración, comentarios e identificadores; `cafam` en minúsculas donde haga falta). Los nombres antiguos ("CalendarioFamilia", "CalenderFam") no se usan, salvo en la URL de producción de Vercel, que se conserva, y en las migraciones ya aplicadas, que no se editan (enmienda 3, 2026-10-29).
+**Nombre:** el proyecto se llama **CaFam** en todas partes (marca, PWA, documentación, specs, configuración, comentarios e identificadores; `cafam` en minúsculas donde haga falta). Los nombres anteriores del proyecto (listados en la spec 010) no se usan, salvo en la URL de producción de Vercel, que se conserva, y en las migraciones ya aplicadas, que no se editan (enmienda 3, 2026-10-29).
 
 Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, analítica de terceros, multi-organización o funcionalidades de equipo/empresa, y cualquier servicio que tenga coste económico.
 

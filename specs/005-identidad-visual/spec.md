@@ -7,7 +7,7 @@
 
 ## Contexto y objetivo
 
-CalenderFam ya hace lo que tiene que hacer (calendarios, eventos, compartir, importar), pero su aspecto es la plantilla por defecto: azul sobre blanco y cada pantalla como una página suelta con enlaces. Esta spec le da una identidad propia, sobria y editorial, definida en la constitución a partir de una imagen de referencia: fondo piedra, tinta casi negra, el número del día enorme como protagonista y un único color de acento que cada persona elige entre seis. Además reorganiza la forma de moverse por la app (un marco fijo con mini calendario y personas en escritorio, una barra inferior en móvil), añade la vista de agenda que da sentido al número gigante y un bloque con el próximo evento. Se hace antes de la gestión de cuenta (spec 006) para que sus pantallas nazcan ya con el estilo nuevo. Todo lo que hoy funciona tiene que seguir funcionando igual.
+CaFam ya hace lo que tiene que hacer (calendarios, eventos, compartir, importar), pero su aspecto es la plantilla por defecto: azul sobre blanco y cada pantalla como una página suelta con enlaces. Esta spec le da una identidad propia, sobria y editorial, definida en la constitución a partir de una imagen de referencia: fondo piedra, tinta casi negra, el número del día enorme como protagonista y un único color de acento que cada persona elige entre seis. Además reorganiza la forma de moverse por la app (un marco fijo con mini calendario y personas en escritorio, una barra inferior en móvil), añade la vista de agenda que da sentido al número gigante y un bloque con el próximo evento. Se hace antes de la gestión de cuenta (spec 006) para que sus pantallas nazcan ya con el estilo nuevo. Todo lo que hoy funciona tiene que seguir funcionando igual.
 
 ## Usuarios / actores
 

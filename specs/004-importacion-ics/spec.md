@@ -5,7 +5,7 @@
 
 ## Contexto y objetivo
 
-Mucha gente ya tiene sus eventos en Google Calendar, iCloud u Outlook. Esta spec permite traerlos a CalenderFam: la persona indica un enlace `.ics` o sube un archivo `.ics`, el sistema lo lee una sola vez y crea un **calendario nuevo** con esos eventos. A partir de ahí es un calendario como cualquier otro de la aplicación: se puede editar, añadirle eventos, compartir con roles Lector/Editor (spec 003) y juntar con otros (spec 002), y no vuelve a depender de la fuente de la que salió. Como la aplicación todavía no tiene eventos recurrentes propios, cada repetición de un evento repetido se convierte en un evento suelto.
+Mucha gente ya tiene sus eventos en Google Calendar, iCloud u Outlook. Esta spec permite traerlos a CaFam: la persona indica un enlace `.ics` o sube un archivo `.ics`, el sistema lo lee una sola vez y crea un **calendario nuevo** con esos eventos. A partir de ahí es un calendario como cualquier otro de la aplicación: se puede editar, añadirle eventos, compartir con roles Lector/Editor (spec 003) y juntar con otros (spec 002), y no vuelve a depender de la fuente de la que salió. Como la aplicación todavía no tiene eventos recurrentes propios, cada repetición de un evento repetido se convierte en un evento suelto.
 
 ## Usuarios / actores
 
@@ -14,7 +14,7 @@ Mucha gente ya tiene sus eventos en Google Calendar, iCloud u Outlook. Esta spec
 
 ## Historias de usuario
 
-- H1: Como usuario quiero pegar el enlace .ics de mi calendario de Google, iCloud u Outlook para traer mis eventos a CalenderFam sin copiarlos a mano.
+- H1: Como usuario quiero pegar el enlace .ics de mi calendario de Google, iCloud u Outlook para traer mis eventos a CaFam sin copiarlos a mano.
 - H2: Como usuario quiero subir un archivo .ics que ya tengo descargado para importar un calendario que no tiene enlace.
 - H3: Como propietario quiero que el calendario importado sea un calendario normal para editarlo, añadirle eventos y compartirlo con mi familia.
 - H4: Como usuario quiero ver las repeticiones (cumpleaños, clases semanales) como eventos en sus días, aunque el origen las guardara como una serie.

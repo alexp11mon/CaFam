@@ -32,8 +32,8 @@ Supabase ── Auth (auth.users) ── trigger handle_new_user → profile (+ 
 | `auth-errors` | `src/lib/auth/error-messages.ts` | Traduce códigos de error de Supabase Auth a mensajes en español | No muestra UI | RF-2, RF-6, RF-11, RF-12 |
 | `auth` | `src/app/(auth)/login`, `src/app/(auth)/signup`, `src/app/(auth)/actions.ts`, `src/components/auth/` | Pantallas, formularios y Server Actions de registro (abierto, con zona horaria detectada en el navegador), login y logout | No protege rutas | RF-1, RF-2, RF-5, RF-6, RF-7, RF-11, RF-12, RF-26, RF-27 |
 | `dashboard` | `src/app/dashboard/`, `src/components/dashboard/` | Panel con nombre visible, lista de calendarios con color y rol, y botón de logout | No crea ni edita calendarios | RF-13, RF-14 |
-| `ui-shell` | `src/app/layout.tsx`, `src/app/globals.css`, `src/app/page.tsx`, `src/components/ui/` | Layout raíz, `viewport`, título "CalenderFam", colores de marca como tokens de Tailwind, portada pública, componentes base (botón, campo, alerta) responsive | No contiene lógica de negocio | RF-24, RNF-7, RNF-9 |
-| `pwa` | `src/app/manifest.ts`, `public/sw.js`, `public/icons/`, `src/components/pwa/service-worker-register.tsx`, `src/app/offline/` | Manifest ("CalenderFam"/"CaFam", `theme_color` #2563EB), iconos con los colores de marca, metadatos Apple, registro del service worker y pantalla offline | No cachea páginas con sesión | RF-21, RF-22, RF-23, RNF-9 |
+| `ui-shell` | `src/app/layout.tsx`, `src/app/globals.css`, `src/app/page.tsx`, `src/components/ui/` | Layout raíz, `viewport`, título "CaFam", colores de marca como tokens de Tailwind, portada pública, componentes base (botón, campo, alerta) responsive | No contiene lógica de negocio | RF-24, RNF-7, RNF-9 |
+| `pwa` | `src/app/manifest.ts`, `public/sw.js`, `public/icons/`, `src/components/pwa/service-worker-register.tsx`, `src/app/offline/` | Manifest ("CaFam", `theme_color` #2563EB), iconos con los colores de marca, metadatos Apple, registro del service worker y pantalla offline | No cachea páginas con sesión | RF-21, RF-22, RF-23, RNF-9 |
 | `keep-alive` | `src/app/api/cron/keep-alive/route.ts`, `vercel.json` | Consulta mínima diaria a Supabase protegida por `CRON_SECRET` | No modifica datos | RF-25 |
 
 ## Modelo de datos
@@ -180,8 +180,8 @@ Los formularios usan `useActionState` y deshabilitan el botón mientras la acci�
 
 - Tokens en `src/app/globals.css` con `@theme` de Tailwind 4: `--color-brand: #2563EB`, `--color-brand-soft: #A6E1FA`, `--color-ink: #0D160B`; fondo de página blanco.
 - Uso: botones y enlaces en `brand` con texto blanco (5,2:1); texto principal en `ink` sobre blanco o sobre `brand-soft`; `brand-soft` solo como fondo, nunca como color de texto sobre blanco (contraste insuficiente).
-- `metadata.title` en `layout.tsx`: plantilla `"%s · CalenderFam"` con valor por defecto `"CalenderFam"`; `appleWebApp.title`: `"CaFam"`.
-- `manifest.ts`: `name: "CalenderFam"`, `short_name: "CaFam"`, `theme_color: "#2563EB"`, `background_color: "#FFFFFF"`, `lang: "es"`.
+- `metadata.title` en `layout.tsx`: plantilla `"%s · CaFam"` con valor por defecto `"CaFam"`; `appleWebApp.title`: `"CaFam"`.
+- `manifest.ts`: `name: "CaFam"`, `short_name: "CaFam"`, `theme_color: "#2563EB"`, `background_color: "#FFFFFF"`, `lang: "es"`.
 
 ### Configuración de Supabase Auth (panel)
 
@@ -266,7 +266,7 @@ Los formularios usan `useActionState` y deshabilitan el botón mientras la acci�
 
 ## Dudas abiertas
 
-- Ninguna. Las dudas de producto de la spec están resueltas: registro abierto (D15), nombre "CalenderFam"/"CaFam" y colores (D14, "Identidad visual") y zona horaria detectada del navegador (D13).
+- Ninguna. Las dudas de producto de la spec están resueltas: registro abierto (D15), nombre "CaFam" y colores (D14, "Identidad visual") y zona horaria detectada del navegador (D13).
 
 ---
 

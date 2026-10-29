@@ -161,7 +161,7 @@
   - Tests primero:
     - `manifest.test.ts`: `theme_color` y `background_color` `#E8E5DD`, `start_url` `/dashboard/calendar` y los mismos iconos;
     - `layout.test.ts`: `themeColor` `#E8E5DD`;
-    - `sw-no-data.test.ts`: `CACHE_NAME` es `calenderfam-v2` y el `activate` borra las cachés con otro nombre.
+    - `sw-no-data.test.ts`: `CACHE_NAME` es `cafam-v2` y el `activate` borra las cachés con otro nombre.
   Hecho cuando: `npm test -- manifest layout sw-no-data` en verde y los cuatro PNG existen con sus tamaños (comprobado con `file public/icons/*.png`). Cubre: RF-51, RF-52, RF-53, RF-54 | Módulo: brand, pwa
 
 - [x] T11 Aplicar la identidad a todas las pantallas y activar la guardia de diseño
@@ -338,7 +338,7 @@ Los tests están en `tests/unit/` y `tests/integration/`. Las capturas se hicier
 | RF-51 | T10, T11 | `side-rail`, `brand-icons`; capturas de portada, acceso y sin conexión |
 | RF-52 | T10 | `brand-icons` (tamaños y SVG único), `manifest`; favicon enlazado en el HTML |
 | RF-53 | T10 | `manifest`; `<meta name="theme-color" content="#E8E5DD">` en el HTML |
-| RF-54 | T10 | `brand-icons` (`calenderfam-v2` y borrado de cachés antiguas) |
+| RF-54 | T10 | `brand-icons` (`cafam-v2` y borrado de cachés antiguas) |
 | RF-55 | T13 | `palette` (sin el azul antiguo), `design-tokens` (prohibido en `src/` y en `globals.css`) |
 | RF-56 | T13 | `remove-old-blue` (BD: registro, importar, juntar y valor por defecto), `palette`, `import-calendar`, `ics-schemas`, `import-action` |
 | RF-57 | T13 | `remove-old-blue` (BD: ningún calendario ni evento con el azul antiguo en `dev`) |

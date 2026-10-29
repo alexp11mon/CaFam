@@ -48,21 +48,23 @@
   Hecho cuando: `npm run build` en verde, y `git grep -i -E` con los nombres antiguos sin resultados en `package.json`, `package-lock.json` ni `supabase/config.toml`. Cubre: RF-10 (configuración) | Módulo: repo-config
   Evidencia (2026-10-29): `npm ci --dry-run` "up to date" (sin cambios de dependencias); sin nombres antiguos en los tres archivos; typecheck, lint y format en verde; `npm test` 1281 tests; build correcto.
 
-- [ ] T4 Generar los datos de prueba con el dominio `@cafam.test`
+- [x] T4 Generar los datos de prueba con el dominio `@cafam.test`
   Pasos:
   - `uniqueEmail()` y `deleteTestMail()` de `tests/integration/helpers.ts`. Este último sigue limpiando también el dominio antiguo hasta T5, para no dejar correo huérfano, y se queda solo con el nuevo al cerrar T5.
   - `account-jobs.test.ts`.
   - Origen `https://cafam.test` en `account-confirm.test.ts` y `oauth-routes.test.ts` (D8).
 
   Hecho cuando: `npm test` y `npm run test:db` en verde. Si salta el límite de Auth, se repite con `--no-file-parallelism` (trampa conocida). Cubre: RF-15 | Módulo: test-data
+  Evidencia (2026-10-29): `npm test` 1281 tests en verde. `test:db` completo por tandas de 6 archivos (el límite de inicios de sesión de Supabase dev cortaba incluso la ejecución en serie): 33 archivos y 323 de 324 tests en verde. El que falla, `invites.test.ts` ("returns a 43 character token"), espera ≤ 7 días y recibe 7,0000057: el reloj local va 0,5 s por detrás del de la base de datos (trampa conocida del reloj). Ese test no depende del nombre; corregirlo queda fuera de esta spec. `deleteTestMail()` pasó directamente a `@cafam.test`, porque la T5 limpia el correo del dominio antiguo.
 
-- [ ] T5 Borrar de dev los usuarios de prueba antiguos
+- [x] T5 Borrar de dev los usuarios de prueba antiguos
   Pasos:
   - Escribir el script del scratchpad `cleanup-old-test-users.mjs` según el contrato del plan. Se niega a seguir sin la referencia de dev y nunca imprime las claves.
   - Ejecutarlo con `--dry-run`, reportar el número y después ejecutarlo de verdad (D9). El usuario ya lo aprobó el 2026-10-29.
   - Borrar el correo en cola del dominio antiguo y dejar `deleteTestMail()` solo con `@cafam.test`.
 
   Hecho cuando: una segunda ejecución con `--dry-run` reporta 0 usuarios y 0 correos en cola, y `npm run test:db -- account` sigue en verde. Cubre: RF-16 | Módulo: dev-cleanup
+  Evidencia (2026-10-29): simulación: 196 usuarios y 0 correos en cola. Ejecución: 196 borrados. Segunda simulación: 0 y 0. Después, `test:db` de la T4 en verde, incluidas las tandas `account-*`.
 
 - [x] T6 Poner al día `AGENTS.md` con el nombre único, la enmienda 3 y las specs 010 a 015
   Pasos: aplicar D7.
@@ -77,7 +79,7 @@
   Hecho cuando: `git grep -i -E` con los nombres antiguos sin resultados en `AGENTS.md`, y en el diff de `AGENTS.md` aparecen las specs 010 a 015 y la enmienda 3. Cubre: RF-13 | Módulo: docs-rename
   Evidencia (2026-10-29): sin nombres antiguos en `AGENTS.md`; el diff añade las filas 010 a 015, el resumen de la enmienda 3, `cafam-v3`, la migración `rename_cafam`, §11 y §12 al día. El bloque de `next dev` no cambia. Solo documentación: no aplica la verificación de código.
 
-- [ ] T7 Impedir que vuelvan los nombres antiguos y renombrar el resto de la documentación
+- [x] T7 Impedir que vuelvan los nombres antiguos y renombrar el resto de la documentación
   Pasos:
   - Primero, `tests/unit/project-name.test.ts` según D2 (con `git ls-files`, las cadenas montadas por trozos y la lista explícita de excepciones). Se ejecuta en rojo y debe listar solo `README.md`, `docs/constitution.md` y las specs 001 a 009.
   - Después, `README.md`.
@@ -85,6 +87,7 @@
   - Las specs cerradas con el script de Python de D4, revisando `git diff --word-diff specs/00*`: solo cambian nombres (RF-12).
 
   Hecho cuando: `npm test -- project-name` en verde después de haber fallado con esa lista, y `invite-url.test.ts` sin cambios con la URL de Vercel (RF-11). Cubre: RF-10, RF-11, RF-12, RF-14 | Módulo: name-guard, docs-rename
+  Evidencia (2026-10-29): la guardia falló primero con `README.md`, `docs/constitution.md` y las specs 001, 003, 004 y 005 (25 líneas). `git diff --word-diff` solo muestra cambios de nombre (y la frase de la constitución de D6). Después, `project-name` e `invite-url` en verde, con `invite-url.test.ts` sin cambios.
 
 - [ ] T8 Validar el cambio de nombre en el navegador y preparar los pasos externos
   Pasos:
