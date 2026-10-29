@@ -667,6 +667,7 @@ export type Database = {
           display_name: string
           id: string
           last_view: string | null
+          theme: string
           time_zone: string
           updated_at: string
         }
@@ -676,6 +677,7 @@ export type Database = {
           display_name: string
           id: string
           last_view?: string | null
+          theme?: string
           time_zone?: string
           updated_at?: string
         }
@@ -685,6 +687,7 @@ export type Database = {
           display_name?: string
           id?: string
           last_view?: string | null
+          theme?: string
           time_zone?: string
           updated_at?: string
         }

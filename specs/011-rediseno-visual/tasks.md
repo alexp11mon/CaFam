@@ -17,7 +17,7 @@
 
 ### Iteración 1 — Datos, paleta, tokens y arranque del tema
 
-- [ ] T1 Guardar el tema de cada usuario en su perfil
+- [x] T1 Guardar el tema de cada usuario en su perfil
   Pasos:
   - Primero, `tests/integration/profile-theme.test.ts` en rojo. Comprueba:
     - un perfil nuevo tiene `theme = 'system'`;
@@ -29,6 +29,7 @@
   - Después, la migración `profile_theme`, según "Modelo de datos".
 
   Hecho cuando: `npm run test:db -- profile-theme profile-accent` en verde y `src/types/database.ts` con `theme`. Cubre: RF-2, RF-4 | Módulo: theme-schema
+  Evidencia (2026-10-29): rojo antes de la migración (`42703`, columna inexistente). Migración `20261029140000_profile_theme.sql` aplicada en dev, tipos regenerados con `theme`. `test:db -- profile-theme profile-accent schema` 6 archivos y 49 tests en verde (la de `schema` cubre `list_tables_without_rls`). typecheck, lint y format en verde, `npm test` 1282 tests, build correcto.
 
 - [ ] T2 Escribir la lógica pura del tema y el script de arranque
   Pasos:
