@@ -153,7 +153,7 @@
   Hecho cuando: `npm test -- privacy-page route-access provider-notice home-page` en verde y capturas de P9 de `/privacy` y del aviso previo. Cubre: RF-39, RF-40, RF-41 | Módulo: privacy, route-access, portada, provider-notice
   Evidencia (2026-10-29): `privacy-page`, `connection-list` y `route-access` en verde; P8 completa en verde; capturas de `/privacy` a 390, 768 y 1440 px sin sesión (acento rojo). Falta la captura del aviso previo con sesión, junto con las de T8–T11.
 
-- [ ] T13 Vigilar secretos, revisar el alcance y preparar producción
+- [x] T13 Vigilar secretos, revisar el alcance y preparar producción
   Pasos:
   - `no-secrets` sigue en verde, y un test nuevo asegura que ningún componente de cliente importa `write-event`, `engine` ni `providers/google`.
   - Revisar el diff de la rama: ningún token llega al navegador.
@@ -161,6 +161,18 @@
   - Actualizar los pasos de producción del plan si la T1 cambió algo, y `AGENTS.md` (estado, rutas, funciones y trampas nuevas).
 
   Hecho cuando: verificación completa de P8 (incluido `npm run test:db`) en verde, con la salida reportada, y checklist de "Fuera de alcance" anotado en este archivo. Cubre: requisito de privacidad y seguridad, Fuera de alcance | Módulo: validación
+  Evidencia (2026-10-29): typecheck, lint, format:check, `npm test` (145 archivos, 1.278 tests) y build en verde; `npm run test:db -- --no-file-parallelism` 33 archivos, 323 tests en verde.
+  Checklist de "Fuera de alcance" (2026-10-29, revisado contra el código):
+  - [x] Borrar calendarios en Google: `deleteCalendar` solo se llama en la compensación de `upload-calendar.ts` (D14) y de `write-calendar.ts` (D15). Desmarcar y desconectar no llaman a Google salvo para revocar el permiso.
+  - [x] Mover entre cuentas o entre traído y normal: `moveTargets` solo ofrece calendarios de la misma conexión, y `sync_write_context` da `22023` si se mezclan.
+  - [x] Color y descripción del calendario, color y categoría del evento: `google-payload.ts` solo envía título, descripción, lugar y horas del evento; `insertCalendar` y `patchCalendar` solo `summary` (y la zona horaria al crear).
+  - [x] Series: no se envía `recurrence`; las repeticiones se tocan una a una por su id.
+  - [x] Invitados, recordatorios, videollamadas y adjuntos: no se envían, y el `PATCH` solo lleva lo que cambió, así que Google los conserva.
+  - [x] Cola de cambios: no existe; si Google rechaza, no se guarda en CaFam (`writeEvent`).
+  - [x] Juntar calendarios traídos: sigue bloqueado (`canMerge` y `merge_calendars`).
+  - [x] Sin servicios de pago, Microsoft ni otros proveedores; sin dependencias nuevas.
+  - [x] Elegir por cuenta si escribe: no hay opción; `can_write` sale de los permisos concedidos.
+  - [x] Secretos: `no-secrets` en verde, con un test nuevo que impide importar el motor de escritura desde un componente de cliente. Ningún token sale de `providers/google.ts`, el callback y el motor.
 
 - [ ] T14 Validar en producción, publicar la aplicación de Google y cerrar
   Pasos (el usuario ejecuta los pasos de producción del plan; el agente le prepara los comandos exactos):

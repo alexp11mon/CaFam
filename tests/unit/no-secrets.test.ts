@@ -102,3 +102,25 @@ describe("spec 007 secrets (T14)", () => {
     ).toEqual([]);
   });
 });
+
+// Spec 009, T13: the write engine runs only on the server; client components
+// reach it through Server Actions, never by importing it.
+describe("spec 009 write engine (T13)", () => {
+  it("is not imported by any client component", () => {
+    const serverOnly = [
+      "lib/sync/write-event",
+      "lib/sync/write-calendar",
+      "lib/sync/upload-calendar",
+      "lib/sync/engine",
+      "lib/sync/providers/google",
+    ];
+    const leaks = FILES.filter(({ content }) => isClient(content)).flatMap(
+      ({ path, content }) =>
+        // `import type` is erased at build time, so it ships nothing.
+        importsOf(path, content.replace(/import\s+type\s[^;]*;/g, ""))
+          .filter((target) => serverOnly.includes(target))
+          .map((target) => `${path} -> ${target}`),
+    );
+    expect(leaks).toEqual([]);
+  });
+});

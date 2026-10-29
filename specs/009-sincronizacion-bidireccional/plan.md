@@ -296,7 +296,7 @@ Antes de programar. Las hacen el usuario (consolas) y el agente (documentación 
 ## Pasos de producción (los ejecuta el usuario)
 
 1. Migraciones a prod: `npx supabase link --project-ref yznbdoskvtxeasujtirk`, `npx supabase db push` y `npx supabase link --project-ref uthubyzhonrtrmbcqcjh` (volver a dev). Aplica `sync_write_schema`, `sync_write_functions` y `sync_apply_events_v2`.
-2. Desplegar: `git checkout main && git merge --ff-only 009-sincronizacion-bidireccional && git push origin main`.
+2. Desplegar: `git push origin 009-sincronizacion-bidireccional`, y después `git checkout main && git merge --ff-only 009-sincronizacion-bidireccional && git push origin main`. Las migraciones van antes que el despliegue: el código nuevo llama a funciones que solo existen tras el paso 1.
 3. Google Cloud (`CaFam`):
    - Página principal `https://calendario-familia-five.vercel.app`, política `https://calendario-familia-five.vercel.app/privacy` y dominio autorizado.
    - "Publicar aplicación" (RF-41).
@@ -314,6 +314,7 @@ Sin variables nuevas en Vercel ni secretos nuevos en Vault.
 - R5: Al quitar la condición `external_id is null` del borrado de `sync_apply_events`, un evento metido a mano en un calendario de la 007 dejaría de borrarse. No pasa porque RLS lo impedía. Mitigación: un test de integración lo comprueba.
 - R6: Google rechaza mover una repetición o un evento de otro organizador. Mitigación: se aplica RF-24 y se comprueba en la T1 (d).
 - R7: `calendar.calendars` hace que la pantalla de Google de "aplicación no verificada" sea más alarmante. Mitigación: `provider-notice` y la política de privacidad lo explican (RF-40).
+- R9 (visto en la T4): un evento que se borra en CaFam mientras corre una actualización que ya lo leyó de Google puede volver a aparecer hasta la siguiente actualización, porque `p_read_at` protege lo cambiado, no lo borrado. Mitigación: Google ya no lo tiene, así que la siguiente actualización lo quita. La diferencia de reloj entre Vercel y la base de datos es de segundos y solo agranda un poco esa ventana.
 - R8: El tope de 100 usuarios de las aplicaciones sin verificar (caso límite). Mitigación: RF-47 de la 007 ya lo trata.
 
 ## Dudas abiertas
