@@ -31,7 +31,7 @@
   Hecho cuando: `npm run test:db -- profile-theme profile-accent` en verde y `src/types/database.ts` con `theme`. Cubre: RF-2, RF-4 | Módulo: theme-schema
   Evidencia (2026-10-29): rojo antes de la migración (`42703`, columna inexistente). Migración `20261029140000_profile_theme.sql` aplicada en dev, tipos regenerados con `theme`. `test:db -- profile-theme profile-accent schema` 6 archivos y 49 tests en verde (la de `schema` cubre `list_tables_without_rls`). typecheck, lint y format en verde, `npm test` 1282 tests, build correcto.
 
-- [ ] T2 Escribir la lógica pura del tema y el script de arranque
+- [x] T2 Escribir la lógica pura del tema y el script de arranque
   Pasos:
   - Primero, `tests/unit/theme.test.ts` en rojo:
     - `parseTheme` acepta `light`, `dark` y `system`, y cualquier otra cosa da `system`;
@@ -45,6 +45,7 @@
   - Después, `src/lib/theme/theme.ts`.
 
   Hecho cuando: `npm test -- theme` en verde. Cubre: RF-2, RF-6, RF-7, RF-8 | Módulo: theme-core
+  Evidencia (2026-10-29): rojo (módulo inexistente). `theme.test.ts` con 10 tests en verde. El oscuro de `THEME_COLOR` es provisional hasta la T3 (comentario `shortcut:`). typecheck, lint y format en verde, `npm test` 148 archivos y 1292 tests, build correcto.
 
 - [ ] T3 Definir la paleta oscura con el contraste comprobado, también sobre cristal
   Pasos:
