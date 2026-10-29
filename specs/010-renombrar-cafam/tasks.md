@@ -102,7 +102,8 @@
 
   Hecho cuando: las comprobaciones del navegador son correctas con sus capturas, la verificación obligatoria está en verde con su salida reportada, y el usuario confirma los pasos de RF-17 a RF-20: consulta de prod en 0 o informada, migración en prod, paneles revisados y repositorio renombrado con Vercel desplegando. Cubre: RF-1, RF-3, RF-17, RF-18, RF-19, RF-20 | Módulo: prod-steps
   Evidencia del agente (2026-10-29): con `next start -p 3100`, `<title>` "CaFam" en `/`, "Iniciar sesión · CaFam", "Política de privacidad · CaFam" y, con sesión, "Ajustes · CaFam"; enlace de inicio de la barra lateral "CaFam"; manifest `name`/`short_name` "CaFam"; `sw.js` con `cafam-v3`; ningún nombre antiguo en el HTML. Capturas a 390, 768 y 1440 px de la portada, `/privacy` y el calendario con el acento rojo y el amarillo (en el scratchpad, no versionadas). Usuario de prueba borrado y `.playwright-cli/` eliminada. Verificación: typecheck, lint y format en verde, `npm test` 147 archivos y 1282 tests, build correcto; `test:db` según la evidencia de la T4.
-  Pendiente del usuario: pasos 1 a 6 de "Pasos fuera del repositorio" del plan (RF-17 a RF-20).
+  Confirmado por el usuario (2026-10-29): paso 1, fusionado en `main` (`bef1dfd`) y publicado; paso 2, `rename_cafam` aplicada en prod y la CLI enlazada de nuevo a dev (RF-19); paso 3, la consulta de prod da 0 usuarios del dominio antiguo (RF-17).
+  Pendiente del usuario: paso 4, paneles de Supabase y Brevo (RF-20), y paso 5, renombrar el repositorio (RF-18). El paso 6 es opcional.
 
 ## Trazabilidad RF -> Tareas
 
