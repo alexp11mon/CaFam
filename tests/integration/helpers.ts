@@ -36,7 +36,7 @@ export function anonClient(): TypedClient {
 }
 
 export function uniqueEmail(): string {
-  return `test-${randomUUID()}@calenderfam.test`;
+  return `test-${randomUUID()}@cafam.test`;
 }
 
 export interface TestUser {
@@ -91,13 +91,13 @@ export async function getOwnCalendarId(userId: string): Promise<string> {
 
 /**
  * Removes the queued mail that deleting test accounts generates for their
- * @calenderfam.test users (spec 006, T23). The sender already skips .test
+ * @cafam.test users (spec 006, T23; spec 010, T4). The sender already skips .test
  * addresses; this keeps the dev queue clean.
  */
 export async function deleteTestMail(): Promise<void> {
   const { error } = await admin
     .from("email_outbox")
     .delete()
-    .like("to_email", "%@calenderfam.test");
+    .like("to_email", "%@cafam.test");
   if (error) throw error;
 }

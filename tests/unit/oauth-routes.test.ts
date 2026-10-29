@@ -23,7 +23,7 @@ vi.mock("@/lib/sync/providers/google", async (original) => ({
 import { GET as start } from "@/app/api/oauth/[provider]/start/route";
 import { GET as callback } from "@/app/api/oauth/[provider]/callback/route";
 
-const ORIGIN = "https://calenderfam.test";
+const ORIGIN = "https://cafam.test";
 const context = (provider = "google") => ({
   params: Promise.resolve({ provider }),
 });

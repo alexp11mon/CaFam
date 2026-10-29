@@ -13,15 +13,14 @@ vi.mock("@/lib/supabase/server", () => ({
 import { GET } from "@/app/auth/confirm/route";
 
 function confirm(query: string) {
-  return GET(new Request(`https://calenderfam.test/auth/confirm?${query}`));
+  return GET(new Request(`https://cafam.test/auth/confirm?${query}`));
 }
 
 function location(response: Response): string {
   return (
-    new URL(response.headers.get("location") ?? "", "https://calenderfam.test")
+    new URL(response.headers.get("location") ?? "", "https://cafam.test")
       .pathname +
-    new URL(response.headers.get("location") ?? "", "https://calenderfam.test")
-      .search
+    new URL(response.headers.get("location") ?? "", "https://cafam.test").search
   );
 }
 

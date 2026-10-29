@@ -29,7 +29,7 @@ beforeAll(async () => {
       body: "x",
       sent_at: new Date().toISOString(),
     },
-    { to_email: "prueba@calenderfam.test", subject: "T8", body: "x" },
+    { to_email: "prueba@cafam.test", subject: "T8", body: "x" },
   ];
   for (const row of rows) {
     const { data, error } = await admin
