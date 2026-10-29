@@ -80,7 +80,7 @@
 
 ### Iteración 2 — Google, motor de escritura y eventos
 
-- [ ] T6 Ampliar el cliente de Google con la escritura
+- [x] T6 Ampliar el cliente de Google con la escritura
   Pasos: test primero, ampliando `tests/unit/provider-google.test.ts` con `fetch` simulado. Comprueba:
   - La URL de autorización lleva exactamente los permisos de D1.
   - `exchangeCode` devuelve `scope`.

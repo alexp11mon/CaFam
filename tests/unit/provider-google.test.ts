@@ -2,14 +2,21 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   authorizationUrl,
+  deleteCalendar,
+  deleteEvent,
   exchangeCode,
-  GOOGLE_SCOPES,
+  insertCalendar,
+  insertEvent,
   listCalendars,
   listEvents,
+  moveEvent,
+  patchCalendar,
+  patchEvent,
   ProviderError,
   refreshAccessToken,
   revokeToken,
 } from "@/lib/sync/providers/google";
+import { GOOGLE_SCOPES } from "@/lib/sync/scopes";
 
 // Spec 007, T6: Google client with a fake fetch (plan D8 to D10; RF-1, RF-2,
 // RF-9, RF-12, RF-15, RF-16, RF-30).
@@ -47,10 +54,10 @@ describe("authorizationUrl (RF-1, RF-2)", () => {
     authorizationUrl({ ...CLIENT, state: "st", codeChallenge: "ch" }),
   );
 
-  it("asks only the read-only scopes of the plan", () => {
+  it("asks exactly the scopes of spec 009 D1", () => {
     expect(url.searchParams.get("scope")).toBe(GOOGLE_SCOPES);
     expect(GOOGLE_SCOPES).toBe(
-      "openid email https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events.readonly",
+      "openid email https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendars",
     );
   });
 
@@ -77,6 +84,7 @@ describe("exchangeCode and refreshAccessToken", () => {
       json({
         access_token: "at",
         refresh_token: "rt",
+        scope: "openid email",
         id_token: idToken({ sub: "123", email: "ana@gmail.com" }),
       }),
     );
@@ -91,6 +99,8 @@ describe("exchangeCode and refreshAccessToken", () => {
       refreshToken: "rt",
       subject: "123",
       email: "ana@gmail.com",
+      // Granted permissions (spec 009 RF-5).
+      scope: "openid email",
     });
     expect(String(fn.mock.calls[0][0])).toBe(
       "https://oauth2.googleapis.com/token",
@@ -162,8 +172,8 @@ describe("listCalendars (RF-9, RF-12)", () => {
     );
 
     expect(await listCalendars("at", fn)).toEqual([
-      { id: "primary@x", name: "Ana", color: "#9fe1e7" },
-      { id: "fam@group", name: "Mi familia", color: "#f83a22" },
+      { id: "primary@x", name: "Ana", color: "#9fe1e7", access: null },
+      { id: "fam@group", name: "Mi familia", color: "#f83a22", access: null },
     ]);
     expect(fn.mock.calls[0][1]?.headers).toMatchObject({
       Authorization: "Bearer at",
@@ -250,5 +260,138 @@ describe("revokeToken (RF-30)", () => {
       "https://oauth2.googleapis.com/revoke",
     );
     expect(String(fn.mock.calls[0][1]?.body)).toBe("token=rt");
+  });
+});
+
+// Spec 009, T6: writing in Google (plan "Contratos", D6, D8; RF-8, RF-10 to
+// RF-13, RF-15, RF-17, RF-19, RF-22 to RF-24, RF-29, RF-31, RF-32, RF-34).
+describe("writes", () => {
+  const API = "https://www.googleapis.com/calendar/v3";
+  const request = (fn: ReturnType<typeof fakeFetch>, call = 0) => {
+    const [url, init] = fn.mock.calls[call];
+    return {
+      url: String(url),
+      method: init?.method,
+      body: init?.body ? JSON.parse(String(init.body)) : undefined,
+      headers: new Headers(init?.headers),
+    };
+  };
+
+  it("insertEvent posts the body and returns the id", async () => {
+    const fn = fakeFetch(json({ id: "g1" }));
+    const id = await insertEvent("at", "fam@group", { summary: "A" }, fn);
+    expect(id).toBe("g1");
+    const r = request(fn);
+    expect(r.url).toBe(`${API}/calendars/fam%40group/events`);
+    expect(r.method).toBe("POST");
+    expect(r.body).toEqual({ summary: "A" });
+    expect(r.headers.get("authorization")).toBe("Bearer at");
+    expect(r.headers.get("if-match")).toBeNull();
+  });
+
+  it("patchEvent sends only the patch to the instance id (RF-17)", async () => {
+    const fn = fakeFetch(json({ id: "rec_20261102" }));
+    await patchEvent("at", "c", "rec_20261102", { summary: "B" }, fn);
+    const r = request(fn);
+    expect(r.url).toBe(`${API}/calendars/c/events/rec_20261102`);
+    expect(r.method).toBe("PATCH");
+    expect(r.body).toEqual({ summary: "B" });
+    expect(r.headers.get("if-match")).toBeNull();
+  });
+
+  it("an empty patch does not call Google", async () => {
+    const fn = fakeFetch();
+    await patchEvent("at", "c", "e", {}, fn);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it("moveEvent uses the move endpoint with the destination", async () => {
+    const fn = fakeFetch(json({ id: "e" }));
+    await moveEvent("at", "a@group", "e", "b@group", fn);
+    const r = request(fn);
+    expect(r.method).toBe("POST");
+    expect(r.url).toBe(
+      `${API}/calendars/a%40group/events/e/move?destination=b%40group`,
+    );
+  });
+
+  it("deleteEvent deletes", async () => {
+    const fn = fakeFetch(new Response(null, { status: 204 }));
+    await deleteEvent("at", "c", "e", fn);
+    expect(request(fn)).toMatchObject({
+      url: `${API}/calendars/c/events/e`,
+      method: "DELETE",
+    });
+  });
+
+  it("insertCalendar, patchCalendar (only summary) and deleteCalendar", async () => {
+    const fn = fakeFetch(
+      json({ id: "new@group" }),
+      json({ id: "new@group" }),
+      new Response(null, { status: 204 }),
+    );
+    expect(
+      await insertCalendar(
+        "at",
+        { summary: "Casa", timeZone: "Europe/Madrid" },
+        fn,
+      ),
+    ).toBe("new@group");
+    await patchCalendar("at", "new@group", "Hogar", fn);
+    await deleteCalendar("at", "new@group", fn);
+    expect(request(fn, 0)).toMatchObject({
+      url: `${API}/calendars`,
+      method: "POST",
+      body: { summary: "Casa", timeZone: "Europe/Madrid" },
+    });
+    expect(request(fn, 1)).toMatchObject({
+      url: `${API}/calendars/new%40group`,
+      method: "PATCH",
+      body: { summary: "Hogar" },
+    });
+    expect(request(fn, 2)).toMatchObject({
+      url: `${API}/calendars/new%40group`,
+      method: "DELETE",
+    });
+  });
+
+  const apiError = (status: number, reason?: string) =>
+    json(
+      { error: { code: status, errors: reason ? [{ reason }] : [] } },
+      status,
+    );
+
+  it.each([
+    [apiError(401), "revoked"],
+    [json({ error: "invalid_grant" }, 400), "revoked"],
+    [apiError(404), "missing"],
+    [apiError(410), "missing"],
+    [apiError(403, "rateLimitExceeded"), "transient"],
+    [apiError(403, "userRateLimitExceeded"), "transient"],
+    [apiError(429), "transient"],
+    [apiError(403, "forbidden"), "rejected"],
+    [apiError(403, "requiredAccessLevel"), "rejected"],
+    [apiError(400, "invalid"), "rejected"],
+    [apiError(500), "transient"],
+  ])("classifies %#", async (response, kind) => {
+    const fn = fakeFetch(response);
+    await expect(
+      insertEvent("at", "c", { summary: "A" }, fn),
+    ).rejects.toMatchObject({ kind });
+  });
+});
+
+describe("listCalendars access (spec 009 RF-8)", () => {
+  it("returns the access of the account over each calendar", async () => {
+    const fn = fakeFetch(
+      json({
+        items: [
+          { id: "a", summary: "A", accessRole: "owner" },
+          { id: "b", summary: "B", accessRole: "freeBusyReader" },
+        ],
+      }),
+    );
+    const calendars = await listCalendars("at", fn);
+    expect(calendars.map((c) => c.access)).toEqual(["owner", "reader"]);
   });
 });

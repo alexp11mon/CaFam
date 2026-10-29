@@ -1,18 +1,11 @@
 import type { GoogleEvent } from "../google-events";
 import { MAX_FETCHED_EVENTS } from "../limits";
+import { GOOGLE_SCOPES } from "../scopes";
 
 // Google OAuth and Calendar API with plain fetch (spec 007; plan D8 to D10).
 // `fetch` comes in as a parameter so tests run without the network.
 
 type Fetch = typeof fetch;
-
-/** Read-only scopes, nothing else (RF-2, plan D9). */
-export const GOOGLE_SCOPES = [
-  "openid",
-  "email",
-  "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
-  "https://www.googleapis.com/auth/calendar.events.readonly",
-].join(" ");
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -43,11 +36,22 @@ export interface ProviderCalendar {
   id: string;
   name: string;
   color: string | null;
+  access: GoogleAccess | null;
 }
 
-function kindOf(status: number, error?: string): FailureKind {
+// Google answers usage limits with 403 or 429: wait and retry (spec 009 RF-22).
+const RATE_LIMITS = new Set([
+  "rateLimitExceeded",
+  "userRateLimitExceeded",
+  "quotaExceeded",
+]);
+
+function kindOf(status: number, error?: string, reason?: string): FailureKind {
   if (error === "invalid_grant" || status === 401) return "revoked";
   if (status === 404 || status === 410) return "missing";
+  if (status === 403 && reason && RATE_LIMITS.has(reason)) return "transient";
+  // A refused write: no permission, invalid data, someone else's event (RF-24).
+  if (status === 400 || status === 403) return "rejected";
   return "transient";
 }
 
@@ -60,12 +64,21 @@ async function call(fetchFn: Fetch, url: string, init?: RequestInit) {
   }
   if (response.ok) return response;
 
+  // OAuth errors are a string; Calendar API errors an object with reasons.
   const body = (await response.json().catch(() => ({}))) as {
-    error?: unknown;
+    error?: string | { errors?: { reason?: unknown }[] };
   };
   const error = typeof body.error === "string" ? body.error : undefined;
+  const reason =
+    typeof body.error === "object"
+      ? body.error?.errors?.[0]?.reason
+      : undefined;
   throw new ProviderError(
-    kindOf(response.status, error),
+    kindOf(
+      response.status,
+      error,
+      typeof reason === "string" ? reason : undefined,
+    ),
     `Google answered ${response.status}${error ? ` (${error})` : ""}`,
   );
 }
@@ -133,6 +146,7 @@ export async function exchangeCode(
   });
   const body = (await response.json()) as Record<string, unknown>;
   const { sub, email } = claimsOf(body.id_token);
+  const scope = typeof body.scope === "string" ? body.scope : "";
   if (
     typeof body.access_token !== "string" ||
     typeof body.refresh_token !== "string" ||
@@ -146,6 +160,8 @@ export async function exchangeCode(
     refreshToken: body.refresh_token,
     subject: sub,
     email,
+    /** Granted permissions; fewer than asked keeps the account read-only (spec 009 RF-5). */
+    scope,
   };
 }
 
@@ -199,6 +215,7 @@ export async function listCalendars(
         id: item.id,
         name: item.summaryOverride ?? item.summary ?? "",
         color: item.backgroundColor ?? null,
+        access: accessOf(item.accessRole),
       });
     }
     pageToken = page.nextPageToken;
@@ -254,4 +271,122 @@ export async function revokeToken(
   fetchFn: Fetch = fetch,
 ): Promise<void> {
   await postForm(fetchFn, REVOKE_URL, { token });
+}
+
+// Writes (spec 009, plan "Contratos"). No If-Match: the last change wins (RF-27).
+
+async function send(
+  fetchFn: Fetch,
+  accessToken: string,
+  method: string,
+  url: string,
+  body?: unknown,
+) {
+  return call(fetchFn, url, {
+    method,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      ...(body === undefined ? {} : { "content-type": "application/json" }),
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}
+
+const eventsUrl = (calendarId: string) =>
+  `${API}/calendars/${encodeURIComponent(calendarId)}/events`;
+const eventUrl = (calendarId: string, eventId: string) =>
+  `${eventsUrl(calendarId)}/${encodeURIComponent(eventId)}`;
+const calendarUrl = (calendarId: string) =>
+  `${API}/calendars/${encodeURIComponent(calendarId)}`;
+
+async function idOf(response: Response): Promise<string> {
+  const body = (await response.json()) as { id?: unknown };
+  if (typeof body.id !== "string") {
+    throw new ProviderError("transient", "Google sent no id");
+  }
+  return body.id;
+}
+
+/** Creates an event and returns its Google id (RF-10). */
+export async function insertEvent(
+  accessToken: string,
+  calendarId: string,
+  body: object,
+  fetchFn: Fetch = fetch,
+): Promise<string> {
+  return idOf(
+    await send(fetchFn, accessToken, "POST", eventsUrl(calendarId), body),
+  );
+}
+
+/** Changes only the given fields; a repetition's id changes only it (RF-11, RF-14, RF-17). */
+export async function patchEvent(
+  accessToken: string,
+  calendarId: string,
+  eventId: string,
+  patch: object,
+  fetchFn: Fetch = fetch,
+): Promise<void> {
+  if (Object.keys(patch).length === 0) return;
+  await send(
+    fetchFn,
+    accessToken,
+    "PATCH",
+    eventUrl(calendarId, eventId),
+    patch,
+  );
+}
+
+/** Moves an event to another calendar of the same account (RF-19). */
+export async function moveEvent(
+  accessToken: string,
+  calendarId: string,
+  eventId: string,
+  destination: string,
+  fetchFn: Fetch = fetch,
+): Promise<void> {
+  const url = `${eventUrl(calendarId, eventId)}/move?destination=${encodeURIComponent(destination)}`;
+  await send(fetchFn, accessToken, "POST", url);
+}
+
+/** Deletes an event, or only that repetition (RF-12, RF-17). */
+export async function deleteEvent(
+  accessToken: string,
+  calendarId: string,
+  eventId: string,
+  fetchFn: Fetch = fetch,
+): Promise<void> {
+  await send(fetchFn, accessToken, "DELETE", eventUrl(calendarId, eventId));
+}
+
+/** Creates a calendar in the account and returns its id (RF-32, RF-34). */
+export async function insertCalendar(
+  accessToken: string,
+  calendar: { summary: string; timeZone?: string },
+  fetchFn: Fetch = fetch,
+): Promise<string> {
+  return idOf(
+    await send(fetchFn, accessToken, "POST", `${API}/calendars`, calendar),
+  );
+}
+
+/** Renames a calendar; color and description stay in CaFam (RF-29, RF-31). */
+export async function patchCalendar(
+  accessToken: string,
+  calendarId: string,
+  summary: string,
+  fetchFn: Fetch = fetch,
+): Promise<void> {
+  await send(fetchFn, accessToken, "PATCH", calendarUrl(calendarId), {
+    summary,
+  });
+}
+
+/** Only to undo a calendar CaFam has just created (RF-37, plan D15). */
+export async function deleteCalendar(
+  accessToken: string,
+  calendarId: string,
+  fetchFn: Fetch = fetch,
+): Promise<void> {
+  await send(fetchFn, accessToken, "DELETE", calendarUrl(calendarId));
 }
