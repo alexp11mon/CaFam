@@ -90,7 +90,7 @@
 
   Hecho cuando: `npm test -- provider-google` en verde. Cubre: RF-1, RF-8, RF-10, RF-11, RF-12, RF-13, RF-15, RF-17, RF-19, RF-22, RF-23, RF-24, RF-29, RF-31, RF-32, RF-34 | Módulo: providers/google
 
-- [ ] T7 Implementar el motor de escritura de eventos
+- [x] T7 Implementar el motor de escritura de eventos
   Pasos: test primero en `tests/unit/write-event.test.ts`, con dependencias inyectadas como en `run-sync`. Comprueba:
   - Crear, cambiar y borrar llaman primero a Google y después a `sync_commit_event`; si Google falla, no se llama a `sync_commit_event` (RF-21).
   - Cambiar y mover hace `PATCH` y luego `move` (D7).

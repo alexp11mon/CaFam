@@ -29,6 +29,14 @@ export function engineDeps(): SyncDeps {
   };
 }
 
+/**
+ * Writes run with the user's session, so the database checks their role, plus
+ * the secret, which proves Google was written first (spec 009 plan D3).
+ */
+export function writeEngineDeps(supabase: SyncDeps["supabase"]): SyncDeps {
+  return { ...engineDeps(), supabase };
+}
+
 export type ConnectionSync =
   | { status: "ok"; results: SyncResult[] }
   | { status: "too_soon"; nextAt: string }
