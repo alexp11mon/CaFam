@@ -22,7 +22,7 @@
   Pasos: (a) a (d) de "Comprobaciones de la T1" del plan. El usuario hace lo de la consola de Google y conecta una cuenta de prueba en dev (no se pegan secretos en el chat). El agente consulta la documentación de Vercel y hace las llamadas a mano en dev con un script del scratchpad que no muestra el token. Los resultados se anotan en `plan.md`.
   Hecho cuando: `plan.md` anota el `maxDuration` de Hobby y lo que pide Google para publicar. También anota la respuesta de Google a cinco cosas: `accessRole`, `PATCH` de una repetición, `move` de una repetición, 404 de un evento borrado y `scope` del token. Si la subida no cabe (D14) o publicar exige pagar o verificar, se detiene y se vuelve al usuario. Cubre: RF-17, RF-35, RF-41, requisito de coste cero | Módulo: comprobación
 
-- [ ] T2 Crear el esquema de escritura: permiso de la cuenta, permiso por calendario y nombre protegido
+- [x] T2 Crear el esquema de escritura: permiso de la cuenta, permiso por calendario y nombre protegido
   Pasos: test primero en `tests/integration/sync-write-schema.test.ts`. Comprueba:
   - Una conexión creada como en la 007 tiene `can_write = false`, y `connect_account` con `p_can_write` la pone a `true` sin duplicar ni tocar sus calendarios traídos.
   - `select_synced_calendars` guarda `google_access`.

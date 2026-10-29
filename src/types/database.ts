@@ -157,6 +157,7 @@ export type Database = {
         Row: {
           account_email: string
           account_subject: string
+          can_write: boolean
           created_at: string
           id: string
           last_synced_at: string | null
@@ -168,6 +169,7 @@ export type Database = {
         Insert: {
           account_email: string
           account_subject: string
+          can_write?: boolean
           created_at?: string
           id?: string
           last_synced_at?: string | null
@@ -179,6 +181,7 @@ export type Database = {
         Update: {
           account_email?: string
           account_subject?: string
+          can_write?: boolean
           created_at?: string
           id?: string
           last_synced_at?: string | null
@@ -694,6 +697,7 @@ export type Database = {
           consecutive_failures: number
           created_at: string
           external_id: string
+          google_access: string | null
           last_attempt_at: string | null
           last_error: string | null
           last_summary: Json | null
@@ -701,6 +705,7 @@ export type Database = {
           provider: string
           state: string
           sync_started_at: string | null
+          can_write: boolean | null
         }
         Insert: {
           calendar_id: string
@@ -708,6 +713,7 @@ export type Database = {
           consecutive_failures?: number
           created_at?: string
           external_id: string
+          google_access?: string | null
           last_attempt_at?: string | null
           last_error?: string | null
           last_summary?: Json | null
@@ -722,6 +728,7 @@ export type Database = {
           consecutive_failures?: number
           created_at?: string
           external_id?: string
+          google_access?: string | null
           last_attempt_at?: string | null
           last_error?: string | null
           last_summary?: Json | null
@@ -774,8 +781,16 @@ export type Database = {
         Args: { p_calendar_id: string }
         Returns: Database["public"]["Enums"]["calendar_role"]
       }
+      can_write: {
+        Args: { "": Database["public"]["Tables"]["synced_calendars"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.can_write with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+      }
+      can_write_synced: { Args: { p_calendar_id: string }; Returns: boolean }
       connect_account: {
         Args: {
+          p_can_write?: boolean
           p_email: string
           p_provider: string
           p_refresh_token: string
@@ -899,6 +914,7 @@ export type Database = {
           consecutive_failures: number
           created_at: string
           external_id: string
+          google_access: string | null
           last_attempt_at: string | null
           last_error: string | null
           last_summary: Json | null

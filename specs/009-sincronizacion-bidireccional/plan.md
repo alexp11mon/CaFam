@@ -286,6 +286,12 @@ Antes de programar. Las hacen el usuario (consolas) y el agente (documentación 
   - Un 404 al cambiar un evento borrado.
   - El `scope` de la respuesta del token lista los permisos concedidos.
 
+### Resultado de la T1 (2026-10-29)
+
+- (a) Documentación de Vercel (`vercel.com/docs/functions/configuring-functions/duration`, actualizada el 2026-08-24): Hobby con Fluid compute tiene por defecto y como máximo **300 s**. `/upload` usa `maxDuration = 300` y la subida para de copiar a los 270 s (con compensación si no acaba). D14 se mantiene.
+- (d) Documentación de Google (`events/move`): solo se mueven eventos `default` (no `birthday`, `focusTime`, `fromGmail`, `outOfOffice` ni `workingLocation`); no dice nada de las repeticiones. Si Google rechaza un caso, se aplica RF-24. `move` acepta `calendar.events`.
+- **Pendiente del usuario** (no se puede hacer sin su consola ni su cuenta): (b) qué pide "Publicar aplicación" y (d) la prueba en vivo de `accessRole`, `PATCH` de una repetición, `move` de una repetición, 404 y `scope`. Se hacen con la prueba manual en dev de la T8 y en la T14; el código ya trata cualquier respuesta con RF-24 y RF-25.
+
 ## Pasos de producción (los ejecuta el usuario)
 
 1. Migraciones a prod: `npx supabase link --project-ref yznbdoskvtxeasujtirk`, `npx supabase db push` y `npx supabase link --project-ref uthubyzhonrtrmbcqcjh` (volver a dev). Aplica `sync_write_schema`, `sync_write_functions` y `sync_apply_events_v2`.

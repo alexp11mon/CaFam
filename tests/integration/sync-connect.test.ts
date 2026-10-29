@@ -204,7 +204,8 @@ describe("select_synced_calendars (RF-10, RF-14)", () => {
     const before = await syncedOf(connectionId);
     await admin
       .from("calendars")
-      .update({ name: "Renombrado" })
+      // The name is protected since spec 009 (D13): the color shows the same.
+      .update({ color: "#BDB2FF" })
       .eq("id", before[0].calendar_id);
 
     await select(bea, connectionId, [
@@ -214,10 +215,10 @@ describe("select_synced_calendars (RF-10, RF-14)", () => {
     expect(await syncedOf(connectionId)).toEqual(before);
     const { data } = await admin
       .from("calendars")
-      .select("name")
+      .select("color")
       .eq("id", before[0].calendar_id)
       .single();
-    expect(data?.name).toBe("Renombrado");
+    expect(data?.color).toBe("#BDB2FF");
   });
 
   it("refuses the twenty-first calendar with CF429", async () => {
