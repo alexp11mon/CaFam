@@ -39,13 +39,14 @@
   Hecho cuando: `npm test -- manifest side-rail brand-icons smoke ics` en verde, y `git grep -i -E` con los nombres antiguos sin resultados en `src/` ni en `public/`. Cubre: RF-2, RF-3, RF-4, RF-5, RF-6 | Módulo: brand-text, sw-cache, ics-agent
   Evidencia (2026-10-29): rojo en 3 tests (manifest, side-rail, brand-icons). Después: 14 archivos y 218 tests en verde con el filtro; sin nombres antiguos en `src/` ni en `public/`; typecheck, lint y format en verde; `npm test` 146 archivos y 1281 tests; build correcto.
 
-- [ ] T3 Poner el nombre técnico `cafam` en la configuración del repositorio
+- [x] T3 Poner el nombre técnico `cafam` en la configuración del repositorio
   Pasos:
   - `package.json` y los dos `name` de `package-lock.json` a `cafam`.
   - `supabase/config.toml` con `project_id = "cafam"` (D5).
   - Comprobar que `npm ci --dry-run` no cambia dependencias.
 
   Hecho cuando: `npm run build` en verde, y `git grep -i -E` con los nombres antiguos sin resultados en `package.json`, `package-lock.json` ni `supabase/config.toml`. Cubre: RF-10 (configuración) | Módulo: repo-config
+  Evidencia (2026-10-29): `npm ci --dry-run` "up to date" (sin cambios de dependencias); sin nombres antiguos en los tres archivos; typecheck, lint y format en verde; `npm test` 1281 tests; build correcto.
 
 - [ ] T4 Generar los datos de prueba con el dominio `@cafam.test`
   Pasos:
