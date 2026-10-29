@@ -50,9 +50,10 @@ export function UploadForm({
         </p>
         {onlyCafam > 0 ? (
           <p className="tabular-nums">
-            {count(onlyCafam)} se {onlyCafam === 1 ? "quedará" : "quedarán"}{" "}
-            solo en CaFam: están fuera del rango que se sincroniza (de 6 meses
-            antes de hoy a 1 año después) o pasan del máximo de 2.000.
+            {count(onlyCafam)}{" "}
+            {onlyCafam === 1
+              ? "se quedará solo en CaFam: está fuera del rango que se sincroniza (de 6 meses antes de hoy a 1 año después) o pasa del máximo de 2.000."
+              : "se quedarán solo en CaFam: están fuera del rango que se sincroniza (de 6 meses antes de hoy a 1 año después) o pasan del máximo de 2.000."}
           </p>
         ) : null}
         <p className="text-sm text-muted">

@@ -234,6 +234,28 @@
 - RF-42 -> T4, T5, T11
 - RF-43 -> T5, T11
 
+## Evidencia de cierre (2026-10-29)
+
+Criterios de finalización de la spec:
+
+- [x] Todos los RF con test en verde y P8 completa: typecheck, lint, format:check, `npm test` (145 archivos, 1.279 tests), build y `npm run test:db -- --no-file-parallelism` (33 archivos, 323 tests). Tests por tarea:
+  - T2 `sync-write-schema`
+  - T3 `sync-write`
+  - T4 `sync-worker`, `run-sync` y `provider-google`
+  - T5 `sync-write-core`
+  - T6 `provider-google`
+  - T7 `write-event`
+  - T8 `event-actions` y `synced-calendar-ui`
+  - T9 `oauth-routes`, `reconnect-notice` y `connection-*`
+  - T10 `write-calendar` y `connection-actions`
+  - T11 `upload-calendar` y `upload-page`
+  - T12 `privacy-page` y `connection-list`
+  - T13 `no-secrets`
+- [x] Aplicación de Google publicada sin verificar. Una cuenta fuera de la lista de pruebas conecta pasando por el aviso de "aplicación no verificada" (el usuario, en producción).
+- [x] Demo en producción con una cuenta real (el usuario, 2026-10-29): volver a conectar una cuenta de la 007; crear, cambiar, mover y borrar eventos y verlos en Google; cambiar una repetición; un Editor cambia un evento; renombrar un calendario; crear uno en Google; subir uno de CaFam; y un cambio rechazado que no se guarda. Todo correcto.
+- [x] Revisión visual (P9): `/privacy` sin sesión a 390, 768 y 1440 px. Además, 42 capturas en dev, con un usuario de prueba y conexiones sembradas (ya borrado): aviso previo, ficha con escritura, ficha de solo lectura, ficha con `?missing=`, "Mis calendarios" con el aviso y "Subir a Google", `/upload` y detalle de un evento traído, a 390, 768 y 1440 px con acento rojo y amarillo. Encontró un fallo de concordancia en `/upload` ("1 evento … están fuera"), ya corregido y con test.
+- [x] `no-secrets` en verde y diff revisado: ninguna autorización de Google llega al navegador (T13).
+
 ## Dudas abiertas
 
 - Ninguna que bloquee la T1. Si la T1 cambia algo del plan (duración de la subida, requisitos para publicar), se enmiendan el plan y estas tareas antes de la T2.

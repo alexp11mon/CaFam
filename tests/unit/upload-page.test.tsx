@@ -23,6 +23,21 @@ describe("UploadForm (RF-43)", () => {
     ).toBeInTheDocument();
   });
 
+  it("agrees in number with a single CaFam-only event", () => {
+    render(
+      <UploadForm
+        accounts={[{ id: "c1", email: "ana@gmail.com" }]}
+        toGoogle={2}
+        onlyCafam={1}
+        action={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(/1 evento se quedará solo en CaFam: está fuera/),
+    ).toBeInTheDocument();
+  });
+
   it("hides the CaFam-only line when every event goes", () => {
     render(
       <UploadForm
