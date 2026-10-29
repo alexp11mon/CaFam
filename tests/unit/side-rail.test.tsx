@@ -6,6 +6,8 @@ import { SideRail } from "@/components/shell/side-rail";
 // Spec 005, T6: the narrow side rail of the desktop frame (RF-16, RF-20, RF-51).
 const navigation = vi.hoisted(() => ({ pathname: "/dashboard/calendar" }));
 vi.mock("next/navigation", () => ({ usePathname: () => navigation.pathname }));
+const actions = vi.hoisted(() => ({ setTheme: vi.fn(async () => ({})) }));
+vi.mock("@/app/dashboard/settings/actions", () => actions);
 
 beforeEach(() => {
   navigation.pathname = "/dashboard/calendar";
@@ -64,6 +66,19 @@ describe("SideRail (RF-16)", () => {
     );
 
     expect(signOut).toHaveBeenCalledTimes(1);
+  });
+
+  it("has the theme shortcut, usable with the keyboard (spec 011 RF-6)", async () => {
+    const { nav } = renderRail();
+    const toggle = within(nav).getByRole("button", {
+      name: "Cambiar a tema oscuro",
+    });
+
+    toggle.focus();
+    await userEvent.keyboard("{Enter}");
+
+    expect(actions.setTheme).toHaveBeenCalledWith("dark");
+    document.documentElement.removeAttribute("data-theme");
   });
 
   it("is hidden below 1024 px", () => {

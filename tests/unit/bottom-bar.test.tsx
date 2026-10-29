@@ -7,6 +7,8 @@ import { BottomBar } from "@/components/shell/bottom-bar";
 // (RF-18, RF-20, RF-22; plan D9).
 const navigation = vi.hoisted(() => ({ pathname: "/dashboard/calendar" }));
 vi.mock("next/navigation", () => ({ usePathname: () => navigation.pathname }));
+const actions = vi.hoisted(() => ({ setTheme: vi.fn(async () => ({})) }));
+vi.mock("@/app/dashboard/settings/actions", () => actions);
 
 // jsdom does not implement the modal methods of <dialog>.
 beforeAll(() => {
@@ -132,5 +134,23 @@ describe("Más sheet (RF-18, plan D9)", () => {
     await userEvent.click(screen.getByRole("link", { name: "Ajustes" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
+// Spec 011, T8: the theme shortcut of the phone frame (RF-6).
+describe("MoreSheet theme shortcut (RF-6)", () => {
+  it("is in the sheet and works with the keyboard", async () => {
+    renderBar();
+    await userEvent.click(screen.getByRole("button", { name: "Más" }));
+    const sheet = screen.getByRole("dialog", { name: "Más" });
+    const toggle = within(sheet).getByRole("button", {
+      name: "Cambiar a tema oscuro",
+    });
+
+    toggle.focus();
+    await userEvent.keyboard("{Enter}");
+
+    expect(actions.setTheme).toHaveBeenCalledWith("dark");
+    document.documentElement.removeAttribute("data-theme");
   });
 });

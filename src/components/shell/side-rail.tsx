@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LogoMark } from "@/components/brand/logo";
 import { activeSection, NAV_ITEMS } from "@/lib/shell/nav";
 import { SECTION_ICONS, SignOutIcon } from "./icons";
+import { ThemeToggle } from "./theme-toggle";
 
 const ITEM =
   "group relative flex size-12 items-center justify-center rounded-full text-muted transition-colors hover:bg-paper hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:bg-paper aria-[current=page]:text-ink";
@@ -13,7 +14,7 @@ const ITEM =
 const TOOLTIP =
   "pointer-events-none absolute top-1/2 left-full z-40 ml-3 -translate-y-1/2 rounded-lg bg-ink px-2.5 py-1 text-sm font-medium whitespace-nowrap text-on-ink opacity-0 shadow-float transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
 
-/** Desktop navigation: the brand, the destinations and signing out (spec 005 RF-16, RF-20). */
+/** Desktop navigation: the brand, the destinations, the theme shortcut and signing out (spec 005 RF-16, RF-20; spec 011 RF-6). */
 export function SideRail({
   signOutAction,
 }: {
@@ -50,6 +51,7 @@ export function SideRail({
           );
         })}
       </ul>
+      <ThemeToggle className={ITEM} labelClassName={TOOLTIP} />
       <form action={signOutAction}>
         <button type="submit" className={ITEM}>
           <SignOutIcon />

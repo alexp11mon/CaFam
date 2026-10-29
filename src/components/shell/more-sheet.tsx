@@ -5,6 +5,7 @@ import { useId, useRef } from "react";
 import { NAV_ITEMS, type Section } from "@/lib/shell/nav";
 import { BAR_ICON, BAR_ITEM } from "./bar-styles";
 import { MoreIcon, SECTION_ICONS, SignOutIcon } from "./icons";
+import { ThemeToggle } from "./theme-toggle";
 
 const SHEET_SECTIONS: readonly Section[] = [
   "connections",
@@ -86,6 +87,9 @@ export function MoreSheet({
               </li>
             );
           })}
+          <li>
+            <ThemeToggle className={ROW} />
+          </li>
           <li>
             <form action={signOutAction}>
               <button type="submit" className={ROW}>

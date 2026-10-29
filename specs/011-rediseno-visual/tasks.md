@@ -111,12 +111,13 @@
   Hecho cuando: `npm test -- theme-picker apply-theme settings` en verde, `npm run test:db -- profile-theme` en verde, y en el navegador el cambio se ve sin recargar y "Como el sistema" sigue el cambio de `prefers-color-scheme` emulado. Cubre: RF-1, RF-3, RF-4, RF-5, RF-21 | Módulo: theme-apply, theme-picker
   Evidencia (2026-10-29): rojo (`theme-picker` y `apply-theme` inexistentes, `setTheme` sin exportar). `theme-picker apply-theme settings` 4 archivos y 21 tests en verde; `test:db -- profile-theme` 6 tests en verde. En `next start` (390 px): Oscuro, Como el sistema y Claro cambian el fondo sin recargar; con "Como el sistema" el fondo sigue a `prefers-color-scheme` emulado; tras recargar se conserva. Capturas de Ajustes a 390, 768 y 1440 px en claro y oscuro con el acento rojo y el amarillo.
 
-- [ ] T8 Añadir el acceso directo de tema a la barra lateral y a la hoja "Más"
+- [x] T8 Añadir el acceso directo de tema a la barra lateral y a la hoja "Más"
   Pasos:
   - Primero, `theme-toggle.test.tsx` en rojo: nombre accesible "Cambiar a tema oscuro" o "Cambiar a tema claro" según el tema efectivo, que alterna con `nextToggleTheme`. También se amplían `side-rail.test.tsx` y `more-sheet.test.tsx` (el botón está y se usa con el teclado).
   - Después, `ThemeToggle`, los iconos de sol y luna en `icons.tsx` y su sitio en los dos menús.
 
   Hecho cuando: `npm test -- theme-toggle side-rail more-sheet` en verde. Cubre: RF-6 | Módulo: theme-toggle
+  Evidencia (2026-10-29): rojo (`theme-toggle` inexistente; el botón no estaba en la barra ni en la hoja). Las pruebas de la hoja "Más" viven en `bottom-bar.test.tsx`. `theme-toggle side-rail bottom-bar` 19 tests en verde. El botón guarda con `setTheme` como Ajustes (si no, `ThemeSync` lo desharía en la siguiente navegación) y, si falla, vuelve al tema de la cookie y lo avisa. En `next start`: barra lateral a 1440 px (claro → oscuro, se conserva al recargar) y hoja "Más" a 390 px (oscuro → claro). `npm test` 154 archivos y 1374 tests, build correcto.
 
 - [ ] T9 Poner las superficies translúcidas en los contenedores principales
   Pasos:
