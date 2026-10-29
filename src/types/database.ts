@@ -892,6 +892,26 @@ export type Database = {
         }
         Returns: Json
       }
+      sync_attach_created: {
+        Args: {
+          p_color?: string
+          p_connection_id: string
+          p_external_id: string
+          p_name: string
+          p_secret: string
+        }
+        Returns: string
+      }
+      sync_attach_uploaded: {
+        Args: {
+          p_calendar_id: string
+          p_connection_id: string
+          p_external_id: string
+          p_mapping: Json
+          p_secret: string
+        }
+        Returns: undefined
+      }
       sync_check_secret: { Args: { p_secret: string }; Returns: undefined }
       sync_claim_connection: {
         Args: { p_connection_id: string; p_manual: boolean; p_secret: string }
@@ -905,6 +925,17 @@ export type Database = {
           external_id: string
           provider: string
         }[]
+      }
+      sync_commit_event: {
+        Args: {
+          p_calendar_id: string
+          p_event_id: string
+          p_external_id: string
+          p_op: string
+          p_row: Json
+          p_secret: string
+        }
+        Returns: string
       }
       sync_due_calendars: {
         Args: never
@@ -938,6 +969,27 @@ export type Database = {
         Args: { p_connection_id: string; p_secret: string }
         Returns: string
       }
+      sync_own_writable_connection: {
+        Args: { p_connection_id: string }
+        Returns: {
+          account_email: string
+          account_subject: string
+          can_write: boolean
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          owner_id: string
+          provider: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "calendar_connections"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       sync_scheduled_jobs: {
         Args: never
         Returns: {
@@ -950,6 +1002,25 @@ export type Database = {
         Returns: undefined
       }
       sync_trigger: { Args: { p_dry_run?: boolean }; Returns: Json }
+      sync_update_calendar: {
+        Args: {
+          p_calendar_id: string
+          p_color: string
+          p_description: string
+          p_name: string
+          p_secret: string
+        }
+        Returns: undefined
+      }
+      sync_write_context: {
+        Args: {
+          p_calendar_id: string
+          p_event_id?: string
+          p_secret: string
+          p_target_calendar_id?: string
+        }
+        Returns: Json
+      }
       vault_secret_matches: {
         Args: { p_id: string; p_value: string }
         Returns: boolean

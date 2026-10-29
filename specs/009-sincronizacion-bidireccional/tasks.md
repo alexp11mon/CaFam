@@ -33,7 +33,7 @@
   Migración `sync_write_schema`.
   Hecho cuando: `npm run test:db -- sync-write-schema sync-connect sync-schema` en verde y `src/types/database.ts` contiene `can_write` y `google_access`. Cubre: RF-2, RF-4, RF-5, RF-8, RF-29 | Módulo: sync_write_schema
 
-- [ ] T3 Crear las funciones de escritura con sesión y secreto
+- [x] T3 Crear las funciones de escritura con sesión y secreto
   Pasos: test primero en `tests/integration/sync-write.test.ts`, que usa `CRON_SECRET`. Comprueba:
   - Sin sesión o con un secreto falso, todas fallan con `42501`.
   - `sync_write_context` devuelve `{synced:false}` entre calendarios normales y los ids de Google al propietario y a un Editor. Falla con un Lector, con una cuenta sin `can_write`, en `needs_reauth` o con `google_access = 'reader'`. Mezclar un calendario normal con uno traído, o dos conexiones, da `22023`. Un evento de otro calendario da `CF404`.
