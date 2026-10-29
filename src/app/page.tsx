@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -41,6 +42,13 @@ export default function HomePage() {
           </LinkButton>
         </div>
         <IosInstallHint />
+        {/* Google asks for it before connecting an account (spec 009 RF-40). */}
+        <Link
+          href="/privacy"
+          className="self-center text-sm text-muted underline decoration-control underline-offset-4 hover:text-ink"
+        >
+          Política de privacidad
+        </Link>
       </div>
     </main>
   );

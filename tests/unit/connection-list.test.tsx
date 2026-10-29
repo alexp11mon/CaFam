@@ -71,6 +71,14 @@ describe("ProviderNotice (RF-48)", () => {
 
     expect(screen.getByText(/no ha verificado/i)).toBeInTheDocument();
     expect(screen.getByText(/sin ánimo de lucro/i)).toBeInTheDocument();
+    // Spec 009: the write permission and the privacy policy (RF-40, R7).
+    expect(screen.getByText(/crear, cambiar y borrar/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/nunca para cambiarlos/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Política de privacidad" }),
+    ).toHaveAttribute("href", "/privacy");
     expect(
       screen.getByRole("link", { name: "Continuar a Google" }),
     ).toHaveAttribute("href", "/api/oauth/google/start");

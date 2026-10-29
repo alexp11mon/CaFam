@@ -143,7 +143,7 @@
   `maxDuration` según la T1.
   Hecho cuando: `npm test -- upload-calendar upload-page calendar-list` en verde, capturas de P9 de `/upload`, y prueba manual en dev: el calendario subido se ve en Google con sus eventos del rango, los de fuera siguen en CaFam y la siguiente actualización no duplica ni borra nada. Cubre: RF-33, RF-34, RF-35, RF-36, RF-37, RF-38, RF-42, RF-43 | Módulo: upload-calendar, calendars/[id]/upload, calendar-list
 
-- [ ] T12 Publicar la política de privacidad y enlazarla
+- [x] T12 Publicar la política de privacidad y enlazarla
   Pasos: test primero en `tests/unit/privacy-page.test.tsx` y ampliando `route-access.test.ts`. Comprueba:
   - `/privacy` se abre sin sesión.
   - La página explica en español qué datos de Google se leen y se escriben, para qué, dónde se guardan, con quién se comparten, y cómo retirar el permiso y borrar los datos.
@@ -151,6 +151,7 @@
   - `provider-notice` ya no dice que la app está en "Prueba", y explica el aviso de "aplicación no verificada" y el permiso de escritura (R7).
 
   Hecho cuando: `npm test -- privacy-page route-access provider-notice home-page` en verde y capturas de P9 de `/privacy` y del aviso previo. Cubre: RF-39, RF-40, RF-41 | Módulo: privacy, route-access, portada, provider-notice
+  Evidencia (2026-10-29): `privacy-page`, `connection-list` y `route-access` en verde; P8 completa en verde; capturas de `/privacy` a 390, 768 y 1440 px sin sesión (acento rojo). Falta la captura del aviso previo con sesión, junto con las de T8–T11.
 
 - [ ] T13 Vigilar secretos, revisar el alcance y preparar producción
   Pasos:
