@@ -6,6 +6,12 @@ interface Timed {
   ends_at: string;
 }
 
+/** The two numbers shown before uploading, as of now (RF-43). */
+export function uploadCounts(events: Timed[]) {
+  const { toGoogle, onlyCafam } = planUpload(events, new Date());
+  return { toGoogle: toGoogle.length, onlyCafam };
+}
+
 /**
  * Which events of an uploaded calendar go to Google: those of the sync window,
  * up to 2,000; the rest stay only in CaFam (RF-35, RF-42, RF-43).

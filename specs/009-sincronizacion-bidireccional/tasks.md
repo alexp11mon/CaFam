@@ -133,7 +133,7 @@
 
 ### Iteración 3 — Subir calendarios, privacidad y cierre
 
-- [ ] T11 Subir un calendario de CaFam a Google
+- [x] T11 Subir un calendario de CaFam a Google
   Pasos: test primero en `tests/unit/upload-calendar.test.ts` (motor con dependencias inyectadas) y `tests/unit/upload-page.test.tsx`. Comprueba:
   - El motor crea el calendario y copia solo los eventos del plan de subida, de cuatro en cuatro y con reintento ante el límite de uso. Si cualquier fallo ocurre, borra el calendario de Google y no llama a `sync_attach_uploaded`.
   - La página muestra los dos números de RF-43 y solo deja elegir cuentas propias con escritura.

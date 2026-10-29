@@ -18,6 +18,8 @@ export interface CalendarListItem {
   /** Without owner, shown inside one of the user's groups (spec 007 RF-46). */
   orphan?: boolean;
   groupId?: string | null;
+  /** Own, normal and with an account that writes (spec 009 RF-34, RF-38). */
+  canUpload?: boolean;
 }
 
 const ROLE_LABELS: Record<CalendarRole, string> = {
@@ -115,6 +117,15 @@ export function CalendarList({
                 className={ACTION_LINK}
               >
                 Editar
+              </Link>
+            ) : null}
+            {calendar.canUpload ? (
+              <Link
+                href={`/dashboard/calendars/${calendar.id}/upload`}
+                aria-label={`Subir ${calendar.name} a Google`}
+                className={ACTION_LINK}
+              >
+                Subir a Google
               </Link>
             ) : null}
             {calendar.role !== "viewer" ? (

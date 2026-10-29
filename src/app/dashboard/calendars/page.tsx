@@ -53,6 +53,9 @@ async function Calendars() {
   const readOnlyAccounts = connections.filter(
     (c) => c.status === "active" && !c.canWrite,
   );
+  const canUploadSome = connections.some(
+    (c) => c.status === "active" && c.canWrite,
+  );
   // The user's groups first, then the rest in the filter panel's order:
   // people, then calendars within each (RF-45, spec 007 RF-36, RF-37).
   const organized = organizeGroups({
@@ -69,6 +72,7 @@ async function Calendars() {
     ...calendar,
     orphan: calendar.ownerId === null,
     groupId: groupOf.get(calendar.id) ?? null,
+    canUpload: canUploadSome && calendar.ownerId === userId && !calendar.synced,
   });
   const sections = organized.groups.map((section) => ({
     group: { id: section.group.id, name: section.group.name },
