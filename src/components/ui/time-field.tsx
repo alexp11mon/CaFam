@@ -127,7 +127,7 @@ export function TimeField({
           if (tidy && tidy !== value) onValueChange(tidy);
         }}
         onKeyDown={onKeyDown}
-        className="w-full rounded-xl border border-control bg-paper px-3 py-2 text-base text-ink tabular-nums outline-none focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20 aria-invalid:border-danger"
+        className="w-full rounded-xl border border-control bg-paper px-3 py-2 text-base text-ink tabular-nums outline-none transition-[border-color,box-shadow] focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20 aria-invalid:border-danger"
       />
       <ul
         ref={list}

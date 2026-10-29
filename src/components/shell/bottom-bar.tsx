@@ -45,7 +45,7 @@ export function BottomBar({
         <li>
           <Link
             href="/dashboard/events/new"
-            className="flex min-h-12 items-center gap-1.5 rounded-full bg-ink px-5 text-base font-semibold text-on-ink transition-colors hover:bg-ink/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="flex min-h-12 items-center gap-1.5 rounded-full bg-ink px-5 text-base font-semibold text-on-ink press hover:bg-ink/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             <span className="sr-only">+ Evento</span>
             <span aria-hidden="true" className="flex items-center gap-1.5">

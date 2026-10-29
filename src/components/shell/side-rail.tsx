@@ -8,7 +8,7 @@ import { SECTION_ICONS, SignOutIcon } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
 
 const ITEM =
-  "group relative flex size-12 items-center justify-center rounded-full text-muted transition-colors hover:bg-paper hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:bg-paper aria-[current=page]:text-ink";
+  "group relative flex size-12 items-center justify-center rounded-full text-muted press hover:bg-paper hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:bg-paper aria-[current=page]:text-ink";
 
 // The label is the accessible name; it shows as a tooltip on hover and focus (plan D8).
 const TOOLTIP =

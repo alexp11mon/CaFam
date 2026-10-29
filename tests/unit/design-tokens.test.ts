@@ -56,8 +56,9 @@ const RULES: { name: string; pattern: RegExp; allow?: Set<string> }[] = [
   // Glass is the glass and glass-float utilities of globals.css (plan D6).
   { name: "a loose blur", pattern: /\bbackdrop-blur/ },
   {
+    // box-shadow inside a transition-[…] list is a CSS property, not a class.
     name: "a shadow other than shadow-soft and shadow-float",
-    pattern: /\bshadow(?!-(?:soft|float)\b)(?:-[a-z0-9]+)?\b/,
+    pattern: /(?<![\w-])(?:drop-)?shadow(?!-(?:soft|float)\b)(?:-[a-z0-9]+)?\b/,
   },
   {
     name: "a floating shadow or glass at rest",

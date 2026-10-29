@@ -48,7 +48,7 @@ const VIEWS: {
 ];
 
 const BUTTON =
-  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-control bg-paper px-4 text-base font-semibold text-ink transition-colors hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
+  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-control bg-paper px-4 text-base font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 /** View switcher, previous / next / today and the period heading (RF-29, RF-37). */
 export function ViewToolbar({
@@ -105,7 +105,7 @@ export function ViewToolbar({
             // Fire and forget: failing to remember the view must not block it.
             onClick={() => void saveLastView?.(item.view)}
             // The chosen view is a selection, so it takes the accent (constitution, RF-3).
-            className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:flex-none ${item.view === view ? "border border-accent-edge bg-accent text-on-accent" : "text-muted hover:text-ink"}`}
+            className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-base font-semibold press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:flex-none ${item.view === view ? "border border-accent-edge bg-accent text-on-accent" : "text-muted hover:text-ink"}`}
           >
             {item.label}
             {/* The key, as Google shows it in its view menu; only with a keyboard-sized screen. */}

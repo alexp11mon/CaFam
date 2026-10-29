@@ -28,7 +28,7 @@ export function Select({
         name={name}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
-        className="min-h-11 w-full rounded-xl border border-control bg-paper px-3 py-2 text-base text-ink outline-none focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20 aria-invalid:border-danger"
+        className="min-h-11 w-full rounded-xl border border-control bg-paper px-3 py-2 text-base text-ink outline-none transition-[border-color,box-shadow] focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20 aria-invalid:border-danger"
         {...props}
       >
         {children}

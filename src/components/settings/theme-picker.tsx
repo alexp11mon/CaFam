@@ -55,7 +55,7 @@ export function ThemePicker({
         {THEME_OPTIONS.map((option) => (
           <label
             key={option.id}
-            className="flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3 text-base font-medium text-ink has-checked:border-ink has-checked:ring-1 has-checked:ring-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink"
+            className="press flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3 text-base font-medium text-ink has-checked:border-ink has-checked:ring-1 has-checked:ring-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink"
           >
             <input
               type="radio"

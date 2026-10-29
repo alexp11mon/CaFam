@@ -127,12 +127,13 @@
   Hecho cuando: `npm test -- glass-surfaces design-tokens` en verde, más capturas a 390, 768 y 1440 px en los dos temas de calendario, Ajustes, hoja "Más", ventana de evento y diálogo. Cubre: RF-12, RF-13, RF-14, RF-15 | Módulo: glass-surfaces
   Evidencia (2026-10-29): rojo (12 fallos). `glass` en la barra lateral, la barra inferior, los paneles del calendario (próximo evento, mini mes, filtros) y las secciones de Ajustes; `glass-float` en la hoja "Más", la ventana de evento, la ventana rápida, los diálogos y el aviso (que pasa de tinta a cristal con texto `ink`). `page-shell` no tiene panel propio: no cambia. El build deja `@supports not (backdrop-filter…) { .glass { background-color: var(--paper) } }`; forzando la superficie opaca en Chrome, el color medio cambia menos de 2/255 (RF-14). Capturas a 390, 768 y 1440 px en claro y oscuro de calendario, ventana de evento, diálogo de borrar, hoja "Más" (390 y 768) y Ajustes. `npm test` 155 archivos y 1398 tests, build correcto.
 
-- [ ] T10 Añadir las microinteracciones a botones y controles
+- [x] T10 Añadir las microinteracciones a botones y controles
   Pasos:
   - Primero, en rojo, ampliar los tests de `Button`, `LinkButton` y los estilos de barra: llevan `press`, y los campos llevan la transición del foco.
   - Después, `micro`.
 
   Hecho cuando: `npm test -- button link-button bar-styles text-field select` en verde, más una comprobación en el navegador de que al pulsar se ve la escala y con movimiento reducido no. Cubre: RF-16 | Módulo: micro
+  Evidencia (2026-10-29): rojo (9 fallos; no había tests de `Button` ni de los campos: se crean `button`, `bar-styles` y `text-field`). `press` en `Button`, `LinkButton`, los elementos de la barra inferior y lateral, la barra de vistas y los selectores de acento y tema; `transition-[border-color,box-shadow]` en los cuatro campos. La guardia ya no confunde `box-shadow` dentro de una transición con una sombra (y sigue prohibiendo `drop-shadow-*`). En `next start`, el botón "Entrar": al pasar el puntero `translate 0 -1px` y al pulsar `scale 0.97`; con `reducedMotion: reduce`, `translate 0` y `scale 1`. `npm test` 158 archivos y 1407 tests, build correcto.
 
 - [ ] T11 Animar el cambio de vista y de periodo
   Pasos:
