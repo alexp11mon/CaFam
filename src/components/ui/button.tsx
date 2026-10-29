@@ -6,7 +6,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 // Actions are black pills; the accent never colors a button (spec 005, P9).
 const VARIANTS = {
-  primary: "bg-ink text-white hover:bg-ink/85",
+  primary: "bg-ink text-on-ink hover:bg-ink/85",
   secondary: "border border-control bg-paper text-ink hover:bg-stone",
   danger: "border border-danger bg-paper text-danger hover:bg-danger/10",
 };

@@ -38,11 +38,11 @@ describe("EventChip variants of the month", () => {
     });
   });
 
-  it("draws an all-day event as a bar filled with its color, text in ink", () => {
+  it("draws an all-day event as a bar filled with its color, text in pastel ink", () => {
     render(<EventChip event={ALL_DAY} timeZone={TZ} variant="bar" />);
 
     const link = screen.getByRole("link", { name: "Excursión" });
     expect(link).toHaveStyle({ backgroundColor: "#FFADAD" });
-    expect(link.className).toMatch(/\btext-ink\b/);
+    expect(link.className).toMatch(/\btext-pastel-ink\b/);
   });
 });

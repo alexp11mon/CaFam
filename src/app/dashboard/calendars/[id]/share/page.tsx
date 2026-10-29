@@ -34,7 +34,7 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
       <p className="flex items-center gap-2 text-ink">
         <span
           aria-hidden="true"
-          className="size-4 shrink-0 rounded-full ring-1 ring-ink/20"
+          className="size-4 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
           style={{ backgroundColor: calendar.color }}
         />
         <span className="min-w-0 break-words font-semibold">

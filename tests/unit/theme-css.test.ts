@@ -103,6 +103,10 @@ describe("accents in globals.css (RF-9)", () => {
 });
 
 describe("theme mechanics (RF-5)", () => {
+  it("keeps the dialog scrim dark in both themes", () => {
+    expect(value(block("@theme inline"), "color-scrim")).toBe(NEUTRALS.ink);
+  });
+
   it("follows the system inside prefers-color-scheme: dark", () => {
     const media = css.indexOf("@media (prefers-color-scheme: dark)");
     expect(media).toBeGreaterThanOrEqual(0);

@@ -135,7 +135,7 @@ export function TimeField({
         role="listbox"
         aria-label={`${label}: opciones`}
         hidden={!open}
-        className="absolute top-full z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-line bg-paper py-1 shadow-lg"
+        className="absolute top-full z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-line bg-paper py-1 shadow-float"
       >
         {options.map((option, index) => (
           <li

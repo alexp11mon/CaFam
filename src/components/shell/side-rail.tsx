@@ -11,7 +11,7 @@ const ITEM =
 
 // The label is the accessible name; it shows as a tooltip on hover and focus (plan D8).
 const TOOLTIP =
-  "pointer-events-none absolute top-1/2 left-full z-40 ml-3 -translate-y-1/2 rounded-lg bg-ink px-2.5 py-1 text-sm font-medium whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
+  "pointer-events-none absolute top-1/2 left-full z-40 ml-3 -translate-y-1/2 rounded-lg bg-ink px-2.5 py-1 text-sm font-medium whitespace-nowrap text-on-ink opacity-0 shadow-float transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
 
 /** Desktop navigation: the brand, the destinations and signing out (spec 005 RF-16, RF-20). */
 export function SideRail({

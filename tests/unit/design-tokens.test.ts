@@ -3,9 +3,9 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Spec 005, T11: the design guard. Every screen uses only the tokens of
-// globals.css and none of the devices the constitution bans (P9; RF-1;
-// plan design-guard, D16).
+// Spec 005, T11 and spec 011, T5: the design guard. Every screen uses only the
+// tokens of globals.css and none of the devices the constitution bans (P9 and
+// amendment 3; spec 005 plan D16, spec 011 RF-12, RF-22, RF-26 and plan D11).
 const ROOT = join(process.cwd(), "src");
 
 function files(dir: string): string[] {
@@ -21,7 +21,8 @@ const SOURCES = files(ROOT).map((path) => ({
   code: readFileSync(path, "utf8"),
 }));
 
-// Shadows only on what floats: dialogs, the "Más" sheet and the rail tooltips.
+// The floating shadow and glass only on what floats: dialogs, the "Más" sheet,
+// the rail tooltips, the time list and the toast.
 const FLOATING = new Set([
   "src/components/calendar/confirm-dialog.tsx",
   "src/components/calendar/event-modal.tsx",
@@ -52,11 +53,31 @@ const RULES: { name: string; pattern: RegExp; allow?: Set<string> }[] = [
   { name: "bg-white (paper is the light surface)", pattern: /\bbg-white\b/ },
   { name: "monospace", pattern: /\bfont-mono\b/ },
   { name: "a gradient", pattern: /\bbg-(?:linear|radial|conic|gradient)-/ },
-  { name: "glass", pattern: /\bbackdrop-blur/ },
+  // Glass is the glass and glass-float utilities of globals.css (plan D6).
+  { name: "a loose blur", pattern: /\bbackdrop-blur/ },
   {
-    name: "a shadow at rest",
-    pattern: /\bshadow(?:-[a-z0-9]+)?\b/,
+    name: "a shadow other than shadow-soft and shadow-float",
+    pattern: /\bshadow(?!-(?:soft|float)\b)(?:-[a-z0-9]+)?\b/,
+  },
+  {
+    name: "a floating shadow or glass at rest",
+    pattern: /\b(?:shadow|glass)-float\b/,
     allow: FLOATING,
+  },
+  // Fixed white or black breaks one of the themes: on-ink, pastel-ink, mark.
+  { name: "text-white", pattern: /\btext-white\b/ },
+  { name: "text-black", pattern: /\btext-black\b/ },
+  // Themes come from the tokens, never from a variant (plan D2).
+  { name: "the dark: variant", pattern: /(?<![\w-])dark:[a-z[!]/ },
+  // Tailwind's default ring offset is white, a white gap in the dark theme.
+  {
+    name: "a ring offset without its color",
+    pattern: /\bring-offset-\d\b(?![^"]*\bring-offset-(?:paper|stone)\b)/,
+  },
+  {
+    name: "a duration longer than 400 ms",
+    pattern:
+      /\bduration-(?:[5-9]\d\d|\d{4,})\b|\bduration-\[(?:(?:4\d[1-9]|4[1-9]\d|[5-9]\d\d|\d{4,})ms|\d+(?:\.\d+)?s)\]/,
   },
   {
     name: "tracked uppercase labels",

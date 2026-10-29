@@ -83,7 +83,7 @@ export function CalendarPicker({
               />
               <span
                 aria-hidden="true"
-                className="size-3 shrink-0 rounded-full ring-1 ring-ink/15"
+                className="size-3 shrink-0 rounded-full ring-1 ring-pastel-ink/15"
                 style={{ backgroundColor: calendar.color ?? undefined }}
               />
               <span className="min-w-0 truncate">{calendar.name}</span>

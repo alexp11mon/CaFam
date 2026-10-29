@@ -174,7 +174,7 @@ export function MiniMonth({
                           <span
                             key={calendarId}
                             data-dot=""
-                            className="size-1.5 rounded-full ring-1 ring-ink/20"
+                            className="size-1.5 rounded-full ring-1 ring-pastel-ink/20"
                             style={{ backgroundColor: colors[calendarId] }}
                           />
                         ))}

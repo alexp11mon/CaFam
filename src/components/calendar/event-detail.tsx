@@ -68,7 +68,7 @@ export function EventDetail({
         <span
           data-testid="event-color"
           aria-hidden="true"
-          className="mt-2 size-4 shrink-0 rounded-full ring-1 ring-ink/20"
+          className="mt-2 size-4 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
           style={{ backgroundColor: event.color ?? event.calendarColor }}
         />
         <h2 className="min-w-0 break-words text-xl font-bold text-ink">

@@ -32,7 +32,7 @@ export function OrphanCalendarItem({
       <p className="flex min-w-0 items-center gap-2 font-semibold text-ink">
         <span
           aria-hidden="true"
-          className="size-4 shrink-0 rounded-full ring-1 ring-ink/15"
+          className="size-4 shrink-0 rounded-full ring-1 ring-pastel-ink/15"
           style={{ backgroundColor: calendar.color }}
         />
         <span className="min-w-0 break-words">{calendar.name}</span>

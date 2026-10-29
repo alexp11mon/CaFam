@@ -22,7 +22,7 @@ export function EventRow({ entry }: { entry: AgendaEntry<AgendaEvent> }) {
         data-color-bar=""
         aria-hidden="true"
         style={{ backgroundColor: event.color }}
-        className="w-1 self-stretch rounded-full ring-1 ring-ink/15 ring-inset"
+        className="w-1 self-stretch rounded-full ring-1 ring-pastel-ink/15 ring-inset"
       />
       <span className="flex min-w-0 flex-col gap-0.5">
         <span className="line-clamp-2 font-bold break-words">

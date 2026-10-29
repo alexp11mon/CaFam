@@ -8,7 +8,7 @@ interface LinkButtonProps extends LinkProps {
 }
 
 const VARIANTS = {
-  primary: "bg-ink text-white hover:bg-ink/85",
+  primary: "bg-ink text-on-ink hover:bg-ink/85",
   secondary: "border border-control bg-paper text-ink hover:bg-stone",
 };
 

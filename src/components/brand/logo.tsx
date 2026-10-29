@@ -1,4 +1,4 @@
-// The CaFam mark: "CF" in stone on ink, the same drawing as
+// The CaFam mark: "CF" in stone on ink in both themes, the same drawing as
 // public/icons/icon.svg (spec 005 RF-51, plan D14). It never takes the accent.
 
 export function LogoMark({ className = "size-12" }: { className?: string }) {
@@ -9,16 +9,16 @@ export function LogoMark({ className = "size-12" }: { className?: string }) {
       focusable="false"
       className={`shrink-0 rounded-2xl ${className}`}
     >
-      <rect width="512" height="512" className="fill-ink" />
+      <rect width="512" height="512" className="fill-mark" />
       <path
         d="M274.9 198.1A90 90 0 1 0 274.9 313.9"
         fill="none"
         strokeWidth="60"
-        className="stroke-stone"
+        className="stroke-on-mark"
       />
       <path
         d="M316 136h110v58h-52v36h34v54h-34v92h-58z"
-        className="fill-stone"
+        className="fill-on-mark"
       />
     </svg>
   );

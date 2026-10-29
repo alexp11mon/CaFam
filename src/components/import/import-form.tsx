@@ -55,7 +55,7 @@ export function ImportForm({ action }: { action: FormAction<ImportState> }) {
             const file = event.target.files?.[0];
             setFileError(file && file.size > MAX_BYTES ? TOO_LARGE : undefined);
           }}
-          className="w-full rounded-xl border border-control bg-paper px-3 py-2 text-base text-ink file:mr-3 file:min-h-11 file:rounded-full file:border-0 file:bg-ink file:px-5 file:font-semibold file:text-white aria-invalid:border-danger"
+          className="w-full rounded-xl border border-control bg-paper px-3 py-2 text-base text-ink file:mr-3 file:min-h-11 file:rounded-full file:border-0 file:bg-ink file:px-5 file:font-semibold file:text-on-ink aria-invalid:border-danger"
         />
         {fileError ? (
           <p

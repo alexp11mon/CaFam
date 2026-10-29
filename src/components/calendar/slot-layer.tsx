@@ -133,7 +133,7 @@ export function SlotLayer({
           onCreate(day, KEYBOARD_RANGE, anchorOf(KEYBOARD_RANGE));
         }}
         onPointerDown={(event) => event.stopPropagation()}
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-1 focus:z-20 focus:rounded-full focus:bg-ink focus:px-3 focus:py-1 focus:text-xs focus:font-semibold focus:text-paper"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-1 focus:z-20 focus:rounded-full focus:bg-ink focus:px-3 focus:py-1 focus:text-xs focus:font-semibold focus:text-on-ink"
       >
         Crear evento el {dayLabel}
       </button>

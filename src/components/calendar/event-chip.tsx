@@ -30,7 +30,7 @@ export function EventChip({
         <span
           data-testid="event-dot"
           aria-hidden="true"
-          className="size-2 shrink-0 rounded-full ring-1 ring-ink/15"
+          className="size-2 shrink-0 rounded-full ring-1 ring-pastel-ink/15"
           style={{ backgroundColor: event.color }}
         />
         {/* not-sr-only allows wrapping again: one line with an ellipsis, as Google. */}
@@ -47,7 +47,7 @@ export function EventChip({
       <Link
         href={`/dashboard/events/${event.id}`}
         style={{ backgroundColor: event.color }}
-        className="block h-1.5 truncate rounded-md text-xs font-semibold text-ink ring-1 ring-ink/15 sm:h-auto sm:px-1.5 sm:py-0.5"
+        className="block h-1.5 truncate rounded-md text-xs font-semibold text-pastel-ink ring-1 ring-pastel-ink/15 sm:h-auto sm:px-1.5 sm:py-0.5"
       >
         <span className="sr-only sm:not-sr-only sm:block sm:truncate">
           {event.title}

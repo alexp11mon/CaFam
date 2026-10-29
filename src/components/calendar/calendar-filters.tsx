@@ -186,7 +186,7 @@ export function CalendarFilters({
                         />
                         <span
                           aria-hidden="true"
-                          className="size-3 shrink-0 rounded-full ring-1 ring-ink/20"
+                          className="size-3 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
                           style={{ backgroundColor: calendar.color }}
                         />
                         <span className="min-w-0 break-words">

@@ -38,7 +38,7 @@ export function ColorPicker({
             />
             <span
               aria-hidden="true"
-              className="grid size-11 place-items-center rounded-full border-2 border-dashed border-control bg-paper text-xs font-semibold text-ink peer-checked:border-solid peer-checked:border-ink peer-checked:ring-2 peer-checked:ring-ink peer-checked:ring-offset-2 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"
+              className="grid size-11 place-items-center rounded-full border-2 border-dashed border-control bg-paper text-xs font-semibold text-ink peer-checked:border-solid peer-checked:border-ink peer-checked:ring-2 peer-checked:ring-ink peer-checked:ring-offset-2 peer-checked:ring-offset-paper peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"
             >
               Auto
             </span>
@@ -57,7 +57,7 @@ export function ColorPicker({
             <span
               aria-hidden="true"
               style={{ backgroundColor: color.value }}
-              className="block size-11 rounded-full border-2 border-control peer-checked:border-ink peer-checked:ring-2 peer-checked:ring-ink peer-checked:ring-offset-2 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"
+              className="block size-11 rounded-full border-2 border-control peer-checked:border-ink peer-checked:ring-2 peer-checked:ring-ink peer-checked:ring-offset-2 peer-checked:ring-offset-paper peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"
             />
             <span className="sr-only">{color.label}</span>
           </label>

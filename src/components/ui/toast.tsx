@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toast ? (
           <p
             key={toast.id}
-            className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-paper shadow-lg"
+            className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-on-ink shadow-float"
           >
             {toast.text}
           </p>

@@ -20,6 +20,8 @@
   --color-pastel-ink: var(--pastel-ink);
   --color-mark: var(--mark);
   --color-on-mark: var(--on-mark);
+  /* Behind dialogs: dark in both themes. */
+  --color-scrim: #141414;
   /* The user's accent switches with data-accent on the app frame (spec 005 D2). */
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);

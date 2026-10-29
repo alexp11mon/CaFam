@@ -7,7 +7,7 @@ export function Avatar({ name, tint }: { name: string; tint: string }) {
       data-avatar=""
       aria-hidden="true"
       style={{ backgroundColor: tint }}
-      className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-ink"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-pastel-ink"
     >
       {initials(name)}
     </span>

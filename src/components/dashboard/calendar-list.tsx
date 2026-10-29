@@ -72,7 +72,7 @@ export function CalendarList({
             <span
               data-testid="calendar-color"
               aria-hidden="true"
-              className="size-4 shrink-0 rounded-full ring-1 ring-ink/20"
+              className="size-4 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
               style={{ backgroundColor: calendar.color }}
             />
             <span

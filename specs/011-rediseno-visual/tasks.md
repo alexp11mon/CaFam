@@ -73,7 +73,7 @@
 
   Hecho cuando: `npm test -- theme-css accents` en verde y `npm run build` correcto. Cubre: RF-5, RF-9, RF-13, RF-14, RF-20, RF-22, RF-23, RF-24, RF-25 | Módulo: tokens-css
 
-- [ ] T5 Migrar los componentes a tokens válidos en los dos temas y poner al día la guardia de diseño
+- [x] T5 Migrar los componentes a tokens válidos en los dos temas y poner al día la guardia de diseño
   Pasos:
   - Primero, `design-tokens.test.ts` con las reglas de D11, en rojo por los `text-white` y los demás usos que hay hoy.
   - Después, los cambios de `token-migration`:
