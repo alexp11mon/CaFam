@@ -1,6 +1,6 @@
 # Tasks 009 - Sincronización bidireccional con Google
 
-> Estado: **Aprobadas** por el usuario (2026-10-29). Plan aprobado el 2026-10-29.
+> Estado: **Aprobadas** por el usuario (2026-10-29). Plan aprobado el 2026-10-29. Spec **cerrada** el 2026-10-29: T1–T14 hechas.
 > Spec: `specs/009-sincronizacion-bidireccional/spec.md` (aprobada, 2026-10-28). Plan: `specs/009-sincronizacion-bidireccional/plan.md` (aprobado, 2026-10-29).
 > 14 tareas en tres iteraciones: T1–T5, T6–T10 y T11–T14. No se empieza una iteración sin cerrar la anterior.
 > Reglas:
@@ -175,7 +175,7 @@
   - [x] Elegir por cuenta si escribe: no hay opción; `can_write` sale de los permisos concedidos.
   - [x] Secretos: `no-secrets` en verde, con un test nuevo que impide importar el motor de escritura desde un componente de cliente. Ningún token sale de `providers/google.ts`, el callback y el motor.
 
-- [ ] T14 Validar en producción, publicar la aplicación de Google y cerrar
+- [x] T14 Validar en producción, publicar la aplicación de Google y cerrar
   Pasos (el usuario ejecuta los pasos de producción del plan; el agente le prepara los comandos exactos):
   - Migraciones, despliegue, publicar la aplicación y volver a conectar las cuentas.
   - Demo de los criterios de finalización de la spec con una cuenta real:

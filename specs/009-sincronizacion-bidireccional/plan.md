@@ -1,7 +1,7 @@
 # Plan 009 — Sincronización bidireccional con Google
 
 > Spec de origen: `specs/009-sincronizacion-bidireccional/spec.md` (aprobada, 2026-10-28). Constitución: `docs/constitution.md`. Parte del plan 007 (`specs/007-sincronizacion-oauth/plan.md`), cuyos módulos, decisiones D1–D19 y funciones siguen vigentes salvo lo que se cambia aquí.
-> Estado: **Aprobado** por el usuario (2026-10-29).
+> Estado: **Aprobado** por el usuario (2026-10-29). Spec cerrada el 2026-10-29.
 > Lo que este plan da por supuesto y hay que confirmar antes de programar está en "Comprobaciones de la T1".
 
 ## Resumen de arquitectura

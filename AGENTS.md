@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-29, al terminar la implementación de la spec 009 (T1–T13; falta validarla en producción, T14).
+> Última actualización: 2026-10-29, al cerrar la spec 009 (en producción, con la aplicación de Google publicada sin verificar).
 
 ## 1. Qué es
 
@@ -33,9 +33,9 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 004-importacion-ics | Importación única de un `.ics` (enlace o archivo) a un calendario propio editable y compartible | **Cerrada** (2026-10-22), T1–T11 hechas |
 | 005-identidad-visual | Identidad visual propia en todas las pantallas, acento elegido por el usuario (6 colores), marco con barra lateral e inferior, vista agenda, mini calendario y próximo evento | **Cerrada** (2026-10-22), T1–T13 hechas |
 | 006-gestion-de-cuenta | Recuperar y cambiar contraseña, cambiar email, editar perfil, borrar cuenta con calendarios sin propietario, autor del evento | **Cerrada** (2026-10-23), T1–T26 hechas; aplicada y validada en producción |
-| 007-sincronizacion-oauth | Sincronización de solo lectura (proveedor → CaFam) con **Google** por OAuth 2.0, actualización automática y manual, y grupos de calendarios. Microsoft se quitó el 2026-10-27 (Enmienda 1: exige tarjeta); la bidireccional y Microsoft quedan para una versión futura | **Cerrada** (2026-10-28), T1–T15 hechas; aplicada y validada en producción con la aplicación de Google en "Prueba" (Enmienda 2) |
+| 007-sincronizacion-oauth | Sincronización de solo lectura (proveedor → CaFam) con **Google** por OAuth 2.0, actualización automática y manual, y grupos de calendarios. Microsoft se quitó el 2026-10-27 (Enmienda 1: exige tarjeta); la bidireccional y Microsoft quedan para una versión futura | **Cerrada** (2026-10-28), T1–T15 hechas; aplicada y validada en producción con la aplicación de Google en "Prueba" (Enmienda 2; publicada desde la 009) |
 | 008-mejoras-de-experiencia | Calendario al estilo Google Calendar (analizado con REA): ventana de evento sobre el calendario, ventana rápida, arrastrar para crear, selector de hora, atajos, vista recordada, avisos y esqueletos | **Cerrada** (2026-10-24), T1–T23 hechas; aplicada y validada en producción |
-| 009-sincronizacion-bidireccional | Escribir en Google lo que se crea, cambia, mueve o borra en los calendarios traídos (propietario y Editores), renombrar, crear y subir calendarios, política de privacidad y publicar la aplicación de Google | Spec, plan y tareas aprobados (2026-10-29). T2–T13 hechas en la rama `009-sincronizacion-bidireccional`; **sin aplicar en producción**. T1 hecha (prueba en vivo en dev correcta). Falta la T14 (producción, publicar la aplicación y cierre) |
+| 009-sincronizacion-bidireccional | Escribir en Google lo que se crea, cambia, mueve o borra en los calendarios traídos (propietario y Editores), renombrar, crear y subir calendarios, política de privacidad y publicar la aplicación de Google | **Cerrada** (2026-10-29), T1–T14 hechas; aplicada y validada en producción, con la aplicación de Google publicada sin verificar |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -90,16 +90,16 @@ Añadido por la spec 008 (comportamiento estudiado en Google Calendar con REA; a
 
 **No hay** eventos recurrentes propios (spec futura sin número), mover o redimensionar eventos arrastrando ni actualización de lo importado.
 
-Añadido por la spec 007 (en producción desde el 2026-10-28). La aplicación de Google sigue en **"Prueba"**: solo conectan los usuarios de prueba que se añaden en Google Cloud y la autorización caduca a los 7 días (Enmienda 2):
+Añadido por la spec 007 (en producción desde el 2026-10-28). Hasta la 009 la aplicación de Google estuvo en "Prueba" (Enmienda 2); desde el 2026-10-29 está **publicada sin verificar**: conecta cualquier cuenta pasando por el aviso de "aplicación no verificada", con un tope de 100 usuarios, y la autorización ya no caduca a los 7 días:
 
 - **Cuentas conectadas** (`/dashboard/connections`, en "Más" y en "Mis calendarios"): lista de cuentas con su estado; "Conectar Google" pasa por un aviso previo (`/new`, explica la pantalla de "app no verificada") y luego por el OAuth. Hasta 5 cuentas.
 - **Ficha de la cuenta** (`/dashboard/connections/[id]`): elegir hasta 20 calendarios con casillas (al desmarcar uno se pide conservarlo o borrarlo), estado de cada calendario traído (última actualización correcta, último resumen, fallo o "ya no existe en la cuenta"), **Actualizar ahora** (como mucho cada 5 minutos) y **Desconectar** (revoca el permiso en Google y pide conservar o borrar sus calendarios, nombrando los compartidos).
 - **Actualización automática** cada hora: `pg_cron` llama a `/api/sync/run`, que reconcilia los eventos desde 6 meses atrás hasta 12 meses adelante.
-- **Solo lectura en la interfaz** (hasta la 009, ver abajo): los calendarios traídos no se ofrecen como destino al crear, editar o duplicar; el detalle de sus eventos no tiene botones y explica que vienen de Google; no se pueden juntar. En "Mis calendarios" todos los miembros ven la última actualización y solo el propietario la cuenta de origen.
+- **Solo lectura en la interfaz** (hasta la 009; hoy solo para las cuentas sin permiso de escritura y los calendarios que Google solo deja leer): los calendarios traídos no se ofrecen como destino al crear, editar o duplicar; el detalle de sus eventos no tiene botones y explica que vienen de Google; no se pueden juntar. En "Mis calendarios" todos los miembros ven la última actualización y solo el propietario la cuenta de origen.
 - **Avisos** en "Mis calendarios": Google retiró el permiso (`sync_revoked`, con "Volver a conectar") y 3 fallos seguidos (`sync_failing`).
 - **Grupos de calendarios** en "Mis calendarios" y en los filtros: crear, renombrar, borrar (los calendarios se quedan), meter cada calendario en un grupo con su selector, subir y bajar, y ocultar o mostrar todos sus calendarios a la vez ("parcialmente visible" si hay de los dos). Son privados de cada usuario y valen para cualquier calendario, también los sin propietario. El orden de los calendarios dentro de un grupo solo se cambia desde los filtros.
 
-Añadido por la spec 009 (en la rama, aún no en producción):
+Añadido por la spec 009 (en producción desde el 2026-10-29):
 
 - **Escritura en Google**: crear, cambiar, mover (solo entre calendarios de la misma cuenta) y borrar eventos de los calendarios traídos, por el propietario y los Editores, con la cuenta de Google del propietario. Primero se escribe en Google y, si lo acepta, en CaFam; si Google lo rechaza no se guarda nada (sin cola de cambios). Un `PATCH` solo envía lo que cambió. Las repeticiones se tocan una a una; nunca se envían series, invitados, color ni categoría.
 - **Permisos**: conectar pide además `calendar.events` y `calendar.calendars`. `calendar_connections.can_write` dice si se concedieron; si no, la cuenta es de solo lectura y hay un aviso con "Volver a conectar" (`reconnect-notice`) en la ficha y en "Mis calendarios". Los calendarios que Google solo deja leer (`google_access = reader`) salen como "Solo lectura en Google".
@@ -333,7 +333,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `pg_cron` `sync-run-due` (cada hora) llama a `sync_trigger()`, que solo si hay algo pendiente hace `net.http_post` a `sync_app_url || '/api/sync/run'` con `Authorization: Bearer <cron_secret>`. Vault: `cron_secret` (igual que `CRON_SECRET`) y `sync_app_url`, que crea el usuario en cada proyecto (dev: `http://localhost:3000`).
   - Ayudas de test solo para `service_role`: `vault_secret_matches` y `sync_scheduled_jobs`. `provider` admite `'microsoft'` en los `check`, pero desde la Enmienda 1 no se usa.
   - **Grupos** (migración `calendar_groups`): tabla `calendar_groups (user_id, name, position)` con RLS propia (solo su dueño la lee y escribe), nombre de 1 a 40 único por usuario ignorando mayúsculas y espacios exteriores, y `calendar_preferences.group_id` con FK compuesta `(group_id, user_id)`: no se puede asignar un grupo ajeno y borrar el grupo solo pone `group_id` a nulo. Un calendario, un grupo (clave primaria). La visibilidad del grupo no se guarda: se calcula de la de sus calendarios (`organizeGroups`, plan D14).
-- Añadido por la spec 009 (migraciones `sync_write_schema`, `sync_write_functions` y `sync_apply_events_v2`; solo en dev):
+- Añadido por la spec 009 (migraciones `sync_write_schema`, `sync_write_functions` y `sync_apply_events_v2`; en dev y en prod):
   - `calendar_connections.can_write` (por defecto `false`) y `synced_calendars.google_access` (`owner | writer | reader`). `can_write_synced(uuid)` y el campo calculado `can_write(synced_calendars)`.
   - Las políticas de `events` siguen prohibiendo escribir en traídos: las escrituras pasan por funciones `SECURITY DEFINER` que exigen **sesión con rol owner/editor y además `p_secret`**: `sync_write_context` (comprueba rol, cuenta que escribe y acceso; `42501`, `22023` si se mezclan normal y traído o dos cuentas, `CF404`), `sync_commit_event` (insert/update/delete/gone tras el éxito en Google), `sync_update_calendar`, `sync_attach_created` y `sync_attach_uploaded` (`CF429` a los 20). El trigger `prevent_synced_rename` solo deja renombrar un traído con la marca `app.sync_write`.
   - `connect_account` recibe `p_can_write`; `select_synced_calendars` acepta `access`; `sync_set_access` guarda el acceso al listar.
@@ -404,8 +404,8 @@ Variables (documentadas en `.env.example`):
 
 - Para usos futuros: `calendar.calendarlist`, `calendar.calendars`, `calendar.calendars.readonly`, `calendar.events` y `calendar.events.readonly`.
 - Registrar un permiso no lo concede: el usuario solo autoriza los que la app pide en la URL de autorización.
-- La 007 pide únicamente los de solo lectura (`openid email calendar.calendarlist.readonly calendar.events.readonly`, RF-2).
-- Los de escritura (`calendar.events`, `calendar.calendars`, `calendar.calendarlist`) quedan para una futura sincronización bidireccional, con su propia spec.
+- Desde la 009 la app pide `openid email calendar.calendarlist.readonly calendar.events calendar.calendars` (`GOOGLE_SCOPES` en `lib/sync/scopes.ts`). Sin todos ellos la cuenta queda de solo lectura (`can_write = false`).
+- La 007 pedía `calendar.events.readonly` en lugar de los de escritura; las cuentas conectadas entonces hay que volver a conectarlas.
 
 `.env.local` y `.env.test.local` apuntan a **dev** y están ignorados por git. No los leas ni los muestres en la salida.
 
@@ -516,7 +516,7 @@ Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o d
 
 La 006 y la 008 están cerradas y en producción (2026-10-23 y 2026-10-24). La 008 añadió la migración `profile_last_view`, ya aplicada en prod.
 
-La **007 (sincronización de Google, solo lectura, y grupos)** está cerrada y en producción (2026-10-28), con la aplicación de Google en **"Prueba"** (Enmienda 2): para que alguien conecte su cuenta hay que añadirlo como usuario de prueba en Google Cloud (proyecto `CaFam` → Público). En producción usa el cliente web `CaFamWeb`; en dev, `CaFam Local`.
+La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincronización bidireccional)** están cerradas y en producción (2026-10-28 y 2026-10-29). La aplicación de Google está **publicada sin verificar** (proyecto `CaFam`, con marca, página principal y `/privacy`; sin logotipo para no tener que verificarla). En producción usa el cliente web `CaFamWeb`; en dev, `CaFam Local`.
 
-- **Siguiente:** la 009 (sincronización bidireccional) tiene hechas T2–T13 en su rama. La T1 está hecha (prueba en vivo en dev correcta el 2026-10-29). Falta la T14 (migraciones a prod, despliegue, publicar la aplicación de Google, volver a conectar las cuentas y la demo). Pasos exactos en `specs/009-sincronizacion-bidireccional/plan.md`, "Pasos de producción". Faltan también las capturas de P9 de las pantallas con sesión de T8–T12 (necesitan una conexión sembrada).
+- **Siguiente:** no hay ninguna spec abierta. Las mejoras previstas (plan de 4 fases: renombrar a CaFam, rediseño, imágenes, recurrentes y comentarios, y chatbot sin coste) esperan a que el usuario avise; cualquier trabajo nuevo empieza por su spec con `spec-generator`.
 - En dev quedan unos 196 usuarios `@calenderfam.test` antiguos de pruebas; no se han borrado sin permiso del usuario.

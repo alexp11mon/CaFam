@@ -1,6 +1,6 @@
 # Spec 009 — Sincronización bidireccional con Google
 
-> Estado: **Aprobada** por el usuario (2026-10-28). Plan sin empezar.
+> Estado: **Cerrada** (2026-10-29) por decisión del usuario. Aprobada el 2026-10-28.
 > Parte de la spec 007 (sincronización de solo lectura con Google y grupos, cerrada el 2026-10-28 con la aplicación de Google en "Prueba", Enmienda 2). Constitución: `docs/constitution.md` (P9 para lo visual).
 > Esta spec **sustituye** en la 007 (cerrada, no se edita): RF-2 (solo permiso de lectura), RF-20 (eventos traídos de solo lectura), la parte de RF-21 sobre el nombre y el requisito no funcional "Solo lectura". El resto de la 007 sigue vigente.
 > Decisiones de la entrevista (2026-10-28):
