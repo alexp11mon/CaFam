@@ -32,7 +32,8 @@ export function summaryText(summary: UpdateSummary): string {
   return parts.join(" ");
 }
 
-export const SYNC_ERRORS: Record<FailureKind, string> = {
+// sync_fail stores only these: a refused read counts as transient (spec 009).
+export const SYNC_ERRORS: Record<Exclude<FailureKind, "rejected">, string> = {
   transient:
     "La última actualización falló. Se volverá a intentar en la siguiente.",
   revoked:

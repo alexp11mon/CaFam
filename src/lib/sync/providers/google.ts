@@ -19,7 +19,8 @@ const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const REVOKE_URL = "https://oauth2.googleapis.com/revoke";
 const API = "https://www.googleapis.com/calendar/v3";
 
-export type FailureKind = "revoked" | "missing" | "transient";
+/** `rejected`: Google refused a write (spec 009 RF-24). */
+export type FailureKind = "revoked" | "missing" | "transient" | "rejected";
 
 /** A provider failure, already classified for `sync_fail` (RF-13, RF-31, RF-33). */
 export class ProviderError extends Error {

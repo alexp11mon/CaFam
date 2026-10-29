@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_ACCENT, isAccent, type AccentId } from "@/lib/theme/accents";
 import type { CalendarPreference, Person, PersonPreference } from "./grouping";
 import type { CalendarGroup } from "./organize-groups";
+import { accessOf } from "@/lib/sync/providers/google";
 import type { SyncedInfo } from "@/lib/sync/read-only";
 import type { Database } from "@/types/database";
 
@@ -42,7 +43,7 @@ export async function requireUser() {
 }
 
 const CALENDAR_SELECT =
-  "role, calendars(id, name, description, color, owner_id, created_at, synced_calendars(last_synced_at, calendar_connections(account_email)))";
+  "role, calendars(id, name, description, color, owner_id, created_at, synced_calendars(last_synced_at, connection_id, google_access, can_write, calendar_connections(account_email)))";
 
 type CalendarRow = {
   role: CalendarRole;
@@ -55,6 +56,9 @@ type CalendarRow = {
     created_at: string;
     synced_calendars: {
       last_synced_at: string | null;
+      connection_id: string;
+      google_access: string | null;
+      can_write: boolean | null;
       calendar_connections: { account_email: string } | null;
     } | null;
   } | null;
@@ -77,6 +81,11 @@ function toRecord({ role, calendars }: CalendarRow): CalendarRecord[] {
                 accountEmail:
                   calendars.synced_calendars.calendar_connections
                     ?.account_email ?? null,
+                connectionId: calendars.synced_calendars.connection_id,
+                canWrite: calendars.synced_calendars.can_write === true,
+                googleAccess: accessOf(
+                  calendars.synced_calendars.google_access,
+                ),
               }
             : null,
         },

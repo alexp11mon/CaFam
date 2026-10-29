@@ -6,7 +6,13 @@ import { canMerge, canWriteEvents } from "@/lib/sync/read-only";
 
 // Spec 007, T11: synced calendars are read-only in the existing screens and
 // show where they come from (RF-20, RF-21, RF-26, RF-44, RF-45).
-const SYNCED = { lastSyncedAt: "2026-10-27T10:05:00Z", accountEmail: null };
+const SYNCED = {
+  lastSyncedAt: "2026-10-27T10:05:00Z",
+  accountEmail: null,
+  connectionId: "conn-1",
+  canWrite: false,
+  googleAccess: null,
+};
 
 describe("canWriteEvents (RF-20, RF-21)", () => {
   it("offers a calendar as a destination only to owners and editors when it is not synced", () => {
@@ -99,7 +105,7 @@ describe("CalendarList with synced calendars (RF-26, RF-44)", () => {
           {
             ...base,
             role: "owner",
-            synced: { lastSyncedAt: null, accountEmail: null },
+            synced: { ...SYNCED, lastSyncedAt: null },
           },
         ]}
       />,

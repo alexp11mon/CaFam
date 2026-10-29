@@ -64,7 +64,7 @@
   Después, `run-sync.ts` pasa `p_read_at` (la hora antes de leer) y `p_access`, con su test en `tests/unit/run-sync.test.ts`. Migración `sync_apply_events_v2`.
   Hecho cuando: `npm run test:db -- sync-worker` y `npm test -- run-sync` en verde. Cubre: RF-8, RF-16, RF-27, RF-28, RF-42 | Módulo: sync_apply_events_v2, run-sync
 
-- [ ] T5 Implementar la lógica pura: permisos, cuerpos para Google, errores, destinos y plan de subida
+- [x] T5 Implementar la lógica pura: permisos, cuerpos para Google, errores, destinos y plan de subida
   Pasos: test primero en `tests/unit/sync-write-core.test.ts`. Comprueba:
   - `missingScopes` detecta cada permiso que falta.
   - `toGoogleEvent`: un evento con hora va en `dateTime` UTC; uno de día completo y uno de varios días van en `date` con fin exclusivo; nunca lleva color ni categoría.

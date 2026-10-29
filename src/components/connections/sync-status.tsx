@@ -1,6 +1,5 @@
 import type { SyncedCalendarView } from "@/lib/sync/queries";
 import { summaryText, SYNC_ERRORS } from "@/lib/sync/summary";
-import type { FailureKind } from "@/lib/sync/providers/google";
 
 export function formatWhen(iso: string, timeZone: string) {
   return new Intl.DateTimeFormat("es-ES", {
@@ -39,8 +38,9 @@ export function SyncStatus({
               </span>
               {calendar.lastError && calendar.lastError !== "missing" ? (
                 <span className="text-danger">
-                  {SYNC_ERRORS[calendar.lastError as FailureKind] ??
-                    SYNC_ERRORS.transient}
+                  {SYNC_ERRORS[
+                    calendar.lastError as keyof typeof SYNC_ERRORS
+                  ] ?? SYNC_ERRORS.transient}
                 </span>
               ) : calendar.lastSummary ? (
                 <span className="text-muted">

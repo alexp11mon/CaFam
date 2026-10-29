@@ -109,7 +109,9 @@ async function syncOne(
     return { calendarId: calendar.calendar_id, summary };
   } catch (error) {
     // Anything unexpected is retried in the next run (RF-33).
-    const kind = error instanceof ProviderError ? error.kind : "transient";
+    const raw = error instanceof ProviderError ? error.kind : "transient";
+    // A refused read is retried like a transient one (spec 009).
+    const kind = raw === "rejected" ? "transient" : raw;
     await rpc(deps, "sync_fail", {
       p_secret: deps.secret,
       p_calendar_id: calendar.calendar_id,
