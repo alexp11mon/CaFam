@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { ToastProvider } from "@/components/ui/toast";
 import type { AccentId } from "@/lib/theme/accents";
+import type { ThemeId } from "@/lib/theme/theme";
 import { BottomBar } from "./bottom-bar";
 import { SideRail } from "./side-rail";
+import { ThemeSync } from "./theme-sync";
 
 /**
  * Frame of every screen with a session: the side rail from 1024 px, the
@@ -11,10 +13,13 @@ import { SideRail } from "./side-rail";
  */
 export function AppFrame({
   accent,
+  theme,
   signOutAction,
   children,
 }: {
   accent: AccentId;
+  /** The theme of the profile, to fix a device with an old cookie (spec 011 RF-4). */
+  theme: ThemeId;
   signOutAction: () => Promise<void>;
   children: ReactNode;
 }) {
@@ -24,6 +29,7 @@ export function AppFrame({
       data-accent={accent}
       className="flex min-h-full flex-1 flex-col"
     >
+      <ThemeSync theme={theme} />
       <ToastProvider>
         <SideRail signOutAction={signOutAction} />
         <div className="flex flex-1 flex-col pb-24 lg:pb-0 lg:pl-20">

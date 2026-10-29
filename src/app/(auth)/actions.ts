@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AUTH_MESSAGES, getAuthErrorMessage } from "@/lib/auth/error-messages";
 import type {
@@ -10,6 +11,11 @@ import type {
 import { getSafeNextPath } from "@/lib/auth/next-path";
 import { signInSchema, signUpSchema } from "@/lib/auth/schemas";
 import { createClient } from "@/lib/supabase/server";
+import {
+  parseTheme,
+  THEME_COOKIE,
+  THEME_COOKIE_OPTIONS,
+} from "@/lib/theme/theme";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -58,6 +64,9 @@ export async function signUp(
     return { formError: getAuthErrorMessage(error), values };
   }
 
+  // A new account starts on the system theme, whatever this device had (spec 011 RF-2).
+  (await cookies()).delete(THEME_COOKIE);
+
   // `next` only survives if it is an invite link (RF-7, plan D9).
   redirect(getSafeNextPath(formData.get("next")));
 }
@@ -79,10 +88,21 @@ export async function signIn(
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
     if (error) {
       return { formError: getAuthErrorMessage(error), values };
     }
+    // The first paint of the panel already has the theme of the account (spec 011 RF-4).
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("theme")
+      .eq("id", data.user.id)
+      .maybeSingle();
+    (await cookies()).set(
+      THEME_COOKIE,
+      parseTheme(profile?.theme),
+      THEME_COOKIE_OPTIONS,
+    );
   } catch (error) {
     return { formError: getAuthErrorMessage(error), values };
   }
@@ -94,5 +114,7 @@ export async function signIn(
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut({ scope: "local" });
+  // Without a session the device follows the system (spec 011 RF-8).
+  (await cookies()).delete(THEME_COOKIE);
   redirect("/login");
 }

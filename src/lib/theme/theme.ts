@@ -47,3 +47,12 @@ export function nextToggleTheme(effective: EffectiveTheme): EffectiveTheme {
  * Without the cookie, or with "system", CSS follows prefers-color-scheme.
  */
 export const THEME_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|; )${THEME_COOKIE}=(light|dark)(?:;|$)/);if(!m)return;var t=m[1];document.documentElement.setAttribute("data-theme",t);var c=t==="dark"?"${THEME_COLOR.dark}":"${THEME_COLOR.light}";document.querySelectorAll('meta[name="theme-color"]').forEach(function(e){e.setAttribute("content",c)})}catch(e){}})();`;
+
+/** The cookie is a copy of the profile on the device; the boot script reads it, so it is not HttpOnly (plan "Modelo de datos"). */
+export const THEME_COOKIE_OPTIONS = {
+  path: "/",
+  maxAge: 60 * 60 * 24 * 365,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  httpOnly: false,
+} as const;

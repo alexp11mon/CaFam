@@ -72,6 +72,7 @@
   - Después, `globals.css`. `body` usa `bg-backdrop`.
 
   Hecho cuando: `npm test -- theme-css accents` en verde y `npm run build` correcto. Cubre: RF-5, RF-9, RF-13, RF-14, RF-20, RF-22, RF-23, RF-24, RF-25 | Módulo: tokens-css
+  Evidencia (2026-10-29): rojo (26 fallos). `theme-css accents` 64 tests en verde; las utilidades compiladas con Tailwind. `/login` a 390 px en claro igual que antes y en oscuro por el sistema. typecheck, lint y format en verde, `npm test` 149 archivos y 1332 tests, build correcto.
 
 - [x] T5 Migrar los componentes a tokens válidos en los dos temas y poner al día la guardia de diseño
   Pasos:
@@ -83,8 +84,9 @@
   - Los tests de componentes que miran clases se actualizan.
 
   Hecho cuando: `npm test` completo en verde (incluida `design-tokens`), y la portada y el calendario en tema claro iguales que antes, comparando capturas a 1440 px. Cubre: RF-10, RF-26 | Módulo: token-migration, design-guard
+  Evidencia (2026-10-29): rojo en sombras, `text-white` y `ring-offset` sin color. Además: `backdrop:bg-scrim/…` (token `scrim`, oscuro en los dos temas) en las ventanas y `ring-offset-paper` en el selector de color. Portada y calendario a 1440 px en claro idénticos píxel a píxel antes y después. `npm test` 149 archivos y 1339 tests, build correcto.
 
-- [ ] T6 Aplicar el tema guardado sin destello en todas las páginas
+- [x] T6 Aplicar el tema guardado sin destello en todas las páginas
   Pasos:
   - Primero, los tests en rojo:
     - `signIn` escribe la cookie con el tema del perfil, y `signOut` y `signUp` la borran (tests de las acciones, con mocks);
@@ -94,6 +96,7 @@
   - Después, `theme-boot`: el script en `<head>` de `layout.tsx`, `getAppearance` (acento y tema) en el layout del panel y `ThemeSync` en `AppFrame`.
 
   Hecho cuando: los tests nuevos, `npm test` y `npm run build` en verde, y en `next start` una carga de `/dashboard/calendar` con la cookie `dark` pinta oscuro desde el primer fotograma. Se comprueba con una captura tomada justo tras `domcontentloaded` y con el HTML servido. Cubre: RF-4, RF-7, RF-8, RF-11 | Módulo: theme-boot
+  Evidencia (2026-10-29): rojo (9 fallos y `theme-sync` inexistente). `theme-boot` y `theme-sync` en verde; `auth-next-actions` con los mocks nuevos. En `next start`: sin sesión el proxy responde `cafam-theme=; Max-Age=0`; el script va después de los dos `meta theme-color`; tras `signIn` con el perfil en `dark`, la cookie es `dark` (Lax, sin HttpOnly, 365 días) y `/dashboard/calendar` en `domcontentloaded` ya tiene `data-theme=dark`, fondo `#171612` y `theme-color` oscuro. `npm test` 151 archivos y 1353 tests, build correcto.
 
 ### Iteración 2 — Interfaz, movimiento y validación
 

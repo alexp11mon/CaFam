@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_ACCENT, isAccent, type AccentId } from "@/lib/theme/accents";
+import { parseTheme, type ThemeId } from "@/lib/theme/theme";
 import type { CalendarPreference, Person, PersonPreference } from "./grouping";
 import type { CalendarGroup } from "./organize-groups";
 import { accessOf } from "@/lib/sync/providers/google";
@@ -187,16 +188,20 @@ export async function getLastView(
 }
 
 /** The user's interface accent; red if the row cannot be read (spec 005 RF-9, RF-10). */
-export async function getAccent(
+/** The accent and theme of the profile, read together for the frame (spec 011 plan theme-boot). */
+export async function getAppearance(
   supabase: Client,
   userId: string,
-): Promise<AccentId> {
+): Promise<{ accent: AccentId; theme: ThemeId }> {
   const { data } = await supabase
     .from("profiles")
-    .select("accent")
+    .select("accent, theme")
     .eq("id", userId)
     .maybeSingle();
-  return isAccent(data?.accent) ? data.accent : DEFAULT_ACCENT;
+  return {
+    accent: isAccent(data?.accent) ? data.accent : DEFAULT_ACCENT,
+    theme: parseTheme(data?.theme),
+  };
 }
 
 export interface CategoryOptionRecord {

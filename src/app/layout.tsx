@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter_Tight } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
-import { NEUTRALS } from "@/lib/theme/accents";
+import { THEME_COLOR, THEME_SCRIPT } from "@/lib/theme/theme";
 import "./globals.css";
 
 // One neo-grotesk with tabular figures for every screen (spec 005 plan D1).
@@ -22,8 +22,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  // The system bar of the installed app takes the stone ground (spec 005 RF-53).
-  themeColor: NEUTRALS.stone,
+  // The system bar takes the stone ground of each theme; the boot script
+  // overrides both with the theme picked (spec 011 RF-11, plan D12).
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: THEME_COLOR.light },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLOR.dark },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -34,6 +38,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${interTight.variable} h-full antialiased`}
     >
+      <head>
+        {/* Before the first paint, so the theme never flashes (spec 011 RF-7). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         {children}
         <ServiceWorkerRegister />

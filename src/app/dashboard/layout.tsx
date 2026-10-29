@@ -1,14 +1,14 @@
 import { Suspense, type ReactNode } from "react";
 import { AppFrame, FrameSkeleton } from "@/components/shell/app-frame";
-import { getAccent, requireUser } from "@/lib/calendar/queries";
+import { getAppearance, requireUser } from "@/lib/calendar/queries";
 import { signOut } from "../(auth)/actions";
 
 // Reads the session, so it streams behind <Suspense> (cacheComponents, plan D3).
 async function AccentFrame({ children }: { children: ReactNode }) {
   const { supabase, userId } = await requireUser();
-  const accent = await getAccent(supabase, userId);
+  const { accent, theme } = await getAppearance(supabase, userId);
   return (
-    <AppFrame accent={accent} signOutAction={signOut}>
+    <AppFrame accent={accent} theme={theme} signOutAction={signOut}>
       {children}
     </AppFrame>
   );

@@ -8,7 +8,7 @@ import { AccentPicker } from "@/components/settings/accent-picker";
 import { FormAlert } from "@/components/ui/form-alert";
 import { getConfirmNotice } from "@/lib/account/confirm-type";
 import { getAccountEmails, getProfile } from "@/lib/account/queries";
-import { getAccent, requireUser } from "@/lib/calendar/queries";
+import { getAppearance, requireUser } from "@/lib/calendar/queries";
 import { setAccent } from "./actions";
 import {
   changePassword,
@@ -24,7 +24,7 @@ type SearchParams = Promise<{ confirm?: string }>;
 // Each section reads the session, so it streams behind <Suspense> (cacheComponents).
 async function AccentSection() {
   const { supabase, userId } = await requireUser();
-  const accent = await getAccent(supabase, userId);
+  const { accent } = await getAppearance(supabase, userId);
   return <AccentPicker current={accent} setAccent={setAccent} />;
 }
 

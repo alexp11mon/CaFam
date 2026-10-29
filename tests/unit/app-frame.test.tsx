@@ -10,7 +10,11 @@ vi.mock("next/navigation", () => ({
 describe("AppFrame (RF-9)", () => {
   it("wraps the page in the user's accent", () => {
     const { container } = render(
-      <AppFrame accent="blue" signOutAction={vi.fn(async () => {})}>
+      <AppFrame
+        accent="blue"
+        theme="system"
+        signOutAction={vi.fn(async () => {})}
+      >
         <p>Contenido</p>
       </AppFrame>,
     );

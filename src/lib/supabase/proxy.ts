@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getRouteAccess } from "@/lib/auth/route-access";
+import { THEME_COOKIE } from "@/lib/theme/theme";
 import type { Database } from "@/types/database";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./env";
 
@@ -35,10 +36,13 @@ export async function updateSession(request: NextRequest) {
   // Do not run code between createServerClient and getClaims(): it validates
   // the JWT and refreshes an expired session.
   const { data } = await supabase.auth.getClaims();
-  const access = getRouteAccess(
-    request.nextUrl.pathname,
-    Boolean(data?.claims),
-  );
+  const hasSession = Boolean(data?.claims);
+  const access = getRouteAccess(request.nextUrl.pathname, hasSession);
+
+  // Without a session the device follows the system, even with an old cookie (spec 011 RF-8).
+  if (!hasSession && request.cookies.has(THEME_COOKIE)) {
+    response.cookies.set(THEME_COOKIE, "", { path: "/", maxAge: 0 });
+  }
 
   if (access.type === "redirect") {
     // The destination carries its own query (`next` for invites), nothing else is kept.

@@ -10,12 +10,25 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
+// The theme cookie (spec 011, T6) is covered in theme-boot.test.ts.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ set: () => {}, delete: () => {} }),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     auth: {
-      signInWithPassword: async () => ({ error: null }),
+      signInWithPassword: async () => ({
+        data: { user: { id: "user-1" } },
+        error: null,
+      }),
       signUp: async () => ({ data: { session: {} }, error: null }),
     },
+    from: () => ({
+      select: () => ({
+        eq: () => ({ maybeSingle: async () => ({ data: null }) }),
+      }),
+    }),
   }),
 }));
 
