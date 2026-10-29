@@ -18,9 +18,10 @@
 
 ### Iteración 1 — Comprobaciones, base de datos y lógica pura
 
-- [ ] T1 Comprobar lo que el plan da por supuesto (duración de la subida, publicar la app y comportamiento de Google)
+- [x] T1 Comprobar lo que el plan da por supuesto (duración de la subida, publicar la app y comportamiento de Google)
   Pasos: (a) a (d) de "Comprobaciones de la T1" del plan. El usuario hace lo de la consola de Google y conecta una cuenta de prueba en dev (no se pegan secretos en el chat). El agente consulta la documentación de Vercel y hace las llamadas a mano en dev con un script del scratchpad que no muestra el token. Los resultados se anotan en `plan.md`.
   Hecho cuando: `plan.md` anota el `maxDuration` de Hobby y lo que pide Google para publicar. También anota la respuesta de Google a cinco cosas: `accessRole`, `PATCH` de una repetición, `move` de una repetición, 404 de un evento borrado y `scope` del token. Si la subida no cabe (D14) o publicar exige pagar o verificar, se detiene y se vuelve al usuario. Cubre: RF-17, RF-35, RF-41, requisito de coste cero | Módulo: comprobación
+  Evidencia (2026-10-29): resultados en "Resultado de la T1" del plan. 300 s en Hobby; publicar pide nombre, correo de asistencia, página principal y política, sin pagar ni verificar; prueba en vivo en dev correcta.
 
 - [x] T2 Crear el esquema de escritura: permiso de la cuenta, permiso por calendario y nombre protegido
   Pasos: test primero en `tests/integration/sync-write-schema.test.ts`. Comprueba:

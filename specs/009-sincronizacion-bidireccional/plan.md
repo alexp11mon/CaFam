@@ -291,7 +291,13 @@ Antes de programar. Las hacen el usuario (consolas) y el agente (documentación 
 
 - (a) Documentación de Vercel (`vercel.com/docs/functions/configuring-functions/duration`, actualizada el 2026-08-24): Hobby con Fluid compute tiene por defecto y como máximo **300 s**. `/upload` usa `maxDuration = 300` y la subida para de copiar a los 270 s (con compensación si no acaba). D14 se mantiene.
 - (d) Documentación de Google (`events/move`): solo se mueven eventos `default` (no `birthday`, `focusTime`, `fromGmail`, `outOfOffice` ni `workingLocation`); no dice nada de las repeticiones. Si Google rechaza un caso, se aplica RF-24. `move` acepta `calendar.events`.
-- **Pendiente del usuario** (no se puede hacer sin su consola ni su cuenta): (b) qué pide "Publicar aplicación" y (d) la prueba en vivo de `accessRole`, `PATCH` de una repetición, `move` de una repetición, 404 y `scope`. Se hacen con la prueba manual en dev de la T8 y en la T14; el código ya trata cualquier respuesta con RF-24 y RF-25.
+- (b) Google Cloud (respuesta del usuario, 2026-10-29): para pasar a producción externa pide **nombre de la app, correo de asistencia, URL de la página principal y URL de la política de privacidad**, en "Desarrollo de la marca". No pide pagar ni verificar el dominio. El logotipo se deja vacío, porque subirlo obliga a verificar la marca. La URL de `/privacy` tiene que existir, así que se rellena y se publica tras desplegar (T14).
+- (d) Prueba en vivo en dev con la cuenta del usuario (2026-10-29):
+  - `scope`: el callback recibió `openid email calendar.calendarlist.readonly calendar.calendars calendar.events`. Google no devuelve `calendar.events.readonly` aparte; no hace falta, porque `WRITE_SCOPES` no lo pide. La cuenta quedó con `can_write` y la ficha muestra "Crear calendario en Google".
+  - Crear (con hora y de día completo), cambiar (incluido pasar de con hora a día completo), mover a otro calendario de la misma cuenta y borrar eventos: correcto en Google.
+  - `PATCH` de una repetición: cambia solo esa. `move` de una repetición: correcto según RF-24 (o lo acepta, o da error y no cambia nada).
+  - Renombrar un traído, crear un calendario en Google y subir uno de CaFam: correcto. "Actualizar ahora" después no duplica ni borra nada.
+  - No se probaron aparte el 404 de un evento borrado en Google ni un calendario de solo lectura (`accessRole = reader`). Los cubren los tests de `write-event` y `provider-google`; se comprueban en la demo de la T14 si aparecen.
 
 ## Pasos de producción (los ejecuta el usuario)
 
