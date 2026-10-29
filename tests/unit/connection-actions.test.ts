@@ -114,7 +114,9 @@ describe("saveSelection (RF-10, RF-11, RF-14)", () => {
 
     expect(rpcCalls("select_synced_calendars")[0][1]).toEqual({
       p_connection_id: CONNECTION,
-      p_calendars: [{ external_id: "g1", name: "Trabajo", color: "#FFADAD" }],
+      p_calendars: [
+        { external_id: "g1", name: "Trabajo", color: "#FFADAD", access: null },
+      ],
     });
     expect(syncConnection).toHaveBeenCalledWith(CONNECTION, false);
     expect(revalidatePath).toHaveBeenCalledWith("/dashboard", "layout");

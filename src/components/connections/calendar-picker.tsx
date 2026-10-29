@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import type { FormAction } from "@/lib/forms/form-state";
 import { MAX_CALENDARS_PER_ACCOUNT } from "@/lib/sync/limits";
+import type { GoogleAccess } from "@/lib/sync/providers/google";
 
 export interface PickerCalendar {
   id: string;
   name: string;
   color: string | null;
   synced: boolean;
+  /** Festivos, birthdays or shared without changes stay read-only (spec 009 RF-8). */
+  access?: GoogleAccess | null;
 }
 
 interface PickerState {
@@ -70,6 +73,7 @@ export function CalendarPicker({
                   id: calendar.id,
                   name: calendar.name,
                   color: calendar.color,
+                  access: calendar.access ?? null,
                 })}
                 checked={isChecked}
                 disabled={full && !isChecked}
@@ -83,6 +87,11 @@ export function CalendarPicker({
                 style={{ backgroundColor: calendar.color ?? undefined }}
               />
               <span className="min-w-0 truncate">{calendar.name}</span>
+              {calendar.access === "reader" ? (
+                <span className="ml-auto shrink-0 text-sm text-muted">
+                  Solo lectura en Google
+                </span>
+              ) : null}
             </label>
           );
         })}

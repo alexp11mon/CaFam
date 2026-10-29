@@ -3,6 +3,7 @@ import type { ConnectError } from "@/lib/sync/error-messages";
 import { googleConfig } from "@/lib/sync/google-config";
 import { CLEAR_STATE_COOKIE, readStateCookie } from "@/lib/sync/oauth-state";
 import { exchangeCode } from "@/lib/sync/providers/google";
+import { missingScopes, shortScope } from "@/lib/sync/scopes";
 
 /**
  * Google comes back here. The state must match the cookie set by /start, and
@@ -54,6 +55,8 @@ export async function GET(
     return fail("failed");
   }
 
+  // Without every permission the account only reads (spec 009 RF-5, plan D2).
+  const missing = missingScopes(account.scope);
   const { data: connection, error: rpcError } = await supabase.rpc(
     "connect_account",
     {
@@ -61,9 +64,15 @@ export async function GET(
       p_subject: account.subject,
       p_email: account.email,
       p_refresh_token: account.refreshToken,
+      p_can_write: missing.length === 0,
     },
   );
   if (rpcError) return fail(rpcError.code === "CF429" ? "max" : "failed");
 
-  return go(`/dashboard/connections/${(connection as { id: string }).id}`);
+  const page = `/dashboard/connections/${(connection as { id: string }).id}`;
+  return go(
+    missing.length === 0
+      ? page
+      : `${page}?missing=${missing.map(shortScope).join(",")}`,
+  );
 }

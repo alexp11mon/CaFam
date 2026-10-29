@@ -11,6 +11,8 @@ export interface Connection {
   id: string;
   email: string;
   status: "active" | "needs_reauth";
+  /** Granted every permission of spec 009 (plan D2). */
+  canWrite: boolean;
 }
 
 export interface SyncedCalendarView {
@@ -26,13 +28,14 @@ export interface SyncedCalendarView {
 export async function getConnections(supabase: Client): Promise<Connection[]> {
   const { data, error } = await supabase
     .from("calendar_connections")
-    .select("id, account_email, status")
+    .select("id, account_email, status, can_write")
     .order("created_at");
   if (error) throw error;
   return data.map((row) => ({
     id: row.id,
     email: row.account_email,
     status: row.status as Connection["status"],
+    canWrite: row.can_write,
   }));
 }
 
@@ -42,7 +45,7 @@ export async function getConnection(
 ): Promise<Connection | null> {
   const { data, error } = await supabase
     .from("calendar_connections")
-    .select("id, account_email, status")
+    .select("id, account_email, status, can_write")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
@@ -51,6 +54,7 @@ export async function getConnection(
         id: data.id,
         email: data.account_email,
         status: data.status as Connection["status"],
+        canWrite: data.can_write,
       }
     : null;
 }

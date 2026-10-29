@@ -67,6 +67,8 @@ beforeEach(() => {
     refreshToken: "rt",
     subject: "sub-1",
     email: "ana@gmail.com",
+    scope:
+      "openid email https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendars",
   });
 });
 
@@ -172,8 +174,32 @@ describe("callback (RF-3 to RF-5, RF-32, RF-47)", () => {
       p_subject: "sub-1",
       p_email: "ana@gmail.com",
       p_refresh_token: "rt",
+      // Every permission granted: the account writes (spec 009 RF-1, RF-4).
+      p_can_write: true,
     });
     // The state cookie is used once.
     expect(response.headers.get("set-cookie")).toMatch(/Max-Age=0/);
+  });
+
+  it("keeps the account read-only and says what is missing (spec 009 RF-5)", async () => {
+    const { pair, state } = await begin();
+    exchangeCode.mockResolvedValue({
+      accessToken: "at",
+      refreshToken: "rt",
+      subject: "sub-1",
+      email: "ana@gmail.com",
+      scope:
+        "openid email https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+    });
+
+    const response = await back(`code=the-code&state=${state}`, pair);
+
+    expect(location(response)).toBe(
+      "/dashboard/connections/conn-1?missing=calendar.events,calendar.calendars",
+    );
+    expect(rpc).toHaveBeenCalledWith(
+      "connect_account",
+      expect.objectContaining({ p_can_write: false }),
+    );
   });
 });

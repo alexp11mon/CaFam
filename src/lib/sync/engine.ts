@@ -70,12 +70,24 @@ export async function syncConnection(
   };
 }
 
-/** The account's calendars, read from Google on every visit (RF-9, RF-12). */
+/**
+ * The account's calendars, read from Google on every visit (RF-9, RF-12). Their
+ * access is stored too, so a reconnected account writes at once (spec 009 RF-4).
+ */
 export async function providerCalendars(
   connectionId: string,
 ): Promise<ProviderCalendar[]> {
   const deps = engineDeps();
-  return listCalendars(await accessToken(deps, connectionId), deps.fetchFn);
+  const list = await listCalendars(
+    await accessToken(deps, connectionId),
+    deps.fetchFn,
+  );
+  await deps.supabase.rpc("sync_set_access", {
+    p_secret: deps.secret,
+    p_connection_id: connectionId,
+    p_items: list.map((c) => ({ external_id: c.id, access: c.access })),
+  });
+  return list;
 }
 
 /** Withdraws CaFam's access in Google before disconnecting (RF-30). */

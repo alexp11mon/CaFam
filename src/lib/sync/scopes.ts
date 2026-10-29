@@ -18,6 +18,17 @@ export const SCOPE_NAMES: Record<string, string> = {
   [`${API}calendar.calendars`]: "crear calendarios y cambiar su nombre",
 };
 
+/** Short name in the address after connecting: `calendar.events` (RF-5). */
+export function shortScope(scope: string): string {
+  return scope.slice(API.length);
+}
+
+/** The missing permissions of `?missing=`, ignoring anything unknown. */
+export function missingFromQuery(value: string | undefined): string[] {
+  const names = new Set((value ?? "").split(","));
+  return WRITE_SCOPES.filter((scope) => names.has(shortScope(scope)));
+}
+
 /** The write permissions not in Google's `scope` answer (space separated). */
 export function missingScopes(granted: string | null | undefined): string[] {
   const have = new Set((granted ?? "").split(/\s+/));

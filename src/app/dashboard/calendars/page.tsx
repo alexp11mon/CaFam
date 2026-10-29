@@ -8,6 +8,7 @@ import {
 } from "@/components/dashboard/calendar-list";
 import { GroupForm } from "@/components/groups/group-form";
 import { GroupList } from "@/components/groups/group-list";
+import { ReconnectNotice } from "@/components/connections/reconnect-notice";
 import { LinkButton } from "@/components/ui/link-button";
 import { daysLeftNow } from "@/lib/account/orphan";
 import { getNotices, getOrphanCalendars } from "@/lib/account/queries";
@@ -22,6 +23,7 @@ import {
   type CalendarRecord,
 } from "@/lib/calendar/queries";
 import { canMerge } from "@/lib/sync/read-only";
+import { getConnections } from "@/lib/sync/queries";
 import { saveOrder } from "../calendar/preferences-actions";
 import { leaveCalendar } from "./[id]/members/actions";
 import {
@@ -38,13 +40,19 @@ export const metadata: Metadata = { title: "Mis calendarios" };
 // Reads the session cookies, so it streams behind <Suspense> (cacheComponents).
 async function Calendars() {
   const { supabase, userId } = await requireUser();
-  const [records, people, preferences, timeZone, groups] = await Promise.all([
-    getMyCalendars(supabase, userId),
-    getPeople(supabase),
-    getPreferences(supabase, userId),
-    getProfileTimeZone(supabase, userId),
-    getGroups(supabase, userId),
-  ]);
+  const [records, people, preferences, timeZone, groups, connections] =
+    await Promise.all([
+      getMyCalendars(supabase, userId),
+      getPeople(supabase),
+      getPreferences(supabase, userId),
+      getProfileTimeZone(supabase, userId),
+      getGroups(supabase, userId),
+      // RLS returns only the user's own accounts (spec 009 RF-3).
+      getConnections(supabase),
+    ]);
+  const readOnlyAccounts = connections.filter(
+    (c) => c.status === "active" && !c.canWrite,
+  );
   // The user's groups first, then the rest in the filter panel's order:
   // people, then calendars within each (RF-45, spec 007 RF-36, RF-37).
   const organized = organizeGroups({
@@ -74,6 +82,9 @@ async function Calendars() {
 
   return (
     <>
+      {readOnlyAccounts.map((account) => (
+        <ReconnectNotice key={account.id} email={account.email} />
+      ))}
       <div className="flex flex-wrap gap-3">
         <LinkButton href="/dashboard/calendars/new">
           Nuevo calendario

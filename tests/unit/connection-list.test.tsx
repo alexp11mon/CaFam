@@ -8,8 +8,18 @@ import { NAV_ITEMS } from "@/lib/shell/nav";
 // Spec 007, T9: the accounts screen and the notice before Google (RF-1, RF-3,
 // RF-4, RF-5, RF-8, RF-47, RF-48).
 const CONNECTIONS = [
-  { id: "c1", email: "ana@gmail.com", status: "active" as const },
-  { id: "c2", email: "ana.trabajo@gmail.com", status: "needs_reauth" as const },
+  {
+    id: "c1",
+    email: "ana@gmail.com",
+    status: "active" as const,
+    canWrite: true,
+  },
+  {
+    id: "c2",
+    email: "ana.trabajo@gmail.com",
+    status: "needs_reauth" as const,
+    canWrite: true,
+  },
 ];
 
 describe("ConnectionList", () => {

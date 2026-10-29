@@ -135,6 +135,7 @@ export async function saveSelection(
           external_id: c.id,
           name: c.name,
           color: nearestColor(c.color),
+          access: c.access ?? null,
         })),
       });
       if (error) {

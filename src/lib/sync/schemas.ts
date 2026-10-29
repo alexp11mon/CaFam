@@ -10,6 +10,7 @@ const pickedCalendar = z.object({
   id: z.string().min(1).max(1024),
   name: z.string().max(200),
   color: z.string().nullable(),
+  access: z.enum(["owner", "writer", "reader"]).nullable().optional(),
 });
 
 export const selectionSchema = z.object({

@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { PageShell } from "@/components/calendar/page-shell";
 import { CalendarPicker } from "@/components/connections/calendar-picker";
 import { DisconnectDialog } from "@/components/connections/disconnect-dialog";
+import { ReconnectNotice } from "@/components/connections/reconnect-notice";
 import { SyncNowButton } from "@/components/connections/sync-now-button";
 import { SyncStatus } from "@/components/connections/sync-status";
 import { FormAlert } from "@/components/ui/form-alert";
@@ -20,6 +21,7 @@ import {
   getSyncedCalendars,
 } from "@/lib/sync/queries";
 import { connectionIdSchema } from "@/lib/sync/schemas";
+import { missingFromQuery } from "@/lib/sync/scopes";
 import { SYNC_ERRORS } from "@/lib/sync/summary";
 import { disconnectAccount, saveSelection, syncNow } from "../actions";
 
@@ -46,10 +48,13 @@ async function readGoogleList(
 
 async function ConnectionDetail({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ missing?: string | string[] }>;
 }) {
   const { id } = await params;
+  const { missing } = await searchParams;
   if (!connectionIdSchema.safeParse(id).success) notFound();
   const { supabase, userId } = await requireUser();
   const connection = await getConnection(supabase, id);
@@ -89,6 +94,15 @@ async function ConnectionDetail({
           </div>
         )}
       </section>
+
+      {connection.status === "active" && !connection.canWrite ? (
+        <ReconnectNotice
+          email={connection.email}
+          missing={missingFromQuery(
+            typeof missing === "string" ? missing : undefined,
+          )}
+        />
+      ) : null}
 
       {synced.length > 0 ? (
         <section
@@ -148,8 +162,10 @@ async function ConnectionDetail({
 /** One Google account: its calendars, their state and the update (RF-9 to RF-14, RF-23, RF-26). */
 export default function ConnectionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ missing?: string | string[] }>;
 }) {
   return (
     <PageShell
@@ -158,7 +174,7 @@ export default function ConnectionPage({
       backLabel="Volver a Cuentas conectadas"
     >
       <Suspense fallback={<p className="text-muted">Cargando la cuenta…</p>}>
-        <ConnectionDetail params={params} />
+        <ConnectionDetail params={params} searchParams={searchParams} />
       </Suspense>
     </PageShell>
   );

@@ -116,7 +116,7 @@
   `getMyCalendars`/`getCalendar` leen `can_write`, `connection_id` y `google_access`.
   Hecho cuando: `npm test -- event-actions event-form quick-create event-panel` en verde, capturas de P9 del detalle y del formulario de un evento traído, y prueba manual en dev con una cuenta de prueba: crear, cambiar, mover y borrar se ven en Google. Cubre: RF-6, RF-7, RF-8, RF-9, RF-10, RF-11, RF-12, RF-18, RF-19, RF-20, RF-21, RF-22, RF-23, RF-24, RF-25, RF-26 | Módulo: events/actions, load-event, load-new-event, calendar/page, event-form, event-panel, queries
 
-- [ ] T9 Pedir los permisos nuevos y avisar de las cuentas de solo lectura
+- [x] T9 Pedir los permisos nuevos y avisar de las cuentas de solo lectura
   Pasos: test primero, ampliando `tests/unit/oauth-routes.test.ts` y con `tests/unit/reconnect-notice.test.tsx`. Comprueba:
   - `callback` llama a `connect_account` con `p_can_write` verdadero solo con todos los permisos de D1. Si falta alguno, redirige a `/dashboard/connections/<id>?scope=missing`.
   - El aviso aparece al propietario en "Mis calendarios" y en la ficha, para cuentas con `can_write = false`, con "Volver a conectar". Con `?scope=missing` nombra el permiso que falta.

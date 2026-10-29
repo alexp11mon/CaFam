@@ -90,7 +90,7 @@ describe("CalendarPicker", () => {
     const data = (action.mock.calls[0] as unknown[])[1] as FormData;
     expect(data.get("connectionId")).toBe("c1");
     expect(data.getAll("calendar").map((v) => JSON.parse(String(v)))).toEqual([
-      { id: "g-2", name: "Calendario 2", color: "#9fe1e7" },
+      { id: "g-2", name: "Calendario 2", color: "#9fe1e7", access: null },
     ]);
   });
 });
