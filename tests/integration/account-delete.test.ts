@@ -190,6 +190,15 @@ describe("delete_own_account (RF-18, RF-19, RF-20)", () => {
     );
   });
 
+  it("names the app CaFam in that email (spec 010, RF-8)", async () => {
+    const { data } = await admin
+      .from("email_outbox")
+      .select("body")
+      .eq("to_email", bea.email);
+    expect(data?.[0]?.body).toContain("de CaFam.");
+    expect(data?.[0]?.body).toContain("Entra en CaFam,");
+  });
+
   it("does not let Ana's old session act any more", async () => {
     const { data } = await admin.auth.admin.getUserById(ana.id);
     expect(data.user).toBeNull();

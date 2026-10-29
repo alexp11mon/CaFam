@@ -16,7 +16,7 @@
 
 ## Tareas
 
-- [ ] T1 Redefinir con el nombre CaFam las dos funciones de correo
+- [x] T1 Redefinir con el nombre CaFam las dos funciones de correo
   Pasos:
   - Primero los tests en rojo:
     - Test unitario `tests/unit/rename-migration.test.ts`: lee `supabase/migrations/20261029130000_rename_cafam.sql` y comprueba que existe, que el `sender` lleva `'CaFam'` y que no contiene ningún nombre antiguo.
@@ -25,6 +25,7 @@
   - Comprobar con `diff` que solo cambian esas líneas (R1). Aplicar con `npm run db:push` y regenerar con `npm run db:types`.
 
   Hecho cuando: `npm test -- rename-migration` y `npm run test:db -- account` en verde, y `src/types/database.ts` sin cambios. Cubre: RF-7, RF-8, RF-9, RF-19 (en dev) | Módulo: mail-rename
+  Evidencia (2026-10-29): rojo antes de la migración (archivo inexistente; `body` sin "de CaFam."). `diff` con las versiones anteriores: solo las 3 líneas del nombre, la cabecera y los `grant`. Migración aplicada en dev, tipos sin cambios. `rename-migration` 2/2, `test:db -- account` 10 archivos y 62 tests, typecheck, lint y format en verde, `npm test` 146 archivos y 1281 tests, y build correcto.
 
 - [ ] T2 Mostrar CaFam en la interfaz, la PWA y la descarga `.ics`
   Pasos:
