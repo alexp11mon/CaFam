@@ -50,6 +50,7 @@ describe("useCalendarShortcuts", () => {
     fireEvent.keyDown(document.body, { key: "m" });
     expect(router.push).toHaveBeenCalledWith(
       "/dashboard/calendar?view=month&date=2026-10-21",
+      { transitionTypes: ["cal-view"] },
     );
     expect(saveLastView).toHaveBeenCalledWith("month");
   });
@@ -64,5 +65,22 @@ describe("useCalendarShortcuts", () => {
     render(<Calendar canCreate={false} />);
     fireEvent.keyDown(document.body, { key: "n" });
     expect(router.push).not.toHaveBeenCalled();
+  });
+});
+
+// Spec 011, T11: the shortcuts animate like the toolbar (RF-17, RF-18).
+describe("useCalendarShortcuts transitions", () => {
+  it("passes the transition type of each move to router.push", () => {
+    render(<Calendar />);
+    fireEvent.keyDown(document.body, { key: "t" });
+    fireEvent.keyDown(document.body, { key: "ArrowLeft" });
+    fireEvent.keyDown(document.body, { key: "ArrowRight" });
+    fireEvent.keyDown(document.body, { key: "m" });
+    expect(router.push.mock.calls.map(([, options]) => options)).toEqual([
+      { transitionTypes: ["cal-next"] },
+      { transitionTypes: ["cal-prev"] },
+      { transitionTypes: ["cal-next"] },
+      { transitionTypes: ["cal-view"] },
+    ]);
   });
 });

@@ -14,6 +14,30 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
+// jsdom cannot run view transitions: a stand-in shows what the area gets.
+vi.mock("react", async (importOriginal) => {
+  const react = await importOriginal<typeof import("react")>();
+  return {
+    ...react,
+    ViewTransition: ({
+      children,
+      enter,
+    }: {
+      children: React.ReactNode;
+      enter?: Record<string, string>;
+    }) => (
+      <div
+        data-view-transition=""
+        data-enter={Object.keys(enter ?? {})
+          .filter((type) => type !== "default")
+          .join(" ")}
+      >
+        {children}
+      </div>
+    ),
+  };
+});
+
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function showModal() {
     this.setAttribute("open", "");
@@ -120,5 +144,16 @@ describe("CalendarWorkspace: quick creation", () => {
     expect(
       screen.queryByRole("button", { name: /Crear evento el/ }),
     ).toBeNull();
+  });
+});
+
+// Spec 011, T11: the view area is one ViewTransition per view and date, so a
+// change exits the old one and enters the new one (RF-17, RF-18; plan D8).
+describe("CalendarWorkspace view motion", () => {
+  it("wraps the view in a ViewTransition with the calendar types", () => {
+    setup();
+    const area = document.querySelector("[data-view-transition]");
+    expect(area).not.toBeNull();
+    expect(area).toHaveAttribute("data-enter", "cal-view cal-next cal-prev");
   });
 });

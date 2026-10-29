@@ -135,7 +135,7 @@
   Hecho cuando: `npm test -- button link-button bar-styles text-field select` en verde, más una comprobación en el navegador de que al pulsar se ve la escala y con movimiento reducido no. Cubre: RF-16 | Módulo: micro
   Evidencia (2026-10-29): rojo (9 fallos; no había tests de `Button` ni de los campos: se crean `button`, `bar-styles` y `text-field`). `press` en `Button`, `LinkButton`, los elementos de la barra inferior y lateral, la barra de vistas y los selectores de acento y tema; `transition-[border-color,box-shadow]` en los cuatro campos. La guardia ya no confunde `box-shadow` dentro de una transición con una sombra (y sigue prohibiendo `drop-shadow-*`). En `next start`, el botón "Entrar": al pasar el puntero `translate 0 -1px` y al pulsar `scale 0.97`; con `reducedMotion: reduce`, `translate 0` y `scale 1`. `npm test` 158 archivos y 1407 tests, build correcto.
 
-- [ ] T11 Animar el cambio de vista y de periodo
+- [x] T11 Animar el cambio de vista y de periodo
   Pasos:
   - Primero, en rojo:
     - `transition-types.test.ts`: `periodType(-1)` es `cal-prev`, `periodType(1)` es `cal-next`;
@@ -152,6 +152,7 @@
   - en un navegador sin View Transitions (se emula borrando `document.startViewTransition`) todo funciona igual.
 
   Cubre: RF-17, RF-18, RF-22, RF-23, RF-24, RF-25 | Módulo: view-motion
+  Evidencia (2026-10-29): rojo (6 fallos y `transition-types` inexistente). `transition-types view-toolbar use-calendar-shortcuts calendar-workspace` 26 tests en verde; "Hoy" va hacia hoy (`todayType`) y sin tipo si ya está en hoy. En Chrome (`next start`, envolviendo `startViewTransition`): siguiente `[cal-next]` cal-out-start/cal-in-end 220 ms, anterior `[cal-prev]`, vista `[cal-view]` cal-fade-out 150 ms/cal-rise-in 220 ms, y la flecha del teclado lleva su tipo; con movimiento reducido, 150 ms y `--motion-distance: 0` (solo fundido). Cinco "Día siguiente" seguidos acaban en el día 20 sin animaciones vivas; un clic con 5 animaciones en curso navega. Borrando `startViewTransition`: mes siguiente, agenda y → funcionan igual. Los clics antes de que llegue la navegación repiten el mismo destino (el enlace aún no ha cambiado), como antes de la spec. `npm test` 159 archivos y 1416 tests, build correcto.
 
 - [ ] T12 Animar los filtros, las ventanas y los avisos
   Pasos:

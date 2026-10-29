@@ -1,7 +1,18 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import type { ComponentProps } from "react";
 import { ViewToolbar } from "@/components/calendar/view-toolbar";
+
+// The transition types a link carries show up as an attribute (spec 011 T11).
+vi.mock("next/link", () => ({
+  default: ({
+    transitionTypes,
+    ...props
+  }: ComponentProps<"a"> & { transitionTypes?: string[] }) => (
+    <a {...props} data-transition-types={transitionTypes?.join(" ")} />
+  ),
+}));
 
 const TODAY = "2026-10-21";
 
@@ -153,5 +164,41 @@ describe("ViewToolbar (RF-29, RF-37)", () => {
       "aria-keyshortcuts",
       "T",
     );
+  });
+});
+
+describe("ViewToolbar transitions (spec 011 RF-17, RF-18)", () => {
+  function types(name: string | RegExp) {
+    return screen
+      .getByRole("link", { name })
+      .getAttribute("data-transition-types");
+  }
+
+  it("the view links fade between views", () => {
+    render(<ViewToolbar view="month" date="2026-10-14" today={TODAY} />);
+    for (const name of ["Agenda", "Mes", "Semana", "Día"]) {
+      expect(types(name)).toBe("cal-view");
+    }
+  });
+
+  it("previous and next move in their sense", () => {
+    render(<ViewToolbar view="month" date="2026-10-14" today={TODAY} />);
+    expect(types("Mes anterior")).toBe("cal-prev");
+    expect(types("Mes siguiente")).toBe("cal-next");
+  });
+
+  it("today moves towards today, and not at all when already there", () => {
+    const { unmount } = render(
+      <ViewToolbar view="day" date="2026-10-14" today={TODAY} />,
+    );
+    expect(types("Hoy")).toBe("cal-next");
+    unmount();
+    render(<ViewToolbar view="day" date="2026-10-30" today={TODAY} />);
+    expect(types("Hoy")).toBe("cal-prev");
+  });
+
+  it("today on today carries no type", () => {
+    render(<ViewToolbar view="day" date={TODAY} today={TODAY} />);
+    expect(types("Hoy")).toBeNull();
   });
 });

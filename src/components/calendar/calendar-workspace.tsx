@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  ViewTransition,
+} from "react";
 import { FormAlert } from "@/components/ui/form-alert";
 import type { Draft } from "@/lib/calendar/draft";
 import type { Box } from "@/lib/calendar/popover";
@@ -14,6 +21,7 @@ import {
   type PersonGroup,
 } from "@/lib/calendar/grouping";
 import type { CalendarView } from "@/lib/calendar/ranges";
+import { VIEW_MOTION } from "@/lib/calendar/transition-types";
 import { AgendaView, type AgendaEvent } from "./agenda-view";
 import type { MonthMarks } from "@/lib/calendar/month-marks";
 import { CalendarFilters, type FilterCategory } from "./calendar-filters";
@@ -379,54 +387,63 @@ export function CalendarWorkspace({
           />
         </div>
       </div>
-      <div className="min-w-0 flex-1">
-        {view === "agenda" ? (
-          <AgendaView
-            days={days}
-            events={shown}
-            timeZone={timeZone}
-            today={today}
-            canCreate={canCreate}
-          />
-        ) : view === "month" ? (
-          <MonthView
-            date={date}
-            days={days}
-            events={shown}
-            timeZone={timeZone}
-            today={today}
-            // A day of the month creates an all-day event (spec 008 RF-19).
-            onCreate={
-              quickCreate
-                ? (day, at) =>
-                    openDraft(
-                      { day, allDay: true, startMinute: 540, endMinute: 600 },
-                      at,
-                    )
-                : undefined
-            }
-            draft={draftMark}
-          />
-        ) : view === "week" ? (
-          <WeekView
-            days={days}
-            events={shown}
-            timeZone={timeZone}
-            today={today}
-            onCreate={createInGrid}
-            draft={gridDraft}
-          />
-        ) : (
-          <DayView
-            day={date}
-            events={shown}
-            timeZone={timeZone}
-            today={today}
-            onCreate={createInGrid}
-            draft={gridDraft}
-          />
-        )}
-      </div>
+      {/* A new view or date exits the old area and enters the new one in the
+          sense of the change (spec 011 RF-17, RF-18; plan D8). */}
+      <ViewTransition
+        key={`${view}-${date}`}
+        enter={VIEW_MOTION}
+        exit={VIEW_MOTION}
+        default="none"
+      >
+        <div className="min-w-0 flex-1">
+          {view === "agenda" ? (
+            <AgendaView
+              days={days}
+              events={shown}
+              timeZone={timeZone}
+              today={today}
+              canCreate={canCreate}
+            />
+          ) : view === "month" ? (
+            <MonthView
+              date={date}
+              days={days}
+              events={shown}
+              timeZone={timeZone}
+              today={today}
+              // A day of the month creates an all-day event (spec 008 RF-19).
+              onCreate={
+                quickCreate
+                  ? (day, at) =>
+                      openDraft(
+                        { day, allDay: true, startMinute: 540, endMinute: 600 },
+                        at,
+                      )
+                  : undefined
+              }
+              draft={draftMark}
+            />
+          ) : view === "week" ? (
+            <WeekView
+              days={days}
+              events={shown}
+              timeZone={timeZone}
+              today={today}
+              onCreate={createInGrid}
+              draft={gridDraft}
+            />
+          ) : (
+            <DayView
+              day={date}
+              events={shown}
+              timeZone={timeZone}
+              today={today}
+              onCreate={createInGrid}
+              draft={gridDraft}
+            />
+          )}
+        </div>
+      </ViewTransition>
       {draft && quickCreate && defaultCalendarId ? (
         <QuickCreate
           // A new slot starts a new window.

@@ -8,6 +8,13 @@ import {
   navigate,
   type CalendarView,
 } from "@/lib/calendar/ranges";
+import {
+  CAL_NEXT,
+  CAL_PREV,
+  CAL_VIEW,
+  todayType,
+  typesOf,
+} from "@/lib/calendar/transition-types";
 
 const VIEWS: {
   view: CalendarView;
@@ -70,6 +77,7 @@ export function ViewToolbar({
       <div className="flex flex-wrap items-center gap-2">
         <Link
           href={calendarHref(view, today)}
+          transitionTypes={typesOf(todayType(date, today))}
           aria-keyshortcuts="T"
           className={BUTTON}
         >
@@ -77,6 +85,7 @@ export function ViewToolbar({
         </Link>
         <Link
           href={calendarHref(view, navigate(view, date, -1))}
+          transitionTypes={[CAL_PREV]}
           aria-label={current.previous}
           aria-keyshortcuts="ArrowLeft"
           className={BUTTON}
@@ -85,6 +94,7 @@ export function ViewToolbar({
         </Link>
         <Link
           href={calendarHref(view, navigate(view, date, 1))}
+          transitionTypes={[CAL_NEXT]}
           aria-label={current.next}
           aria-keyshortcuts="ArrowRight"
           className={BUTTON}
@@ -100,6 +110,7 @@ export function ViewToolbar({
           <Link
             key={item.view}
             href={calendarHref(item.view, date)}
+            transitionTypes={[CAL_VIEW]}
             aria-current={item.view === view ? "page" : undefined}
             aria-keyshortcuts={item.key}
             // Fire and forget: failing to remember the view must not block it.
