@@ -1,6 +1,6 @@
 # Tasks 010 - Renombrar el proyecto a CaFam
 
-> Estado: **Aprobadas** por el usuario (2026-10-29).
+> Estado: **Aprobadas** por el usuario (2026-10-29). Spec **cerrada** el 2026-10-29 con la aprobación del usuario: T1–T8 hechas.
 > Spec: `specs/010-renombrar-cafam/spec.md` (aprobada el 2026-10-29). Plan: `specs/010-renombrar-cafam/plan.md` (aprobado el 2026-10-29).
 > 8 tareas en una sola iteración.
 > Reglas:
