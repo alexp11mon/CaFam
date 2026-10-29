@@ -155,4 +155,4 @@ Checklist que cierra cada tarea (se reporta la salida de cada comando):
 - Las decisiones de stack de esta versión (Next.js 16 + Supabase Free + Vercel Hobby + Tailwind CSS 4) fueron confirmadas por el usuario en la spec 001.
 - Resueltas en la spec 005: la tipografía es Inter Tight; los valores de los seis acentos y de los neutros están en `src/lib/theme/accents.ts` (con su contraste comprobado en `accents.test.ts`); y el acento se guarda por usuario en `profiles.accent`, así que se ve igual en todos sus dispositivos.
 - Enmienda 3 (2026-10-29, aprobada por el usuario): nombre CaFam en todas partes, tema oscuro, transparencias, sombras, degradados y animaciones, Supabase Storage, `ical.js` para repeticiones, asistente de chat con un proveedor LLM gratuito y excepción de cambio de nombre en las specs cerradas. Las enmiendas 1 y 2 están en la spec 007.
-- [NECESITA ACLARACION: en la spec 015, cómo consiente una persona que el asistente use su disponibilidad (propuesta: un ajuste desactivado por defecto)]
+- Resuelta en la spec 015: una persona consiente que el asistente use su disponibilidad con un ajuste propio, desactivado por defecto.
