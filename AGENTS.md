@@ -8,19 +8,20 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# CalendarioFamilia (CalenderFam) — guía para agentes
+# CaFam — guía para agentes
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-29, al cerrar la spec 009 (en producción, con la aplicación de Google publicada sin verificar).
+> Última actualización: 2026-10-29, al aprobar la enmienda 3 de la constitución y las specs 010 a 015, durante la implementación de la 010 (renombrar a CaFam).
 
 ## 1. Qué es
 
-**CalenderFam** (nombre corto **CaFam**) es una PWA de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso **estrictamente personal** entre familia y amigos. Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comparte con roles Lector/Editor (por enlace o por ID y PIN) e importa calendarios externos (Google, iCloud, Outlook) desde un enlace o archivo `.ics`.
+**CaFam** es una PWA de calendario compartido, mobile-first e instalable en iOS, Android y escritorio, para uso **estrictamente personal** entre familia y amigos. Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comparte con roles Lector/Editor (por enlace o por ID y PIN) e importa calendarios externos (Google, iCloud, Outlook) desde un enlace o archivo `.ics`.
 
-- Sin ánimo de lucro, sin publicidad ni analítica, y **coste cero**: solo capas gratuitas (Supabase Free, Vercel Hobby, GitHub Free).
+- **Nombre único: CaFam** en todas partes (constitución, enmienda 3). Los nombres anteriores del proyecto (listados en la spec 010) no se usan; los impide `tests/unit/project-name.test.ts`. Solo se conservan la URL de Vercel y las migraciones ya aplicadas.
+- Sin ánimo de lucro, sin publicidad ni analítica, y **coste cero**: solo capas gratuitas (Supabase Free, Vercel Hobby, GitHub Free, Brevo y, desde la 015, un proveedor LLM gratuito).
 - Producción: <https://calendario-familia-five.vercel.app>
-- Repositorio (privado): <https://github.com/alexp11mon/CalendarioFamilia>
+- Repositorio (privado): <https://github.com/alexp11mon/CaFam> (renombrado en la spec 010; GitHub redirige el nombre anterior)
 - Idioma: **español** en todo lo visible para el usuario, docs, specs y mensajes de commit; **inglés** en identificadores, nombres de archivos y comentarios técnicos.
 
 ## 2. Estado actual
@@ -36,6 +37,12 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 007-sincronizacion-oauth | Sincronización de solo lectura (proveedor → CaFam) con **Google** por OAuth 2.0, actualización automática y manual, y grupos de calendarios. Microsoft se quitó el 2026-10-27 (Enmienda 1: exige tarjeta); la bidireccional y Microsoft quedan para una versión futura | **Cerrada** (2026-10-28), T1–T15 hechas; aplicada y validada en producción con la aplicación de Google en "Prueba" (Enmienda 2; publicada desde la 009) |
 | 008-mejoras-de-experiencia | Calendario al estilo Google Calendar (analizado con REA): ventana de evento sobre el calendario, ventana rápida, arrastrar para crear, selector de hora, atajos, vista recordada, avisos y esqueletos | **Cerrada** (2026-10-24), T1–T23 hechas; aplicada y validada en producción |
 | 009-sincronizacion-bidireccional | Escribir en Google lo que se crea, cambia, mueve o borra en los calendarios traídos (propietario y Editores), renombrar, crear y subir calendarios, política de privacidad y publicar la aplicación de Google | **Cerrada** (2026-10-29), T1–T14 hechas; aplicada y validada en producción, con la aplicación de Google publicada sin verificar |
+| 010-renombrar-cafam | Renombrar todo el proyecto a CaFam (interfaz, PWA, correos, configuración, tests, documentación, specs cerradas y repositorio) | **En curso**: spec, plan y tareas aprobados (2026-10-29) |
+| 011-rediseno-visual | Modo oscuro con selector, transparencias (glassmorphism), animaciones, microinteracciones y transiciones entre vistas | **Spec aprobada** (2026-10-29), sin plan |
+| 012-imagenes-en-eventos | Imágenes en los eventos con Supabase Storage, también de Lectores y en calendarios traídos de Google | **Spec aprobada** (2026-10-29), sin plan |
+| 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Spec aprobada** (2026-10-29), sin plan |
+| 014-comentarios-en-eventos | Comentarios en los eventos por cualquier miembro, Lectores incluidos | **Spec aprobada** (2026-10-29), sin plan |
+| 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | **Spec aprobada** (2026-10-29), sin plan |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -88,7 +95,7 @@ Añadido por la spec 008 (comportamiento estudiado en Google Calendar con REA; a
 - **Mes al estilo Google**: eventos con hora como punto + hora + título; de día completo o varios días como barra rellena del color pastel (enmienda de P9). **Rejilla** de semana y día a toda la altura de la pantalla.
 - **Agenda**: botón fijo "Hora actual". **Avisos** breves ("Evento creado", "Cambios guardados", "Evento borrado"), **esqueleto** con la forma de la vista mientras carga y **actualización** al volver a la app tras más de 60 s.
 
-**No hay** eventos recurrentes propios (spec futura sin número), mover o redimensionar eventos arrastrando ni actualización de lo importado.
+**No hay** eventos recurrentes propios (llegan con la spec 013), mover o redimensionar eventos arrastrando ni actualización de lo importado.
 
 Añadido por la spec 007 (en producción desde el 2026-10-28). Hasta la 009 la aplicación de Google estuvo en "Prueba" (Enmienda 2); desde el 2026-10-29 está **publicada sin verificar**: conecta cualquier cuenta pasando por el aviso de "aplicación no verificada", con un tope de 100 usuarios, y la autorización ya no caduca a los 7 días:
 
@@ -124,6 +131,7 @@ La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen d
 - **Prohibido:** servicios de pago, SDK de analítica/tracking/telemetría (GA, Sentry…), librerías PWA (`next-pwa`, Serwist, Workbox), ORMs (Prisma, Drizzle), backends paralelos, y otro gestor de paquetes que no sea npm.
 - **Aprobaciones del usuario:** pasar de fase (spec → plan → tareas → implementación) y cerrar una spec exigen su aprobación explícita. No la des por supuesta.
 - **Identidad visual (P9):** toda pantalla nueva o rediseñada sigue la sección "Identidad visual y diseño de interfaz" de la constitución (estilo de `docs/referencia.jpg`, solo local), usa solo tokens (la guardia `design-tokens.test.ts` lo comprueba) y se revisa con capturas a 390, 768 y 1440 px con el acento rojo y el amarillo. Para diseñar usa las skills `design-taste-frontend` (pantallas de aplicación), `frontend-design` y `web-design-guidelines`. Ver §6 "Identidad visual".
+- **Enmienda 3 (2026-10-29):** la constitución ya permite tema oscuro, transparencias con desenfoque, sombras suaves, degradados suaves (siempre como tokens) y animaciones de hasta 400 ms con alternativa para `prefers-reduced-motion`; Supabase Storage; `ical.js` también para repeticiones; y un proveedor LLM gratuito sin tarjeta para el asistente, llamado con `fetch` y sin SDK. Hasta que la 011 actualice la guardia de diseño, las prohibiciones antiguas siguen comprobándose en `design-tokens.test.ts`.
 - **Acciones externas:** el usuario ejecuta él mismo (con `!` en Claude Code) las acciones sobre producción: `supabase db push` a prod, `git push` y merges a `main`. Prepárale los comandos exactos.
 
 ## 4. Stack
@@ -213,7 +221,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon.svg (maestro) → icon-192, icon-512, icon-512-maskable (letras al 85 %), apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions, calendar_groups · 009: sync_write_schema, sync_write_functions, sync_apply_events_v2 · 010: rename_cafam
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
@@ -343,14 +351,14 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 
 ### PWA
 
-- Manifest: CalenderFam/CaFam, `theme_color` y `background_color` piedra `#E8E5DD` (de `NEUTRALS.stone`), `start_url /dashboard/calendar`, `standalone`, iconos 192, 512 y 512 maskable generados desde `public/icons/icon.svg`. El favicon (`/icon.svg`) se enlaza explícitamente en `metadata.icons`: la convención de archivo sola no dejaba `<link rel="icon">`.
+- Manifest: CaFam (nombre y nombre corto), `theme_color` y `background_color` piedra `#E8E5DD` (de `NEUTRALS.stone`), `start_url /dashboard/calendar`, `standalone`, iconos 192, 512 y 512 maskable generados desde `public/icons/icon.svg`. El favicon (`/icon.svg`) se enlaza explícitamente en `metadata.icons`: la convención de archivo sola no dejaba `<link rel="icon">`.
 - iOS: `appleWebApp` en `layout.tsx` + `apple-touch-icon`. La portada muestra la ayuda "Compartir › Añadir a pantalla de inicio" **solo** en Safari iOS.
 - `public/sw.js`:
   - Precachea `/offline`, los iconos y los `/_next/static/` que referencia `/offline`.
   - En navegaciones usa red primero, con `/offline` como respaldo.
   - Usa caché primero para `/_next/static/` e `/icons/`.
   - **Nunca cachea HTML con sesión ni respuestas de Supabase** (privacidad en dispositivos compartidos).
-  - **Si cambias `sw.js` o los iconos, sube `CACHE_NAME`** (`calenderfam-vN`; ahora `v2`).
+  - **Si cambias `sw.js` o los iconos, sube `CACHE_NAME`** (`cafam-vN`; ahora `v3`).
   - Se registra solo en producción.
 
 ### Identidad visual
@@ -365,7 +373,7 @@ Reglas completas en la constitución ("Identidad visual y diseño de interfaz", 
 - **Tipografía**: Inter Tight (`next/font`, cifras tabulares comprobadas) para todo; `tabular-nums` en horas, fechas y contadores; sin monoespaciada.
 - **Forma**: superficies separadas por tono (piedra/papel), paneles `rounded-3xl`, botones y controles `rounded-full`; sombras solo en lo que flota (diálogos, hoja "Más", tooltips de la barra).
 - **Componentes base**: `Button`/`LinkButton` primario negro, secundario papel con borde `control`; campos `bg-paper` con borde `control`. Iconos: SVG propios en `components/shell/icons.tsx`.
-- Sin tema oscuro (fuera de alcance).
+- Sin tema oscuro todavía: lo añade la spec 011 (enmienda 3).
 
 ## 7. Entornos, despliegue y variables
 
@@ -510,7 +518,7 @@ npm run db:types       # regenera src/types/database.ts
 
 ## 11. Fuera de alcance hasta su spec
 
-Eventos recurrentes (spec futura sin número, con edición de una ocurrencia o de toda la serie), mover o redimensionar eventos ya creados arrastrando (crear arrastrando sí existe desde la 008), "Deshacer" en los avisos, vistas de año y de 4 días, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos, tema oscuro e i18n. No implementes nada de esto sin su spec aprobada.
+Mover o redimensionar eventos ya creados arrastrando (crear arrastrando sí existe desde la 008), "Deshacer" en los avisos, vistas de año y de 4 días, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. El tema oscuro, las transparencias y animaciones, las imágenes, los recurrentes, los comentarios y el asistente ya tienen spec aprobada (011 a 015): se implementan siguiendo su plan y sus tareas cuando estén aprobados.
 
 ## 12. Cómo continuar
 
@@ -518,5 +526,5 @@ La 006 y la 008 están cerradas y en producción (2026-10-23 y 2026-10-24). La 0
 
 La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincronización bidireccional)** están cerradas y en producción (2026-10-28 y 2026-10-29). La aplicación de Google está **publicada sin verificar** (proyecto `CaFam`, con marca, página principal y `/privacy`; sin logotipo para no tener que verificarla). En producción usa el cliente web `CaFamWeb`; en dev, `CaFam Local`.
 
-- **Siguiente:** no hay ninguna spec abierta. Las mejoras previstas (plan de 4 fases: renombrar a CaFam, rediseño, imágenes, recurrentes y comentarios, y chatbot sin coste) esperan a que el usuario avise; cualquier trabajo nuevo empieza por su spec con `spec-generator`.
-- En dev quedan unos 196 usuarios `@calenderfam.test` antiguos de pruebas; no se han borrado sin permiso del usuario.
+- **En curso:** la spec 010 (renombrar a CaFam), en la rama `010-renombrar-cafam`. Después, por orden y cada una con su plan y sus tareas aprobados: 011 (rediseño visual), 012 (imágenes), 013 (recurrentes), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
+- Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.

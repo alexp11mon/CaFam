@@ -64,7 +64,7 @@
 
   Hecho cuando: una segunda ejecución con `--dry-run` reporta 0 usuarios y 0 correos en cola, y `npm run test:db -- account` sigue en verde. Cubre: RF-16 | Módulo: dev-cleanup
 
-- [ ] T6 Poner al día `AGENTS.md` con el nombre único, la enmienda 3 y las specs 010 a 015
+- [x] T6 Poner al día `AGENTS.md` con el nombre único, la enmienda 3 y las specs 010 a 015
   Pasos: aplicar D7.
   - Título, §1 y el repositorio nuevo `alexp11mon/CaFam`.
   - Tabla de §2 con las specs 010 a 015.
@@ -75,6 +75,7 @@
   - El bloque de `next dev` no se toca (R7).
 
   Hecho cuando: `git grep -i -E` con los nombres antiguos sin resultados en `AGENTS.md`, y en el diff de `AGENTS.md` aparecen las specs 010 a 015 y la enmienda 3. Cubre: RF-13 | Módulo: docs-rename
+  Evidencia (2026-10-29): sin nombres antiguos en `AGENTS.md`; el diff añade las filas 010 a 015, el resumen de la enmienda 3, `cafam-v3`, la migración `rename_cafam`, §11 y §12 al día. El bloque de `next dev` no cambia. Solo documentación: no aplica la verificación de código.
 
 - [ ] T7 Impedir que vuelvan los nombres antiguos y renombrar el resto de la documentación
   Pasos:
