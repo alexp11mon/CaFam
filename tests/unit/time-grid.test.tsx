@@ -135,14 +135,15 @@ describe("TimeGrid", () => {
     );
   });
 
-  it("fills the screen and fits the seven days on a phone (plan time-grid)", () => {
+  it("fills the screen and fits the seven days at any width (plan time-grid)", () => {
     renderGrid();
 
     const scroller = screen.getByTestId("time-grid").parentElement!;
     expect(scroller).toHaveClass("overflow-y-auto", "flex-1");
+    // The seven columns always fit: no minimum width (spec 016, T12 review).
     const inner = scroller.parentElement!;
     expect(inner.style.minWidth).toBe("");
-    expect(inner).toHaveClass("tab:min-w-[40rem]");
+    expect(inner.className).not.toMatch(/min-w-/);
   });
 
   it("keeps creating on the slots for whoever can create (RF-46)", () => {

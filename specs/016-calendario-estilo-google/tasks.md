@@ -153,13 +153,20 @@
   Hecho cuando: `grep -r "event-chip\|event-row" src tests` sin resultados, `npm test` completo en verde y la verificación completa reportada.
   Cubre: RF-1, RF-62 | Módulo: event-chip (retirada), workspace
 
-- [ ] T12 Revisar la identidad visual en todas las anchuras, temas y acentos
+- [x] T12 Revisar la identidad visual en todas las anchuras, temas y acentos
   Pasos:
   - Hacer capturas a 390, 768, 769, 1024 y 1440 px de las cuatro vistas, del cajón y del selector, en claro y oscuro, con el acento rojo y el amarillo, y con movimiento reducido.
   - Guardarlas en `specs/016-calendario-estilo-google/evidencias/` y revisarlas contra la sección de identidad visual (enmienda 4) y contra las capturas de Google.
   - Corregir lo que salga, con su test si cambia la lógica.
   Hecho cuando: capturas guardadas, lista de revisión sin pendientes en este archivo y la verificación completa reportada.
   Cubre: RF-63, RF-61 | Módulo: validation, design-guard
+  Revisión (2026-10-30, 59 capturas en `evidencias/t12/`):
+  - [x] Ninguna vista desborda en horizontal a ninguna anchura (comprobado con `scrollWidth` en las 40 combinaciones de vista, anchura y tema).
+  - [x] A 1024 px la semana perdía el domingo por `min-w-[40rem]` en la rejilla: quitado, `time-grid.test.tsx` comprueba que no vuelve.
+  - [x] Títulos de la semana en el móvil: `hyphens-auto` en los bloques de rejilla (Safari parte con guion en español; Chromium en Windows sigue partiendo la palabra, como Google).
+  - [x] Hoy en círculo de acento, iniciales de los días, línea de ahora y bandas de la agenda se leen con el acento amarillo en claro y en oscuro.
+  - [x] Cajón, fila de meses y mini mes en oscuro con movimiento reducido: sin animación y con el mismo contraste.
+  - [x] 768 px usa el marco del móvil y 769 px el de tableta, sin saltos de altura en el mes.
 
 - [ ] T13 Validar la spec RF por RF en un iPhone real y en el escritorio
   Pasos:

@@ -243,12 +243,12 @@ describe("AgendaView loading", () => {
     renderAgenda([], { loadEvents });
 
     for (const month of ["enero", "febrero", "marzo"]) {
+      // Let the observer of the new window replace the old one first.
+      await act(async () => {});
       intersect(screen.getByTestId("agenda-end"));
-      await screen.findByRole(
-        "heading",
-        { name: `${month} de 2027` },
-        { timeout: 3000 },
-      );
+      expect(
+        await screen.findByRole("heading", { name: `${month} de 2027` }),
+      ).toBeInTheDocument();
     }
 
     // 56 + 3 × 28 = 140 days: the first 56 go.

@@ -89,10 +89,8 @@ export function TimeGrid({
     // The screen height under the header, never under 28 rem on a larger screen.
     <div className="flex h-[calc(100dvh-4.5rem-env(safe-area-inset-top))] flex-col gap-3 tab:h-[max(32rem,calc(100dvh-14rem))]">
       {/* The grid scrolls on its own; the day header and the strip stay on top (RF-38). */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-x-auto rounded-3xl bg-paper max-tab:-mx-4 max-tab:rounded-none">
-        <div
-          className={`flex min-h-0 flex-1 flex-col ${days.length > 1 ? "tab:min-w-[40rem]" : ""}`}
-        >
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-paper max-tab:-mx-4 max-tab:rounded-none">
+        <div className="flex min-h-0 flex-1 flex-col">
           <div className="grid border-b border-line" style={columns}>
             <div />
             {days.map((day) => {
