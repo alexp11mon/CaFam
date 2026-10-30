@@ -506,3 +506,137 @@ describe("confirm_event_image (RF-2)", () => {
     expect(gone.error?.code).toBe("CF404");
   });
 });
+
+// Spec 012, T4: copies, sync and upload keep or remove the images (plan D6,
+// D12; RF-18, RF-31, RF-32).
+const SECRET = process.env.CRON_SECRET ?? "";
+
+async function createConnection(ownerId: string, canWrite = false) {
+  const { data, error } = await admin
+    .from("calendar_connections")
+    .insert({
+      owner_id: ownerId,
+      provider: "google",
+      account_subject: `sub-${randomUUID()}`,
+      account_email: "owner@gmail.test",
+      can_write: canWrite,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+async function createSynced(ownerId: string, connectionId: string) {
+  const id = await createCalendar(ownerId, "Google");
+  const { error } = await admin.from("synced_calendars").insert({
+    calendar_id: id,
+    connection_id: connectionId,
+    provider: "google",
+    external_id: `cal-${randomUUID()}`,
+  });
+  if (error) throw error;
+  return id;
+}
+
+async function syncedEvent(calendarId: string) {
+  const { data, error } = await admin
+    .from("events")
+    .insert({
+      calendar_id: calendarId,
+      title: "Traído",
+      external_id: `ev-${randomUUID()}`,
+      ...TIMES,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+describe("copies of ownerless calendars (RF-31)", () => {
+  it("each copy gets the ready images, sharing the object", async () => {
+    const cleo = await createTestUser({ display_name: "Cleo" });
+    extraUsers.push(cleo.id);
+    const source = await createCalendar(owner.id, "Familia");
+    const event = await createEvent(source);
+    const ready = await seedImage(event, editor.id);
+    await seedImage(event, owner.id, { status: "pending" });
+
+    const { data: copy, error } = await admin.rpc("copy_calendar_for_owner", {
+      p_calendar_id: source,
+      p_user_id: cleo.id,
+    });
+    expect(error).toBeNull();
+
+    const { data: original } = await admin
+      .from("event_images")
+      .select("object_id, uploaded_by, width, height, created_at, status")
+      .eq("id", ready.id)
+      .single();
+    const { data: copied } = await admin
+      .from("event_images")
+      .select(
+        "object_id, uploaded_by, width, height, created_at, status, events!inner(calendar_id)",
+      )
+      .eq("events.calendar_id", copy!);
+    expect(copied).toHaveLength(1);
+    const { events: _events, ...row } = copied![0];
+    expect(row).toEqual(original);
+
+    const { data: canRead } = await cleo.client.rpc("can_read_event_image", {
+      p_name: `${ready.objectId}/full.jpg`,
+    });
+    expect(canRead).toBe(true);
+  });
+});
+
+describe("synced calendars (RF-18, RF-32)", () => {
+  it("an event removed by the sync queues the objects of its images", async () => {
+    const connection = await createConnection(owner.id);
+    const synced = await createSynced(owner.id, connection);
+    const image = await seedImage(await syncedEvent(synced), viewer.id);
+
+    const { error } = await anonClient().rpc("sync_apply_events", {
+      p_secret: SECRET,
+      p_calendar_id: synced,
+      p_events: [],
+      p_read_at: new Date(Date.now() + 3_600_000).toISOString(),
+    });
+    expect(error).toBeNull();
+    expect(await rowExists(image.id)).toBe(false);
+    expect(await queued(image.objectId)).toBe(true);
+  });
+
+  it("keeping a calendar that left Google keeps its images", async () => {
+    const connection = await createConnection(owner.id);
+    const synced = await createSynced(owner.id, connection);
+    const image = await seedImage(await syncedEvent(synced), owner.id);
+
+    const { error } = await owner.client.rpc("detach_synced_calendars", {
+      p_connection_id: connection,
+      p_calendar_ids: [synced],
+      p_delete: false,
+    });
+    expect(error).toBeNull();
+    expect(await rowExists(image.id)).toBe(true);
+  });
+
+  it("uploading a calendar to Google keeps the images in CaFam", async () => {
+    const connection = await createConnection(owner.id, true);
+    const normal = await createCalendar(owner.id, "Subir");
+    const event = await createEvent(normal);
+    const image = await seedImage(event, owner.id);
+
+    const { error } = await owner.client.rpc("sync_attach_uploaded", {
+      p_secret: SECRET,
+      p_calendar_id: normal,
+      p_connection_id: connection,
+      p_external_id: `cal-${randomUUID()}`,
+      p_mapping: [{ event_id: event, external_id: "up-1" }],
+    });
+    expect(error).toBeNull();
+    expect(await rowExists(image.id)).toBe(true);
+    expect(await visibleTo(owner, image.id)).toBe(true);
+  });
+});

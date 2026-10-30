@@ -62,7 +62,7 @@
   Hecho cuando: `npm run test:db -- storage-images` en verde. Cubre: RF-25, RF-26, RF-30 | Módulo: images-schema
   Evidencia (2026-10-30): rojo antes de la migración (6 tests). Migraciones `20261030120000_event_images_storage.sql` y `20261030120100_event_images_purge_claim.sql` aplicadas en dev. Dos hallazgos que ajustaron el plan (D5, D7): el CDN de Supabase seguía sirviendo la imagen a un Lector expulsado con la misma URL y token (se descarga con `?v=` aleatorio, que da `BYPASS`), y Postgres solo borra filas visibles por una política `SELECT` (los objetos se reclaman con el secreto y solo son visibles para `anon` 5 minutos). `test:db -- storage-images event-images` 27 tests en verde. typecheck, lint y format en verde, `npm test` 1418 tests, build correcto.
 
-- [ ] T4 Conservar las imágenes al copiar, sincronizar y subir a Google
+- [x] T4 Conservar las imágenes al copiar, sincronizar y subir a Google
   Pasos:
   - Primero, tests en rojo en `event-images.test.ts`:
     - `copy_calendar_for_owner` crea en cada copia las filas `ready` con el mismo `object_id`, autor, medidas y fecha, y el nuevo propietario descarga la imagen;
@@ -72,6 +72,7 @@
   - Después, la migración `copy_calendar_images` (`create or replace` de `copy_calendar_for_owner`, plan D6).
 
   Hecho cuando: `npm run test:db -- event-images account-orphans sync-worker` en verde. Cubre: RF-18, RF-31, RF-32 | Módulo: images-copy
+  Evidencia (2026-10-30): rojo en la copia (0 filas copiadas); la sincronización, desconectar conservando y subir a Google ya cumplían por diseño (D6) y quedan cubiertos. Migraciones `20261030130000_copy_calendar_images.sql` y `20261030130100_copy_calendar_images_fix.sql` (la segunda porque `account-apply` hace varias copias en una transacción y la tabla temporal chocaba, `42P07`). `test:db -- event-images account-copy account-apply sync-worker` 62 tests en verde (los de la 006 se llaman `account-*`, no `account-orphans`). typecheck, lint y format en verde, `npm test` 1418 tests, build correcto.
 
 - [ ] T5 Limpiar Storage cada hora sin la clave secreta
   Pasos:
