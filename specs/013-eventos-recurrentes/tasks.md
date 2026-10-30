@@ -17,7 +17,7 @@
 
 ### Iteración 1 — Base de datos, lógica pura y lectura
 
-- [ ] T1 Añadir las series y sus excepciones al esquema de eventos
+- [x] T1 Añadir las series y sus excepciones al esquema de eventos
   Pasos:
   - Primero, `tests/integration/event-series.test.ts` en rojo. Comprueba:
     - propietario y Editor crean una serie con `insert`; un Lector no (0 filas o `42501`); los miembros leen series y excepciones, un ajeno y `anon` no;
@@ -30,6 +30,7 @@
   - Después, la migración `event_series` según "Modelo de datos" (columnas, restricciones, FK compuesta, índices, `enforce_series_rules` y `reserve_event_images`).
 
   Hecho cuando: `npm run test:db -- event-series event-images schema` en verde y `src/types/database.ts` con las columnas nuevas. Cubre: RF-6, RF-23, RF-24, RF-29, RF-31, RF-32 | Módulo: series-schema
+  Evidencia (2026-10-30): rojo antes de la migración (11 tests, columnas inexistentes). Migraciones `20261031100000_event_series.sql`, `20261031100100_series_reserve_images.sql` y `20261031100200_series_rules_fast_tz.sql` (la validación de zona con `pg_timezone_names` hacía saltar el tiempo máximo al insertar 500 series) aplicadas en dev y tipos regenerados. `test:db -- event-series` 11 tests y `event-images schema merge` 6 archivos y 80 tests en verde. typecheck y format en verde, lint con los 2 avisos previos, `npm test` 1556 tests, build correcto.
 
 - [ ] T2 Modelar la regla de repetición y su RRULE
   Pasos:

@@ -580,9 +580,15 @@ export type Database = {
           created_by: string | null
           description: string | null
           ends_at: string
+          exdates: string[]
           external_id: string | null
           id: string
           location: string | null
+          original_start: string | null
+          recurrence: string | null
+          recurrence_tz: string | null
+          recurrence_until: string | null
+          series_id: string | null
           starts_at: string
           title: string
           updated_at: string
@@ -596,9 +602,15 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           ends_at: string
+          exdates?: string[]
           external_id?: string | null
           id?: string
           location?: string | null
+          original_start?: string | null
+          recurrence?: string | null
+          recurrence_tz?: string | null
+          recurrence_until?: string | null
+          series_id?: string | null
           starts_at: string
           title: string
           updated_at?: string
@@ -612,9 +624,15 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           ends_at?: string
+          exdates?: string[]
           external_id?: string | null
           id?: string
           location?: string | null
+          original_start?: string | null
+          recurrence?: string | null
+          recurrence_tz?: string | null
+          recurrence_until?: string | null
+          series_id?: string | null
           starts_at?: string
           title?: string
           updated_at?: string
@@ -640,6 +658,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_series_fkey"
+            columns: ["series_id", "calendar_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id", "calendar_id"]
           },
         ]
       }
