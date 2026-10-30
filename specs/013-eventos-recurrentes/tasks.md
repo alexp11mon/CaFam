@@ -48,12 +48,13 @@
   Hecho cuando: `npm test -- recurrence-presets` en verde. Cubre: RF-1, RF-2, RF-7 | Módulo: recurrence-presets
   Evidencia (2026-10-30): rojo con el módulo inexistente; `npm test -- recurrence-presets` 11 tests en verde (los nombres de días y meses viven en `summary.ts`, que completa T4). Verificación completa en verde (lint con los 2 avisos previos), build correcto.
 
-- [ ] T4 Resumir una regla en español
+- [x] T4 Resumir una regla en español
   Pasos:
   - Primero, `tests/unit/recurrence-summary.test.ts` en rojo con los textos exactos: "Cada día", "Cada 2 semanas el lunes y el jueves, 10 veces", "Cada mes el último viernes", "Cada mes el día 31", "Cada año el 29 de febrero", "Cada semana de lunes a viernes, hasta el 15 de enero de 2027", "Cada 3 días" y una vez ("1 vez").
   - Después, `src/lib/recurrence/summary.ts` (sin `ical.js`).
 
   Hecho cuando: `npm test -- recurrence-summary` en verde. Cubre: RF-5, RF-10 | Módulo: recurrence-summary
+  Evidencia (2026-10-30): rojo sin `summarizeRule`; `npm test -- recurrence-summary` 13 tests en verde. Verificación completa en verde (lint con los 2 avisos previos), build correcto.
 
 - [ ] T5 Expandir series en un rango con `ical.js` e identificar repeticiones
   Pasos:
