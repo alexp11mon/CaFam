@@ -32,12 +32,13 @@
   Hecho cuando: `npm run test:db -- event-series event-images schema` en verde y `src/types/database.ts` con las columnas nuevas. Cubre: RF-6, RF-23, RF-24, RF-29, RF-31, RF-32 | Módulo: series-schema
   Evidencia (2026-10-30): rojo antes de la migración (11 tests, columnas inexistentes). Migraciones `20261031100000_event_series.sql`, `20261031100100_series_reserve_images.sql` y `20261031100200_series_rules_fast_tz.sql` (la validación de zona con `pg_timezone_names` hacía saltar el tiempo máximo al insertar 500 series) aplicadas en dev y tipos regenerados. `test:db -- event-series` 11 tests y `event-images schema merge` 6 archivos y 80 tests en verde. typecheck y format en verde, lint con los 2 avisos previos, `npm test` 1556 tests, build correcto.
 
-- [ ] T2 Modelar la regla de repetición y su RRULE
+- [x] T2 Modelar la regla de repetición y su RRULE
   Pasos:
   - Primero, `tests/unit/recurrence-rule.test.ts` en rojo: `toRRule` y `fromRRule` de ida y vuelta para diaria, semanal con varios días, mensual por día y por posición (1.º a 4.º y último), anual y laborables; intervalo 1 y 99 válidos, 0 y 100 no; `COUNT` 1 y 999 válidos, 0 y 1000 no; `UNTIL` en fecha (día completo) y en hora de reloj de fin de día (con hora); `toRRule` siempre escribe las partes `BY*` (D5); `fromRRule` rechaza partes no admitidas (`RDATE`, `BYHOUR`, `BYSETPOS` suelto…) y longitudes de más de 200.
   - Después, `src/lib/recurrence/rule.ts`, `limits.ts` y `schemas.ts`.
 
   Hecho cuando: `npm test -- recurrence-rule` en verde. Cubre: RF-3, RF-4, RF-31, RF-32 | Módulo: recurrence-rule
+  Evidencia (2026-10-30): rojo con el módulo inexistente; `npm test -- recurrence-rule` 29 tests en verde. typecheck y format en verde, lint con los 2 avisos previos, `npm test` 178 archivos y 1585 tests, build correcto.
 
 - [ ] T3 Calcular las opciones rápidas de "Repetir" a partir de la fecha
   Pasos:
