@@ -9,7 +9,10 @@ export const RECURRENCE_MESSAGES = {
     "Esta serie ya tiene 100 cambios sueltos. Usa «Este y los siguientes».",
   calendarThis:
     "Para cambiar de calendario, elige «Todos los eventos» o «Este y los siguientes».",
+  ruleThis:
+    "Para cambiar la repetición, elige «Todos los eventos» o «Este y los siguientes».",
   gone: "Esta repetición ya no existe.",
+  scope: "Elige a qué eventos se aplica.",
 } as const;
 
 /** The SQLSTATE of the series rules (enforce_series_rules), or null. */

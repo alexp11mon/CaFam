@@ -13,6 +13,13 @@ export interface FormState<Field extends string> {
   done?: Done;
   /** The new event, when the form still has images to upload (spec 012 RF-7). */
   eventId?: string;
+  /** What a change to a series would lose, before it is confirmed (spec 013 RF-19, RF-24b). */
+  loss?: Loss;
+}
+
+export interface Loss {
+  exceptions: number;
+  images: number;
 }
 
 /** "gone": deleted in Google while it was being changed (spec 009 RF-25). */
@@ -22,6 +29,7 @@ export type Done = "created" | "updated" | "deleted" | "gone";
 export interface ConfirmState {
   formError?: string;
   done?: Done;
+  loss?: Loss;
 }
 
 export type ParseResult<Data, Field extends string> =

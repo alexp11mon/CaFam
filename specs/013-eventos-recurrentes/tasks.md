@@ -141,7 +141,7 @@
   Hecho cuando: `npm test -- event-block event-detail design-tokens` en verde y capturas de agenda, mes, semana, día y detalle a 390, 768 y 1440 px. Cubre: RF-9, RF-10, RF-16 | Módulo: series-marks
   Evidencia (2026-10-30): rojo con `RepeatIcon` y la fila «Se repite» inexistentes; `npm test -- event-block event-detail design-tokens` en verde (icono y «Se repite» en `sr-only` en las tres formas, sin icono donde no cabe con las mismas reglas que el de imágenes, prop `icons` común; resumen de la regla y «Cambiado solo en este evento» en el detalle). `npm test` 187 archivos y 1684 tests, typecheck, format y build correctos, lint con los 2 avisos previos. Capturas de agenda, mes, semana, día y detalle a 390, 768 y 1440 px en `next start -p 3100` con una serie semanal: el icono sale junto al título y el detalle de una repetición virtual dice «Cada semana el miércoles».
 
-- [ ] T12 Guardar cambios en una repetición eligiendo el alcance
+- [x] T12 Guardar cambios en una repetición eligiendo el alcance
   Pasos:
   - Primero, en rojo:
     - `series-scope-dialog.test.tsx`: tres opciones; sin "Solo este evento" si cambió el calendario (D10); con 100 excepciones, "Solo este evento" deshabilitado con la propuesta de "Este y los siguientes" (RF-32); con pérdidas, el texto "Se perderán N cambios y M imágenes" y "Guardar igualmente";
@@ -150,6 +150,7 @@
   - Después, `series-scope-dialog.tsx`, `EventForm` y `updateEvent`.
 
   Hecho cuando: `npm test -- series-scope-dialog event-form event-actions` en verde y cada alcance probado a mano en `next start -p 3100`. Cubre: RF-15, RF-16, RF-17, RF-18, RF-19, RF-21, RF-23, RF-24b, RF-32 | Módulo: scope-ui, series-actions
+  Evidencia (2026-10-30): rojo con `series-scope-dialog`, `planSeriesChange` y el alcance de `updateEvent` inexistentes; `npm test -- series-scope-dialog series-write series-actions event-form event-actions` en verde (diálogo: tres alcances, sin «Solo este evento» al cambiar de calendario, deshabilitado a las 100 excepciones con la propuesta, pérdidas con «Guardar igualmente» y `confirmLoss`; plan: función y argumentos de cada alcance, desplazamiento de D12, descarte de RF-19, D11 y conversión a suelto; acción: id de repetición, cada alcance, `loss` sin confirmar, CF429 y CF404, suelto → serie con y sin imágenes (D7) y nunca en traídos). `npm test` 189 archivos y 1719 tests, typecheck, format y build correctos, lint con los 2 avisos previos. En `next start -p 3100`: «Solo este evento» cambia solo el 11, «Este y los siguientes» desde el 18 parte la serie, «Todos los eventos» desde el 4 conserva la excepción del 11 (RF-18), y cambiar la regla con «Todos» avisa «Se perderá 1 cambio.» y la descarta al confirmar. La conversión suelto → serie con imágenes solo está probada con tests unitarios.
 
 - [ ] T13 Borrar y duplicar repeticiones
   Pasos:

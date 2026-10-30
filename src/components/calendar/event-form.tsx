@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { RepeatField } from "@/components/recurrence/repeat-field";
+import { SeriesScopeDialog } from "@/components/recurrence/series-scope-dialog";
 import { ImagePicker } from "@/components/images/image-picker";
 import { UploadList } from "@/components/images/upload-list";
 import { useImageUploads } from "@/components/images/use-image-uploads";
@@ -20,6 +21,7 @@ import {
 import type { EventFormField, EventFormValues } from "@/lib/calendar/schemas";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
+import type { SeriesScope } from "@/lib/recurrence/series-write";
 import { ColorPicker } from "./color-picker";
 import { useEventModal } from "./event-modal";
 
@@ -55,6 +57,7 @@ export function EventForm({
   cancelHref,
   focusTitle = false,
   withImages = false,
+  series,
 }: {
   action: FormAction<EventFormState>;
   initial: EventFormValues;
@@ -68,6 +71,8 @@ export function EventForm({
   focusTitle?: boolean;
   /** Creating offers images, uploaded once the event exists (spec 012 RF-7). */
   withImages?: boolean;
+  /** Editing an occurrence: saving asks the scope first (spec 013 RF-15, RF-32). */
+  series?: { limitReached: boolean };
 }) {
   const [state, formAction, pending] = useActionState(action, {
     values: initial,
@@ -120,6 +125,10 @@ export function EventForm({
   const [endTouched, setEndTouched] = useState(false);
   const [startDate, setStartDate] = useState(values.startDate);
   const [endDate, setEndDate] = useState(values.endDate);
+  // The scope dialog: open while choosing or confirming losses (spec 013 RF-19).
+  const [asking, setAsking] = useState(false);
+  const [scope, setScope] = useState<SeriesScope | null>(null);
+  const [dismissed, setDismissed] = useState<EventFormState | null>(null);
 
   // The fields are uncontrolled (React resets forms after an action); this state only
   // drives the times and the category list. A server response carries what was
@@ -134,6 +143,8 @@ export function EventForm({
     setEndTime(values.endTime);
     setStartDate(values.startDate);
     setEndDate(values.endDate);
+    // Losses keep the dialog open to confirm; any other answer closes it.
+    setAsking(Boolean(state.loss));
   }
 
   function changeStart(next: string) {
@@ -190,6 +201,14 @@ export function EventForm({
       noValidate
       // Any typing counts as a change the window must not lose silently (spec 008 RF-7).
       onInput={() => modal?.setDirty(true)}
+      onSubmit={(event) => {
+        // An occurrence is saved from the scope dialog, never straight away.
+        const submitter = (event.nativeEvent as SubmitEvent).submitter;
+        if (series && submitter?.getAttribute("name") !== "scope") {
+          event.preventDefault();
+          setAsking(true);
+        }
+      }}
       className="flex flex-col gap-4"
     >
       {modal ? <input type="hidden" name="mode" value="modal" /> : null}
@@ -340,6 +359,22 @@ export function EventForm({
         >
           {pending ? pendingLabel : submitLabel}
         </Button>
+        {series ? (
+          <SeriesScopeDialog
+            open={asking}
+            verb="save"
+            allowThis={calendarId === initial.calendarId}
+            limitReached={series.limitReached}
+            loss={dismissed === state ? null : (state.loss ?? null)}
+            scope={scope}
+            pending={pending}
+            onChoose={setScope}
+            onCancel={() => {
+              setAsking(false);
+              setDismissed(state);
+            }}
+          />
+        ) : null}
         {modal ? (
           <Button variant="secondary" onClick={modal.requestClose}>
             Cancelar

@@ -30,6 +30,7 @@ const FLOATING = new Set([
   "src/components/calendar/merge-form.tsx",
   "src/components/calendar/quick-create.tsx",
   "src/components/recurrence/recurrence-editor.tsx",
+  "src/components/recurrence/series-scope-dialog.tsx",
   "src/components/shell/more-sheet.tsx",
   "src/components/shell/nav-drawer.tsx",
   "src/components/shell/side-rail.tsx",

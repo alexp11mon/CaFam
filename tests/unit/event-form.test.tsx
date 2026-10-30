@@ -1,6 +1,14 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import {
   EventForm,
   type EventFormValues,
@@ -507,5 +515,85 @@ describe("EventForm: Repetir (spec 013 RF-1, RF-2, RF-29)", () => {
       message,
     );
     expect(screen.getByLabelText("Repetir")).toHaveDisplayValue("Cada día");
+  });
+});
+
+// Spec 013, T12: saving an occurrence asks the scope first (RF-15, RF-19, D10).
+describe("EventForm on an occurrence", () => {
+  const SERIES_INITIAL = {
+    ...INITIAL,
+    title: "Natación",
+    repeat: "custom:FREQ=WEEKLY;INTERVAL=1;BYDAY=MO",
+  };
+
+  function renderSeries(
+    implementation: (prev: State, formData: FormData) => Promise<State>,
+    limitReached = false,
+  ) {
+    const action = vi.fn(implementation);
+    render(
+      <EventForm
+        action={action}
+        initial={SERIES_INITIAL}
+        calendars={CALENDARS}
+        categories={CATEGORIES}
+        submitLabel="Guardar cambios"
+        pendingLabel="Guardando…"
+        cancelHref="/dashboard"
+        series={{ limitReached }}
+      />,
+    );
+    return action;
+  }
+
+  beforeAll(() => {
+    HTMLDialogElement.prototype.showModal = function () {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close = function () {
+      this.open = false;
+    };
+  });
+
+  it("opens the scope dialog instead of saving, then saves with the scope", async () => {
+    const user = userEvent.setup();
+    const action = renderSeries(async () => ({ values: SERIES_INITIAL }));
+    expect(screen.getByLabelText("Repetir")).toHaveDisplayValue(
+      "Cada semana el lunes",
+    );
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+    expect(action).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Solo este evento" }));
+    await waitFor(() => expect(action).toHaveBeenCalled());
+    expect(action.mock.calls[0]![1].get("scope")).toBe("this");
+  });
+
+  it("asks to confirm the losses and sends confirmLoss (RF-19)", async () => {
+    const user = userEvent.setup();
+    const action = renderSeries(async (_prev, data) =>
+      data.get("confirmLoss") === "1"
+        ? { values: SERIES_INITIAL, formError: "guardado" }
+        : { values: SERIES_INITIAL, loss: { exceptions: 1, images: 2 } },
+    );
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+    await user.click(screen.getByRole("button", { name: "Todos los eventos" }));
+    await screen.findByText("Se perderán 1 cambio y 2 imágenes.");
+    await user.click(
+      screen.getByRole("button", { name: "Guardar igualmente" }),
+    );
+    await waitFor(() => expect(action).toHaveBeenCalledTimes(2));
+    const second = action.mock.calls[1]![1];
+    expect(second.get("scope")).toBe("all");
+    expect(second.get("confirmLoss")).toBe("1");
+  });
+
+  it("hides 'Solo este evento' once the calendar changes (D10)", async () => {
+    const user = userEvent.setup();
+    renderSeries(async () => ({ values: SERIES_INITIAL }));
+    await user.selectOptions(screen.getByLabelText("Calendario"), "cal-b");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+    expect(
+      screen.queryByRole("button", { name: "Solo este evento" }),
+    ).not.toBeInTheDocument();
   });
 });

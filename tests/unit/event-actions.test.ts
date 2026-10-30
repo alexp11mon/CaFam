@@ -104,6 +104,7 @@ beforeEach(() => {
   h.writeEvent.mockReset();
   h.writeEvent.mockResolvedValue({ status: "normal" });
   h.current = {
+    id: EVENT_ID,
     calendar_id: CALENDAR_ID,
     title: "Antes",
     description: null,

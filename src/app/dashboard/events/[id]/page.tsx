@@ -22,6 +22,7 @@ async function Event({ params }: { params: Promise<{ id: string }> }) {
       canAttach={data.canAttach}
       images={data.images}
       editInitial={data.editInitial}
+      series={data.series}
       calendars={data.calendars}
       categories={data.categories}
       updateAction={updateEvent.bind(null, id)}

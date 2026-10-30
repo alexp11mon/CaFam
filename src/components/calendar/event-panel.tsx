@@ -35,6 +35,7 @@ export function EventPanel({
   deleteAction,
   canAttach = false,
   images = [],
+  series,
 }: {
   detail: EventDetailData;
   timeZone: string;
@@ -49,6 +50,8 @@ export function EventPanel({
   canAttach?: boolean;
   /** Ready images in upload order (spec 012 RF-9). */
   images?: EventImage[];
+  /** An occurrence of a series (spec 013 RF-15). */
+  series?: { limitReached: boolean } | null;
 }) {
   const modal = useEventModal();
   const [editing, setEditing] = useState(false);
@@ -71,6 +74,7 @@ export function EventPanel({
           submitLabel="Guardar cambios"
           pendingLabel="Guardando…"
           cancelHref="/dashboard/calendar"
+          series={series ?? undefined}
         />
       </div>
     );

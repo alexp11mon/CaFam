@@ -34,6 +34,8 @@ export interface EventData {
   images: EventImage[];
   /** Any member attaches images, viewers and synced calendars included (spec 012 RF-4, RF-8). */
   canAttach: boolean;
+  /** An occurrence: saving asks the scope (spec 013 RF-15, RF-32). */
+  series: { limitReached: boolean } | null;
 }
 
 /**
@@ -101,8 +103,8 @@ export async function loadEvent(id: string): Promise<EventData | null> {
       location: event.location ?? "",
       color: event.color ?? "",
       categoryId: event.categoryId ?? "",
-      // Spec 013: the scope dialog decides what changes; T12 fills it.
-      repeat: "none",
+      // An occurrence shows its series' rule (spec 013 RF-21).
+      repeat: event.series ? `custom:${event.series.recurrence}` : "none",
     },
     calendars: editable.map(({ id, name, color, synced }) => ({
       id,
@@ -113,5 +115,9 @@ export async function loadEvent(id: string): Promise<EventData | null> {
     categories,
     images,
     canAttach: true,
+    // An existing exception adds none (RF-32).
+    series: event.series
+      ? { limitReached: !event.rowId && event.series.exceptions >= 100 }
+      : null,
   };
 }
