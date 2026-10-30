@@ -27,6 +27,12 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie |
 | 014-comentarios-en-eventos | Notas y comentarios en los eventos por cualquier miembro del calendario, Lectores incluidos |
 | 015-asistente-de-chat | Asistente de chat en lenguaje natural que consulta los eventos y la disponibilidad común entre usuarios, con un proveedor LLM gratuito |
+| 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: eventos como bloques rellenos, cabecera con cajón y botón flotante, deslizar para cambiar de periodo, agenda continua y fila de meses. Se hace antes de la 013 |
+| 017-mover-eventos-y-menu | Mover y redimensionar eventos arrastrando (dedo y ratón), menú contextual en el ordenador (color, duplicar, borrar), "Deshacer" en los avisos, detalle en hoja inferior en el móvil, pellizcar para ampliar las horas y más atajos. Va después de la 016 y antes de la 013 |
+| Futura (sin número) | Recordatorios con notificaciones push (Web Push, gratis; en iOS solo con la app instalada) |
+| Futura (sin número) | Búsqueda de eventos por título, lugar y descripción |
+| Futura (sin número) | Compartir e integrar con el sistema: compartir un evento, recibir `.ics` o fotos compartidas, accesos directos y número de eventos de hoy en el icono |
+| Futura (sin número) | Alta de eventos en lenguaje natural ("Cena con Ana mañana a las 21"), sin IA ni coste |
 
 Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": desde el 2026-10-22 son la 006 y la 007. Las specs cerradas no se editan, con una única excepción: el cambio de nombre a CaFam de la spec 010, que solo sustituye el nombre y no toca requisitos, decisiones ni evidencias (enmienda 3).
 
@@ -85,15 +91,18 @@ La interfaz deja de ser la plantilla por defecto (azul sobre blanco) y adopta un
 ### Qué se toma de la referencia
 
 - **Fondo piedra cálido y paneles un tono más claros.** La pantalla es un plano de color piedra; la barra lateral y los paneles se separan por un escalón de tono, no por sombras. Tinta casi negra para el texto y gris cálido para lo secundario.
-- **El número del día como protagonista.** En la vista de agenda/día, la fecha se compone con un número enorme y muy grueso (el gesto distintivo de la referencia) con el día de la semana pequeño y en el color de acento al lado. Es la única excepción a la escala tipográfica contenida de una app.
-- **Eventos como filas de texto, no como bloques de color.** Hora en negrita con la hora de fin en gris, una barra vertical fina con el color del calendario o de la categoría, título en negrita y el lugar o la nota en gris. El color identifica, no rellena.
-  - **Excepción (enmienda del 2026-10-23, spec 008 plan D9, aprobada por el usuario):** en la **vista mes**, los eventos de día completo y de varios días son una barra **rellena** con el color pastel del calendario, con el texto en tinta y un contorno `ink/15`, como en Google Calendar; los eventos con hora del mes son un **punto** del color + hora + título, sin relleno. Toda la paleta tiene un contraste ≥ 4,5:1 con la tinta (`palette.test.ts`). Fuera de esa barra el color sigue siendo solo una marca.
+- **El número del día como protagonista.** Las vistas semana y día ponen el número del día en grande sobre la rejilla, y en la agenda el día se compone como en Google Calendar: abreviatura arriba y número debajo, a la izquierda de los eventos. El día de hoy lleva el número en un círculo relleno del acento (enmienda 4, spec 016; sustituye al número gigante de la agenda de la spec 005).
+- **Eventos como bloques rellenos** (enmienda 4, 2026-10-30, spec 016, aprobada por el usuario; sustituye a "eventos como filas de texto" y a la excepción de la spec 008). En las vistas mes, semana, día y agenda, y en todas las anchuras, cada evento es un bloque relleno con el color pastel del evento o de su calendario, como en Google Calendar. El texto va en tinta y el título en negrita, en los dos temas. Toda la paleta tiene un contraste ≥ 4,5:1 con la tinta (`palette.test.ts`). El título siempre es visible, aunque esté recortado, para que la información no dependa solo del color. Fuera de los bloques de evento, el color del calendario sigue siendo solo una marca (puntos del mini calendario, avatares, listas).
 - **Un único color de acento para "ahora" y "hoy":** el día de hoy en el mini calendario (cuadrado relleno), la línea de la hora actual, las abreviaturas de los días y el elemento seleccionado. En nada más.
 - **Botones de acción en negro**, totalmente redondos (píldora o círculo), con texto blanco; los secundarios, sin relleno o en el tono del panel. El botón flotante "+" (crear evento) es un círculo negro.
 - **Mini calendario mensual** compacto con puntos de color bajo los días que tienen eventos (un punto por calendario, máximo tres).
 - **Personas como avatares circulares** (iniciales sobre un tinte pálido propio de cada persona, porque la app no guarda fotos), usados en el filtro por persona y en la lista de miembros.
-- **Una superficie de color pleno por pantalla como máximo**, para lo más urgente (p. ej. el próximo evento con su cuenta atrás), en lugar de tarjetas iguales.
-- **Escritorio en columnas** (navegación estrecha, panel con mini calendario y listas, área principal de agenda) y **móvil como composición propia**: título grande con la fecha, contenido a ancho completo y barra inferior con botones circulares y la acción principal como píldora negra centrada.
+- **Una superficie de color pleno por pantalla como máximo**, para lo más urgente (p. ej. el próximo evento con su cuenta atrás), en lugar de tarjetas iguales. Los bloques de evento rellenos del calendario no cuentan para este límite (enmienda 4).
+- **Escritorio en columnas** (navegación estrecha, panel con mini calendario y listas, área principal de agenda) y **móvil como Google Calendar** (enmienda 4, spec 016; sustituye a la barra inferior). Hasta 768 px hay:
+  - una cabecera superior con el botón de menú, el título de la pantalla (en el calendario, el mes, que se despliega), "Hoy" y el avatar;
+  - un cajón lateral con las vistas, los filtros y el resto de destinos;
+  - el botón flotante "+" en tinta en el calendario, y el contenido a ancho completo.
+- **Banda del mes en la agenda** (enmienda 4): cada mes empieza con una banda alta con su nombre sobre un degradado suave de tokens, igual en todos los meses. Nunca con ilustraciones ni imágenes de Google.
 
 ### Qué se ignora de la referencia
 
@@ -113,7 +122,7 @@ Su contenido y sus funciones, que no existen en la app ni están en su alcance: 
 - Radios decididos una vez: paneles con radio medio (≈ 16 px), controles y botones totalmente redondos.
 - Márgenes laterales de 16 px en móvil y una rejilla única en escritorio; el espacio entre bloques es mayor que el espacio dentro de ellos.
 - **Movimiento** (enmienda 3): microinteracciones en botones y controles (pulsar, pasar por encima, foco), apertura y cierre de ventanas y hojas, y transiciones al cambiar de vista (agenda, mes, semana, día), de periodo, de calendario visible y de tema. Cada animación dura como mucho 400 ms, solo anima `transform`, `opacity` o `filter`, y con `prefers-reduced-motion: reduce` se sustituye por un cambio inmediato o un fundido.
-- **Transparencias y profundidad** (enmienda 3): los contenedores principales (barra lateral, barra inferior, paneles, ventanas, hojas y avisos) pueden ser superficies translúcidas con desenfoque de fondo (`backdrop-filter`), borde fino y sombra suave, definidas como tokens. Debajo del cristal el contraste del texto se mide contra el peor fondo posible y cumple P9; sin soporte de `backdrop-filter`, la superficie es opaca. Se permiten degradados suaves como fondo de la pantalla o de esas superficies, también como tokens.
+- **Transparencias y profundidad** (enmienda 3): los contenedores principales (barra lateral, cabecera superior del móvil, cajón, paneles, ventanas, hojas y avisos) pueden ser superficies translúcidas con desenfoque de fondo (`backdrop-filter`), borde fino y sombra suave, definidas como tokens. Debajo del cristal el contraste del texto se mide contra el peor fondo posible y cumple P9; sin soporte de `backdrop-filter`, la superficie es opaca. Se permiten degradados suaves como fondo de la pantalla o de esas superficies, también como tokens.
 
 ### Prohibido en la interfaz
 
@@ -129,12 +138,16 @@ Colores, sombras, desenfoques o degradados sueltos que no sean tokens; texto sob
 
 El calendario se comporta como Google Calendar para que quien lo conozca lo entienda sin explicación. Se estudió con REA (`specs/008-mejoras-de-experiencia/analisis-google-calendar.md`) **solo su comportamiento**: no se copia código, estilos, iconos ni imágenes de Google, y su aspecto sigue siendo el de esta sección.
 
-- **Crear sin salir del calendario.** Un hueco vacío (o un arrastre con ratón en semana y día) abre una **ventana rápida** junto al hueco (título, día y horas, calendario); "Más opciones" lleva al formulario completo con lo escrito. El alta, el detalle y la edición se abren en una **ventana sobre el calendario**, a pantalla completa en el móvil; el enlace o la recarga muestran la página completa.
-- **Atajos sin modificadores** (N, T, ←, →, A, M, S, D), nunca mientras se escribe ni con una ventana abierta, y visibles en los botones de vista.
+- **Crear sin salir del calendario.** Un hueco vacío (o un arrastre con ratón en semana y día) abre una **ventana rápida** junto al hueco (título, día y horas, calendario); "Más opciones" lleva al formulario completo con lo escrito. El alta, el detalle y la edición se abren en una **ventana sobre el calendario**, a pantalla completa en el móvil; el enlace o la recarga muestran la página completa. Desde la enmienda 5 (spec 017), el **detalle** se abre en el móvil en una **hoja inferior** a media pantalla, que se amplía o se cierra deslizándola; el alta y la edición siguen a pantalla completa.
+- **Atajos sin modificadores** (N, T, ←, →, A, M, S, D y, desde la 017, E, G, Supr y ?), nunca mientras se escribe ni con una ventana abierta, y visibles en los botones de vista o en la ayuda de atajos. Los únicos atajos con modificador son Ctrl/Cmd+C y Ctrl/Cmd+V para copiar y pegar un evento, y Alt + flechas para moverlo (enmienda 5).
+- **Mover y redimensionar** (enmienda 5, spec 017): los eventos se arrastran con el ratón o, en táctil, tras mantenerlos pulsados 500 ms. Al soltar se guardan sin confirmación. Todo lo que se hace arrastrando se puede hacer también con el teclado.
+- **Menú contextual** (enmienda 5): solo con ratón o teclado, con la paleta de colores, "Duplicar" y "Borrar". Sin menú en pantallas táctiles.
 - **Horas como combobox**: se escriben o se eligen de una lista de 30 en 30 minutos; la de fin muestra la duración y sigue a la de inicio.
-- **Aviso breve** abajo tras guardar, borrar o duplicar, que se anuncia a los lectores de pantalla. Sin "Deshacer".
-- Lo que flota (la ventana de evento, la ventana rápida, la lista de horas, el aviso, los diálogos, la hoja "Más" y los tooltips) lleva la sombra de "flotante"; las superficies en reposo, como mucho la sombra suave de las transparencias. La guardia `design-tokens.test.ts` mantiene los tokens de sombra.
-- Fuera de alcance hasta su spec: mover o redimensionar eventos arrastrando.
+- **Aviso breve** abajo tras guardar, borrar o duplicar, que se anuncia a los lectores de pantalla. Desde la enmienda 5 (spec 017), el aviso de mover, redimensionar, cambiar el color, pegar o borrar un evento ofrece "Deshacer" durante 10 s, solo para la última acción. Borrar un solo evento ya no pide confirmación.
+- Lo que flota (la ventana de evento, la ventana rápida, la lista de horas, el aviso, los diálogos, el cajón, el botón flotante "+" y los tooltips) lleva la sombra de "flotante"; las superficies en reposo, como mucho la sombra suave de las transparencias. La guardia `design-tokens.test.ts` mantiene los tokens de sombra.
+- **Gestos del móvil** (enmienda 4, spec 016): deslizar a izquierda o derecha en mes, semana y día cambia de periodo; la agenda es una lista continua. Todo lo que se hace deslizando también se puede hacer con un control o un atajo.
+- **Pellizcar para ampliar** (enmienda 5): en semana y día, pellizcar o Ctrl + rueda cambia la altura de las horas, recordada por dispositivo.
+- Fuera de alcance: arrastrar a otro periodo o a otro calendario, seleccionar varios eventos y deshacer más de una acción.
 
 ## Verificación obligatoria
 
@@ -155,4 +168,6 @@ Checklist que cierra cada tarea (se reporta la salida de cada comando):
 - Las decisiones de stack de esta versión (Next.js 16 + Supabase Free + Vercel Hobby + Tailwind CSS 4) fueron confirmadas por el usuario en la spec 001.
 - Resueltas en la spec 005: la tipografía es Inter Tight; los valores de los seis acentos y de los neutros están en `src/lib/theme/accents.ts` (con su contraste comprobado en `accents.test.ts`); y el acento se guarda por usuario en `profiles.accent`, así que se ve igual en todos sus dispositivos.
 - Enmienda 3 (2026-10-29, aprobada por el usuario): nombre CaFam en todas partes, tema oscuro, transparencias, sombras, degradados y animaciones, Supabase Storage, `ical.js` para repeticiones, asistente de chat con un proveedor LLM gratuito y excepción de cambio de nombre en las specs cerradas. Las enmiendas 1 y 2 están en la spec 007.
+- Enmienda 4 (2026-10-30, aprobada por el usuario con la spec 016): eventos como bloques rellenos en todas las vistas, composición del móvil al estilo Google Calendar (cabecera, cajón y botón flotante, sin barra inferior), día de la agenda al estilo Google y banda del mes con degradado.
+- Enmienda 5 (2026-10-30, aprobada por el usuario con la spec 017): mover y redimensionar eventos arrastrando, menú contextual en el ordenador, "Deshacer" en los avisos (y borrar un evento sin confirmación), detalle en hoja inferior en el móvil, pellizcar para ampliar y atajos nuevos (E, G, Supr, ?, Ctrl/Cmd+C/V y Alt + flechas).
 - Resuelta en la spec 015: una persona consiente que el asistente use su disponibilidad con un ajuste propio, desactivado por defecto.
