@@ -40,12 +40,13 @@
   Hecho cuando: `npm test -- recurrence-rule` en verde. Cubre: RF-3, RF-4, RF-31, RF-32 | Módulo: recurrence-rule
   Evidencia (2026-10-30): rojo con el módulo inexistente; `npm test -- recurrence-rule` 29 tests en verde. typecheck y format en verde, lint con los 2 avisos previos, `npm test` 178 archivos y 1585 tests, build correcto.
 
-- [ ] T3 Calcular las opciones rápidas de "Repetir" a partir de la fecha
+- [x] T3 Calcular las opciones rápidas de "Repetir" a partir de la fecha
   Pasos:
   - Primero, `tests/unit/recurrence-presets.test.ts` en rojo: para el martes 10-11-2026 salen "Cada día", "Cada semana el martes", "Cada mes el día 10", "Cada mes el 2.º martes", "Cada año el 10 de noviembre", "Todos los días laborables (lunes a viernes)" y "Personalizado…", sin "el último"; para el martes 24-11-2026 sale además "Cada mes el último martes"; "No se repite" es el valor por defecto; `resolveRepeat` resuelve cada tipo con la fecha enviada (cambiar la fecha cambia el día, D13), `custom:<RRULE>` pasa por `fromRRule` y un valor desconocido da error.
   - Después, `src/lib/recurrence/presets.ts`.
 
   Hecho cuando: `npm test -- recurrence-presets` en verde. Cubre: RF-1, RF-2, RF-7 | Módulo: recurrence-presets
+  Evidencia (2026-10-30): rojo con el módulo inexistente; `npm test -- recurrence-presets` 11 tests en verde (los nombres de días y meses viven en `summary.ts`, que completa T4). Verificación completa en verde (lint con los 2 avisos previos), build correcto.
 
 - [ ] T4 Resumir una regla en español
   Pasos:
