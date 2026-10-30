@@ -152,12 +152,13 @@
   Hecho cuando: `npm test -- series-scope-dialog event-form event-actions` en verde y cada alcance probado a mano en `next start -p 3100`. Cubre: RF-15, RF-16, RF-17, RF-18, RF-19, RF-21, RF-23, RF-24b, RF-32 | Módulo: scope-ui, series-actions
   Evidencia (2026-10-30): rojo con `series-scope-dialog`, `planSeriesChange` y el alcance de `updateEvent` inexistentes; `npm test -- series-scope-dialog series-write series-actions event-form event-actions` en verde (diálogo: tres alcances, sin «Solo este evento» al cambiar de calendario, deshabilitado a las 100 excepciones con la propuesta, pérdidas con «Guardar igualmente» y `confirmLoss`; plan: función y argumentos de cada alcance, desplazamiento de D12, descarte de RF-19, D11 y conversión a suelto; acción: id de repetición, cada alcance, `loss` sin confirmar, CF429 y CF404, suelto → serie con y sin imágenes (D7) y nunca en traídos). `npm test` 189 archivos y 1719 tests, typecheck, format y build correctos, lint con los 2 avisos previos. En `next start -p 3100`: «Solo este evento» cambia solo el 11, «Este y los siguientes» desde el 18 parte la serie, «Todos los eventos» desde el 4 conserva la excepción del 11 (RF-18), y cambiar la regla con «Todos» avisa «Se perderá 1 cambio.» y la descarta al confirmar. La conversión suelto → serie con imágenes solo está probada con tests unitarios.
 
-- [ ] T13 Borrar y duplicar repeticiones
+- [x] T13 Borrar y duplicar repeticiones
   Pasos:
   - Primero, en rojo: borrar una repetición abre el diálogo de alcance con el aviso de imágenes que se pierden y `deleteEvent(id, mode, scope)` llama a `delete_occurrences`; duplicar una repetición (`?from=<id de repetición>`) abre el alta con su fecha y "No se repite".
   - Después, `event-detail.tsx`, `deleteEvent` y `load-new-event.ts`.
 
   Hecho cuando: `npm test -- event-detail event-actions load-new-event` en verde. Cubre: RF-20, RF-22, RF-24b | Módulo: scope-ui, series-actions
+  Evidencia (2026-10-30): rojo con `SeriesDelete`, `planSeriesDelete` y el alcance de `deleteEvent` inexistentes, y con `from` que rechazaba ids de repetición; `npm test -- event-detail event-actions series-actions series-write new-event-query` en verde (diálogo de borrado con alcance, aviso «Se perderán 2 imágenes.» y `confirmLoss`; `delete_occurrences` con cada alcance, `series_loss` con `p_only` para «Solo este evento», formulario leído también en la página completa). No hay `load-new-event.test`: el duplicado lo cubren `new-event-query` y `getEvent`, y se probó a mano. `npm test` 189 archivos y 1729 tests, typecheck, format y build correctos, lint con los 2 avisos previos. En `next start -p 3100`: «Solo este evento» borra el 12 y deja el 13; duplicar la repetición virtual del 13 abre el alta con «Natación club», 2026-11-13 y «No se repite».
 
 - [ ] T14 Añadir imágenes a una repetición
   Pasos:

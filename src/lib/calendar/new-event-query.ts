@@ -1,5 +1,6 @@
 import { DEFAULT_END_TIME, DEFAULT_START_TIME } from "./format";
 import { clampEnd, fromMinutes, toMinutes } from "./time-options";
+import { parseEventId } from "@/lib/recurrence/occurrence-id";
 import { parseDateKey } from "./time-zone";
 
 type Query = { [key: string]: string | string[] | undefined };
@@ -16,7 +17,6 @@ export interface NewEventDefaults {
 }
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function single(query: Query, key: string): string | undefined {
   const value = query[key];
@@ -60,6 +60,7 @@ export function parseNewEventQuery(
     endTime,
     allDay: single(query, "allDay") === "1",
     title: title.length <= 100 ? title : "",
-    from: from && UUID.test(from) ? from : undefined,
+    // A row or an occurrence of a series (spec 013 RF-22).
+    from: from && parseEventId(from) ? from : undefined,
   };
 }

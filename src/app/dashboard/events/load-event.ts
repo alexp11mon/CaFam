@@ -89,7 +89,11 @@ export async function loadEvent(id: string): Promise<EventData | null> {
       author: authorLabel(event.createdBy, members),
       readOnly: readOnlyReason(calendar.synced),
       repeat: event.series
-        ? { summary: event.series.summary, changed: event.series.changed }
+        ? {
+            summary: event.series.summary,
+            changed: event.series.changed,
+            limitReached: !event.rowId && event.series.exceptions >= 100,
+          }
         : null,
     },
     timeZone,

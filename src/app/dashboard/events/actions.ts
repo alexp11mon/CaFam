@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import {
   CALENDAR_MESSAGES,
   getCalendarErrorMessage,
@@ -35,6 +34,7 @@ import type { RecurrenceRule } from "@/lib/recurrence/rule";
 import { parseEventId } from "@/lib/recurrence/occurrence-id";
 import {
   planSeriesChange,
+  planSeriesDelete,
   seriesColumns,
   SERIES_SCOPES,
   type LossQuery,
@@ -182,6 +182,7 @@ async function unconfirmedLoss(
   const { data, error } = await supabase.rpc("series_loss", {
     p_series_id: seriesId,
     ...(query.from ? { p_from: query.from } : {}),
+    ...(query.only ? { p_only: query.only } : {}),
   });
   if (error) throw error;
   const row = data?.[0];
@@ -503,17 +504,76 @@ export async function updateEvent(
   redirect(`/dashboard/events/${saved.id}`);
 }
 
+/**
+ * Deleting occurrences in the chosen scope (spec 013 RF-20), once the images
+ * that go with them are confirmed (RF-24b).
+ */
+async function deleteOccurrences(
+  supabase: Supabase,
+  series: NonNullable<EventRecord["series"]>,
+  formData: FormData | undefined,
+): Promise<ConfirmState | null> {
+  const scope = formData ? readScope(formData) : null;
+  if (!scope) return { formError: RECURRENCE_MESSAGES.scope };
+  const plan = planSeriesDelete(series, scope);
+  const loss = await unconfirmedLoss(supabase, series.id, plan.loss, formData!);
+  if (loss) return { loss };
+  // The arguments come from planSeriesDelete, tested there.
+  const { error } = await supabase.rpc(
+    "delete_occurrences",
+    plan.args as never,
+  );
+  if (error) {
+    return {
+      formError:
+        recurrenceErrorMessage(error) ?? getCalendarErrorMessage(error),
+    };
+  }
+  return null;
+}
+
 // Bound as deleteEvent(id) or deleteEvent(id, "modal"); useActionState then appends
-// its state and form data, which are not needed: nothing to carry over.
+// its state and form data. Only an occurrence needs the form: it carries the scope.
 export async function deleteEvent(
   id: string,
   mode?: unknown,
+  ...rest: unknown[]
 ): Promise<ConfirmState> {
-  if (!z.uuid().safeParse(id).success) {
+  if (!parseEventId(id)) {
     return { formError: CALENDAR_MESSAGES.notFound };
   }
   const { supabase } = await requireActionUser();
+  const formData = [mode, ...rest].find(
+    (arg): arg is FormData => arg instanceof FormData,
+  );
 
+  let series: EventRecord["series"] = null;
+  try {
+    series = (await getEvent(supabase, id))?.series ?? null;
+    if (series) {
+      const failed = await deleteOccurrences(supabase, series, formData);
+      if (failed) return failed;
+    }
+  } catch (error) {
+    return { formError: getCalendarErrorMessage(error) };
+  }
+
+  if (!series) {
+    const failed = await deleteSingle(supabase, id, mode);
+    if (failed) return failed;
+  }
+
+  refresh();
+  if (mode === "modal") return { done: "deleted" };
+  redirect("/dashboard/calendar");
+}
+
+/** A single event, through Google when its calendar is synced (spec 009 RF-12). */
+async function deleteSingle(
+  supabase: Supabase,
+  id: string,
+  mode: unknown,
+): Promise<ConfirmState | null> {
   try {
     const current = await currentEvent(supabase, id);
     if (!current) return { formError: CALENDAR_MESSAGES.notFound };
@@ -553,8 +613,5 @@ export async function deleteEvent(
   } catch (error) {
     return { formError: getCalendarErrorMessage(error) };
   }
-
-  refresh();
-  if (mode === "modal") return { done: "deleted" };
-  redirect("/dashboard/calendar");
+  return null;
 }

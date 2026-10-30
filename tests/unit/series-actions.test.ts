@@ -79,7 +79,7 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
-const { createEvent, updateEvent } =
+const { createEvent, deleteEvent, updateEvent } =
   await import("@/app/dashboard/events/actions");
 
 const EMPTY = {
@@ -442,5 +442,83 @@ describe("updateEvent turning a single event into a series (RF-21, D7)", () => {
     const state = await updateEvent(EVENT_ID, EMPTY, form({ repeat: "daily" }));
     expect(state.fieldErrors?.repeat).toMatch(/Google/);
     expect(h.updates).toEqual([]);
+  });
+});
+
+// Spec 013, T13: deleting occurrences in the chosen scope (RF-20, RF-24b).
+describe("deleteEvent on an occurrence", () => {
+  function scoped(fields: Record<string, string>) {
+    const data = new FormData();
+    for (const [key, value] of Object.entries(fields)) data.append(key, value);
+    return data;
+  }
+
+  beforeEach(() => {
+    h.event = OCCURRENCE;
+    h.rpc.mockImplementation(async (fn: string) =>
+      fn === "series_loss"
+        ? { data: [{ exceptions: 0, images: 0 }], error: null }
+        : { data: null, error: null },
+    );
+  });
+
+  it("needs the scope", async () => {
+    const state = await deleteEvent(OCCURRENCE.id, "modal", {}, scoped({}));
+    expect(state.formError).toBe("Elige a qué eventos se aplica.");
+    expect(h.rpc).not.toHaveBeenCalled();
+  });
+
+  it("'Solo este evento' calls delete_occurrences and closes the window", async () => {
+    const state = await deleteEvent(
+      OCCURRENCE.id,
+      "modal",
+      {},
+      scoped({ scope: "this" }),
+    );
+    expect(state).toEqual({ done: "deleted" });
+    expect(rpcCalls("series_loss")[0]![1]).toEqual({
+      p_series_id: SERIES_ID,
+      p_only: "2026-10-14T16:00:00.000Z",
+    });
+    expect(rpcCalls("delete_occurrences")[0]![1]).toMatchObject({
+      p_series_id: SERIES_ID,
+      p_scope: "this",
+    });
+    expect(h.writeEvent).not.toHaveBeenCalled();
+  });
+
+  it("warns of the images that go and deletes once confirmed (RF-24b)", async () => {
+    h.rpc.mockImplementation(async (fn: string) =>
+      fn === "series_loss"
+        ? { data: [{ exceptions: 1, images: 4 }], error: null }
+        : { data: null, error: null },
+    );
+    const state = await deleteEvent(
+      OCCURRENCE.id,
+      "modal",
+      {},
+      scoped({ scope: "all" }),
+    );
+    expect(state).toEqual({ loss: { exceptions: 1, images: 4 } });
+    expect(rpcCalls("delete_occurrences")).toEqual([]);
+
+    await deleteEvent(
+      OCCURRENCE.id,
+      "modal",
+      {},
+      scoped({ scope: "all", confirmLoss: "1" }),
+    );
+    expect(rpcCalls("delete_occurrences")[0]![1]).toMatchObject({
+      p_scope: "all",
+    });
+  });
+
+  it("on the full page it reads the form after the state and redirects", async () => {
+    await expect(
+      deleteEvent(OCCURRENCE.id, {}, scoped({ scope: "following" })),
+    ).rejects.toThrow("REDIRECT:/dashboard/calendar");
+    expect(rpcCalls("delete_occurrences")[0]![1]).toMatchObject({
+      p_scope: "following",
+    });
   });
 });

@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   planSeriesChange,
+  planSeriesDelete,
   type SeriesChangeInput,
 } from "@/lib/recurrence/series-write";
 
@@ -254,5 +255,45 @@ describe("planSeriesChange: Este y los siguientes (RF-17, D11)", () => {
       row: { ...ROW, starts_at: SERIES.startsAt, ends_at: SERIES.endsAt },
     });
     expect(result).toMatchObject({ fn: "update_series" });
+  });
+});
+
+describe("planSeriesDelete (RF-20, RF-24b)", () => {
+  it("'Solo este evento' counts only its own images", () => {
+    expect(planSeriesDelete(SERIES, "this")).toEqual({
+      args: {
+        p_series_id: "s1",
+        p_original_start: SERIES.originalStart,
+        p_scope: "this",
+        p_recurrence: null,
+        p_until: null,
+      },
+      loss: { only: SERIES.originalStart },
+    });
+  });
+
+  it("'Este y los siguientes' ends the series the day before", () => {
+    expect(planSeriesDelete(SERIES, "following")).toEqual({
+      args: {
+        p_series_id: "s1",
+        p_original_start: SERIES.originalStart,
+        p_scope: "following",
+        p_recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=WE;UNTIL=20261110T235959",
+        p_until: "2026-11-04T18:00:00.000Z",
+      },
+      loss: { from: SERIES.originalStart },
+    });
+  });
+
+  it("from the first occurrence or with 'Todos' it deletes all", () => {
+    const first = { ...SERIES, originalStart: SERIES.startsAt };
+    expect(planSeriesDelete(first, "following")).toMatchObject({
+      args: { p_recurrence: null },
+      loss: {},
+    });
+    expect(planSeriesDelete(SERIES, "all")).toMatchObject({
+      args: { p_scope: "all" },
+      loss: {},
+    });
   });
 });

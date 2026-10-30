@@ -35,9 +35,9 @@ const EVENT: EventDetailData = {
 function setup(
   overrides: Partial<React.ComponentProps<typeof EventDetail>> = {},
 ) {
-  const remove = vi.fn<(prev: ConfirmState) => Promise<ConfirmState>>(
-    async () => ({}),
-  );
+  const remove = vi.fn<
+    (prev: ConfirmState, formData: FormData) => Promise<ConfirmState>
+  >(async () => ({}));
   render(
     <EventDetail
       event={EVENT}
@@ -204,7 +204,11 @@ describe("EventDetail of a series", () => {
     setup({
       event: {
         ...EVENT,
-        repeat: { summary: "Cada semana el lunes", changed: false },
+        repeat: {
+          summary: "Cada semana el lunes",
+          changed: false,
+          limitReached: false,
+        },
       },
     });
     expect(screen.getByText("Se repite")).toBeInTheDocument();
@@ -218,7 +222,11 @@ describe("EventDetail of a series", () => {
     setup({
       event: {
         ...EVENT,
-        repeat: { summary: "Cada semana el lunes", changed: true },
+        repeat: {
+          summary: "Cada semana el lunes",
+          changed: true,
+          limitReached: false,
+        },
       },
     });
     expect(
@@ -229,5 +237,49 @@ describe("EventDetail of a series", () => {
   it("a single event has no repetition row", () => {
     setup();
     expect(screen.queryByText("Se repite")).not.toBeInTheDocument();
+  });
+});
+
+// Spec 013, T13: deleting an occurrence asks the scope (RF-20, RF-24b).
+describe("EventDetail deleting an occurrence", () => {
+  const OCCURRENCE = {
+    ...EVENT,
+    repeat: {
+      summary: "Cada semana el lunes",
+      changed: false,
+      limitReached: false,
+    },
+  };
+
+  it("asks the scope and sends it", async () => {
+    const user = userEvent.setup();
+    const remove = setup({ event: OCCURRENCE });
+    await user.click(screen.getByRole("button", { name: "Borrar evento" }));
+    expect(
+      screen.getByRole("dialog", { name: "Borrar evento repetido" }),
+    ).toBeInTheDocument();
+    expect(remove).not.toHaveBeenCalled();
+    await user.click(
+      screen.getByRole("button", { name: "Este y los siguientes" }),
+    );
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(remove.mock.calls[0]![1].get("scope")).toBe("following");
+  });
+
+  it("warns of the images that go before deleting them (RF-24b)", async () => {
+    const user = userEvent.setup();
+    const remove = setup({ event: OCCURRENCE });
+    remove.mockImplementation(async (_prev: ConfirmState, data: FormData) =>
+      data.get("confirmLoss") === "1"
+        ? { formError: "hecho" }
+        : { loss: { exceptions: 0, images: 2 } },
+    );
+    await user.click(screen.getByRole("button", { name: "Borrar evento" }));
+    await user.click(screen.getByRole("button", { name: "Solo este evento" }));
+    await screen.findByText("Se perderán 2 imágenes.");
+    await user.click(screen.getByRole("button", { name: "Borrar igualmente" }));
+    expect(remove).toHaveBeenCalledTimes(2);
+    expect(remove.mock.calls[1]![1].get("confirmLoss")).toBe("1");
+    expect(remove.mock.calls[1]![1].get("scope")).toBe("this");
   });
 });

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { formatEventWhen } from "@/lib/calendar/format";
 import type { ConfirmState, Done, FormAction } from "@/lib/forms/form-state";
+import { SeriesDelete } from "@/components/recurrence/series-delete";
 import { ConfirmDialog } from "./confirm-dialog";
 
 export interface EventDetailData {
@@ -21,7 +22,7 @@ export interface EventDetailData {
   /** Why a synced event cannot be changed from CaFam, if it cannot (spec 009 RF-8). */
   readOnly?: "google" | "reconnect" | null;
   /** The rule of an occurrence and whether it was changed alone (spec 013 RF-10, RF-16). */
-  repeat?: { summary: string; changed: boolean } | null;
+  repeat?: { summary: string; changed: boolean; limitReached: boolean } | null;
 }
 
 const READ_ONLY_TEXT = {
@@ -113,14 +114,22 @@ export function EventDetail({
       {canEdit ? (
         <div className="flex flex-wrap gap-3">
           {actions}
-          <ConfirmDialog
-            triggerLabel="Borrar evento"
-            title={`¿Borrar «${event.title}»?`}
-            description="El evento se borrará de forma definitiva."
-            confirmLabel="Sí, borrar"
-            action={deleteAction}
-            onDone={onDeleted}
-          />
+          {event.repeat ? (
+            <SeriesDelete
+              action={deleteAction}
+              limitReached={event.repeat.limitReached}
+              onDone={onDeleted}
+            />
+          ) : (
+            <ConfirmDialog
+              triggerLabel="Borrar evento"
+              title={`¿Borrar «${event.title}»?`}
+              description="El evento se borrará de forma definitiva."
+              confirmLabel="Sí, borrar"
+              action={deleteAction}
+              onDone={onDeleted}
+            />
+          )}
         </div>
       ) : null}
     </article>

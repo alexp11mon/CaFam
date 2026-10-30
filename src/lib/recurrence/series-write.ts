@@ -97,7 +97,7 @@ export interface SeriesChangeInput {
 }
 
 /** What `series_loss` must count before saving; null when nothing is lost. */
-export type LossQuery = { from?: string } | null;
+export type LossQuery = { from?: string; only?: string } | null;
 
 export type SeriesChangePlan =
   | { kind: "error"; field?: "repeat"; message: string }
@@ -254,4 +254,48 @@ export function planSeriesChange(input: SeriesChangeInput): SeriesChangePlan {
     },
     loss: drop ? {} : null,
   };
+}
+
+/** Arguments of delete_occurrences and what it would lose (RF-20, RF-24b). */
+export function planSeriesDelete(
+  series: SeriesChangeInput["series"],
+  scope: SeriesScope,
+): {
+  args: Record<string, unknown>;
+  loss: { from?: string; only?: string };
+} {
+  const base = {
+    p_series_id: series.id,
+    p_original_start: series.originalStart,
+    p_scope: scope,
+    p_recurrence: null as string | null,
+    p_until: null as string | null,
+  };
+  if (scope === "this") {
+    return { args: base, loss: { only: series.originalStart } };
+  }
+  if (scope === "following") {
+    const truncated = truncateBefore(
+      {
+        startsAt: series.startsAt,
+        endsAt: series.endsAt,
+        allDay: series.allDay,
+        recurrence: series.recurrence,
+        recurrenceTz: series.recurrenceTz,
+      },
+      series.originalStart,
+    );
+    // Nothing before it: delete_occurrences deletes the series.
+    if (truncated.recurrence) {
+      return {
+        args: {
+          ...base,
+          p_recurrence: truncated.recurrence,
+          p_until: truncated.until,
+        },
+        loss: { from: series.originalStart },
+      };
+    }
+  }
+  return { args: base, loss: {} };
 }
