@@ -168,7 +168,7 @@
   - [x] Cajón, fila de meses y mini mes en oscuro con movimiento reducido: sin animación y con el mismo contraste.
   - [x] 768 px usa el marco del móvil y 769 px el de tableta, sin saltos de altura en el mes.
 
-- [ ] T13 Validar la spec RF por RF en un iPhone real y en el escritorio
+- [x] T13 Validar la spec RF por RF en un iPhone real y en el escritorio
   Pasos:
   - Rellenar la tabla de trazabilidad con la evidencia de cada RF (test o prueba manual).
   - Probar en un iPhone real (despliegue de la rama en una preview de Vercel):
@@ -183,6 +183,7 @@
   - Actualizar `AGENTS.md` (estado, "Añadido por la spec 016", estructura, patrones y trampas nuevas).
   Hecho cuando: tabla de trazabilidad completa, `AGENTS.md` actualizado, verificación completa reportada y aprobación del usuario para cerrar la spec.
   Cubre: todos | Módulo: validation
+  Cierre (2026-10-30): el usuario aprobó cerrar la spec e integrarla en `main` sin la prueba en la preview (protegida por Vercel); la prueba en el iPhone la hace en producción, en la app instalada.
 
 ## Trazabilidad RF → tareas
 

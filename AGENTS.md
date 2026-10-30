@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-30, al terminar las tareas de la spec 016 (calendario al estilo Google), pendiente de la prueba en un iPhone real y del cierre.
+> Última actualización: 2026-10-30, al cerrar la spec 016 (calendario al estilo Google), sin migraciones.
 
 ## 1. Qué es
 
@@ -43,7 +43,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Spec aprobada** (2026-10-29), sin plan |
 | 014-comentarios-en-eventos | Comentarios en los eventos por cualquier miembro, Lectores incluidos | **Spec aprobada** (2026-10-29), sin plan |
 | 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | **Spec aprobada** (2026-10-29), sin plan |
-| 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Implementada** (2026-10-30), T1–T13 hechas en la rama `016-calendario-estilo-google`; falta la prueba en un iPhone real y la aprobación para cerrarla. Sin migraciones |
+| 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Cerrada** (2026-10-30), T1–T13 hechas; sin migraciones. La prueba en el iPhone se hace en producción |
 | 017-mover-eventos-y-menu | Mover y redimensionar arrastrando, menú contextual en el ordenador, "Deshacer" en los avisos, detalle en hoja inferior en el móvil, pellizcar para ampliar y atajos nuevos (enmienda 5) | **Spec aprobada** (2026-10-30), sin plan; va después de la 016 |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
@@ -133,7 +133,7 @@ Añadido por la spec 012 (en producción desde el 2026-10-30):
 - **Icono** en las vistas para los eventos con imágenes (`imageCount` de `getEventsInRange`); en semana y día solo en bloques de 30 min o más.
 - Borrar el evento, el calendario o la cuenta, o que la sincronización quite un evento traído, borra sus imágenes (por la cola de purga). Mover, juntar, copiar calendarios sin propietario y subir a Google las conservan; duplicar no las copia.
 
-Añadido por la spec 016 (rama `016-calendario-estilo-google`, sin migraciones; comportamiento tomado de las capturas de Google Calendar en el iPhone):
+Añadido por la spec 016 (en producción desde el 2026-10-30, sin migraciones; comportamiento tomado de las capturas de Google Calendar en el iPhone):
 
 - **Bloques rellenos** (`EventBlock`, formas `line`, `grid` y `card`): todos los eventos de todas las vistas son un bloque del color pastel con el texto en `pastel-ink` (4,5:1 con cada pastel) y el título en negrita. Sustituye a `EventChip` y `EventRow`, retirados.
 - **Marco del móvil (≤ 768 px)**: cabecera `TopBar` en todas las pantallas del panel (menú ≡, título, "Hoy" con el número del día, avatar → Ajustes) y **sin barra inferior**. El menú abre `NavDrawer` (un `<dialog data-drawer>` desde la izquierda): en el calendario, las cuatro vistas y los filtros; después los destinos, el tema y cerrar sesión. Se cierra al elegir, en el fondo, con Escape o deslizando a la izquierda, y devuelve el foco al menú. En el calendario no hay barra de herramientas ni "Próximo evento", y hay un botón flotante "+" (`Fab`) si se puede crear. Entre 769 y 1023 px sigue la barra inferior, y desde 1024 px la lateral: el escritorio no cambia.
@@ -579,6 +579,6 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **010 (renombrar a CaFam)** está cerrada y en producción (2026-10-29). Queda abierto `invites.test.ts` ("returns a 43 character token"), que falla cuando el reloj local va por detrás del de la base de datos (trampa del reloj); no es de ninguna spec.
 - La **011 (rediseño visual)** está cerrada y en producción (2026-10-30), con `profile_theme` aplicada en prod.
 - La **012 (imágenes)** está cerrada y en producción (2026-10-30), con sus 8 migraciones aplicadas en prod.
-- La **016 (calendario al estilo Google)** tiene T1–T13 hechas en su rama; falta probarla en un iPhone real con una preview de Vercel y la aprobación del usuario para cerrarla e integrarla en `main`.
-- **Siguiente:** después de cerrar la 016, por orden y cada una con su plan y sus tareas aprobados: 017 (mover arrastrando, menú y "Deshacer"; spec aprobada, enmienda 5 ya en la constitución), 013 (recurrentes), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
+- La **016 (calendario al estilo Google)** está cerrada (2026-10-30). Las previews de Vercel están protegidas con su inicio de sesión: para verlas en el móvil hay que entrar en Vercel o usar "Share".
+- **Siguiente:** por orden y cada una con su plan y sus tareas aprobados: 017 (mover arrastrando, menú y "Deshacer"; spec aprobada, enmienda 5 ya en la constitución), 013 (recurrentes), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.

@@ -310,12 +310,9 @@ describe("AgendaView position", () => {
       { loadEvents },
     );
     for (const month of ["enero", "febrero", "marzo"]) {
+      await act(async () => {});
       intersect(screen.getByTestId("agenda-end"));
-      await screen.findByRole(
-        "heading",
-        { name: `${month} de 2027` },
-        { timeout: 3000 },
-      );
+      await screen.findByRole("heading", { name: `${month} de 2027` });
     }
     scrolled.length = 0;
 
