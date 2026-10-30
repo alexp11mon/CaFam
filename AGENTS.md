@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-29, al cerrar la spec 010 (renombrar a CaFam), en producción y con el repositorio renombrado a `alexp11mon/CaFam`.
+> Última actualización: 2026-10-30, al cerrar la spec 011 (rediseño visual), con la migración `profile_theme` aplicada en prod.
 
 ## 1. Qué es
 
@@ -38,7 +38,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 008-mejoras-de-experiencia | Calendario al estilo Google Calendar (analizado con REA): ventana de evento sobre el calendario, ventana rápida, arrastrar para crear, selector de hora, atajos, vista recordada, avisos y esqueletos | **Cerrada** (2026-10-24), T1–T23 hechas; aplicada y validada en producción |
 | 009-sincronizacion-bidireccional | Escribir en Google lo que se crea, cambia, mueve o borra en los calendarios traídos (propietario y Editores), renombrar, crear y subir calendarios, política de privacidad y publicar la aplicación de Google | **Cerrada** (2026-10-29), T1–T14 hechas; aplicada y validada en producción, con la aplicación de Google publicada sin verificar |
 | 010-renombrar-cafam | Renombrar todo el proyecto a CaFam (interfaz, PWA, correos, configuración, tests, documentación, specs cerradas y repositorio) | **Cerrada** (2026-10-29), T1–T8 hechas; migración `rename_cafam` aplicada en prod, paneles de correo revisados y repositorio renombrado |
-| 011-rediseno-visual | Modo oscuro con selector, transparencias (glassmorphism), animaciones, microinteracciones y transiciones entre vistas | **En curso**: spec, plan y tareas aprobados (2026-10-29) |
+| 011-rediseno-visual | Modo oscuro con selector, transparencias (glassmorphism), animaciones, microinteracciones y transiciones entre vistas | **Cerrada** (2026-10-30), T1–T13 hechas; migración `profile_theme` aplicada en prod |
 | 012-imagenes-en-eventos | Imágenes en los eventos con Supabase Storage, también de Lectores y en calendarios traídos de Google | **Spec aprobada** (2026-10-29), sin plan |
 | 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Spec aprobada** (2026-10-29), sin plan |
 | 014-comentarios-en-eventos | Comentarios en los eventos por cualquier miembro, Lectores incluidos | **Spec aprobada** (2026-10-29), sin plan |
@@ -115,6 +115,13 @@ Añadido por la spec 009 (en producción desde el 2026-10-29):
 
 
 
+Añadido por la spec 011 (en producción desde el 2026-10-30):
+
+- **Tema** claro, oscuro o "Como el sistema" (por defecto) en Ajustes, guardado en `profiles.theme` y en la cookie `cafam-theme` (la escriben `signIn` y `setTheme`; `signUp`, `signOut` y el proxy sin sesión la borran). Un script en `<head>` (`THEME_SCRIPT`, `lib/theme/theme.ts`) pinta `data-theme` antes del primer fotograma; sin sesión, la página sigue al sistema. Acceso directo (`ThemeToggle`) en la barra lateral y en la hoja "Más".
+- **Cristal**: utilidades `glass` (barras, paneles del calendario y secciones de Ajustes) y `glass-float` (ventanas, hojas, diálogos y avisos), con respaldo opaco si no hay `backdrop-filter`. El contraste se calcula sobre el peor fondo (`lib/theme/contrast.ts`, `composite`).
+- **Movimiento**: `press` en botones y controles; View Transitions de React (`<ViewTransition>`, `addTransitionType`) al cambiar de vista, periodo o filtro (`lib/calendar/transition-types.ts`); ventanas, hoja y avisos entran y salen con `@starting-style`. Todo con tokens `--motion-*` y versión reducida para `prefers-reduced-motion`.
+- **El logotipo se invierte en oscuro** (piedra clara con letras en tinta); el icono de la PWA no cambia.
+
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 
 - **Flujo SDD (P7):** no se escribe código sin `spec.md` → `plan.md` → `tasks.md` aprobados explícitamente por el usuario, en ese orden. Cada spec vive en `specs/NNN-nombre/`. Se implementa **una tarea `Tn` cada vez y con el test primero** (rojo → verde). Cada commit cita su tarea.
@@ -131,7 +138,7 @@ La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen d
 - **Prohibido:** servicios de pago, SDK de analítica/tracking/telemetría (GA, Sentry…), librerías PWA (`next-pwa`, Serwist, Workbox), ORMs (Prisma, Drizzle), backends paralelos, y otro gestor de paquetes que no sea npm.
 - **Aprobaciones del usuario:** pasar de fase (spec → plan → tareas → implementación) y cerrar una spec exigen su aprobación explícita. No la des por supuesta.
 - **Identidad visual (P9):** toda pantalla nueva o rediseñada sigue la sección "Identidad visual y diseño de interfaz" de la constitución (estilo de `docs/referencia.jpg`, solo local), usa solo tokens (la guardia `design-tokens.test.ts` lo comprueba) y se revisa con capturas a 390, 768 y 1440 px con el acento rojo y el amarillo. Para diseñar usa las skills `design-taste-frontend` (pantallas de aplicación), `frontend-design` y `web-design-guidelines`. Ver §6 "Identidad visual".
-- **Enmienda 3 (2026-10-29):** la constitución ya permite tema oscuro, transparencias con desenfoque, sombras suaves, degradados suaves (siempre como tokens) y animaciones de hasta 400 ms con alternativa para `prefers-reduced-motion`; Supabase Storage; `ical.js` también para repeticiones; y un proveedor LLM gratuito sin tarjeta para el asistente, llamado con `fetch` y sin SDK. Hasta que la 011 actualice la guardia de diseño, las prohibiciones antiguas siguen comprobándose en `design-tokens.test.ts`.
+- **Enmienda 3 (2026-10-29):** la constitución ya permite tema oscuro, transparencias con desenfoque, sombras suaves, degradados suaves (siempre como tokens) y animaciones de hasta 400 ms con alternativa para `prefers-reduced-motion`; Supabase Storage; `ical.js` también para repeticiones; y un proveedor LLM gratuito sin tarjeta para el asistente, llamado con `fetch` y sin SDK. La 011 ya actualizó la guardia de diseño (`design-tokens.test.ts`): solo `shadow-soft`/`shadow-float`, cristal y sombra de flotar solo en lo que flota, sin `text-white`, `text-black` ni `dark:`, y duraciones de 400 ms como mucho.
 - **Acciones externas:** el usuario ejecuta él mismo (con `!` en Claude Code) las acciones sobre producción: `supabase db push` a prod, `git push` y merges a `main`. Prepárale los comandos exactos.
 
 ## 4. Stack
@@ -221,7 +228,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon.svg (maestro) → icon-192, icon-512, icon-512-maskable (letras al 85 %), apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions, calendar_groups · 009: sync_write_schema, sync_write_functions, sync_apply_events_v2 · 010: rename_cafam
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions, calendar_groups · 009: sync_write_schema, sync_write_functions, sync_apply_events_v2 · 010: rename_cafam · 011: profile_theme
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
@@ -366,14 +373,14 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 Reglas completas en la constitución ("Identidad visual y diseño de interfaz", P9), inspiradas en `docs/referencia.jpg` (solo local, en `.gitignore`). Lo que hay en el código:
 
 - **Tokens** en `src/app/globals.css`, con los valores de `src/lib/theme/accents.ts` (`accents.test.ts` los mantiene iguales):
-  - Neutros (`@theme`): `stone #E8E5DD` (fondo), `paper #F2F0EA` (paneles), `ink #141414` (texto), `muted #66635D` (secundario, 4,5:1), `line #D6D1C4` (separadores), `control #857F75` (bordes de campos, 3:1) y `danger #B42318`.
+  - Neutros (`@theme inline` sobre variables crudas): `stone #E8E5DD` (fondo), `paper #F2F0EA` (paneles), `ink #141414` (texto), `muted #66635D` (secundario, 4,5:1), `line #D6D1C4` (separadores), `control #857F75` (bordes de campos, 3:1) y `danger #B42318`, más `on-ink`, `pastel-ink`, `mark`/`on-mark` y `scrim`. El tema oscuro redefine las variables en `[data-theme="dark"]` y en `prefers-color-scheme: dark` sin `data-theme="light"` (valores en `DARK_NEUTRALS` y `THEME_INKS`).
   - Acento (`@theme inline`): `accent` (relleno), `on-accent` (texto encima), `accent-ink` (texto y líneas sobre piedra o papel) y `accent-edge` (borde de un relleno; en amarillo es oscuro porque el relleno no se distingue del fondo). Cada `[data-accent=…]` redefine las variables; `:root` es rojo para las páginas sin sesión.
 - **El acento** lo pinta `AppFrame` con `data-accent` (y `data-app-frame`, que usa el selector de Ajustes para repintar sin recargar). Úsalo solo para hoy, la hora actual, los días de la semana, la selección y el próximo evento. Texto y líneas, siempre `accent-ink`; sobre un relleno `bg-accent`, siempre `text-on-accent` y `border-accent-edge`.
 - **Colores de calendario** (paleta pastel de la spec 002): solo como marca (barra `border-l-4`, punto o barra de 4 px con contorno `ink/15`); el texto del evento siempre en tinta.
 - **Tipografía**: Inter Tight (`next/font`, cifras tabulares comprobadas) para todo; `tabular-nums` en horas, fechas y contadores; sin monoespaciada.
-- **Forma**: superficies separadas por tono (piedra/papel), paneles `rounded-3xl`, botones y controles `rounded-full`; sombras solo en lo que flota (diálogos, hoja "Más", tooltips de la barra).
-- **Componentes base**: `Button`/`LinkButton` primario negro, secundario papel con borde `control`; campos `bg-paper` con borde `control`. Iconos: SVG propios en `components/shell/icons.tsx`.
-- Sin tema oscuro todavía: lo añade la spec 011 (enmienda 3).
+- **Forma**: superficies separadas por tono (piedra/papel), paneles `rounded-3xl`, botones y controles `rounded-full`; `shadow-soft` en el cristal y `shadow-float`/`glass-float` solo en lo que flota (diálogos, hoja "Más", avisos, tooltips de la barra).
+- **Componentes base**: `Button`/`LinkButton` primario en tinta (negro en claro, claro en oscuro, texto `on-ink`), secundario papel con borde `control`; campos `bg-paper` con borde `control`. Iconos: SVG propios en `components/shell/icons.tsx`.
+- **Nunca** `text-white`, `text-black` ni la variante `dark:`: el tema cambia las variables, no las clases.
 
 ## 7. Entornos, despliegue y variables
 
@@ -518,7 +525,7 @@ npm run db:types       # regenera src/types/database.ts
 
 ## 11. Fuera de alcance hasta su spec
 
-Mover o redimensionar eventos ya creados arrastrando (crear arrastrando sí existe desde la 008), "Deshacer" en los avisos, vistas de año y de 4 días, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. El tema oscuro, las transparencias y animaciones, las imágenes, los recurrentes, los comentarios y el asistente ya tienen spec aprobada (011 a 015): se implementan siguiendo su plan y sus tareas cuando estén aprobados.
+Mover o redimensionar eventos ya creados arrastrando (crear arrastrando sí existe desde la 008), "Deshacer" en los avisos, vistas de año y de 4 días, búsqueda (la vista agenda llega con la spec 005), papelera o deshacer, zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. Las imágenes, los recurrentes, los comentarios y el asistente ya tienen spec aprobada (012 a 015): se implementan siguiendo su plan y sus tareas cuando estén aprobados.
 
 ## 12. Cómo continuar
 
@@ -527,5 +534,6 @@ La 006 y la 008 están cerradas y en producción (2026-10-23 y 2026-10-24). La 0
 La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincronización bidireccional)** están cerradas y en producción (2026-10-28 y 2026-10-29). La aplicación de Google está **publicada sin verificar** (proyecto `CaFam`, con marca, página principal y `/privacy`; sin logotipo para no tener que verificarla). En producción usa el cliente web `CaFamWeb`; en dev, `CaFam Local`.
 
 - La **010 (renombrar a CaFam)** está cerrada y en producción (2026-10-29). Queda abierto `invites.test.ts` ("returns a 43 character token"), que falla cuando el reloj local va por detrás del de la base de datos (trampa del reloj); no es de ninguna spec.
-- **Siguiente:** el plan de la 011 con `plan-generator`. Después, por orden y cada una con su plan y sus tareas aprobados: 011 (rediseño visual), 012 (imágenes), 013 (recurrentes), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
+- La **011 (rediseño visual)** está cerrada y en producción (2026-10-30), con `profile_theme` aplicada en prod.
+- **Siguiente:** el plan de la 012 con `plan-generator`. Después, por orden y cada una con su plan y sus tareas aprobados: 012 (imágenes), 013 (recurrentes), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.
