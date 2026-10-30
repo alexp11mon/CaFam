@@ -297,3 +297,212 @@ describe("authors that leave (RF-19)", () => {
     expect(await visibleTo(owner, image.id)).toBe(true);
   });
 });
+
+// Spec 012, T2: reserve_event_images and confirm_event_image (plan
+// "Contratos"; RF-2, RF-4, RF-8, RF-20, RF-22, RF-23).
+const IMAGE = { bytes: 300_000, width: 2048, height: 1536 };
+
+function images(count: number) {
+  return Array.from({ length: count }, () => IMAGE);
+}
+
+async function reserve(user: TestUser, eventId: string, count: number) {
+  const result = await user.client.rpc("reserve_event_images", {
+    p_event_id: eventId,
+    p_images: images(count),
+  });
+  objectIds.push(...(result.data ?? []));
+  return result;
+}
+
+async function seedMany(eventId: string, uploadedBy: string, count: number) {
+  const rows = Array.from({ length: count }, () => {
+    const id = randomUUID();
+    objectIds.push(id);
+    return {
+      id,
+      event_id: eventId,
+      object_id: id,
+      uploaded_by: uploadedBy,
+      status: "ready",
+      bytes: 1000,
+      width: 10,
+      height: 10,
+    };
+  });
+  const { error } = await admin.from("event_images").insert(rows);
+  if (error) throw error;
+  return rows;
+}
+
+describe("reserve_event_images (RF-2, RF-4, RF-8, RF-20)", () => {
+  it("any member reserves, viewers included; strangers get CF404", async () => {
+    const event = await createEvent(calendar);
+    const { data, error } = await reserve(viewer, event, 2);
+    expect(error).toBeNull();
+    expect(data).toHaveLength(2);
+    const { data: rows } = await admin
+      .from("event_images")
+      .select("status, uploaded_by, object_id, id")
+      .in("id", data!);
+    expect(rows!.every((r) => r.status === "pending")).toBe(true);
+    expect(rows!.every((r) => r.uploaded_by === viewer.id)).toBe(true);
+    expect(rows!.every((r) => r.object_id === r.id)).toBe(true);
+
+    expect((await reserve(stranger, event, 1)).error?.code).toBe("CF404");
+    expect((await reserve(owner, randomUUID(), 1)).error?.code).toBe("CF404");
+  });
+
+  it("a viewer reserves in a synced calendar too (RF-8)", async () => {
+    const synced = await createCalendar(owner.id, "Google");
+    const { data: connection, error } = await admin
+      .from("calendar_connections")
+      .insert({
+        owner_id: owner.id,
+        provider: "google",
+        account_subject: `sub-${randomUUID()}`,
+        account_email: "owner@gmail.test",
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    await admin.from("synced_calendars").insert({
+      calendar_id: synced,
+      connection_id: connection.id,
+      provider: "google",
+      external_id: "primary",
+    });
+    await admin
+      .from("calendar_members")
+      .insert({ calendar_id: synced, user_id: viewer.id, role: "viewer" });
+    const { data: event } = await admin
+      .from("events")
+      .insert({
+        calendar_id: synced,
+        title: "Traído",
+        external_id: "g1",
+        ...TIMES,
+      })
+      .select("id")
+      .single();
+
+    const { data, error: reserveError } = await reserve(viewer, event!.id, 1);
+    expect(reserveError).toBeNull();
+    expect(data).toHaveLength(1);
+  });
+
+  it("rejects 0 or more than 10 images and invalid sizes", async () => {
+    const event = await createEvent(calendar);
+    expect((await reserve(owner, event, 0)).error?.code).toBe("22023");
+    expect((await reserve(owner, event, 11)).error?.code).toBe("22023");
+    const { error } = await owner.client.rpc("reserve_event_images", {
+      p_event_id: event,
+      p_images: [{ bytes: 10, width: 4000, height: 10 }],
+    });
+    expect(error?.code).toBe("22023");
+  });
+
+  it("reserves only what fits in the event and fails when it is full (RF-20)", async () => {
+    const event = await createEvent(calendar);
+    await seedMany(event, owner.id, 8);
+    const { data } = await reserve(editor, event, 5);
+    expect(data).toHaveLength(2);
+    const full = await reserve(editor, event, 1);
+    expect(full.error?.code).toBe("CF429");
+    expect(full.error?.message).toBe("event");
+  });
+
+  it("two reservations at the same time never pass 10", async () => {
+    const event = await createEvent(calendar);
+    const results = await Promise.all([
+      reserve(owner, event, 6),
+      reserve(editor, event, 6),
+    ]);
+    const reserved = results.reduce((n, r) => n + (r.data?.length ?? 0), 0);
+    expect(reserved).toBe(10);
+    const { count } = await admin
+      .from("event_images")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", event);
+    expect(count).toBe(10);
+  });
+});
+
+describe("reserve_event_images per user and in total (RF-22, RF-23)", () => {
+  it("stops at 300 own images, counting shared copies once", async () => {
+    const rita = await createTestUser({ display_name: "Rita" });
+    extraUsers.push(rita.id);
+    const ritaCalendar = await getOwnCalendarId(rita.id);
+    const events = await Promise.all(
+      Array.from({ length: 30 }, () => createEvent(ritaCalendar)),
+    );
+    const seeded = (
+      await Promise.all(events.map((e) => seedMany(e, rita.id, 10)))
+    ).flat();
+    const spare = await createEvent(ritaCalendar);
+
+    const over = await reserve(rita, spare, 1);
+    expect(over.error?.code).toBe("CF429");
+    expect(over.error?.message).toBe("user");
+
+    // Replace one image by a copy of another: still 299 distinct objects.
+    await admin.from("event_images").delete().eq("id", seeded[0].id);
+    await admin
+      .from("image_purge_queue")
+      .delete()
+      .eq("object_id", seeded[0].id);
+    await admin.from("event_images").insert({
+      event_id: events[0],
+      object_id: seeded[1].object_id,
+      uploaded_by: rita.id,
+      status: "ready",
+      bytes: 1000,
+      width: 10,
+      height: 10,
+    });
+    const { data, error } = await reserve(rita, spare, 1);
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+  });
+
+  it("refuses new images when the project space is full", async () => {
+    const { data: limit } = await admin.rpc("images_total_limit");
+    expect(limit).toBe(838860800);
+    const event = await createEvent(calendar);
+    const big = await seedImage(event, owner.id);
+    await admin
+      .from("event_images")
+      .update({ bytes: Number(limit) })
+      .eq("id", big.id);
+    try {
+      const full = await reserve(viewer, await createEvent(calendar), 1);
+      expect(full.error?.code).toBe("CF429");
+      expect(full.error?.message).toBe("total");
+    } finally {
+      await admin.from("event_images").delete().eq("id", big.id);
+      await admin
+        .from("image_purge_queue")
+        .delete()
+        .eq("object_id", big.objectId);
+    }
+  });
+});
+
+describe("confirm_event_image (RF-2)", () => {
+  it("needs both objects in Storage and only works on own pending rows", async () => {
+    const event = await createEvent(calendar);
+    const { data } = await reserve(viewer, event, 1);
+    const id = data![0];
+
+    const missing = await viewer.client.rpc("confirm_event_image", {
+      p_id: id,
+    });
+    expect(missing.error?.code).toBe("P0002");
+    const foreign = await owner.client.rpc("confirm_event_image", { p_id: id });
+    expect(foreign.error?.code).toBe("CF404");
+    const gone = await viewer.client.rpc("confirm_event_image", {
+      p_id: randomUUID(),
+    });
+    expect(gone.error?.code).toBe("CF404");
+  });
+});

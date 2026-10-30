@@ -866,6 +866,7 @@ export type Database = {
         } & "the function public.can_write with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
       }
       can_write_synced: { Args: { p_calendar_id: string }; Returns: boolean }
+      confirm_event_image: { Args: { p_id: string }; Returns: undefined }
       connect_account: {
         Args: {
           p_can_write?: boolean
@@ -919,6 +920,7 @@ export type Database = {
           role: Database["public"]["Enums"]["calendar_role"]
         }[]
       }
+      images_total_limit: { Args: never; Returns: number }
       import_calendar: {
         Args: { p_color: string; p_events: Json; p_name: string }
         Returns: string
@@ -943,6 +945,10 @@ export type Database = {
         Returns: string
       }
       request_recovery: { Args: { p_email: string }; Returns: boolean }
+      reserve_event_images: {
+        Args: { p_event_id: string; p_images: Json }
+        Returns: string[]
+      }
       revoke_invite: { Args: { p_invite_id: string }; Returns: undefined }
       select_synced_calendars: {
         Args: { p_calendars: Json; p_connection_id: string }

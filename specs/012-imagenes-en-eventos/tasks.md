@@ -32,7 +32,7 @@
   Hecho cuando: `npm run test:db -- event-images schema` en verde y `src/types/database.ts` con `event_images`. Cubre: RF-4, RF-15, RF-16, RF-17, RF-19, RF-29, RF-30 | Módulo: images-schema
   Evidencia (2026-10-30): rojo antes de la migración (11 tests, tabla inexistente). Migración `20261030100000_event_images.sql` aplicada en dev y tipos regenerados con `event_images` e `image_purge_queue`. `test:db -- event-images schema` 5 archivos y 48 tests en verde (11 de `event-images`; `schema` cubre `list_tables_without_rls`). typecheck, lint y format en verde, `npm test` 159 archivos y 1418 tests, build correcto.
 
-- [ ] T2 Reservar y confirmar imágenes con los límites atómicos
+- [x] T2 Reservar y confirmar imágenes con los límites atómicos
   Pasos:
   - Primero, ampliar `event-images.test.ts` en rojo:
     - un Lector reserva en su calendario y también en un calendario traído (sembrado como en la 007);
@@ -45,6 +45,7 @@
   - Después, `reserve_event_images`, `confirm_event_image` e `images_total_limit` según "Contratos".
 
   Hecho cuando: `npm run test:db -- event-images` en verde. Cubre: RF-2, RF-4, RF-8, RF-20, RF-22, RF-23 | Módulo: images-functions
+  Evidencia (2026-10-30): rojo antes de la migración (8 tests, funciones inexistentes). Migración `20261030110000_event_images_functions.sql` aplicada en dev y tipos regenerados. `test:db -- event-images` 19 tests en verde (incluida la reserva simultánea, que da exactamente 10). El código `CF429` lleva en el mensaje `event`, `user` o `total`. typecheck, lint y format en verde, `npm test` 1418 tests, build correcto.
 
 - [ ] T3 Crear el bucket privado y la matriz de permisos de Storage
   Pasos:
