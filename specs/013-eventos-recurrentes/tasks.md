@@ -72,7 +72,7 @@
   Hecho cuando: `npm test -- recurrence-expand occurrence-id no-secrets` en verde. Cubre: RF-6, RF-8, RF-11, RF-12, RF-13, RF-14, RF-17 | Módulo: recurrence-expand, occurrence-id
   Evidencia (2026-10-30): rojo con los módulos inexistentes. `ical.js` omite por sí mismo el día 31 en los meses cortos y el 29 de febrero en los años no bisiestos (R1 resuelto, sin filtro propio). Para no hacer 4 llamadas a `Intl` por repetición se reutiliza el desfase anterior con una sola comprobación. La regla anual rechaza días que el mes nunca tiene (30 de febrero), que dejarían al iterador buscando sin fin. El test de tiempo (50 series en un mes) salía 66–223 ms según la carga de la suite: se quitó del unitario y el requisito de rendimiento se mide en `range-performance` (T7). `npm test -- recurrence-expand occurrence-id no-secrets recurrence-rule` en verde (19 + 7 + guardias + 31). Verificación completa: typecheck, format, `npm test` 182 archivos y 1638 tests, build correcto, lint con los 2 avisos previos.
 
-- [ ] T6 Cambiar y borrar repeticiones con funciones por alcance
+- [x] T6 Cambiar y borrar repeticiones con funciones por alcance
   Pasos:
   - Primero, ampliar `event-series.test.ts` en rojo, con series sembradas y la RRULE truncada calculada en el test:
     - `update_occurrence` crea la excepción y la actualiza en una segunda llamada; con `{}` la crea idéntica; la 101.ª da `CF429`;
@@ -84,6 +84,7 @@
   - Después, la migración `event_series_functions` según "Contratos".
 
   Hecho cuando: `npm run test:db -- event-series` en verde y los tipos regenerados con las funciones. Cubre: RF-15, RF-16, RF-17, RF-18, RF-19, RF-20, RF-21, RF-24b, RF-32 | Módulo: series-functions
+  Evidencia (2026-10-30): rojo con las funciones inexistentes (12 tests, `PGRST202`). Migración `20261031110000_event_series_functions.sql` aplicada en dev (el primer `db push` falló por un timeout de conexión del pooler y se repitió) y tipos regenerados. Diferencia con el plan: `update_series` recibe la regla dentro de `p_fields` (`recurrence: null` = evento suelto) y devuelve el id del evento que queda. Los tipos generados no admiten `null` en los argumentos: se pasa con una conversión explícita. `test:db -- event-series event-images` 54 tests en verde. Verificación completa en verde (lint con los 2 avisos previos), `npm test` 1638 tests, build correcto.
 
 - [ ] T7 Leer las repeticiones en las vistas, el detalle y el próximo evento
   Pasos:

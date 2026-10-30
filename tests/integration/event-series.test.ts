@@ -385,3 +385,363 @@ describe("series schema (T1)", () => {
     await deleteQueuedImages(data ?? []);
   });
 });
+
+async function rows(seriesId: string) {
+  const { data, error } = await admin
+    .from("events")
+    .select("id, title, location, starts_at, ends_at, original_start")
+    .eq("series_id", seriesId)
+    .order("original_start");
+  if (error) throw error;
+  return data;
+}
+
+async function seriesRow(id: string) {
+  const { data } = await admin
+    .from("events")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  return data;
+}
+
+async function seedImageOn(eventId: string, uploadedBy: string) {
+  const id = randomUUID();
+  const { error } = await admin.from("event_images").insert({
+    id,
+    event_id: eventId,
+    object_id: id,
+    uploaded_by: uploadedBy,
+    status: "ready",
+    bytes: 1000,
+    width: 100,
+    height: 100,
+  });
+  if (error) throw error;
+  return id;
+}
+
+const ms = (value: string | null | undefined) => Date.parse(value ?? "");
+// The generated types mark every function argument as non-null; SQL takes null.
+const NULL = null as unknown as string;
+
+describe("series functions (T6)", () => {
+  it("update_occurrence creates the exception, then updates it (RF-16)", async () => {
+    const series = await seedSeries(calendar);
+    const { data: id, error } = await editor.client.rpc("update_occurrence", {
+      p_series_id: series,
+      p_original_start: tuesday(2),
+      p_fields: { title: "Sin clase", location: "Casa" },
+    });
+    expect(error).toBeNull();
+    const [row] = await rows(series);
+    expect(row).toMatchObject({ id, title: "Sin clase", location: "Casa" });
+    expect(ms(row!.starts_at)).toBe(ms(tuesday(2)));
+
+    const { data: again } = await owner.client.rpc("update_occurrence", {
+      p_series_id: series,
+      p_original_start: tuesday(2),
+      p_fields: { title: "Clase corta" },
+    });
+    expect(again).toBe(id);
+    expect((await rows(series))[0]!.title).toBe("Clase corta");
+  });
+
+  it("update_occurrence with no fields creates an identical row (RF-24)", async () => {
+    const series = await seedSeries(calendar);
+    const { error } = await viewer.client.rpc("update_occurrence", {
+      p_series_id: series,
+      p_original_start: tuesday(1),
+      p_fields: {},
+    });
+    expect(error?.code).toBe("CF404");
+
+    const { data: id } = await editor.client.rpc("update_occurrence", {
+      p_series_id: series,
+      p_original_start: tuesday(1),
+      p_fields: {},
+    });
+    const [row] = await rows(series);
+    expect(row).toMatchObject({ id, title: "Extraescolar", location: null });
+    expect(ms(row!.ends_at) - ms(row!.starts_at)).toBe(3_600_000);
+  });
+
+  it("refuses unknown fields and a 101st exception (RF-32)", async () => {
+    const series = await seedSeries(calendar);
+    const { error } = await owner.client.rpc("update_occurrence", {
+      p_series_id: series,
+      p_original_start: tuesday(1),
+      p_fields: { calendar_id: randomUUID() },
+    });
+    expect(error?.code).toBe("22023");
+
+    const full = await seedSeries(calendar, {
+      exdates: Array.from({ length: 100 }, (_, i) => tuesday(i + 100)),
+    });
+    const { error: over } = await owner.client.rpc("update_occurrence", {
+      p_series_id: full,
+      p_original_start: tuesday(1),
+      p_fields: {},
+    });
+    expect(over?.code).toBe("CF429");
+  });
+
+  it("split_series ends the series and moves later exceptions when kept (RF-17)", async () => {
+    const series = await seedSeries(calendar, {
+      exdates: [tuesday(1), tuesday(5)],
+    });
+    await seedException(series, calendar, tuesday(2), { title: "Excursión" });
+    const later = await seedException(series, calendar, tuesday(4));
+    const { data: newId, error } = await owner.client.rpc("split_series", {
+      p_series_id: series,
+      p_original_start: tuesday(3),
+      p_old_recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=TU;UNTIL=20261116T235959",
+      p_old_until: tuesday(2),
+      p_new: {
+        title: "Extraescolar nueva",
+        starts_at: tuesday(3),
+        ends_at: tuesday(3),
+        recurrence: WEEKLY,
+        recurrence_until: NULL,
+      },
+      p_keep_exceptions: true,
+    });
+    expect(error).toBeNull();
+
+    const old = await seriesRow(series);
+    expect(old?.recurrence).toContain("UNTIL=20261116");
+    expect(old?.exdates.map(ms)).toEqual([ms(tuesday(1))]);
+    expect((await rows(series)).map((r) => r.title)).toEqual(["Excursión"]);
+
+    const next = await seriesRow(newId!);
+    expect(next).toMatchObject({
+      title: "Extraescolar nueva",
+      recurrence: WEEKLY,
+    });
+    expect(next?.exdates).toHaveLength(1);
+    // The later exception kept the old title, so it follows the change.
+    expect(await rows(newId!)).toEqual([
+      expect.objectContaining({ id: later, title: "Extraescolar nueva" }),
+    ]);
+  });
+
+  it("split_series without keeping drops later exceptions (plan D11)", async () => {
+    const series = await seedSeries(calendar);
+    const later = await seedException(series, calendar, tuesday(4));
+    const { data: newId, error } = await owner.client.rpc("split_series", {
+      p_series_id: series,
+      p_original_start: tuesday(3),
+      p_old_recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=TU;COUNT=3",
+      p_old_until: tuesday(2),
+      p_new: {
+        starts_at: tuesday(3),
+        ends_at: tuesday(3),
+        recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=WE",
+      },
+      p_keep_exceptions: false,
+    });
+    expect(error).toBeNull();
+    expect(await rows(newId!)).toEqual([]);
+    expect(await seriesRow(later)).toBeNull();
+  });
+
+  it("update_series propagates only what matched the series (RF-18)", async () => {
+    const series = await seedSeries(calendar);
+    const same = await seedException(series, calendar, tuesday(1));
+    const own = await seedException(series, calendar, tuesday(2), {
+      title: "Excursión",
+    });
+    const { error } = await editor.client.rpc("update_series", {
+      p_series_id: series,
+      p_fields: { title: "Robótica", location: "Aula 3" },
+      p_shift: NULL,
+      p_drop_exceptions: false,
+    });
+    expect(error).toBeNull();
+    const after = await rows(series);
+    expect(after.find((r) => r.id === same)).toMatchObject({
+      title: "Robótica",
+      location: "Aula 3",
+    });
+    expect(after.find((r) => r.id === own)).toMatchObject({
+      title: "Excursión",
+      location: "Aula 3",
+    });
+  });
+
+  it("update_series shifts the keys and unmoved hours with the series (plan D12)", async () => {
+    const series = await seedSeries(calendar, { exdates: [tuesday(3)] });
+    const unmoved = await seedException(series, calendar, tuesday(1));
+    const moved = await seedException(series, calendar, tuesday(2), {
+      starts_at: "2026-11-18T09:00:00Z",
+      ends_at: "2026-11-18T10:00:00Z",
+    });
+    const { error } = await owner.client.rpc("update_series", {
+      p_series_id: series,
+      p_fields: {
+        starts_at: "2026-11-03T18:00:00Z",
+        ends_at: "2026-11-03T19:00:00Z",
+      },
+      p_shift: "1 hour",
+      p_drop_exceptions: false,
+    });
+    expect(error).toBeNull();
+    const hour = 3_600_000;
+    const after = await rows(series);
+    const a = after.find((r) => r.id === unmoved)!;
+    expect(ms(a.original_start)).toBe(ms(tuesday(1)) + hour);
+    expect(ms(a.starts_at)).toBe(ms(tuesday(1)) + hour);
+    const b = after.find((r) => r.id === moved)!;
+    expect(ms(b.original_start)).toBe(ms(tuesday(2)) + hour);
+    expect(ms(b.starts_at)).toBe(ms("2026-11-18T09:00:00Z"));
+    const row = await seriesRow(series);
+    expect(ms(row!.exdates[0])).toBe(ms(tuesday(3)) + hour);
+  });
+
+  it("update_series drops exceptions and exdates on a new rule (RF-19)", async () => {
+    const series = await seedSeries(calendar, { exdates: [tuesday(3)] });
+    await seedException(series, calendar, tuesday(1));
+    const { error } = await owner.client.rpc("update_series", {
+      p_series_id: series,
+      p_fields: { recurrence: "FREQ=DAILY;INTERVAL=1" },
+      p_shift: NULL,
+      p_drop_exceptions: true,
+    });
+    expect(error).toBeNull();
+    expect(await rows(series)).toEqual([]);
+    expect((await seriesRow(series))?.exdates).toEqual([]);
+  });
+
+  it("a series becomes a single event; the first occurrence keeps its images (RF-21, D7)", async () => {
+    const plain = await seedSeries(calendar);
+    await seedException(plain, calendar, tuesday(2));
+    const { data: same, error } = await owner.client.rpc("update_series", {
+      p_series_id: plain,
+      p_fields: {
+        recurrence: NULL,
+        recurrence_tz: NULL,
+        recurrence_until: NULL,
+      },
+      p_shift: NULL,
+      p_drop_exceptions: true,
+    });
+    expect(error).toBeNull();
+    expect(same).toBe(plain);
+    expect(await seriesRow(plain)).toMatchObject({ recurrence: NULL });
+    expect(await rows(plain)).toEqual([]);
+
+    const withImages = await seedSeries(calendar);
+    const first = await seedException(withImages, calendar, SERIES.starts_at);
+    const image = await seedImageOn(first, owner.id);
+    const { data: kept } = await owner.client.rpc("update_series", {
+      p_series_id: withImages,
+      p_fields: { recurrence: NULL, recurrence_tz: NULL, title: "Una vez" },
+      p_shift: NULL,
+      p_drop_exceptions: true,
+    });
+    expect(kept).toBe(first);
+    expect(await seriesRow(withImages)).toBeNull();
+    expect(await seriesRow(first)).toMatchObject({
+      title: "Una vez",
+      series_id: null,
+      original_start: null,
+    });
+    const { data: images } = await admin
+      .from("event_images")
+      .select("id")
+      .eq("id", image);
+    expect(images).toHaveLength(1);
+    await admin.from("event_images").delete().eq("id", image);
+    await deleteQueuedImages([image]);
+  });
+
+  it("delete_occurrences by scope (RF-20)", async () => {
+    const series = await seedSeries(calendar);
+    await seedException(series, calendar, tuesday(1));
+    await seedException(series, calendar, tuesday(4));
+
+    const deleteAs = (user: TestUser, args: object) =>
+      user.client.rpc("delete_occurrences", {
+        p_series_id: series,
+        p_original_start: tuesday(0),
+        p_scope: "this",
+        p_recurrence: NULL,
+        p_until: NULL,
+        ...args,
+      });
+
+    expect(
+      (await deleteAs(editor, { p_original_start: tuesday(1) })).error,
+    ).toBeNull();
+    await deleteAs(owner, { p_original_start: tuesday(2) });
+    expect((await seriesRow(series))?.exdates).toHaveLength(2);
+    expect(await rows(series)).toHaveLength(1);
+
+    await deleteAs(owner, {
+      p_original_start: tuesday(3),
+      p_scope: "following",
+      p_recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=TU;UNTIL=20261116T235959",
+      p_until: tuesday(2),
+    });
+    expect(await rows(series)).toEqual([]);
+    expect((await seriesRow(series))?.recurrence).toContain("UNTIL");
+
+    const { error } = await deleteAs(viewer, { p_scope: "all" });
+    expect(error?.code).toBe("CF404");
+
+    await deleteAs(owner, { p_scope: "following" });
+    expect(await seriesRow(series)).toBeNull();
+  });
+
+  it("series_loss counts exceptions and ready images (RF-19, RF-24b)", async () => {
+    const series = await seedSeries(calendar);
+    const a = await seedException(series, calendar, tuesday(1));
+    const b = await seedException(series, calendar, tuesday(3));
+    const images = [
+      await seedImageOn(a, owner.id),
+      await seedImageOn(b, owner.id),
+      await seedImageOn(b, editor.id),
+    ];
+
+    const loss = async (args: object) =>
+      (
+        await viewer.client.rpc("series_loss", {
+          p_series_id: series,
+          ...args,
+        })
+      ).data;
+    expect(await loss({})).toEqual([{ exceptions: 2, images: 3 }]);
+    expect(await loss({ p_from: tuesday(2) })).toEqual([
+      { exceptions: 1, images: 2 },
+    ]);
+    expect(await loss({ p_only: tuesday(1) })).toEqual([
+      { exceptions: 1, images: 1 },
+    ]);
+    await admin.from("event_images").delete().in("id", images);
+    await deleteQueuedImages(images);
+  });
+
+  it("an editor who lost the role is refused", async () => {
+    const lost = await createTestUser({ display_name: "Ex" });
+    try {
+      await admin
+        .from("calendar_members")
+        .insert({ calendar_id: calendar, user_id: lost.id, role: "editor" });
+      const series = await seedSeries(calendar);
+      await admin
+        .from("calendar_members")
+        .update({ role: "viewer" })
+        .eq("calendar_id", calendar)
+        .eq("user_id", lost.id);
+      const { error } = await lost.client.rpc("update_series", {
+        p_series_id: series,
+        p_fields: { title: "x" },
+        p_shift: NULL,
+        p_drop_exceptions: false,
+      });
+      expect(error?.code).toBe("CF404");
+    } finally {
+      await deleteTestUser(lost.id);
+    }
+  });
+});

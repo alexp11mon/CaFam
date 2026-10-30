@@ -922,6 +922,16 @@ export type Database = {
         Args: { p_calendar_id: string; p_keep: boolean }
         Returns: undefined
       }
+      delete_occurrences: {
+        Args: {
+          p_original_start: string
+          p_recurrence: string
+          p_scope: string
+          p_series_id: string
+          p_until: string
+        }
+        Returns: undefined
+      }
       delete_own_account: { Args: never; Returns: undefined }
       detach_synced_calendars: {
         Args: {
@@ -1011,11 +1021,72 @@ export type Database = {
         Args: { p_dry_run?: boolean; p_limit?: number }
         Returns: number[]
       }
+      series_check_fields: {
+        Args: { p_extra?: string[]; p_fields: Json }
+        Returns: undefined
+      }
+      series_lock: {
+        Args: { p_series_id: string }
+        Returns: {
+          all_day: boolean
+          calendar_id: string
+          category_id: string | null
+          color: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string
+          exdates: string[]
+          external_id: string | null
+          id: string
+          location: string | null
+          original_start: string | null
+          recurrence: string | null
+          recurrence_tz: string | null
+          recurrence_until: string | null
+          series_id: string | null
+          starts_at: string
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "events"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      series_loss: {
+        Args: { p_from?: string; p_only?: string; p_series_id: string }
+        Returns: {
+          exceptions: number
+          images: number
+        }[]
+      }
+      series_propagate: {
+        Args: {
+          p_exceptions: string[]
+          p_new: Database["public"]["Tables"]["events"]["Row"]
+          p_old: Database["public"]["Tables"]["events"]["Row"]
+        }
+        Returns: undefined
+      }
       set_access_code: {
         Args: {
           p_calendar_id: string
           p_pin: string
           p_role: Database["public"]["Enums"]["calendar_role"]
+        }
+        Returns: string
+      }
+      split_series: {
+        Args: {
+          p_keep_exceptions: boolean
+          p_new: Json
+          p_old_recurrence: string
+          p_old_until: string
+          p_original_start: string
+          p_series_id: string
         }
         Returns: string
       }
@@ -1163,6 +1234,19 @@ export type Database = {
           p_target_calendar_id?: string
         }
         Returns: Json
+      }
+      update_occurrence: {
+        Args: { p_fields: Json; p_original_start: string; p_series_id: string }
+        Returns: string
+      }
+      update_series: {
+        Args: {
+          p_drop_exceptions: boolean
+          p_fields: Json
+          p_series_id: string
+          p_shift: string
+        }
+        Returns: string
       }
       vault_secret_matches: {
         Args: { p_id: string; p_value: string }
