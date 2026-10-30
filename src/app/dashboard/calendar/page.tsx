@@ -155,7 +155,8 @@ async function CalendarContent({
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* On a phone the header, the drawer and "+" do this (spec 016 RF-19). */}
+      <div className="flex flex-wrap items-center justify-between gap-3 max-tab:hidden">
         <ViewToolbar
           view={view}
           date={date}
@@ -226,7 +227,10 @@ export default function CalendarPage({
 }) {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
-      <h1 className="text-2xl font-bold text-ink">Calendario</h1>
+      {/* The phone header already names the month (spec 016 RF-8). */}
+      <h1 className="text-2xl font-bold text-ink max-tab:sr-only">
+        Calendario
+      </h1>
       <Suspense fallback={<CalendarSkeleton view="agenda" />}>
         <ShapedLoading searchParams={searchParams} />
       </Suspense>

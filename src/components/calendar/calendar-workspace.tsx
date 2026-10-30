@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   addTransitionType,
   startTransition,
@@ -10,11 +12,19 @@ import {
   useState,
   ViewTransition,
 } from "react";
+import { createPortal } from "react-dom";
+import {
+  useCalendarHeader,
+  usePublishCalendarHeader,
+} from "@/components/shell/calendar-header";
 import { FormAlert } from "@/components/ui/form-alert";
+import { monthLabel } from "@/lib/calendar/agenda-feed";
 import type { Draft } from "@/lib/calendar/draft";
 import type { Box } from "@/lib/calendar/popover";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { useCalendarShortcuts } from "@/lib/hooks/use-calendar-shortcuts";
+import { useIsPhone } from "@/lib/hooks/use-is-phone";
+import { useSwipe } from "@/lib/hooks/use-swipe";
 import { useRefreshOnFocus } from "@/lib/hooks/use-refresh-on-focus";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import {
@@ -22,14 +32,27 @@ import {
   type GroupableCalendar,
   type PersonGroup,
 } from "@/lib/calendar/grouping";
-import type { CalendarView } from "@/lib/calendar/ranges";
-import { CAL_FILTER, VIEW_MOTION } from "@/lib/calendar/transition-types";
+import {
+  calendarHref,
+  navigate,
+  type CalendarView,
+} from "@/lib/calendar/ranges";
+import {
+  CAL_FILTER,
+  CAL_VIEW,
+  periodType,
+  todayType,
+  typesOf,
+  VIEW_MOTION,
+} from "@/lib/calendar/transition-types";
 import { AgendaView, type AgendaEvent } from "./agenda-view";
 import type { MonthMarks } from "@/lib/calendar/month-marks";
 import { CalendarFilters, type FilterCategory } from "./calendar-filters";
 import { DayView } from "./day-view";
+import { Fab } from "./fab";
 import type { CalendarOption, EventFormValues } from "./event-form";
 import { MiniMonth } from "./mini-month";
+import { MonthStrip } from "./month-strip";
 import { MonthView } from "./month-view";
 import { NextEventCard, type NextEventItem } from "./next-event-card";
 import { QuickCreate } from "./quick-create";
@@ -89,6 +112,45 @@ function swapSection(
   const next = [...sections];
   [next[index], next[target]] = [next[target]!, next[index]!];
   return next;
+}
+
+const DRAWER_VIEWS: { view: CalendarView; label: string }[] = [
+  { view: "agenda", label: "Agenda" },
+  { view: "day", label: "Día" },
+  { view: "week", label: "Semana" },
+  { view: "month", label: "Mes" },
+];
+
+const DRAWER_ROW =
+  "flex min-h-12 w-full items-center rounded-xl px-3 text-base font-medium text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:border aria-[current=page]:border-accent-edge aria-[current=page]:bg-accent aria-[current=page]:text-on-accent";
+
+/** The views at the top of the phone drawer, the current one as the selection (spec 016 RF-13). */
+function DrawerViews({
+  view,
+  date,
+  saveLastView,
+}: {
+  view: CalendarView;
+  date: string;
+  saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
+}) {
+  return (
+    <ul aria-label="Vistas" className="flex flex-col gap-1">
+      {DRAWER_VIEWS.map((item) => (
+        <li key={item.view}>
+          <Link
+            href={calendarHref(item.view, date)}
+            transitionTypes={[CAL_VIEW]}
+            aria-current={item.view === view ? "page" : undefined}
+            onClick={() => void saveLastView?.(item.view)}
+            className={DRAWER_ROW}
+          >
+            {item.label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 function swap<T>(items: T[], index: number, direction: Direction): T[] {
@@ -169,6 +231,32 @@ export function CalendarWorkspace({
   const [draftTitle, setDraftTitle] = useState("");
   const [anchor, setAnchor] = useState<Box | null>(null);
   const closeDraft = useCallback(() => setDraft(null), []);
+
+  // The phone header and drawer (spec 016 RF-8, RF-10, RF-13, RF-20, RF-23, plan D3, D15).
+  const router = useRouter();
+  const isPhone = useIsPhone();
+  const onCalendarPage = usePathname() === "/dashboard/calendar";
+  const { drawerSlot, pickerOpen, setPickerOpen } = useCalendarHeader();
+  usePublishCalendarHeader({
+    title: monthLabel(date.slice(0, 7), today),
+    today,
+    onToday: () =>
+      router.push(calendarHref(view, today), {
+        transitionTypes: typesOf(todayType(date, today)),
+      }),
+    picker: view === "month" ? "months" : "mini",
+  });
+  // Sliding a finger changes the period of the month, the week and the day (RF-25..RF-29).
+  const swipe = useSwipe({
+    enabled: view !== "agenda" && draft === null,
+    onSwipe: (direction) => {
+      const delta = direction === "next" ? 1 : -1;
+      router.push(calendarHref(view, navigate(view, date, delta)), {
+        transitionTypes: typesOf(periodType(delta)),
+      });
+    },
+  });
+  const filtersInDrawer = isPhone && onCalendarPage ? drawerSlot : null;
   const quickCreate = canCreate && createAction && editableCalendars.length > 0;
 
   function openDraft(next: Draft, at: Box) {
@@ -356,9 +444,65 @@ export function CalendarWorkspace({
         )
     : undefined;
 
+  const filters = (
+    <>
+      <FormAlert message={error} />
+      <CalendarFilters
+        groups={groups}
+        categories={categories}
+        hiddenCategories={hiddenCategories}
+        onToggleCalendar={toggleCalendar}
+        onTogglePerson={togglePerson}
+        onToggleCategory={toggleCategory}
+        onMove={move}
+      />
+    </>
+  );
+
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
-      <div className="flex flex-col gap-3 lg:w-84 lg:shrink-0">
+      {filtersInDrawer
+        ? createPortal(
+            <div className="flex flex-col gap-3">
+              <DrawerViews
+                view={view}
+                date={date}
+                saveLastView={saveLastView}
+              />
+              {filters}
+            </div>,
+            filtersInDrawer,
+          )
+        : null}
+      {pickerOpen ? (
+        // Under the phone header; a day of the mini month folds it (RF-20, RF-23, RF-24).
+        <div
+          className="-mx-4 -mt-2 tab:hidden"
+          onClick={(event) => {
+            if ((event.target as Element).closest("a") && view !== "month")
+              setPickerOpen(false);
+          }}
+        >
+          {view === "month" ? (
+            <MonthStrip month={date.slice(0, 7)} />
+          ) : monthMarks && loadMonthMarks ? (
+            <div className="px-4">
+              <MiniMonth
+                key={date.slice(0, 7)}
+                month={date.slice(0, 7)}
+                today={today}
+                view={view}
+                initialMarks={monthMarks}
+                colors={colors}
+                visibleCalendarIds={visibleCalendars}
+                loadMonthMarks={loadMonthMarks}
+              />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+      {/* On a phone the drawer and the header take the panel's place (RF-19). */}
+      <div className="flex flex-col gap-3 max-tab:hidden lg:w-84 lg:shrink-0">
         {nextEvents && loadedAt !== undefined ? (
           <NextEventCard
             events={nextEvents}
@@ -381,7 +525,6 @@ export function CalendarWorkspace({
           ref={panel}
           className={`${panelOpen ? "flex" : "hidden"} flex-col gap-3 lg:flex`}
         >
-          <FormAlert message={error} />
           {monthMarks && loadMonthMarks ? (
             <MiniMonth
               // A new month in the main view starts the mini month there again.
@@ -395,15 +538,7 @@ export function CalendarWorkspace({
               loadMonthMarks={loadMonthMarks}
             />
           ) : null}
-          <CalendarFilters
-            groups={groups}
-            categories={categories}
-            hiddenCategories={hiddenCategories}
-            onToggleCalendar={toggleCalendar}
-            onTogglePerson={togglePerson}
-            onToggleCategory={toggleCategory}
-            onMove={move}
-          />
+          {filtersInDrawer ? null : filters}
         </div>
       </div>
       {/* A new view or date exits the old area and enters the new one in the
@@ -415,7 +550,10 @@ export function CalendarWorkspace({
         update={{ [CAL_FILTER]: CAL_FILTER, default: "none" }}
         default="none"
       >
-        <div className="min-w-0 flex-1">
+        <div
+          className={`min-w-0 flex-1 ${view === "agenda" ? "" : "touch-pan-y"}`}
+          {...swipe}
+        >
           {view === "agenda" ? (
             <AgendaView
               days={days}
@@ -464,6 +602,7 @@ export function CalendarWorkspace({
           )}
         </div>
       </ViewTransition>
+      {canCreate ? <Fab href={`/dashboard/events/new?date=${date}`} /> : null}
       {draft && quickCreate && defaultCalendarId ? (
         <QuickCreate
           // A new slot starts a new window.

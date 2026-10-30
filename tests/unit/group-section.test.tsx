@@ -12,6 +12,7 @@ import { getVisibleRange } from "@/lib/calendar/ranges";
 // Spec 007, T13: groups in "Mis calendarios" and in the filters (RF-35 to RF-41, RF-46).
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard/calendar",
 }));
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function showModal() {

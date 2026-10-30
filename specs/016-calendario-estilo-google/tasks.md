@@ -73,7 +73,7 @@
   Hecho cuando: `npm test -- top-bar nav-drawer app-frame design-tokens` en verde, la verificación completa reportada y capturas de Ajustes y "Mis calendarios" a 390 px con la cabecera y el cajón abierto.
   Cubre: RF-6, RF-7, RF-9, RF-11, RF-12, RF-14, RF-15, RF-16, RF-61 | Módulo: top-bar, nav-drawer, app-frame, design-guard
 
-- [ ] T6 Conectar el calendario a la cabecera: título, Hoy, selector, filtros en el cajón, deslizar y "+"
+- [x] T6 Conectar el calendario a la cabecera: título, Hoy, selector, filtros en el cajón, deslizar y "+"
   Pasos:
   - Primero, los tests en rojo:
     - `calendar-workspace.test.tsx`: publica el título del mes; en `phone` los filtros aparecen dentro del cajón (portal) y no en el panel; "Hoy" navega a la fecha de hoy; con `canCreate` hay "+" y sin él no.

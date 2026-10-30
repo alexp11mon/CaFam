@@ -10,7 +10,10 @@ import { ORPHAN_GROUP_ID, type PersonGroup } from "@/lib/calendar/grouping";
 import { getVisibleRange } from "@/lib/calendar/ranges";
 
 // The workspace listens to the calendar shortcuts, which navigate (spec 008 T12).
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/dashboard/calendar",
+}));
 
 const TZ = "Europe/Madrid";
 const DAYS = getVisibleRange("month", "2026-11-02", TZ).days;

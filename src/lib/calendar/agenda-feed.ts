@@ -42,6 +42,13 @@ const MONTHS = [
 ];
 
 const monthName = (key: string) => MONTHS[Number(key.slice(5, 7)) - 1]!;
+
+/** "noviembre", or "enero de 2027" outside the current year: the agenda bands and the phone header. */
+export function monthLabel(key: string, today: string): string {
+  return key.slice(0, 4) === today.slice(0, 4)
+    ? monthName(key)
+    : `${monthName(key)} de ${key.slice(0, 4)}`;
+}
 const dayNumber = (key: string) => String(Number(key.slice(8, 10)));
 
 /** "2–8 de noviembre" or "26 de octubre – 1 de noviembre". */
@@ -88,10 +95,7 @@ export function buildAgendaFeed<T extends Located>({
       feed.push({
         kind: "month",
         key: month,
-        label:
-          month.slice(0, 4) === today.slice(0, 4)
-            ? monthName(key)
-            : `${monthName(key)} de ${month.slice(0, 4)}`,
+        label: monthLabel(month, today),
       });
     }
     // A week is cut at the end of its month, so the band never splits it.
