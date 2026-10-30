@@ -56,6 +56,7 @@ const EDIT: EventFormValues = {
 };
 
 function setup({
+  canAttach = false,
   canEdit = true,
   deleteAction = vi.fn(async (): Promise<ConfirmState> => ({})),
   inWindow = false,
@@ -65,6 +66,7 @@ function setup({
       detail={DETAIL}
       timeZone="Europe/Madrid"
       canEdit={canEdit}
+      canAttach={canAttach}
       editInitial={EDIT}
       calendars={[{ id: "cal-a", name: "Familia", color: "#A0C4FF" }]}
       categories={[]}
@@ -133,5 +135,21 @@ describe("EventPanel", () => {
 
     expect(await screen.findByText("Evento borrado")).toBeVisible();
     expect(router.back).toHaveBeenCalledTimes(1);
+  });
+
+  // Spec 012, T9: any member adds images, readers included (RF-1, RF-4).
+  it("offers Añadir imágenes to a reader who can attach", () => {
+    setup({ canEdit: false, canAttach: true });
+    expect(
+      screen.getByRole("button", { name: "Añadir imágenes" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Editar" })).toBeNull();
+  });
+
+  it("offers no Añadir imágenes without canAttach", () => {
+    setup();
+    expect(
+      screen.queryByRole("button", { name: "Añadir imágenes" }),
+    ).toBeNull();
   });
 });

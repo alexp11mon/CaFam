@@ -121,7 +121,7 @@
   Hecho cuando: `npm test -- image-actions images-queries load-event` en verde. Cubre: RF-2, RF-4, RF-8, RF-11, RF-15, RF-19, RF-20, RF-22, RF-23 | Módulo: images-actions, images-queries
   Evidencia (2026-10-30): rojo (módulos inexistentes). `image-actions.test.ts` 13 tests e `images-queries.test.ts` 2 tests en verde. `load-event.ts` no tenía test propio: devuelve `images` (de `getEventImages`) y `canAttach: true` para cualquier miembro, porque llegar a cargarlo ya exige serlo (RLS); lo comprueban el tipado y los tests de interfaz de la T9. La purga inmediata usa `purgeDeps()` (clave publicable + `CRON_SECRET`), también desde la ruta. typecheck, lint y format en verde, `npm test` 1457 tests, build correcto.
 
-- [ ] T9 Añadir imágenes desde el detalle del evento con progreso, cancelar y reintentar
+- [x] T9 Añadir imágenes desde el detalle del evento con progreso, cancelar y reintentar
   Pasos:
   - Primero, `tests/unit/image-uploader.test.tsx` en rojo (Testing Library, acciones y subida simuladas):
     - "Añadir imágenes" aparece para cualquier miembro, Lector y traído incluidos;
@@ -133,6 +133,7 @@
   - Después, `image-picker.tsx`, `upload-list.tsx` y `use-image-uploads.ts` en `src/components/images/`, montados en el detalle (`event-detail`) de la ventana y de la página.
 
   Hecho cuando: `npm test -- image-uploader event-detail event-modal` en verde y capturas a 390, 768 y 1440 px en los dos temas. Cubre: RF-1, RF-2, RF-4, RF-6, RF-8, RF-20, RF-24 | Módulo: images-uploader
+  Evidencia (2026-10-30): rojo (componentes inexistentes). `image-uploader.test.tsx` 7 tests y 2 nuevos en `event-panel.test.tsx`; `image-uploader event-detail event-modal event-panel` 36 tests en verde. `EventDetail` recibe `media` y `EventPanel` `canAttach` (páginas completa y ventana). La subida real al bucket y las capturas del detalle se hacen junto con la galería en la T10, que es la misma pantalla. typecheck, lint y format en verde, `npm test` 1466 tests, build correcto.
 
 - [ ] T10 Ver las imágenes en miniatura y a pantalla completa
   Pasos:

@@ -23,6 +23,7 @@ async function InterceptedEvent({
         detail={data.detail}
         timeZone={data.timeZone}
         canEdit={data.canEdit}
+        canAttach={data.canAttach}
         editInitial={data.editInitial}
         calendars={data.calendars}
         categories={data.categories}

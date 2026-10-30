@@ -52,6 +52,7 @@ export function EventDetail({
   deleteAction,
   actions,
   onDeleted,
+  media,
 }: {
   event: EventDetailData;
   timeZone: string;
@@ -61,6 +62,8 @@ export function EventDetail({
   /** More buttons next to "Borrar evento" (spec 008: Editar, Duplicar). */
   actions?: ReactNode;
   onDeleted?: (done: Done) => void;
+  /** The event's images and "Añadir imágenes" (spec 012 RF-1, RF-9). */
+  media?: ReactNode;
 }) {
   return (
     <article className="flex flex-col gap-4">
@@ -91,6 +94,7 @@ export function EventDetail({
         <Row label="Calendario">{event.calendarName}</Row>
         <Row label="Creado por">{event.author}</Row>
       </dl>
+      {media}
       {event.readOnly ? (
         <p className="text-sm text-muted">{READ_ONLY_TEXT[event.readOnly]}</p>
       ) : null}
