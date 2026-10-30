@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-30, al cerrar la spec 011 (rediseño visual), con la migración `profile_theme` aplicada en prod.
+> Última actualización: 2026-10-30, al terminar las tareas de la spec 012 (imágenes en los eventos), pendiente de que el usuario apruebe el cierre y aplique sus migraciones en prod.
 
 ## 1. Qué es
 
@@ -39,7 +39,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 009-sincronizacion-bidireccional | Escribir en Google lo que se crea, cambia, mueve o borra en los calendarios traídos (propietario y Editores), renombrar, crear y subir calendarios, política de privacidad y publicar la aplicación de Google | **Cerrada** (2026-10-29), T1–T14 hechas; aplicada y validada en producción, con la aplicación de Google publicada sin verificar |
 | 010-renombrar-cafam | Renombrar todo el proyecto a CaFam (interfaz, PWA, correos, configuración, tests, documentación, specs cerradas y repositorio) | **Cerrada** (2026-10-29), T1–T8 hechas; migración `rename_cafam` aplicada en prod, paneles de correo revisados y repositorio renombrado |
 | 011-rediseno-visual | Modo oscuro con selector, transparencias (glassmorphism), animaciones, microinteracciones y transiciones entre vistas | **Cerrada** (2026-10-30), T1–T13 hechas; migración `profile_theme` aplicada en prod |
-| 012-imagenes-en-eventos | Imágenes en los eventos con Supabase Storage, también de Lectores y en calendarios traídos de Google | **Spec aprobada** (2026-10-29), sin plan |
+| 012-imagenes-en-eventos | Imágenes en los eventos con Supabase Storage, también de Lectores y en calendarios traídos de Google | **Implementada** (2026-10-30), T1–T13 hechas; migraciones aplicadas en dev, **pendientes en prod**; falta la aprobación del cierre |
 | 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Spec aprobada** (2026-10-29), sin plan |
 | 014-comentarios-en-eventos | Comentarios en los eventos por cualquier miembro, Lectores incluidos | **Spec aprobada** (2026-10-29), sin plan |
 | 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | **Spec aprobada** (2026-10-29), sin plan |
@@ -121,6 +121,15 @@ Añadido por la spec 011 (en producción desde el 2026-10-30):
 - **Cristal**: utilidades `glass` (barras, paneles del calendario y secciones de Ajustes) y `glass-float` (ventanas, hojas, diálogos y avisos), con respaldo opaco si no hay `backdrop-filter`. El contraste se calcula sobre el peor fondo (`lib/theme/contrast.ts`, `composite`).
 - **Movimiento**: `press` en botones y controles; View Transitions de React (`<ViewTransition>`, `addTransitionType`) al cambiar de vista, periodo o filtro (`lib/calendar/transition-types.ts`); ventanas, hoja y avisos entran y salen con `@starting-style`. Todo con tokens `--motion-*` y versión reducida para `prefers-reduced-motion`.
 - **El logotipo se invierte en oscuro** (piedra clara con letras en tinta); el icono de la PWA no cambia.
+
+Añadido por la spec 012 (en dev; en prod cuando el usuario aplique sus migraciones):
+
+- **Imágenes en los eventos**: "Añadir imágenes" en el detalle para **cualquier miembro, Lectores incluidos**, también en calendarios traídos de Google (las imágenes nunca se envían a Google), y en el alta completa (página y ventana). En el móvil ofrece cámara y galería.
+- **En el dispositivo** cada imagen se reduce a 2048 px (y una miniatura de 400 px) y se recomprime a JPEG con canvas, lo que quita el EXIF y la ubicación. Se aceptan JPEG, PNG, WebP y HEIC/HEIF si el navegador los lee; más de 20 MB antes de reducir se rechaza. Se suben dos a la vez, con progreso, "Cancelar" y "Reintentar".
+- **Límites**: 10 por evento, 300 por usuario y 800 MB en total (`images_total_limit()`), comprobados al reservar con el evento bloqueado.
+- **Galería** en el detalle (miniaturas en orden de subida, `alt` "Título, imagen 2 de 5") y **visor** a pantalla completa con anterior/siguiente (botones, flechas, deslizar), autor y fecha, "Descargar" y "Borrar imagen" (quien la subió, propietario y Editores).
+- **Icono** en las vistas para los eventos con imágenes (`imageCount` de `getEventsInRange`); en semana y día solo en bloques de 30 min o más.
+- Borrar el evento, el calendario o la cuenta, o que la sincronización quite un evento traído, borra sus imágenes (por la cola de purga). Mover, juntar, copiar calendarios sin propietario y subir a Google las conservan; duplicar no las copia.
 
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 
@@ -208,6 +217,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── calendar/          # formularios, vistas (agenda-view, event-row, month/week/day, time-grid, slot-layer), event-modal, event-panel, quick-create, gone-event, calendar-skeleton, mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog…
 │   │   ├── sharing/           # invite-form, copy-button, invite-list, access-code-panel, member-list, join-code-form, invite-join-card
 │   │   ├── import/            # import-form, import-summary
+│   │   ├── images/            # spec 012: image-picker, upload-list, use-image-uploads (cola de subidas), image-uploader (detalle), event-images (galería), image-viewer (visor), use-image-blob
 │   │   ├── connections/       # spec 007: connection-list, provider-notice, calendar-picker, sync-status, sync-now-button, disconnect-dialog
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
@@ -220,6 +230,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
+│   │   ├── images/            # spec 012: paths, limits, fit, alt, error-messages (puras), prepare-image (canvas), upload-object (XHR con progreso), download-image, queries.ts, purge.ts
 │   │   ├── sync/              # spec 007. Puras y testeadas: limits, window, limit-events, nearest-color, event-row, google-events, oauth-state, summary, error-messages, schemas, read-only (canWriteEvents, canMerge). Con red o BD: providers/google.ts (único cliente HTTP de Google), google-config, run-sync (motor con dependencias inyectadas), engine.ts (entrada del servidor), queries.ts (lecturas con RLS)
 │   │   └── supabase/          # env.ts, server.ts, client.ts, proxy.ts
 │   └── types/database.ts      # GENERADO con `npm run db:types`; no editar a mano
@@ -228,7 +239,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon.svg (maestro) → icon-192, icon-512, icon-512-maskable (letras al 85 %), apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions, calendar_groups · 009: sync_write_schema, sync_write_functions, sync_apply_events_v2 · 010: rename_cafam · 011: profile_theme
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions, calendar_groups · 009: sync_write_schema, sync_write_functions, sync_apply_events_v2 · 010: rename_cafam · 011: profile_theme · 012: event_images, event_images_functions, event_images_storage, event_images_purge_claim, copy_calendar_images(_fix), images_purge, reserve_images_order
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
@@ -284,6 +295,7 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/dashboard/calendars/[id]/upload` | solo propietario de un calendario normal con propietario (otros → 404) | Subir a Google (spec 009); `maxDuration` 300 |
 | `/privacy` | pública | Política de privacidad (spec 009) |
 | `/manifest.webmanifest`, `/sw.js`, `/icons/*` | pública | PWA |
+| `/api/images/purge` | `Authorization: Bearer ${CRON_SECRET}` (POST) | Spec 012: borra en Storage los objetos de la cola de purga; `maxDuration` 60 |
 | `/api/cron/keep-alive` | `Authorization: Bearer ${CRON_SECRET}` | `200 {"ok":true}` / `401` / `500` |
 
 La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSession)`, en `src/lib/auth/route-access.ts` (testeada en `route-access.test.ts`). Para proteger una ruta nueva se cambia **ahí**, no en cada página. El `matcher` de `src/proxy.ts` excluye estáticos, `sw.js` y el manifest.
@@ -354,6 +366,11 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `connect_account` recibe `p_can_write`; `select_synced_calendars` acepta `access`; `sync_set_access` guarda el acceso al listar.
   - `sync_apply_events` recibe `p_read_at` (no pisa filas con `updated_at >= p_read_at`, lo escrito en CaFam mientras se leía) y `p_access`, y solo borra eventos con `external_id`.
 - **Cambios de esquema solo mediante una migración nueva** en `supabase/migrations/` (nunca editando el panel ni migraciones ya aplicadas). Después: `npm run db:push` (dev), `npm run db:types` y tests en `tests/integration/`.
+- Añadido por la spec 012 (migraciones `event_images`, `event_images_functions`, `event_images_storage`, `event_images_purge_claim`, `copy_calendar_images`, `copy_calendar_images_fix`, `images_purge` y `reserve_images_order`; en dev):
+  - `event_images (id, event_id → events on delete cascade, object_id, uploaded_by → profiles on delete set null, status pending|ready, bytes, width, height, created_at)` con RLS: los miembros del calendario leen las `ready` y quien reservó, sus `pending`; borran quien la subió, el propietario y los Editores. Nadie inserta ni actualiza directamente. Varias filas pueden compartir `object_id` (copias de calendarios sin propietario).
+  - Bucket privado **`event-images`** (solo `image/jpeg`, 4 MB por objeto), rutas `<object_id>/full.jpg` y `<object_id>/thumb.jpg`. El permiso sale de `event_images → events → miembro` (`can_read_event_image`, `image_upload_allowed`), nunca de la ruta: mover o juntar no toca Storage.
+  - Funciones: `reserve_event_images(p_event_id, p_images jsonb) returns uuid[]` (cualquier miembro; `CF429` con mensaje `event`/`user`/`total`, `CF404`, `22023`; el orden de `created_at` usa `clock_timestamp()`), `confirm_event_image(p_id)` (`P0002` si faltan los dos objetos) e `images_total_limit()`.
+  - **Cola de purga** `image_purge_queue (object_id, bytes, attempts, queued_at, claimed_at)`, que llena el trigger `queue_image_purge` cuando desaparece la última fila de un objeto. Supabase no deja borrar objetos con SQL: `/api/images/purge` reclama con `images_claim_purge(p_secret, …)` (con `CRON_SECRET`, sin `service_role`), borra en Storage como `anon` (solo objetos reclamados en los últimos 5 min) y llama a `images_done_purge`. `pg_cron` `images-purge` (minuto 15 de cada hora) llama a `images_purge_trigger()`, que usa `sync_app_url` de Vault. Las reservas sin confirmar de más de 1 h también se purgan.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, …) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
 ### PWA
@@ -521,6 +538,12 @@ npm run db:types       # regenera src/types/database.ts
 - **Microsoft Entra no admite cuentas personales sin directorio** (`AADSTS16000`), y crearlo exige una suscripción de Azure con tarjeta. Por eso la 007 quitó Microsoft (Enmienda 1).
 - **Un evento borrado en CaFam durante una actualización** puede reaparecer hasta la siguiente (plan 009 R9): `p_read_at` protege lo cambiado, no lo borrado. No es un fallo.
 - **Las cuentas conectadas en la 007 no escriben** (`can_write = false`) hasta volver a conectarlas con los permisos nuevos.
+- **El CDN de Supabase Storage guarda la descarga por URL y token** (spec 012): con `storage.download()` un miembro expulsado seguía viendo la imagen. `downloadImage` pide `/storage/v1/object/authenticated/…?v=<uuid aleatorio>` con `cache: "no-store"`, así cada petición pasa por RLS (plan D5). No lo cambies por enlaces firmados ni por `download()`.
+- **`now()` es el mismo en toda la transacción**: para ordenar filas insertadas en una sola llamada usa `clock_timestamp()` (lo corrigió `reserve_images_order`).
+- **Los objetos del bucket no se borran con SQL**: se encolan en `image_purge_queue` y los borra `/api/images/purge`. En dev, sin la app en el puerto de `sync_app_url`, la cola crece; los tests limpian sus filas con `deleteQueuedImages`.
+- **Si Google mueve un evento entre calendarios**, la sincronización lo ve como un borrado y un alta: sus imágenes se pierden (plan 012 R5, coherente con RF-18). No es un fallo.
+- **Alta con imágenes desde la página completa**: tras subir, el formulario navega con `window.location.assign`, porque `router.replace` al detalle lo intercepta `@modal` y deja el formulario detrás.
+- **Activity y los `input type="file"`**: tras navegar, el formulario de alta sigue oculto en el DOM con su propio `input` de archivos; en `playwright-cli` apunta al del detalle (`section[aria-label="Añadir imágenes"] input`).
 - **Tailwind 4 solo busca clases en `src/`** (`@import "tailwindcss" source("..")` en `globals.css`). Sin eso escanea todo el repositorio y convierte en CSS los ejemplos de la documentación (así se coló el azul antiguo `bg-[#…]` en producción).
 
 ## 11. Fuera de alcance hasta su spec
@@ -535,5 +558,6 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 
 - La **010 (renombrar a CaFam)** está cerrada y en producción (2026-10-29). Queda abierto `invites.test.ts` ("returns a 43 character token"), que falla cuando el reloj local va por detrás del de la base de datos (trampa del reloj); no es de ninguna spec.
 - La **011 (rediseño visual)** está cerrada y en producción (2026-10-30), con `profile_theme` aplicada en prod.
-- **Siguiente:** el plan de la 012 con `plan-generator`. Después, por orden y cada una con su plan y sus tareas aprobados: 012 (imágenes), 013 (recurrentes), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
+- La **012 (imágenes)** tiene sus tareas T1–T13 hechas en la rama `012-imagenes-en-eventos`, con las migraciones en dev. Falta que el usuario apruebe el cierre, aplique las migraciones en prod, haga el merge a `main` y pruebe en un móvil real (HEIC en iPhone, cámara, cortar la red).
+- **Siguiente:** el plan de la 013 con `plan-generator`. Después, por orden y cada una con su plan y sus tareas aprobados: 013 (recurrentes), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.

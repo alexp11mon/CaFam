@@ -185,6 +185,54 @@
 
   Hecho cuando: checklist RF-1 a RF-32 completo con su evidencia, verificación obligatoria en verde con la salida reportada y aprobación del usuario para cerrar. Cubre: todos | Módulo: validation
 
+  Evidencia (2026-10-30), a falta de la aprobación del cierre y de la prueba en un móvil real:
+  - Checklist RF-1 a RF-32 en "Evidencias RF-1 a RF-32 (T13)", más abajo.
+  - EXIF y tamaño (navegador real, `next start -p 3100`): un JPEG de 4000×3000 y 7,4 MB con GPS y marca de cámara, subido desde el detalle, queda guardado en 2048×1536, 600 KB y **sin EXIF ni GPS** (leído con Pillow sobre la descarga de "Descargar", `EXIF T13-1.jpg`).
+  - Rendimiento: con la red "Fast 4G" de Chrome (150 ms, 9 Mb/s) la primera miniatura del detalle se pinta a los 832 ms.
+  - Teclado: Enter sobre la miniatura abre el visor, "Descargar" funciona, Escape cierra y el foco vuelve a la miniatura ("Ver EXIF T13, imagen 1 de 1"). Las flechas y el deslizar están en `event-images.test.tsx`.
+  - Capturas: detalle y visor a 390, 768 y 1440 px en claro y oscuro con rojo y amarillo (T10); alta con imágenes a 390 y 1440 px (T11) y a 768 px con los dos acentos; agenda, mes, semana y día a 390 y 1440 px (T12) y a 768 px con rojo y amarillo en los dos temas. Revisadas contra P9: solo tokens, texto en tinta, el color del calendario solo marca y el icono de imagen en `currentColor`.
+  - Verificación: typecheck, lint, format:check, `npm test` (167 archivos, 1490 tests) y build en verde. `npm run test:db` completo: 36 archivos, 340 tests en verde y 4 fallos, todos de las trampas conocidas: 7 archivos con `AuthApiError: Request rate limit reached` (repetidos con `--no-file-parallelism`: 7 en verde) e `invites.test.ts` ("returns a 43 character token", el reloj local por detrás del de la base de datos, abierto desde la 010 y ajeno a esta spec).
+  - Limpieza de dev: el usuario de la prueba manual y sus 8 imágenes (16 objetos) borrados; borrados también 268 usuarios `@cafam.test` que dejaron ejecuciones de `test:db` cortadas por el límite de Auth (13 de hoy y 255 del 2026-10-29) y su correo en cola. Quedan 1 usuario (el real), 0 objetos en `event-images`, 0 filas en `event_images` y la cola de purga vacía. Sin carpeta `.playwright-cli/`.
+  - `AGENTS.md` actualizado: estado, funciones, esquema, rutas, estructura y trampas (CDN de Storage, `clock_timestamp()`, cola de purga, R5 del movimiento en Google, navegación tras el alta con imágenes y el `input` oculto por Activity).
+  - Queda para el usuario: probar en un móvil real (cámara y galería, una foto HEIC en iPhone, cortar la red y reintentar, deslizar), el lector de pantalla con los `alt`, aplicar las 8 migraciones en prod y aprobar el cierre.
+
+## Evidencias RF-1 a RF-32 (T13)
+
+| RF | Evidencia (tests en verde y pruebas en el navegador) |
+|----|------------------------------------------------------|
+| RF-1 | `image-uploader.test.tsx`, `event-panel.test.tsx` ("Añadir imágenes" en el detalle para cualquier miembro); navegador (T10, T13) |
+| RF-2 | `event-images.test.ts` (`reserve_event_images`, `confirm_event_image`), `storage-images.test.ts`, `image-actions.test.ts`, `image-uploader.test.tsx`; navegador: varias imágenes a la vez (T10, T11) |
+| RF-3 | `images-core.test.ts` y `prepare-image.test.ts` (tipos aceptados y lectura que falla con mensaje); HEIC en iPhone queda para la prueba en el móvil del usuario |
+| RF-4 | `event-images.test.ts` ("any member reserves, viewers included"), `storage-images.test.ts` |
+| RF-5 | `prepare-image.test.ts` (2048 px, JPEG); navegador (T13): un JPEG de 4000×3000 y 7,4 MB con GPS queda en 2048×1536, 600 KB y **sin EXIF ni GPS** |
+| RF-6 | `upload-object.test.ts` (progreso y cancelar), `image-uploader.test.tsx` ("Cancelar" libera la reserva) |
+| RF-7 | `event-form.test.tsx` y `event-actions.test.ts` (T11); navegador en página completa y en la ventana |
+| RF-8 | `event-images.test.ts` ("a viewer reserves in a synced calendar too"); ninguna llamada a Google en `image-actions.ts` |
+| RF-9 | `event-images.test.tsx` (orden y `alt`), `event-images.test.ts` ("keeps the order of the chosen images") |
+| RF-10 | `event-images.test.tsx` (botones, flechas, deslizar, "Cerrar" y Escape); navegador con teclado (T13): Enter abre, Escape cierra y el foco vuelve a la miniatura |
+| RF-11 | `event-images.test.tsx` (autor y fecha), `images-queries.test.ts` |
+| RF-12 | `agenda-view`, `month-view`, `week-view`, `day-view` y `event-images.test.ts` (`imageCount`) (T12); capturas de las cuatro vistas |
+| RF-13 | `event-images.test.tsx` (enlace "Descargar" con nombre legible); navegador: se descarga `EXIF T13-1.jpg`, la imagen guardada |
+| RF-14 | `images-core.test.ts` (`imageAlt`), `event-images.test.tsx` |
+| RF-15 | `event-images.test.ts` (matriz de borrado), `image-actions.test.ts`, `event-images.test.tsx` (confirmar); navegador (T10): borra fila y archivos |
+| RF-16 | `event-images.test.ts` ("deleting the event or the calendar queues…"), `images-purge-route.test.ts` |
+| RF-17 | `event-images.test.ts` (calendario y cuenta del propietario) |
+| RF-18 | `event-images.test.ts` ("an event removed by the sync queues the objects") |
+| RF-19 | `event-images.test.ts` ("deleting the uploader's account keeps the image without author"), `images-queries.test.ts` |
+| RF-20 | `event-images.test.ts` (10 por evento, también en paralelo), `images-core.test.ts` (`fitNotice`), `image-uploader.test.tsx` |
+| RF-21 | `prepare-image.test.ts` y `images-core.test.ts` (más de 20 MB, mensaje en español) |
+| RF-22 | `event-images.test.ts` ("refuses new images when the project space is full"), `image-actions.test.ts` |
+| RF-23 | `event-images.test.ts` ("stops at 300 own images"), `image-actions.test.ts` |
+| RF-24 | `upload-object.test.ts`, `image-uploader.test.tsx` y `event-form.test.tsx` ("Reintentar" sin perder las demás) |
+| RF-25 | `storage-images.test.ts` (matriz de lectura del bucket), `event-images.test.ts`, `event-images.test.tsx` ("No disponible") |
+| RF-26 | `storage-images.test.ts` (expulsado deja de leer); descarga sin caché del CDN (plan D5) |
+| RF-27 | `sw-no-data.test.ts` ("ignores the images of Supabase Storage") |
+| RF-28 | `event-form.test.tsx` ("starts without images, also when duplicating") |
+| RF-29 | `event-images.test.ts` ("merge_calendars keeps the images") |
+| RF-30 | `event-images.test.ts` ("moving the event keeps its images…"), `storage-images.test.ts` |
+| RF-31 | `event-images.test.ts` ("each copy gets the ready images, sharing the object") |
+| RF-32 | `event-images.test.ts` ("uploading a calendar to Google keeps the images in CaFam") |
+
 ## Trazabilidad RF → Tareas
 
 | RF | Tareas |
