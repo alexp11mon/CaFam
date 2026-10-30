@@ -85,7 +85,14 @@ export function getVisibleRange(
     count = 1;
   }
 
-  const days = listDays(first, count);
+  return {
+    view,
+    days: listDays(first, count),
+    ...instantsOf(first, count, timeZone),
+  };
+}
+
+function instantsOf(first: string, count: number, timeZone: string) {
   const end = addDays(first, count);
   // All-day events sit at 00:00 UTC of their date, which can fall outside the
   // local window of the first or last day (plan D6).
@@ -93,16 +100,22 @@ export function getVisibleRange(
   const utcTo = new Date(`${end}T00:00:00Z`);
   const localFrom = startOfDay(first, timeZone);
   const localTo = startOfDay(end, timeZone);
-
   return {
-    view,
-    days,
     from: new Date(Math.min(utcFrom.getTime(), localFrom.getTime())),
     to: new Date(Math.max(utcTo.getTime(), localTo.getTime())),
   };
 }
 
-function daysBetween(first: string, last: string): number {
+/** The instants to read for the days `first` to `last`, both included (spec 016 agenda chunks). */
+export function daysRange(
+  first: string,
+  last: string,
+  timeZone: string,
+): { from: Date; to: Date } {
+  return instantsOf(first, daysBetween(first, last) + 1, timeZone);
+}
+
+export function daysBetween(first: string, last: string): number {
   return Math.round(
     (Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) /
       86_400_000,

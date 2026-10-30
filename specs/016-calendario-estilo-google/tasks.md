@@ -117,7 +117,7 @@
   Hecho cuando: `npm test -- time-grid` en verde, la verificación completa reportada y capturas de semana y día junto a `IMG_1844` e `IMG_1845`.
   Cubre: RF-38, RF-39, RF-40, RF-41, RF-42, RF-43, RF-44, RF-45, RF-46 | Módulo: time-grid
 
-- [ ] T9 Añadir la carga de tramos de la agenda
+- [x] T9 Añadir la carga de tramos de la agenda
   Pasos:
   - Primero, `tests/unit/agenda-actions.test.ts` (`// @vitest-environment node`, Supabase simulado) en rojo. Comprueba: fechas no válidas, `to < from` y más de 62 días dan error; un tramo válido devuelve los eventos con color y nombre de calendario; un fallo de la base de datos da el mensaje de conexión.
   - Después, `agenda-actions.ts` y `to-view-events.ts`, que se saca de `page.tsx`.

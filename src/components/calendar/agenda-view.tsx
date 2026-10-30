@@ -10,11 +10,8 @@ import { useNow } from "@/lib/hooks/use-now";
 import { PlusIcon } from "@/components/shell/icons";
 import { EventRow } from "./event-row";
 
-/** Optional extras only the agenda rows show (spec 005 RF-35). */
-export interface AgendaEvent extends CalendarEventItem {
-  location?: string | null;
-  calendarName?: string;
-}
+export type { AgendaEvent } from "@/lib/calendar/to-view-events";
+import type { AgendaEvent } from "@/lib/calendar/to-view-events";
 
 function NowLine({ now, timeZone }: { now: number; timeZone: string }) {
   return (

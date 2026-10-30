@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import type { AgendaEvent } from "@/components/calendar/agenda-view";
 import { CalendarSkeleton } from "@/components/calendar/calendar-skeleton";
 import { CalendarWorkspace } from "@/components/calendar/calendar-workspace";
 import { ViewToolbar } from "@/components/calendar/view-toolbar";
@@ -9,7 +8,6 @@ import { todayKey } from "@/lib/calendar/format";
 import { organizeGroups } from "@/lib/calendar/organize-groups";
 import { monthMarks } from "@/lib/calendar/month-marks";
 import { nextEventsWindow } from "@/lib/calendar/next-event";
-import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
 import {
   getCategoriesForCalendars,
   getEventsInRange,
@@ -26,6 +24,7 @@ import {
   isCalendarView,
   parseViewParams,
 } from "@/lib/calendar/ranges";
+import { toViewEvents } from "@/lib/calendar/to-view-events";
 import { canWriteEvents } from "@/lib/sync/read-only";
 import { createEvent } from "../events/actions";
 import { loadMonthMarks } from "./mini-month-actions";
@@ -91,23 +90,8 @@ async function CalendarContent({
     );
   }
 
-  // An event without its own color takes its calendar's (RF-17).
-  const colors = new Map(calendars.map((c) => [c.id, c.color]));
   const names = new Map(calendars.map((c) => [c.id, c.name]));
-  const events: AgendaEvent[] = records.map((record) => ({
-    id: record.id,
-    title: record.title,
-    startsAt: record.startsAt,
-    endsAt: record.endsAt,
-    allDay: record.allDay,
-    calendarId: record.calendarId,
-    categoryId: record.categoryId,
-    color:
-      record.color ?? colors.get(record.calendarId) ?? DEFAULT_CALENDAR_COLOR,
-    location: record.location,
-    imageCount: record.imageCount,
-    calendarName: names.get(record.calendarId) ?? "",
-  }));
+  const events = toViewEvents(records, calendars);
   const canCreate = calendars.some(canWriteEvents);
   const nextEvents = upcoming
     .filter((record) => !record.allDay)
