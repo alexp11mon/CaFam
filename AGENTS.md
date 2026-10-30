@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-30, al cerrar la spec 016 (calendario al estilo Google), sin migraciones.
+> Última actualización: 2026-10-30, al terminar las tareas de la spec 013 (eventos recurrentes), pendiente de que el usuario la cierre; sus migraciones están en dev y faltan en prod.
 
 ## 1. Qué es
 
@@ -40,7 +40,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 010-renombrar-cafam | Renombrar todo el proyecto a CaFam (interfaz, PWA, correos, configuración, tests, documentación, specs cerradas y repositorio) | **Cerrada** (2026-10-29), T1–T8 hechas; migración `rename_cafam` aplicada en prod, paneles de correo revisados y repositorio renombrado |
 | 011-rediseno-visual | Modo oscuro con selector, transparencias (glassmorphism), animaciones, microinteracciones y transiciones entre vistas | **Cerrada** (2026-10-30), T1–T13 hechas; migración `profile_theme` aplicada en prod |
 | 012-imagenes-en-eventos | Imágenes en los eventos con Supabase Storage, también de Lectores y en calendarios traídos de Google | **Cerrada** (2026-10-30), T1–T13 hechas; migraciones aplicadas en prod |
-| 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Spec aprobada** (2026-10-29), sin plan |
+| 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Implementada** (2026-10-30), T1–T15 hechas y T16 a falta de la aprobación para cerrar; 6 migraciones en dev, **pendientes en prod** |
 | 014-comentarios-en-eventos | Comentarios en los eventos por cualquier miembro, Lectores incluidos | **Spec aprobada** (2026-10-29), sin plan |
 | 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | **Spec aprobada** (2026-10-29), sin plan |
 | 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Cerrada** (2026-10-30), T1–T13 hechas; sin migraciones. La prueba en el iPhone se hace en producción |
@@ -97,7 +97,7 @@ Añadido por la spec 008 (comportamiento estudiado en Google Calendar con REA; a
 - **Mes al estilo Google**: eventos con hora como punto + hora + título; de día completo o varios días como barra rellena del color pastel (enmienda de P9). **Rejilla** de semana y día a toda la altura de la pantalla.
 - **Agenda**: botón fijo "Hora actual". **Avisos** breves ("Evento creado", "Cambios guardados", "Evento borrado"), **esqueleto** con la forma de la vista mientras carga y **actualización** al volver a la app tras más de 60 s.
 
-**No hay** eventos recurrentes propios (llegan con la spec 013), mover o redimensionar eventos arrastrando ni actualización de lo importado.
+**No hay** mover o redimensionar eventos arrastrando (spec 017) ni actualización de lo importado.
 
 Añadido por la spec 007 (en producción desde el 2026-10-28). Hasta la 009 la aplicación de Google estuvo en "Prueba" (Enmienda 2); desde el 2026-10-29 está **publicada sin verificar**: conecta cualquier cuenta pasando por el aviso de "aplicación no verificada", con un tope de 100 usuarios, y la autorización ya no caduca a los 7 días:
 
@@ -143,6 +143,17 @@ Añadido por la spec 016 (en producción desde el 2026-10-30, sin migraciones; c
 - **Semana y día**: cabecera fija con inicial y número grande, franja de día completo, horas "9:00", bloques redondeados con título y lugar que parten el texto en varias líneas, y línea de ahora con un punto. Al abrir en hoy se desplaza a la hora actual.
 - **Agenda continua en todas las anchuras**: bandas de mes con degradado (`bg-agenda-band`), separadores de semana ("2–8 de noviembre", "Sin eventos"), día a la izquierda y bloques "A las 11:15–14:15 en <lugar>". Carga tramos de 28 días al llegar a un extremo con `loadAgendaEvents` (como mucho 120 días en memoria, sin saltos al cargar hacia arriba), el título de la cabecera sigue el mes visible y "Hoy" (botón, cabecera o T) vuelve a hoy sin recargar si puede.
 
+Añadido por la spec 013 (implementada el 2026-10-30; migraciones en dev, pendientes en prod):
+
+- **"Repetir"** en el alta y la edición (`RepeatField`): "No se repite", opciones rápidas calculadas con la fecha (cada día, semana, mes por día o por posición, último, año, laborables) y "Personalizado…" (`RecurrenceEditor`: cada N días, semanas, meses o años, días de la semana, fin Nunca, El <fecha> o Tras <n>, con resumen en español). El campo envía `repeat` (`none`, el tipo de opción rápida o `custom:<RRULE>`) y el servidor lo resuelve con la fecha. Deshabilitado en calendarios traídos de Google, con su motivo.
+- **Una serie es una fila** de `events` con `recurrence`; sus repeticiones se expanden al leer (`getEventsInRange`, `getEvent`) con `ical.js`, a la hora de reloj de `recurrence_tz` (la zona del perfil de quien la creó). Una repetición sin fila propia tiene el id `<uuid de la serie>_<YYYYMMDDTHHMMSSZ>` (`occurrenceId`, `parseEventId`). Una **excepción** es una fila con `series_id` y `original_start`; si no difiere de la serie solo existe para guardar imágenes y se muestra como una repetición normal.
+- **Marcas**: icono de repetición con "Se repite" para lectores de pantalla donde cabe (las mismas reglas que el de imágenes, prop `icons` de `EventBlock`); el detalle muestra "Se repite" con el resumen y "Cambiado solo en este evento".
+- **Alcance** al guardar o borrar una repetición (`SeriesScopeDialog`, dentro del formulario): "Solo este evento", "Este y los siguientes" y "Todos los eventos". Sin "Solo este evento" si cambió el calendario; deshabilitado a las 100 excepciones. Si se pierden cambios o imágenes, pide confirmar ("Se perderán 2 cambios y 3 imágenes." → "Guardar igualmente" / "Borrar igualmente").
+- **Convertir**: un suelto pasa a serie eligiendo una regla (con imágenes, el original queda como primera repetición de una serie nueva); "No se repite" con "Todos los eventos" deja solo la primera repetición.
+- **Imágenes en una repetición**: la primera imagen crea su fila (excepción idéntica) con `materialize_occurrence`; cada repetición tiene las suyas.
+- **Duplicar** una repetición crea un evento suelto en su fecha. Juntar, copiar calendarios sin propietario y subir a Google conservan o convierten las series (subir: cada repetición de la ventana como evento suelto, con aviso).
+- Límites: 500 series por calendario y 100 excepciones (contando las fechas borradas) por serie.
+
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 
 - **Flujo SDD (P7):** no se escribe código sin `spec.md` → `plan.md` → `tasks.md` aprobados explícitamente por el usuario, en ese orden. Cada spec vive en `specs/NNN-nombre/`. Se implementa **una tarea `Tn` cada vez y con el test primero** (rojo → verde). Cada commit cita su tarea.
@@ -177,7 +188,7 @@ La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen d
 | Calidad | ESLint 9 (`eslint-config-next` + `eslint-config-prettier`), Prettier 3 |
 | BD | Supabase CLI (`supabase` como devDependency) para migraciones y tipos |
 
-Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod` y `ical.js` (2.2.1, MPL-2.0, aprobada en la spec 004; solo se importa en `src/lib/ics/parse-ics.ts`). El `package.json` no debe crecer sin aprobación.
+Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod` y `ical.js` (2.2.1, MPL-2.0, aprobada en la spec 004; solo se importa en `src/lib/ics/parse-ics.ts` y, desde la 013, en `src/lib/recurrence/expand.ts`, ambos solo del servidor; `no-secrets.test.ts` lo comprueba). El `package.json` no debe crecer sin aprobación.
 
 ## 5. Estructura del repositorio
 
@@ -226,9 +237,10 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── people/            # avatar
 │   │   ├── auth/              # auth-card, login-form, signup-form (Client Components con useActionState)
 │   │   ├── dashboard/         # calendar-list
-│   │   ├── calendar/          # formularios, vistas (agenda-view, month/week/day, time-grid, slot-layer), event-block (bloque relleno), month-strip, fab, event-modal, event-panel, quick-create, gone-event, calendar-skeleton, mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog…
+│   │   ├── calendar/          # formularios, vistas (agenda-view, month/week/day, time-grid, slot-layer), event-block (bloque relleno con las marcas de imágenes y de repetición), month-strip, fab, event-modal, event-panel, quick-create, gone-event, calendar-skeleton, mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog…
 │   │   ├── sharing/           # invite-form, copy-button, invite-list, access-code-panel, member-list, join-code-form, invite-join-card
 │   │   ├── import/            # import-form, import-summary
+│   │   ├── recurrence/        # spec 013: repeat-field, recurrence-editor, series-scope-dialog, series-delete
 │   │   ├── images/            # spec 012: image-picker, upload-list, use-image-uploads (cola de subidas), image-uploader (detalle), event-images (galería), image-viewer (visor), use-image-blob
 │   │   ├── connections/       # spec 007: connection-list, provider-notice, calendar-picker, sync-status, sync-now-button, disconnect-dialog
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
@@ -242,6 +254,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
+│   │   ├── recurrence/        # spec 013: limits, schemas, rule (RRULE ↔ regla), presets, summary, occurrence-id y error-messages (puras); expand (ical.js), read-series y series-write (`seriesColumns`, `planSeriesChange`, `planSeriesDelete`), solo servidor; server-secret
 │   │   ├── images/            # spec 012: paths, limits, fit, alt, error-messages (puras), prepare-image (canvas), upload-object (XHR con progreso), download-image, queries.ts, purge.ts
 │   │   ├── sync/              # spec 007. Puras y testeadas: limits, window, limit-events, nearest-color, event-row, google-events, oauth-state, summary, error-messages, schemas, read-only (canWriteEvents, canMerge). Con red o BD: providers/google.ts (único cliente HTTP de Google), google-config, run-sync (motor con dependencias inyectadas), engine.ts (entrada del servidor), queries.ts (lecturas con RLS)
 │   │   └── supabase/          # env.ts, server.ts, client.ts, proxy.ts
@@ -251,7 +264,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon.svg (maestro) → icon-192, icon-512, icon-512-maskable (letras al 85 %), apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions, calendar_groups · 009: sync_write_schema, sync_write_functions, sync_apply_events_v2 · 010: rename_cafam · 011: profile_theme · 012: event_images, event_images_functions, event_images_storage, event_images_purge_claim, copy_calendar_images(_fix), images_purge, reserve_images_order
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions, calendar_groups · 009: sync_write_schema, sync_write_functions, sync_apply_events_v2 · 010: rename_cafam · 011: profile_theme · 012: event_images, event_images_functions, event_images_storage, event_images_purge_claim, copy_calendar_images(_fix), images_purge, reserve_images_order · 013: event_series, series_reserve_images, series_rules_fast_tz, event_series_functions, series_copy_upload, materialize_occurrence
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
@@ -383,6 +396,12 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - Bucket privado **`event-images`** (solo `image/jpeg`, 4 MB por objeto), rutas `<object_id>/full.jpg` y `<object_id>/thumb.jpg`. El permiso sale de `event_images → events → miembro` (`can_read_event_image`, `image_upload_allowed`), nunca de la ruta: mover o juntar no toca Storage.
   - Funciones: `reserve_event_images(p_event_id, p_images jsonb) returns uuid[]` (cualquier miembro; `CF429` con mensaje `event`/`user`/`total`, `CF404`, `22023`; el orden de `created_at` usa `clock_timestamp()`), `confirm_event_image(p_id)` (`P0002` si faltan los dos objetos) e `images_total_limit()`.
   - **Cola de purga** `image_purge_queue (object_id, bytes, attempts, queued_at, claimed_at)`, que llena el trigger `queue_image_purge` cuando desaparece la última fila de un objeto. Supabase no deja borrar objetos con SQL: `/api/images/purge` reclama con `images_claim_purge(p_secret, …)` (con `CRON_SECRET`, sin `service_role`), borra en Storage como `anon` (solo objetos reclamados en los últimos 5 min) y llama a `images_done_purge`. `pg_cron` `images-purge` (minuto 15 de cada hora) llama a `images_purge_trigger()`, que usa `sync_app_url` de Vault. Las reservas sin confirmar de más de 1 h también se purgan.
+- Añadido por la spec 013 (migraciones `event_series`, `series_reserve_images`, `series_rules_fast_tz`, `event_series_functions`, `series_copy_upload` y `materialize_occurrence`; en dev, **pendientes en prod**):
+  - `events` gana `recurrence` (RRULE sin `DTSTART`), `recurrence_tz` (nula en día completo), `recurrence_until` (fin de la última repetición, nulo si no acaba; acota las lecturas), `exdates timestamptz[]` (repeticiones borradas), `series_id` y `original_start` (de una excepción). FK `(series_id, calendar_id)` → `events (id, calendar_id)` en cascada: una excepción vive en el calendario de su serie y se mueve y borra con ella; `unique (series_id, original_start)`.
+  - Trigger `enforce_series_rules`: sin series en calendarios traídos (`22023`), zona válida, `CF429 series` a las 500 por calendario, `CF429 exceptions` a las 100 excepciones más `exdates`, y no deja quitar la regla a una serie con excepciones. `reserve_event_images` da `22023` sobre una serie: las imágenes van siempre en la fila de una repetición.
+  - Funciones `SECURITY INVOKER` (bloquean la serie con `for update`, así que un Lector recibe `CF404`): `update_occurrence`, `split_series`, `update_series` (con `"recurrence": null` en los campos convierte la serie en suelto), `delete_occurrences` y `series_loss` (excepciones e imágenes que se perderían). La regla truncada y los argumentos los calcula TypeScript (`planSeriesChange`, `planSeriesDelete`): SQL no expande reglas.
+  - `materialize_occurrence(p_secret, p_series_id, p_original_start)`: `SECURITY DEFINER` para cualquier miembro, idempotente, con el secreto de Vault como las escrituras de la 009, porque la acción comprueba antes con `ical.js` que la fecha es una repetición.
+  - `copy_calendar_for_owner` copia series y excepciones; `sync_attach_uploaded` v2 recibe en `p_mapping` `{event_id, external_id}` o `{series_id, starts_at, ends_at, external_id}`, suelta las excepciones y borra las series. `merge_calendars` no cambia.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, …) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
 ### PWA
@@ -507,6 +526,8 @@ npm run db:types       # regenera src/types/database.ts
 - **Móvil y escritorio (spec 016):** las variantes `max-tab:` (hasta 768 px) y `tab:` (desde 769 px) de `globals.css` separan el marco del móvil del de escritorio; no uses `md:` para eso. En JavaScript, `useIsPhone()` con la misma consulta.
 - **Cabecera del móvil:** la pantalla del calendario publica su título, el selector y el "Hoy" con `usePublishCalendarHeader` (`components/shell/calendar-header.tsx`); `TopBar` los pinta. Lo que va dentro del cajón se lleva con `createPortal` a `drawerSlot`.
 - **"Hoy" en la agenda:** no navega; se pide con `requestAgendaToday()` (`lib/calendar/agenda-today.ts`), un evento de `window` que atiende `AgendaView`. La cabecera, la barra de herramientas y la tecla T lo usan.
+- **Ids de evento (spec 013):** un id de la URL puede ser de una repetición (`<uuid>_<fecha>`). Valídalo con `parseEventId`, nunca con `z.uuid()`, y lee con `getEvent`, que devuelve la fila, la excepción o la repetición calculada con su `series`.
+- **Escrituras sobre series:** `updateEvent` y `deleteEvent` leen `scope` y `confirmLoss` del formulario; las funciones y sus argumentos salen de `planSeriesChange`/`planSeriesDelete` (puras y testeadas), y la acción solo consulta `series_loss` y llama. Un cambio nuevo sobre series va ahí.
 - **Commits:** Conventional Commits en español con la tarea: `feat: registro de usuario (T7)`.
 
 ## 10. Trampas conocidas
@@ -566,9 +587,15 @@ npm run db:types       # regenera src/types/database.ts
 - **`ScrollOnMount`** recibe `top: () => number` y `scrollKey`: solo vuelve a desplazar si cambia la clave, no en cada render.
 - **`hyphens-auto`** en los bloques de la semana parte con guion en Safari (español); Chromium en Windows parte la palabra sin guion, como Google. No es un fallo.
 
+- **Lectores e imágenes en repeticiones (spec 013):** `update_occurrence` les da `CF404` (bloquea la serie), así que materializar para una imagen usa `materialize_occurrence` con el secreto. Sin él, un Lector podría crear copias de la serie en cualquier fecha.
+- **`deleteEvent` recibe el formulario en distinta posición** según se enlace con o sin `"modal"` (`useActionState` añade estado y formulario): búscalo con `instanceof FormData`.
+- **Los tipos generados no admiten `null`** en los argumentos de las funciones: en tests, `null as unknown as string`; en las acciones, los argumentos de `planSeries*` van con `as never`.
+- **`pg_timezone_names` es lento** dentro de un trigger que corre en cada fila: `series_rules_fast_tz` valida la zona con `now() at time zone`.
+- **Parar `next start` en segundo plano:** detener la tarea no mata el proceso de Node y el puerto 3100 queda ocupado; mata el PID que escucha en él (`netstat -ano | grep :3100`).
+
 ## 11. Fuera de alcance hasta su spec
 
-Vistas de año y de 4 días, búsqueda, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. Mover o redimensionar arrastrando y "Deshacer" en los avisos ya tienen spec aprobada (017), igual que los recurrentes, los comentarios y el asistente (013 a 015): se implementan siguiendo su plan y sus tareas cuando estén aprobados.
+Vistas de año y de 4 días, búsqueda, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. Mover o redimensionar arrastrando y "Deshacer" en los avisos ya tienen spec aprobada (017), igual que los comentarios y el asistente (014 y 015): se implementan siguiendo su plan y sus tareas cuando estén aprobados.
 
 ## 12. Cómo continuar
 
@@ -580,5 +607,6 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **011 (rediseño visual)** está cerrada y en producción (2026-10-30), con `profile_theme` aplicada en prod.
 - La **012 (imágenes)** está cerrada y en producción (2026-10-30), con sus 8 migraciones aplicadas en prod.
 - La **016 (calendario al estilo Google)** está cerrada (2026-10-30). Las previews de Vercel están protegidas con su inicio de sesión: para verlas en el móvil hay que entrar en Vercel o usar "Share".
-- **Siguiente:** por orden y cada una con su plan y sus tareas aprobados: 017 (mover arrastrando, menú y "Deshacer"; spec aprobada, enmienda 5 ya en la constitución), 013 (recurrentes), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
+- La **013 (eventos recurrentes)** tiene T1–T15 hechas y la evidencia de T16 en su `tasks.md`; falta que el usuario apruebe cerrarla y aplique sus 6 migraciones en prod (`npx supabase link --project-ref yznbdoskvtxeasujtirk`, `npx supabase db push`, volver a enlazar dev) antes del merge a `main`.
+- **Siguiente:** por orden y cada una con su plan y sus tareas aprobados: 017 (mover arrastrando, menú y "Deshacer"; spec aprobada, enmienda 5 ya en la constitución; tendrá que decidir el alcance al soltar una repetición), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.

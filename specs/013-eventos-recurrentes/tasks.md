@@ -185,6 +185,46 @@
 
   Hecho cuando: la tabla de evidencias cubre RF-1 a RF-32 con su test o captura y el usuario aprueba cerrar la spec. Cubre: todos | Módulo: validation
 
+## Evidencias RF por RF (T16, 2026-10-30)
+
+Verificación final: `npm run typecheck`, `lint` (0 errores, los 2 avisos previos), `format:check`, `npm test` (189 archivos, 1738 tests) y `npm run build` correctos; `npm run test:db` entero con 37 archivos y 404 tests en verde. Prueba manual en `next start -p 3100` a 390 px y a 1440 px; 48 capturas a 390, 768 y 1440 px (claro con acento rojo y oscuro con acento amarillo) de agenda, mes, semana, día, detalle, campo "Repetir", "Repetición personalizada" y diálogo de alcance, revisadas y no versionadas.
+
+| RF | Test o prueba |
+|----|---------------|
+| RF-1 | `repeat-field.test.tsx`, `event-form.test.tsx` ("Repetir" con "No se repite"), `series-actions.test.ts` ("No se repite" crea un suelto) |
+| RF-2 | `recurrence-presets.test.ts` (opciones calculadas con la fecha), `repeat-field.test.tsx` |
+| RF-3 | `recurrence-editor.test.tsx`, `recurrence-rule.test.ts` |
+| RF-4 | `recurrence-editor.test.tsx` (Nunca, El, Tras), `recurrence-rule.test.ts` (UNTIL y COUNT) |
+| RF-5 | `recurrence-summary.test.ts`, `recurrence-editor.test.tsx`; captura `custom-*` |
+| RF-6 | `series-actions.test.ts` (con hora y día completo), `event-series.test.ts` (T1); a mano: cumpleaños anual de día completo, viaje semanal de varios días, recibo mensual y gimnasio de lunes a viernes |
+| RF-7 | "Más opciones" ya lleva al alta completa (tests de la 008 sin cambios) y el alta completa tiene "Repetir" (`event-form.test.tsx`); comprobado a mano |
+| RF-8 | `series-actions.test.ts` y `series-write.test.ts` ("Con este final la serie no tiene ninguna repetición."), `event-form.test.tsx` (error junto al campo) |
+| RF-9 | `read-series.test.ts`, `event-series.test.ts` (T7: `getEventsInRange`), `to-view-events.test.ts`; capturas de las cuatro vistas |
+| RF-10 | `event-block.test.tsx` (icono y "Se repite"), `event-detail.test.tsx` (resumen); capturas `week-*`, `agenda-*` y `detail-*` |
+| RF-11 | `recurrence-expand.test.ts` (salto rápido), `event-series.test.ts` ("any future date of an endless series") |
+| RF-12 | `recurrence-expand.test.ts` (cambio de horario: misma hora de reloj), `series-actions.test.ts` (zona del perfil) |
+| RF-13 | `recurrence-expand.test.ts` (día 31 y 29 de febrero omitidos) |
+| RF-14 | `recurrence-expand.test.ts` y `event-series.test.ts` (día completo sin zona) |
+| RF-15 | `series-scope-dialog.test.tsx`, `event-form.test.tsx` ("EventForm on an occurrence"), `series-actions.test.ts` (pide el alcance) |
+| RF-16 | `series-write.test.ts`, `series-actions.test.ts` (`update_occurrence`), `event-series.test.ts` (T6), `event-detail.test.tsx` ("Cambiado solo en este evento"); a mano en semanal y anual |
+| RF-17 | `series-write.test.ts` (`split_series`, COUNT restante), `event-series.test.ts` (T6); a mano en semanal y de varios días |
+| RF-18 | `series-write.test.ts` (conserva excepciones, desplaza la hora, D12), `event-series.test.ts` (T6); a mano: "Todos" conservó la excepción del 11 |
+| RF-19 | `series-write.test.ts` (regla o fecha nuevas descartan), `series-actions.test.ts` (`loss` sin confirmar), `series-scope-dialog.test.tsx`; a mano: "Se perderá 1 cambio." |
+| RF-20 | `series-write.test.ts` (`planSeriesDelete`), `series-actions.test.ts` (`deleteEvent` por alcance), `event-detail.test.tsx`, `event-series.test.ts` (T6); a mano en los tres alcances |
+| RF-21 | `series-actions.test.ts` (suelto → serie con y sin imágenes, D7), `series-write.test.ts` ("No se repite" deja la primera), `event-series.test.ts` (T6) |
+| RF-22 | `new-event-query.test.ts` (id de repetición), a mano: duplicar la repetición del 13 abre el alta con su fecha y "No se repite" |
+| RF-23 | `series-actions.test.ts` (mover con "Todos"), `series-write.test.ts`, `event-series.test.ts` (T1: excepciones en cascada) |
+| RF-24 | `image-actions.test.ts` (`materializeOccurrence`), `event-series.test.ts` (T14: el cumpleaños de 2026 no comparte imágenes con el de 2027); a mano: imagen solo en el 19 |
+| RF-24b | `series-actions.test.ts`, `series-scope-dialog.test.tsx` y `event-detail.test.tsx` ("Se perderán 2 imágenes."), `event-series.test.ts` (`series_loss`) |
+| RF-25 | `event-series.test.ts` (T8: `merge_calendars`) |
+| RF-26 | `event-series.test.ts` (T8: `copy_calendar_for_owner`) |
+| RF-27 | Importación sin cambios: `ics-*.test.ts` e `import-action.test.ts` en verde |
+| RF-28 | `event-series.test.ts` ("events of Google calendars stay single occurrences") |
+| RF-29 | `series-actions.test.ts` (crear y convertir en traído), `event-form.test.tsx` (deshabilitado con su motivo), `event-series.test.ts` (T1) |
+| RF-30 | `sync-write-core.test.ts` (`withOccurrences`, `uploadCounts`), `upload-calendar.test.ts` (mapping v2), `upload-page.test.tsx` (aviso), `event-series.test.ts` (T8) |
+| RF-31 | `event-series.test.ts` (T1: 500 series), `series-actions.test.ts` (mensaje) |
+| RF-32 | `event-series.test.ts` (T1 y T6: 100 excepciones), `series-scope-dialog.test.tsx` (deshabilitado con la propuesta), `series-actions.test.ts` e `image-actions.test.ts` (CF429) |
+
 ## Trazabilidad RF → tareas
 
 | RF | Tareas | RF | Tareas | RF | Tareas |
