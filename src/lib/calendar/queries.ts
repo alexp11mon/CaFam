@@ -11,6 +11,14 @@ import type { CalendarGroup } from "./organize-groups";
 import { accessOf } from "@/lib/sync/providers/google";
 import type { SyncedInfo } from "@/lib/sync/read-only";
 import type { Database } from "@/types/database";
+import { occurrenceId, parseEventId } from "@/lib/recurrence/occurrence-id";
+import {
+  expandRows,
+  findOccurrence,
+  isChanged,
+} from "@/lib/recurrence/read-series";
+import { fromRRule } from "@/lib/recurrence/rule";
+import { summarizeRule } from "@/lib/recurrence/summary";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 type CalendarRole = Database["public"]["Enums"]["calendar_role"];
@@ -234,7 +242,10 @@ export async function getCategoriesForCalendars(
 }
 
 export interface EventRecord {
+  /** Id of the URL: the row, or "<series>_<start>" for an occurrence without one. */
   id: string;
+  /** Row of this event; null while the occurrence only exists in its rule (spec 013). */
+  rowId: string | null;
   calendarId: string;
   title: string;
   description: string | null;
@@ -246,36 +257,151 @@ export interface EventRecord {
   categoryId: string | null;
   /** Null once the author deleted the account (spec 006 RF-20). */
   createdBy: string | null;
+  /** The series of an occurrence (spec 013 RF-10, RF-16); null for a single event. */
+  series: EventSeries | null;
 }
 
-/** One event, or null if it does not exist, is not visible to the user or the id is malformed. */
+export interface EventSeries {
+  id: string;
+  recurrence: string;
+  recurrenceTz: string | null;
+  summary: string;
+  originalStart: string;
+  /** An exception that differs from its series (RF-16, plan D9). */
+  changed: boolean;
+  /** Exceptions plus deleted occurrences, for the limit of RF-32. */
+  exceptions: number;
+  /** First occurrence of the series, which "Todos los eventos" edits. */
+  startsAt: string;
+  endsAt: string;
+  allDay: boolean;
+}
+
+const EVENT_COLUMNS =
+  "id, calendar_id, title, description, location, starts_at, ends_at, all_day, color, category_id, created_by, recurrence, recurrence_tz, exdates, series_id, original_start";
+
+async function eventRow(supabase: Client, id: string) {
+  const { data, error } = await supabase
+    .from("events")
+    .select(EVENT_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+type EventRow = NonNullable<Awaited<ReturnType<typeof eventRow>>>;
+
+function fromRow(row: EventRow): EventRecord {
+  return {
+    id: row.id,
+    rowId: row.id,
+    calendarId: row.calendar_id,
+    title: row.title,
+    description: row.description,
+    location: row.location,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    allDay: row.all_day,
+    color: row.color,
+    categoryId: row.category_id,
+    createdBy: row.created_by,
+    series: null,
+  };
+}
+
+async function seriesInfo(
+  supabase: Client,
+  series: EventRow,
+  originalStart: string,
+  changed: boolean,
+): Promise<EventSeries> {
+  const { count, error } = await supabase
+    .from("events")
+    .select("id", { count: "exact", head: true })
+    .eq("series_id", series.id);
+  if (error) throw error;
+  const rule = fromRRule(series.recurrence ?? "");
+  return {
+    id: series.id,
+    recurrence: series.recurrence ?? "",
+    recurrenceTz: series.recurrence_tz,
+    summary: rule ? summarizeRule(rule) : "Se repite",
+    originalStart: new Date(originalStart).toISOString(),
+    changed,
+    exceptions: (count ?? 0) + series.exdates.length,
+    startsAt: series.starts_at,
+    endsAt: series.ends_at,
+    allDay: series.all_day,
+  };
+}
+
+async function exceptionRecord(
+  supabase: Client,
+  row: EventRow,
+  series: EventRow,
+): Promise<EventRecord> {
+  return {
+    ...fromRow(row),
+    series: await seriesInfo(
+      supabase,
+      series,
+      row.original_start!,
+      isChanged(row, series),
+    ),
+  };
+}
+
+/** The occurrence of a series at `originalStart`: its exception, or one built from the rule. */
+async function occurrenceRecord(
+  supabase: Client,
+  series: EventRow,
+  originalStart: string,
+): Promise<EventRecord | null> {
+  const { data: exception, error } = await supabase
+    .from("events")
+    .select(EVENT_COLUMNS)
+    .eq("series_id", series.id)
+    .eq("original_start", originalStart)
+    .maybeSingle();
+  if (error) throw error;
+  if (exception) return exceptionRecord(supabase, exception, series);
+  const occurrence = findOccurrence(series, originalStart);
+  if (!occurrence) return null;
+  return {
+    ...fromRow(series),
+    id: occurrenceId(series.id, occurrence.originalStart),
+    rowId: null,
+    startsAt: occurrence.startsAt,
+    endsAt: occurrence.endsAt,
+    series: await seriesInfo(supabase, series, occurrence.originalStart, false),
+  };
+}
+
+/**
+ * One event or occurrence (spec 013 RF-9), or null if it does not exist, is not
+ * visible to the user or the id is malformed. The id of a series row stands for
+ * its first occurrence.
+ */
 export async function getEvent(
   supabase: Client,
   id: string,
 ): Promise<EventRecord | null> {
-  if (!z.uuid().safeParse(id).success) return null;
-  const { data, error } = await supabase
-    .from("events")
-    .select(
-      "id, calendar_id, title, description, location, starts_at, ends_at, all_day, color, category_id, created_by",
-    )
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
-  return {
-    id: data.id,
-    calendarId: data.calendar_id,
-    title: data.title,
-    description: data.description,
-    location: data.location,
-    startsAt: data.starts_at,
-    endsAt: data.ends_at,
-    allDay: data.all_day,
-    color: data.color,
-    categoryId: data.category_id,
-    createdBy: data.created_by,
-  };
+  const parsed = parseEventId(id);
+  if (!parsed) return null;
+  if (parsed.kind === "occurrence") {
+    const series = await eventRow(supabase, parsed.seriesId);
+    if (!series?.recurrence) return null;
+    return occurrenceRecord(supabase, series, parsed.originalStart);
+  }
+  const row = await eventRow(supabase, parsed.id);
+  if (!row) return null;
+  if (row.recurrence) return occurrenceRecord(supabase, row, row.starts_at);
+  if (row.series_id) {
+    const series = await eventRow(supabase, row.series_id);
+    if (series) return exceptionRecord(supabase, row, series);
+  }
+  return fromRow(row);
 }
 
 /** Whether RLS lets the user see the event: tells "gone" apart from "not yours". */
@@ -283,15 +409,18 @@ export async function canSeeEvent(
   supabase: Client,
   id: string,
 ): Promise<boolean> {
+  const parsed = parseEventId(id);
+  if (!parsed) return false;
   const { data } = await supabase
     .from("events")
     .select("id")
-    .eq("id", id)
+    .eq("id", parsed.kind === "event" ? parsed.id : parsed.seriesId)
     .maybeSingle();
   return Boolean(data);
 }
 
 export interface CalendarEventRecord {
+  /** Row id, or "<series>_<start>" for an occurrence without its own row. */
   id: string;
   calendarId: string;
   title: string;
@@ -303,10 +432,13 @@ export interface CalendarEventRecord {
   location: string | null;
   /** Ready images, for the mark of the views (spec 012 RF-12, plan D14). */
   imageCount: number;
+  /** Series of an occurrence, for the repeat mark (spec 013 RF-10). */
+  seriesId: string | null;
 }
 
 /**
- * Events of every calendar the user belongs to that overlap [from, to) (RF-31).
+ * Events of every calendar the user belongs to that overlap [from, to) (RF-31),
+ * with the occurrences of their series (spec 013 RF-9, RF-11, plan D2).
  * Columns are kept to the minimum the views draw (plan D14); RLS limits the rows.
  */
 export async function getEventsInRange(
@@ -314,18 +446,33 @@ export async function getEventsInRange(
   from: Date,
   to: Date,
 ): Promise<CalendarEventRecord[]> {
-  const { data, error } = await supabase
-    .from("events")
-    .select(
-      "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location, event_images(count)",
-    )
-    // The uploader also sees their pending images: count the ready ones only.
-    .eq("event_images.status", "ready")
-    .lt("starts_at", to.toISOString())
-    .gte("ends_at", from.toISOString())
-    .order("starts_at");
-  if (error) throw error;
-  return (data ?? []).map((row) => ({
+  const [single, series] = await Promise.all([
+    supabase
+      .from("events")
+      .select(
+        "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location, series_id, event_images(count)",
+      )
+      // The uploader also sees their pending images: count the ready ones only.
+      .eq("event_images.status", "ready")
+      .is("recurrence", null)
+      .lt("starts_at", to.toISOString())
+      .gte("ends_at", from.toISOString())
+      .order("starts_at"),
+    supabase
+      .from("events")
+      .select(
+        "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location, recurrence, recurrence_tz, exdates",
+      )
+      .not("recurrence", "is", null)
+      .lt("starts_at", to.toISOString())
+      .or(
+        `recurrence_until.is.null,recurrence_until.gte.${from.toISOString()}`,
+      ),
+  ]);
+  if (single.error) throw single.error;
+  if (series.error) throw series.error;
+
+  const records: CalendarEventRecord[] = (single.data ?? []).map((row) => ({
     id: row.id,
     calendarId: row.calendar_id,
     title: row.title,
@@ -337,7 +484,52 @@ export async function getEventsInRange(
     // The agenda rows show the place (spec 005 RF-35).
     location: row.location,
     imageCount: row.event_images[0]?.count ?? 0,
+    seriesId: row.series_id,
   }));
+  const seriesRows = series.data ?? [];
+  if (seriesRows.length === 0) return records;
+
+  // Exceptions whose occurrence could overlap the range, wherever they moved
+  // to: their original starts are not expanded.
+  const longest = Math.max(
+    ...seriesRows.map(
+      (row) => Date.parse(row.ends_at) - Date.parse(row.starts_at),
+    ),
+  );
+  const { data: keys, error } = await supabase
+    .from("events")
+    .select("series_id, original_start")
+    .not("series_id", "is", null)
+    .lt("original_start", to.toISOString())
+    .gte(
+      "original_start",
+      new Date(from.getTime() - longest - 86_400_000).toISOString(),
+    );
+  if (error) throw error;
+
+  for (const { row, occurrence } of expandRows(
+    seriesRows,
+    keys ?? [],
+    from,
+    to,
+  )) {
+    records.push({
+      id: occurrenceId(row.id, occurrence.originalStart),
+      calendarId: row.calendar_id,
+      title: row.title,
+      startsAt: occurrence.startsAt,
+      endsAt: occurrence.endsAt,
+      allDay: row.all_day,
+      color: row.color,
+      categoryId: row.category_id,
+      location: row.location,
+      imageCount: 0,
+      seriesId: row.id,
+    });
+  }
+  return records.sort(
+    (a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt),
+  );
 }
 
 /** People whose calendars the user shares, plus the user (RF-42). Names only, no time zone. */

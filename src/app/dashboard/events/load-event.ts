@@ -60,13 +60,16 @@ export async function loadEvent(id: string): Promise<EventData | null> {
   );
   const category = categories.find((c) => c.id === event.categoryId);
   const members = await getMembers(supabase, [event.calendarId]);
-  const images = await getEventImages(
-    supabase,
-    event.id,
-    userId,
-    calendar.role,
-    members,
-  );
+  // An occurrence without its own row has no images yet (spec 013 RF-24).
+  const images = event.rowId
+    ? await getEventImages(
+        supabase,
+        event.rowId,
+        userId,
+        calendar.role,
+        members,
+      )
+    : [];
 
   return {
     detail: {

@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { getEventsInRange } from "@/lib/calendar/queries";
 import { getVisibleRange } from "@/lib/calendar/ranges";
 import {
   admin,
@@ -90,5 +91,75 @@ describe("agenda query with 500 events (spec 005 RNF rendimiento)", () => {
     expect(error).toBeNull();
     expect(data).toHaveLength(EVENTS_IN_AGENDA);
     expect(elapsed).toBeLessThan(3000);
+  });
+});
+
+// Spec 013 RNF rendimiento: a view with 50 active series takes at most 300 ms
+// more than the same view with 50 single events. Best of three runs, so a slow
+// round trip to Supabase does not decide it.
+describe("month with 50 series (spec 013 RNF rendimiento)", () => {
+  let seriesUser: TestUser;
+  let singlesUser: TestUser;
+
+  beforeAll(async () => {
+    [seriesUser, singlesUser] = await Promise.all([
+      createTestUser({ display_name: "Series" }),
+      createTestUser({ display_name: "Sueltos" }),
+    ]);
+    const [seriesCalendar, singlesCalendar] = await Promise.all([
+      getOwnCalendarId(seriesUser.id),
+      getOwnCalendarId(singlesUser.id),
+    ]);
+    // Long-running series, half daily and half on three weekdays.
+    const series = Array.from({ length: 50 }, (_, index) => ({
+      calendar_id: seriesCalendar,
+      title: `Serie ${index}`,
+      starts_at: "2024-01-01T08:00:00Z",
+      ends_at: "2024-01-01T09:00:00Z",
+      recurrence:
+        index % 2
+          ? "FREQ=DAILY;INTERVAL=1"
+          : "FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,WE,FR",
+      recurrence_tz: "Europe/Madrid",
+    }));
+    const singles = Array.from({ length: 50 }, (_, index) => ({
+      calendar_id: singlesCalendar,
+      title: `Suelto ${index}`,
+      starts_at: `2026-11-${String((index % 28) + 1).padStart(2, "0")}T08:00:00Z`,
+      ends_at: `2026-11-${String((index % 28) + 1).padStart(2, "0")}T09:00:00Z`,
+    }));
+    const { error } = await admin
+      .from("events")
+      .insert([...series, ...singles]);
+    if (error) throw error;
+  });
+
+  afterAll(async () => {
+    await Promise.all(
+      [seriesUser, singlesUser]
+        .filter(Boolean)
+        .map((u) => deleteTestUser(u.id)),
+    );
+  });
+
+  async function bestOfThree(client: TestUser["client"]) {
+    const range = getVisibleRange("month", "2026-11-01", "Europe/Madrid");
+    const times: number[] = [];
+    let count = 0;
+    for (let run = 0; run < 3; run++) {
+      const started = performance.now();
+      count = (await getEventsInRange(client as never, range.from, range.to))
+        .length;
+      times.push(performance.now() - started);
+    }
+    return { time: Math.min(...times), count };
+  }
+
+  it("takes at most 300 ms more than 50 single events", async () => {
+    const singles = await bestOfThree(singlesUser.client);
+    const series = await bestOfThree(seriesUser.client);
+    expect(singles.count).toBe(50);
+    expect(series.count).toBeGreaterThan(900);
+    expect(series.time - singles.time).toBeLessThan(300);
   });
 });

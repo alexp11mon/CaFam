@@ -86,7 +86,7 @@
   Hecho cuando: `npm run test:db -- event-series` en verde y los tipos regenerados con las funciones. Cubre: RF-15, RF-16, RF-17, RF-18, RF-19, RF-20, RF-21, RF-24b, RF-32 | Módulo: series-functions
   Evidencia (2026-10-30): rojo con las funciones inexistentes (12 tests, `PGRST202`). Migración `20261031110000_event_series_functions.sql` aplicada en dev (el primer `db push` falló por un timeout de conexión del pooler y se repitió) y tipos regenerados. Diferencia con el plan: `update_series` recibe la regla dentro de `p_fields` (`recurrence: null` = evento suelto) y devuelve el id del evento que queda. Los tipos generados no admiten `null` en los argumentos: se pasa con una conversión explícita. `test:db -- event-series event-images` 54 tests en verde. Verificación completa en verde (lint con los 2 avisos previos), `npm test` 1638 tests, build correcto.
 
-- [ ] T7 Leer las repeticiones en las vistas, el detalle y el próximo evento
+- [x] T7 Leer las repeticiones en las vistas, el detalle y el próximo evento
   Pasos:
   - Primero, en rojo:
     - `tests/unit/` de `getEventsInRange` con el cliente simulado: une sueltos, excepciones y repeticiones expandidas, quita las fechas con excepción, pone `seriesId` e ids de repetición, y una regla ilegible se ignora sin lanzar (R3);
@@ -96,6 +96,7 @@
   - Después, `queries.ts` y `to-view-events.ts` según "Contratos".
 
   Hecho cuando: `npm test -- queries to-view-events` y `npm run test:db -- range-performance event-series` en verde. Cubre: RF-9, RF-11, RF-14, RF-16, RF-28 | Módulo: series-queries
+  Evidencia (2026-10-30): La lógica pura de lectura quedó en `src/lib/recurrence/read-series.ts` (`expandRows`, `findOccurrence`, `isChanged`), testeada sin simular Supabase (`read-series.test.ts`, 11 tests; escrita junto al código, no en rojo previo). Las tres consultas de `getEventsInRange` y `getEvent`/`canSeeEvent` con ids de repetición se cubren con integración: `event-series` 28 tests (sueltos, excepciones y repeticiones juntos, fechas futuras de una serie sin fin, serie terminada fuera de rango, repetición virtual, excepción sin cambios y cambiada, id de la serie, ajenos, RF-28) y `range-performance` 3 tests (50 series largas frente a 50 sueltos, mejor de 3, menos de 300 ms de diferencia). `EventRecord` gana `rowId` y `series`; `load-event` no busca imágenes de una repetición sin fila. `to-view-events.test.ts` nuevo. `test:db -- event-images calendars-events preferences` 65 tests en verde. Verificación completa en verde (lint con los 2 avisos previos), `npm test` 1651 tests, build correcto.
 
 - [ ] T8 Conservar las series al copiar y juntar calendarios y prepararlas para subirlas
   Pasos:

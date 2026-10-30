@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  canSeeEvent,
+  getEvent,
+  getEventsInRange,
+} from "@/lib/calendar/queries";
+import { occurrenceId } from "@/lib/recurrence/occurrence-id";
+import {
   admin,
   anonClient,
   createTestUser,
@@ -743,5 +749,171 @@ describe("series functions (T6)", () => {
     } finally {
       await deleteTestUser(lost.id);
     }
+  });
+});
+
+describe("reading series (T7)", () => {
+  async function ownCalendar() {
+    return createCalendar(owner.id, `Lectura ${randomUUID().slice(0, 4)}`);
+  }
+
+  it("getEventsInRange mixes single events, exceptions and occurrences (RF-9, RF-11)", async () => {
+    const own = await ownCalendar();
+    const series = await seedSeries(own, { exdates: [tuesday(1)] });
+    await seedException(series, own, tuesday(2), {
+      title: "Excursión",
+      starts_at: "2026-11-18T09:00:00Z",
+      ends_at: "2026-11-18T10:00:00Z",
+    });
+    await admin.from("events").insert({
+      calendar_id: own,
+      title: "Suelto",
+      starts_at: "2026-11-05T10:00:00Z",
+      ends_at: "2026-11-05T11:00:00Z",
+    });
+
+    const events = (
+      await getEventsInRange(
+        owner.client as never,
+        new Date("2026-11-01T00:00:00Z"),
+        new Date("2026-12-01T00:00:00Z"),
+      )
+    ).filter((e) => e.calendarId === own);
+    expect(events.map((e) => [e.title, e.startsAt.slice(0, 10)])).toEqual([
+      ["Extraescolar", "2026-11-03"],
+      ["Suelto", "2026-11-05"],
+      ["Excursión", "2026-11-18"],
+      ["Extraescolar", "2026-11-24"],
+    ]);
+    expect(events[0]).toMatchObject({
+      id: occurrenceId(series, tuesday(0)),
+      seriesId: series,
+      imageCount: 0,
+    });
+    expect(events[1]!.seriesId).toBeNull();
+    expect(events[2]!.seriesId).toBe(series);
+  });
+
+  it("shows any future date of an endless series (RF-11)", async () => {
+    const own = await ownCalendar();
+    await seedSeries(own);
+    const events = (
+      await getEventsInRange(
+        owner.client as never,
+        new Date("2040-03-01T00:00:00Z"),
+        new Date("2040-03-15T00:00:00Z"),
+      )
+    ).filter((e) => e.calendarId === own);
+    expect(events.map((e) => e.startsAt)).toEqual([
+      "2040-03-06T17:00:00.000Z",
+      "2040-03-13T17:00:00.000Z",
+    ]);
+  });
+
+  it("an ended series is not read outside its dates", async () => {
+    const own = await ownCalendar();
+    await seedSeries(own, {
+      recurrence: `${WEEKLY};COUNT=2`,
+      recurrence_until: tuesday(1),
+    });
+    const events = (
+      await getEventsInRange(
+        owner.client as never,
+        new Date("2026-12-01T00:00:00Z"),
+        new Date("2027-01-01T00:00:00Z"),
+      )
+    ).filter((e) => e.calendarId === own);
+    expect(events).toEqual([]);
+  });
+
+  it("getEvent of an occurrence, an exception and the series row (RF-10, RF-16)", async () => {
+    const own = await ownCalendar();
+    const series = await seedSeries(own);
+    const unchanged = await seedException(series, own, tuesday(1), {
+      ends_at: new Date(Date.parse(tuesday(1)) + 3_600_000).toISOString(),
+    });
+    const changed = await seedException(series, own, tuesday(2), {
+      title: "Excursión",
+    });
+
+    const virtual = await getEvent(
+      owner.client as never,
+      occurrenceId(series, tuesday(3)),
+    );
+    expect(virtual).toMatchObject({
+      id: occurrenceId(series, tuesday(3)),
+      rowId: null,
+      startsAt: "2026-11-24T17:00:00.000Z",
+      series: {
+        id: series,
+        summary: "Cada semana el martes",
+        originalStart: tuesday(3),
+        changed: false,
+        exceptions: 2,
+      },
+    });
+
+    expect(
+      await getEvent(owner.client as never, occurrenceId(series, tuesday(1))),
+    ).toMatchObject({
+      id: unchanged,
+      rowId: unchanged,
+      series: { changed: false },
+    });
+    expect(await getEvent(owner.client as never, changed)).toMatchObject({
+      title: "Excursión",
+      series: { changed: true, originalStart: tuesday(2) },
+    });
+    expect(await getEvent(owner.client as never, series)).toMatchObject({
+      id: occurrenceId(series, tuesday(0)),
+    });
+
+    // Not an occurrence of the rule, and a stranger: nothing.
+    expect(
+      await getEvent(
+        owner.client as never,
+        occurrenceId(series, "2026-11-25T17:00:00.000Z"),
+      ),
+    ).toBeNull();
+    expect(
+      await getEvent(
+        stranger.client as never,
+        occurrenceId(series, tuesday(3)),
+      ),
+    ).toBeNull();
+    expect(
+      await canSeeEvent(
+        owner.client as never,
+        occurrenceId(series, tuesday(3)),
+      ),
+    ).toBe(true);
+    expect(
+      await canSeeEvent(
+        stranger.client as never,
+        occurrenceId(series, tuesday(3)),
+      ),
+    ).toBe(false);
+  });
+
+  it("events of Google calendars stay single occurrences (RF-28)", async () => {
+    const synced = await seedSynced(owner.id);
+    await admin.from("events").insert(
+      [0, 1, 2].map((n) => ({
+        calendar_id: synced,
+        title: "Clase de Google",
+        external_id: `g-${n}`,
+        starts_at: tuesday(n),
+        ends_at: tuesday(n),
+      })),
+    );
+    const events = (
+      await getEventsInRange(
+        owner.client as never,
+        new Date("2026-11-01T00:00:00Z"),
+        new Date("2026-12-01T00:00:00Z"),
+      )
+    ).filter((e) => e.calendarId === synced);
+    expect(events).toHaveLength(3);
+    expect(events.every((e) => e.seriesId === null)).toBe(true);
   });
 });
