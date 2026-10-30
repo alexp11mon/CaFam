@@ -16,7 +16,7 @@
 
 ### Iteración 1 — Lógica pura, bloques y marco del móvil
 
-- [ ] T1 Crear la lógica pura de carriles del mes, deslizar y fila de meses
+- [x] T1 Crear la lógica pura de carriles del mes, deslizar y fila de meses
   Pasos:
   - Primero, los tests en rojo:
     - `tests/unit/month-lanes.test.ts`: un evento de varios días ocupa un carril con su `span`; uno que cruza dos semanas aparece en cada una; los solapados van a carriles distintos; `fitWeek` con `maxLanes` deja `maxLanes - 1` y "+N" en el día que no cabe; un día sin desbordar no lleva "+N".
