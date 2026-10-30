@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   CalendarWorkspace,
@@ -90,7 +90,11 @@ const GROUPS: PersonGroup<PanelCalendar>[] = [
   },
 ];
 
-function setup(canCreate = true, wrap = (node: ReactNode) => node) {
+function setup(
+  canCreate = true,
+  wrap = (node: ReactNode) => node,
+  extra: Partial<ComponentProps<typeof CalendarWorkspace>> = {},
+) {
   render(
     wrap(
       <ToastProvider>
@@ -114,6 +118,7 @@ function setup(canCreate = true, wrap = (node: ReactNode) => node) {
           createAction={vi.fn(async () => ({
             values: {} as never,
           }))}
+          {...extra}
         />
       </ToastProvider>,
     ),
@@ -279,6 +284,29 @@ describe("CalendarWorkspace on a phone", () => {
     expect(
       screen.getByRole("navigation", { name: "Meses" }),
     ).toBeInTheDocument();
+  });
+
+  it("opens the mini month in the other views and folds it on a day (RF-23, RF-24)", async () => {
+    setup(true, withHeader, {
+      view: "week",
+      monthMarks: {},
+      loadMonthMarks: vi.fn(async () => ({ marks: {} })),
+    });
+    expect(screen.getAllByLabelText("Mini calendario")).toHaveLength(1);
+
+    await userEvent.click(
+      within(screen.getByRole("banner")).getByRole("button", {
+        name: /noviembre/,
+      }),
+    );
+    const picker = screen.getAllByLabelText("Mini calendario")[0]!;
+    const day = within(picker).getByRole("link", { name: /25 de noviembre/ });
+    expect(day).toHaveAttribute(
+      "href",
+      "/dashboard/calendar?view=week&date=2026-11-25",
+    );
+    fireEvent.click(day);
+    expect(screen.getAllByLabelText("Mini calendario")).toHaveLength(1);
   });
 
   it("shows the floating + only to who can create", () => {

@@ -212,6 +212,74 @@
 
 Todas las tareas se validan además en T13.
 
+## Evidencia por RF (T13)
+
+| RF | Test | Prueba manual |
+|----|------|---------------|
+| RF-1 | `event-block.test.tsx`, `month-view`, `time-grid`, `agenda-view` | Capturas T12 |
+| RF-2 | `event-block.test.tsx` (negrita, `text-pastel-ink`) | Capturas T12 en oscuro |
+| RF-3 | `palette.test.ts` (4,5:1 con cada pastel) |  |
+| RF-4 | `event-block.test.tsx` (ImageMark según tamaño), `time-grid.test.tsx` |  |
+| RF-5 | `event-block.test.tsx` (título siempre presente) |  |
+| RF-6 | `top-bar.test.tsx`, `app-frame.test.tsx` | Capturas a 390 y 768 px |
+| RF-7 | `app-frame.test.tsx` | Capturas a 390 px |
+| RF-8 | `calendar-header.test.tsx`, `top-bar.test.tsx` |  |
+| RF-9 | `top-bar.test.tsx` |  |
+| RF-10 | `calendar-header.test.tsx`, `calendar-workspace.test.tsx` | Navegador (T10, agenda) |
+| RF-11 | `top-bar.test.tsx` (avatar → Ajustes) |  |
+| RF-12 | `nav-drawer.test.tsx` | Captura del cajón |
+| RF-13 | `nav-drawer.test.tsx`, `calendar-workspace.test.tsx` (vistas y filtros en el cajón) |  |
+| RF-14 | `nav-drawer.test.tsx` |  |
+| RF-15 | `nav-drawer.test.tsx` (fondo, Escape, deslizar) | iPhone |
+| RF-16 | `nav-drawer.test.tsx` (foco dentro y vuelta al menú) |  |
+| RF-17 | `calendar-workspace.test.tsx` (Fab) | Capturas a 390 px |
+| RF-18 | `calendar-workspace.test.tsx` (sin Fab sin calendarios editables) |  |
+| RF-19 | `calendar-workspace.test.tsx`, `view-toolbar.test.tsx` | Capturas a 390 px |
+| RF-20 | `calendar-workspace.test.tsx`, `month-strip.test.tsx` | Captura de la fila de meses |
+| RF-21 | `month-strip.test.ts`, `month-strip.test.tsx` |  |
+| RF-22 | `month-strip.test.tsx` |  |
+| RF-23 | `calendar-workspace.test.tsx` (mini mes en agenda, semana y día) | Captura del mini mes |
+| RF-24 | `calendar-workspace.test.tsx` |  |
+| RF-25 | `swipe.test.ts`, `use-swipe.test.ts` | iPhone |
+| RF-26 | `swipe.test.ts`, `use-swipe.test.ts` | iPhone |
+| RF-27 | `swipe.test.ts` (umbral de 50 px y eje) |  |
+| RF-28 | `use-swipe.test.ts` (desactivado con ventana o cajón) |  |
+| RF-29 | `calendar-workspace.test.tsx` (tipo de transición por sentido) | iPhone; movimiento reducido en T12 |
+| RF-30 | `month-view.test.tsx` (iniciales, altura) | Capturas T12 |
+| RF-31 | `month-view.test.tsx` |  |
+| RF-32 | `month-view.test.tsx` |  |
+| RF-33 | `month-view.test.tsx` |  |
+| RF-34 | `month-view.test.tsx`, `event-block.test.tsx` (forma `line`) |  |
+| RF-35 | `month-lanes.test.ts`, `month-view.test.tsx` |  |
+| RF-36 | `month-lanes.test.ts` (`fitWeek`), `month-view.test.tsx` |  |
+| RF-37 | `month-view.test.tsx` (enlace a la vista día) |  |
+| RF-38 | `time-grid.test.tsx`, `week-view.test.tsx`, `day-view.test.tsx` |  |
+| RF-39 | `time-grid.test.tsx` |  |
+| RF-40 | `time-grid.test.tsx` (franja de día completo) |  |
+| RF-41 | `time-grid.test.tsx`, `event-block.test.tsx` |  |
+| RF-42 | `event-block.test.tsx` (forma `grid` sin `truncate`) | Capturas de la semana a 390 px |
+| RF-43 | `time-grid.test.tsx` (línea y punto de ahora) |  |
+| RF-44 | `time-grid.test.tsx` ("9:00") |  |
+| RF-45 | `time-grid.test.tsx` (desplazamiento a la hora actual) | Navegador |
+| RF-46 | `time-grid.test.tsx`, `slots` y `quick-create` sin cambios |  |
+| RF-47 | `agenda-view.test.tsx`, `view-toolbar.test.tsx` (sin anterior ni siguiente) |  |
+| RF-48 | `agenda-view.test.tsx`, `agenda-actions.test.ts` | Navegador (T10) |
+| RF-49 | `agenda-view.test.tsx` | Navegador (T10, sin saltos); iPhone |
+| RF-50 | `agenda-view.test.tsx`, `design-tokens.test.ts` (degradado de tokens) | Capturas T12 |
+| RF-51 | `agenda-feed.test.ts`, `agenda-view.test.tsx` |  |
+| RF-52 | `agenda-view.test.tsx` |  |
+| RF-53 | `agenda-view.test.tsx` |  |
+| RF-54 | `event-block.test.tsx`, `agenda-view.test.tsx` |  |
+| RF-55 | `event-block.test.tsx` |  |
+| RF-56 | `event-block.test.tsx` (forma `card` con `truncate`) |  |
+| RF-57 | `agenda-feed.test.ts`, `agenda-view.test.tsx` |  |
+| RF-58 | `agenda-feed.test.ts`, `agenda-view.test.tsx`, `calendar-header.test.tsx` | Navegador (T10) |
+| RF-59 | `agenda-view.test.tsx` | Navegador (T10) |
+| RF-60 | `agenda-view.test.tsx` | Capturas a 1440 px |
+| RF-61 | `app-frame.test.tsx`, `calendar-workspace.test.tsx`, `view-toolbar.test.tsx` | Capturas a 769, 1024 y 1440 px |
+| RF-62 | Tests de atajos, ventana de evento, ventana rápida, vista recordada, filtros, grupos y solo lectura en verde (T11) | Escritorio |
+| RF-63 | `design-tokens.test.ts`, `accents.test.ts` | Capturas T12 en claro, oscuro y amarillo |
+
 ## Dudas abiertas
 
 - Ninguna bloqueante.

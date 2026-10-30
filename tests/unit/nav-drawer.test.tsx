@@ -75,6 +75,17 @@ describe("NavDrawer", () => {
     expect(menu).toHaveFocus();
   });
 
+  it("closes on Escape and gives the focus back (RF-15, RF-16)", async () => {
+    const { menu, drawer } = await openDrawer();
+
+    // jsdom does not close a dialog on Escape: the browser's cancel does it.
+    drawer.dispatchEvent(new Event("cancel", { cancelable: true }));
+    (drawer as HTMLDialogElement).close();
+
+    expect(drawer).not.toHaveAttribute("open");
+    expect(menu).toHaveFocus();
+  });
+
   it("closes on the backdrop and when slid to the left", async () => {
     const { drawer } = await openDrawer();
     fireEvent.click(drawer);

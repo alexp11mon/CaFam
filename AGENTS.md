@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-30, al cerrar la spec 012 (imágenes en los eventos), con sus migraciones aplicadas en prod.
+> Última actualización: 2026-10-30, al terminar las tareas de la spec 016 (calendario al estilo Google), pendiente de la prueba en un iPhone real y del cierre.
 
 ## 1. Qué es
 
@@ -43,7 +43,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Spec aprobada** (2026-10-29), sin plan |
 | 014-comentarios-en-eventos | Comentarios en los eventos por cualquier miembro, Lectores incluidos | **Spec aprobada** (2026-10-29), sin plan |
 | 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | **Spec aprobada** (2026-10-29), sin plan |
-| 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Spec aprobada** (2026-10-30), sin plan; va antes de la 013 |
+| 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Implementada** (2026-10-30), T1–T13 hechas en la rama `016-calendario-estilo-google`; falta la prueba en un iPhone real y la aprobación para cerrarla. Sin migraciones |
 | 017-mover-eventos-y-menu | Mover y redimensionar arrastrando, menú contextual en el ordenador, "Deshacer" en los avisos, detalle en hoja inferior en el móvil, pellizcar para ampliar y atajos nuevos (enmienda 5) | **Spec aprobada** (2026-10-30), sin plan; va después de la 016 |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
@@ -133,6 +133,16 @@ Añadido por la spec 012 (en producción desde el 2026-10-30):
 - **Icono** en las vistas para los eventos con imágenes (`imageCount` de `getEventsInRange`); en semana y día solo en bloques de 30 min o más.
 - Borrar el evento, el calendario o la cuenta, o que la sincronización quite un evento traído, borra sus imágenes (por la cola de purga). Mover, juntar, copiar calendarios sin propietario y subir a Google las conservan; duplicar no las copia.
 
+Añadido por la spec 016 (rama `016-calendario-estilo-google`, sin migraciones; comportamiento tomado de las capturas de Google Calendar en el iPhone):
+
+- **Bloques rellenos** (`EventBlock`, formas `line`, `grid` y `card`): todos los eventos de todas las vistas son un bloque del color pastel con el texto en `pastel-ink` (4,5:1 con cada pastel) y el título en negrita. Sustituye a `EventChip` y `EventRow`, retirados.
+- **Marco del móvil (≤ 768 px)**: cabecera `TopBar` en todas las pantallas del panel (menú ≡, título, "Hoy" con el número del día, avatar → Ajustes) y **sin barra inferior**. El menú abre `NavDrawer` (un `<dialog data-drawer>` desde la izquierda): en el calendario, las cuatro vistas y los filtros; después los destinos, el tema y cerrar sesión. Se cierra al elegir, en el fondo, con Escape o deslizando a la izquierda, y devuelve el foco al menú. En el calendario no hay barra de herramientas ni "Próximo evento", y hay un botón flotante "+" (`Fab`) si se puede crear. Entre 769 y 1023 px sigue la barra inferior, y desde 1024 px la lateral: el escritorio no cambia.
+- **Título del calendario**: el mes visible con una flecha. En la vista mes despliega una fila de meses (`MonthStrip`, con el año entre diciembre y enero); en las demás, el mini calendario, que se pliega al elegir un día.
+- **Deslizar** en mes, semana y día cambia de periodo (50 px, más horizontal que vertical, nunca con una ventana o el cajón abiertos), con la transición de la 011.
+- **Mes** a toda la altura: iniciales L M X J V S D, hoy en círculo de acento, eventos en carriles de una línea (los de varios días cruzan la semana) y "+N" que lleva a la vista día.
+- **Semana y día**: cabecera fija con inicial y número grande, franja de día completo, horas "9:00", bloques redondeados con título y lugar que parten el texto en varias líneas, y línea de ahora con un punto. Al abrir en hoy se desplaza a la hora actual.
+- **Agenda continua en todas las anchuras**: bandas de mes con degradado (`bg-agenda-band`), separadores de semana ("2–8 de noviembre", "Sin eventos"), día a la izquierda y bloques "A las 11:15–14:15 en <lugar>". Carga tramos de 28 días al llegar a un extremo con `loadAgendaEvents` (como mucho 120 días en memoria, sin saltos al cargar hacia arriba), el título de la cabecera sigue el mes visible y "Hoy" (botón, cabecera o T) vuelve a hoy sin recargar si puede.
+
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 
 - **Flujo SDD (P7):** no se escribe código sin `spec.md` → `plan.md` → `tasks.md` aprobados explícitamente por el usuario, en ese orden. Cada spec vive en `specs/NNN-nombre/`. Se implementa **una tarea `Tn` cada vez y con el test primero** (rojo → verde). Cada commit cita su tarea.
@@ -193,7 +203,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── auth/confirm/route.ts  # verifica el token_hash de los correos de Auth (spec 006)
 │   │   ├── dashboard/         # layout.tsx (marco con el acento + slot `modal`), page.tsx (redirige al calendario); protegido por getRouteAccess
 │   │   │   ├── @modal/        # spec 008: default.tsx y [...catchAll] (null), (.)events/new y (.)events/[id] (ventana sobre el calendario)
-│   │   │   ├── calendar/      # vistas agenda/mes/semana/día (?view=&date=) + preferences-actions.ts (incl. saveLastView) + mini-month-actions.ts
+│   │   │   ├── calendar/      # vistas agenda/mes/semana/día (?view=&date=) + preferences-actions.ts (incl. saveLastView) + mini-month-actions.ts + agenda-actions.ts (loadAgendaEvents, spec 016)
 │   │   │   ├── calendars/     # page.tsx ("Mis calendarios"), new, [id]/edit, [id]/categories, merge + actions.ts (calendarios y juntar)
 │   │   │   ├── settings/      # Ajustes: acento + actions.ts (setAccent) y cuenta + account-actions.ts (spec 006)
 │   │   │   ├── connections/   # spec 007: page.tsx (lista), new (aviso previo), [id] (elegir calendarios, estado, actualizar, desconectar; `maxDuration` 60) + actions.ts (saveSelection, syncNow, disconnectAccount)
@@ -209,14 +219,14 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   └── api/cron/keep-alive/route.ts  # GET protegido por CRON_SECRET
 │   ├── components/
 │   │   ├── ui/                # button (variantes), link-button, text-field, text-area, select, form-alert, time-field (combobox de horas), toast (avisos) (solo tokens)
-│   │   ├── shell/             # app-frame, side-rail, bottom-bar, more-sheet, bar-styles, icons (SVG propios)
+│   │   ├── shell/             # app-frame, side-rail, bottom-bar (769–1023 px), more-sheet, top-bar y nav-drawer (móvil, spec 016), calendar-header (contexto de la cabecera), bar-styles, icons (SVG propios)
 │   │   ├── brand/             # logo (LogoMark y Logo)
 │   │   ├── settings/          # accent-picker
 │   │   ├── account/           # formularios de cuenta, diálogo de borrado, avisos, calendario sin propietario (spec 006)
 │   │   ├── people/            # avatar
 │   │   ├── auth/              # auth-card, login-form, signup-form (Client Components con useActionState)
 │   │   ├── dashboard/         # calendar-list
-│   │   ├── calendar/          # formularios, vistas (agenda-view, event-row, month/week/day, time-grid, slot-layer), event-modal, event-panel, quick-create, gone-event, calendar-skeleton, mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog…
+│   │   ├── calendar/          # formularios, vistas (agenda-view, month/week/day, time-grid, slot-layer), event-block (bloque relleno), month-strip, fab, event-modal, event-panel, quick-create, gone-event, calendar-skeleton, mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog…
 │   │   ├── sharing/           # invite-form, copy-button, invite-list, access-code-panel, member-list, join-code-form, invite-join-card
 │   │   ├── import/            # import-form, import-summary
 │   │   ├── images/            # spec 012: image-picker, upload-list, use-image-uploads (cola de subidas), image-uploader (detalle), event-images (galería), image-viewer (visor), use-image-blob
@@ -224,11 +234,11 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
 │   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts, next-path.ts (destino tras login: solo /invite/<token>)
-│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, agenda, month-marks, next-event, grouping, format, schemas, error-messages, time-options, slots, popover, shortcuts, new-event-query, draft; queries.ts (lecturas con RLS)
+│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, agenda-feed, agenda-today, month-lanes, month-strip, swipe, to-view-events, month-marks, next-event, grouping, format, schemas, error-messages, time-options, slots, popover, shortcuts, new-event-query, draft; queries.ts (lecturas con RLS)
 │   │   ├── theme/             # accents.ts: los seis acentos y los neutros (fuente de los valores de globals.css)
 │   │   ├── shell/             # nav.ts: destinos y sección activa
 │   │   ├── people/            # avatar.ts: iniciales y tintes
-│   │   ├── hooks/             # use-now.ts (reloj compartido), use-calendar-shortcuts.ts, use-refresh-on-focus.ts
+│   │   ├── hooks/             # use-now.ts (reloj compartido), use-calendar-shortcuts.ts, use-refresh-on-focus.ts, use-swipe.ts, use-is-phone.ts
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
@@ -494,6 +504,9 @@ npm run db:types       # regenera src/types/database.ts
 - **Sincronización (spec 007):** el servidor nunca usa `service_role`. `engineDeps()` crea un cliente con la clave publicable y pasa `CRON_SECRET` como `p_secret` a las funciones `sync_*`. Antes de llamar al motor desde una acción o página, comprueba con la sesión (RLS) que la conexión es del usuario (`getConnection`). Las llamadas a Google van solo en `providers/google.ts` y sus fallos son `ProviderError` con `kind` `revoked | missing | transient`.
 - **Escritura en Google (spec 009):** las acciones llaman a `writeEvent` (`lib/sync/write-event.ts`), `renameSyncedCalendar`/`createSyncedCalendar` (`write-calendar.ts`) o `uploadCalendar` (`upload-calendar.ts`) con `writeEngineDeps(supabase)`, que usa la sesión del usuario más `CRON_SECRET`. Plazo de 9 s por escritura de evento. Los mensajes salen de `WRITE_ERRORS` (`write-errors.ts`), que no importa el cliente de Google para poder usarse en el navegador. `no-secrets.test.ts` falla si un componente `"use client"` importa el motor (salvo `import type`).
 - **Calendarios traídos:** `CalendarRecord.synced` (de `getMyCalendars`/`getCalendar`) es `null` en los normales. Para decidir qué ofrece la interfaz usa `canWriteEvents`, `moveTargets`, `readOnlyReason` y `canMerge` de `lib/sync/read-only.ts`, nunca `role !== "viewer"` a secas. La base de datos lo impone igualmente.
+- **Móvil y escritorio (spec 016):** las variantes `max-tab:` (hasta 768 px) y `tab:` (desde 769 px) de `globals.css` separan el marco del móvil del de escritorio; no uses `md:` para eso. En JavaScript, `useIsPhone()` con la misma consulta.
+- **Cabecera del móvil:** la pantalla del calendario publica su título, el selector y el "Hoy" con `usePublishCalendarHeader` (`components/shell/calendar-header.tsx`); `TopBar` los pinta. Lo que va dentro del cajón se lleva con `createPortal` a `drawerSlot`.
+- **"Hoy" en la agenda:** no navega; se pide con `requestAgendaToday()` (`lib/calendar/agenda-today.ts`), un evento de `window` que atiende `AgendaView`. La cabecera, la barra de herramientas y la tecla T lo usan.
 - **Commits:** Conventional Commits en español con la tarea: `feat: registro de usuario (T7)`.
 
 ## 10. Trampas conocidas
@@ -549,6 +562,10 @@ npm run db:types       # regenera src/types/database.ts
 - **Remitente de los correos**: Brevo no envía "en nombre de" una dirección gratuita (`@gmail.com`…) y la reescribe a `…@<id>.brevosend.com` (en prod, `alexponmon@12551706.brevosend.com`). Si "no llega" un correo que Brevo da por entregado, búscalo por `from:brevosend.com` en todo el buzón, spam incluido. Un dominio propio lo evitaría, pero cuesta dinero.
 - **Tailwind 4 solo busca clases en `src/`** (`@import "tailwindcss" source("..")` en `globals.css`). Sin eso escanea todo el repositorio y convierte en CSS los ejemplos de la documentación (así se coló el azul antiguo `bg-[#…]` en producción).
 
+- **Agenda continua (spec 016):** los centinelas `agenda-start` y `agenda-end` se observan con un `IntersectionObserver` nuevo en cada cambio de ventana; un tramo que llega tarde y ya no es contiguo se descarta. En los tests, antes de simular otra intersección espera a los efectos (`await act(async () => {})`) o el observador viejo pide un tramo que se tira.
+- **`ScrollOnMount`** recibe `top: () => number` y `scrollKey`: solo vuelve a desplazar si cambia la clave, no en cada render.
+- **`hyphens-auto`** en los bloques de la semana parte con guion en Safari (español); Chromium en Windows parte la palabra sin guion, como Google. No es un fallo.
+
 ## 11. Fuera de alcance hasta su spec
 
 Vistas de año y de 4 días, búsqueda, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. Mover o redimensionar arrastrando y "Deshacer" en los avisos ya tienen spec aprobada (017), igual que los recurrentes, los comentarios y el asistente (013 a 015): se implementan siguiendo su plan y sus tareas cuando estén aprobados.
@@ -562,5 +579,6 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **010 (renombrar a CaFam)** está cerrada y en producción (2026-10-29). Queda abierto `invites.test.ts` ("returns a 43 character token"), que falla cuando el reloj local va por detrás del de la base de datos (trampa del reloj); no es de ninguna spec.
 - La **011 (rediseño visual)** está cerrada y en producción (2026-10-30), con `profile_theme` aplicada en prod.
 - La **012 (imágenes)** está cerrada y en producción (2026-10-30), con sus 8 migraciones aplicadas en prod.
-- **Siguiente:** el plan de la 016 (calendario al estilo Google, enmienda 4 ya en la constitución) con `plan-generator`. Después, por orden y cada una con su plan y sus tareas aprobados: 017 (mover arrastrando, menú y "Deshacer"; spec aprobada, enmienda 5 ya en la constitución), 013 (recurrentes), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
+- La **016 (calendario al estilo Google)** tiene T1–T13 hechas en su rama; falta probarla en un iPhone real con una preview de Vercel y la aprobación del usuario para cerrarla e integrarla en `main`.
+- **Siguiente:** después de cerrar la 016, por orden y cada una con su plan y sus tareas aprobados: 017 (mover arrastrando, menú y "Deshacer"; spec aprobada, enmienda 5 ya en la constitución), 013 (recurrentes), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.
