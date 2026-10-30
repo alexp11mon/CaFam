@@ -1,6 +1,6 @@
 # Tasks 012 - Imágenes en los eventos
 
-> Estado: **Aprobadas** por el usuario (2026-10-30).
+> Estado: **Aprobadas** por el usuario (2026-10-30). **Spec cerrada** con su aprobación el 2026-10-30, con las migraciones aplicadas en prod y el código en `main`.
 > Spec: `specs/012-imagenes-en-eventos/spec.md` (aprobada el 2026-10-29). Plan: `specs/012-imagenes-en-eventos/plan.md` (aprobado el 2026-10-30).
 > 13 tareas en dos iteraciones: T1–T6 (base de datos, Storage, limpieza y lógica pura) y T7–T13 (navegador, interfaz y validación). No se empieza la segunda sin cerrar la primera.
 > Reglas:
@@ -173,7 +173,7 @@
 
   Evidencia (2026-10-30): rojo en las cuatro vistas (sin "Con imágenes") y en `event-images.test.ts` ("getEventsInRange counts the ready images only": `imageCount` indefinido). El test de `sw-no-data.test.ts` con `/storage/v1/object/` ya pasaba, porque `sw.js` no toca otros orígenes: se queda como guardia de RF-27. `getEventsInRange` cuenta solo las imágenes listas (`event_images(count)` con `event_images.status = ready`, porque quien reserva ve también sus pendientes). `ImageMark` (en `event-chip.tsx`) lleva el icono y el texto oculto; en semana y día el icono solo sale en bloques de 30 min o más, y en el mes va delante del título para que los puntos suspensivos no lo escondan. `agenda-view month-view week-view day-view event-chip time-grid sw-no-data` 52 tests en verde y el de integración en verde contra dev. Capturas de agenda, mes, semana y día a 390 y 1440 px en claro y oscuro. typecheck, lint y format en verde, `npm test` 1490 tests, build correcto.
 
-- [ ] T13 Validar las imágenes de punta a punta
+- [x] T13 Validar las imágenes de punta a punta
   Pasos:
   - Checklist RF-1 a RF-32 con el test que cubre cada uno (tabla de evidencias en este archivo).
   - Prueba manual en un móvil real: subir desde la cámara y desde la galería (una foto HEIC en iPhone), cancelar, cortar la red y reintentar, ver, deslizar, descargar y borrar; comprobar en Storage que la foto subida no lleva ubicación (EXIF vacío) y no pasa de 2048 px.
@@ -195,7 +195,8 @@
   - Limpieza de dev: el usuario de la prueba manual y sus 8 imágenes (16 objetos) borrados; borrados también 268 usuarios `@cafam.test` que dejaron ejecuciones de `test:db` cortadas por el límite de Auth (13 de hoy y 255 del 2026-10-29) y su correo en cola. Quedan 1 usuario (el real), 0 objetos en `event-images`, 0 filas en `event_images` y la cola de purga vacía. Sin carpeta `.playwright-cli/`.
   - `AGENTS.md` actualizado: estado, funciones, esquema, rutas, estructura y trampas (CDN de Storage, `clock_timestamp()`, cola de purga, R5 del movimiento en Google, navegación tras el alta con imágenes y el `input` oculto por Activity).
   - Ajuste pedido por el usuario tras probar en producción (2026-10-30): la imagen ampliada del visor lleva las esquinas redondeadas y un marco fino del color de los paneles (`rounded-2xl bg-paper p-1.5 ring-1 ring-line`, solo tokens). Test en `event-images.test.tsx` (rojo → verde) y capturas a 390 y 1440 px en claro y oscuro, con una imagen horizontal y otra vertical. `npm test` 1491 tests y build correcto.
-  - Queda para el usuario: probar en un móvil real (cámara y galería, una foto HEIC en iPhone, cortar la red y reintentar, deslizar), el lector de pantalla con los `alt`, aplicar las 8 migraciones en prod y aprobar el cierre.
+  - En producción (2026-10-30): el usuario aplicó las 8 migraciones con `supabase db push`, hizo el merge a `main`, comprobó que `sync_app_url` de Vault de prod apunta a Vercel y probó a añadir imágenes a un evento. **Aprobó el cierre** el 2026-10-30.
+  - Quedó para el usuario: probar en un móvil real (cámara y galería, una foto HEIC en iPhone, cortar la red y reintentar, deslizar), el lector de pantalla con los `alt`, aplicar las 8 migraciones en prod y aprobar el cierre.
 
 ## Evidencias RF-1 a RF-32 (T13)
 
