@@ -917,3 +917,171 @@ describe("reading series (T7)", () => {
     expect(events.every((e) => e.seriesId === null)).toBe(true);
   });
 });
+
+describe("copying, merging and uploading series (T8)", () => {
+  async function category(calendarId: string, name: string) {
+    const { data, error } = await admin
+      .from("event_categories")
+      .insert({ calendar_id: calendarId, name })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return data.id;
+  }
+
+  it("merge_calendars keeps series, exceptions and unified categories (RF-25, R4)", async () => {
+    const target = await createCalendar(owner.id, "Destino");
+    const source = await createCalendar(owner.id, "Origen");
+    const sourceCategory = await category(source, "Cole");
+    const targetCategory = await category(target, "cole ");
+    const series = await seedSeries(source, {
+      category_id: sourceCategory,
+      exdates: [tuesday(1)],
+    });
+    const exception = await seedException(series, source, tuesday(2), {
+      title: "Excursión",
+      category_id: sourceCategory,
+    });
+
+    const { error } = await owner.client.rpc("merge_calendars", {
+      p_source_ids: [target, source],
+      p_target_id: target,
+    });
+    expect(error).toBeNull();
+    expect(await seriesRow(series)).toMatchObject({
+      calendar_id: target,
+      recurrence: WEEKLY,
+      category_id: targetCategory,
+    });
+    expect((await seriesRow(series))?.exdates).toHaveLength(1);
+    expect(await seriesRow(exception)).toMatchObject({
+      calendar_id: target,
+      series_id: series,
+      title: "Excursión",
+      category_id: targetCategory,
+    });
+  });
+
+  it("merging past 500 series is refused (RF-31)", async () => {
+    const full = await createCalendar(owner.id, "Lleno 2");
+    const other = await createCalendar(owner.id, "Otro 2");
+    const { error: seedError } = await admin
+      .from("events")
+      .insert(
+        Array.from({ length: 500 }, () => ({ calendar_id: full, ...SERIES })),
+      );
+    expect(seedError).toBeNull();
+    await seedSeries(other);
+    const { error } = await owner.client.rpc("merge_calendars", {
+      p_source_ids: [full, other],
+      p_target_id: full,
+    });
+    expect(error?.code).toBe("CF429");
+  });
+
+  it("copy_calendar_for_owner copies series and exceptions with their images (RF-26)", async () => {
+    const source = await createCalendar(owner.id, "Sin dueño");
+    const series = await seedSeries(source, { exdates: [tuesday(1)] });
+    const exception = await seedException(series, source, tuesday(2), {
+      title: "Excursión",
+    });
+    const image = await seedImageOn(exception, owner.id);
+
+    const { data: copy, error } = await admin.rpc("copy_calendar_for_owner", {
+      p_calendar_id: source,
+      p_user_id: editor.id,
+    });
+    expect(error).toBeNull();
+
+    const { data: copied } = await admin
+      .from("events")
+      .select(
+        "id, title, recurrence, recurrence_tz, exdates, series_id, original_start",
+      )
+      .eq("calendar_id", copy as string);
+    const copiedSeries = copied!.find((e) => e.recurrence)!;
+    const copiedException = copied!.find((e) => e.series_id)!;
+    expect(copiedSeries).toMatchObject({
+      recurrence: WEEKLY,
+      recurrence_tz: "Europe/Madrid",
+    });
+    expect(copiedSeries.id).not.toBe(series);
+    expect(copiedSeries.exdates).toHaveLength(1);
+    expect(copiedException).toMatchObject({
+      title: "Excursión",
+      series_id: copiedSeries.id,
+    });
+    expect(ms(copiedException.original_start)).toBe(ms(tuesday(2)));
+    const { data: images } = await admin
+      .from("event_images")
+      .select("object_id")
+      .eq("event_id", copiedException.id);
+    expect(images).toEqual([{ object_id: image }]);
+
+    await admin
+      .from("calendars")
+      .delete()
+      .eq("id", copy as string);
+    await admin.from("event_images").delete().eq("id", image);
+    await deleteQueuedImages([image]);
+  });
+
+  it("sync_attach_uploaded turns occurrences into single events (RF-30)", async () => {
+    const { data: connection, error: connectError } = await owner.client.rpc(
+      "connect_account",
+      {
+        p_provider: "google",
+        p_subject: `sub-${randomUUID()}`,
+        p_email: "upload@gmail.test",
+        p_refresh_token: "rt",
+        p_can_write: true,
+      },
+    );
+    expect(connectError).toBeNull();
+    const upload = await createCalendar(owner.id, "Subir series");
+    const series = await seedSeries(upload);
+    const inside = await seedException(series, upload, tuesday(1), {
+      title: "Excursión",
+    });
+    const outside = await seedException(series, upload, tuesday(60), {
+      title: "Lejos",
+    });
+
+    const { error } = await owner.client.rpc("sync_attach_uploaded", {
+      p_secret: process.env.CRON_SECRET ?? "",
+      p_calendar_id: upload,
+      p_connection_id: (connection as { id: string }).id,
+      p_external_id: "series@group",
+      p_mapping: [
+        {
+          series_id: series,
+          starts_at: tuesday(0),
+          ends_at: tuesday(0),
+          external_id: "g-0",
+        },
+        { event_id: inside, external_id: "g-1" },
+        {
+          series_id: series,
+          starts_at: tuesday(2),
+          ends_at: tuesday(2),
+          external_id: "g-2",
+        },
+      ],
+    } as never);
+    expect(error).toBeNull();
+
+    const { data: after } = await admin
+      .from("events")
+      .select("title, external_id, recurrence, series_id, starts_at")
+      .eq("calendar_id", upload)
+      .order("starts_at");
+    expect(after).toEqual([
+      expect.objectContaining({ title: "Extraescolar", external_id: "g-0" }),
+      expect.objectContaining({ title: "Excursión", external_id: "g-1" }),
+      expect.objectContaining({ title: "Extraescolar", external_id: "g-2" }),
+      expect.objectContaining({ title: "Lejos", external_id: null }),
+    ]);
+    expect(after!.every((e) => !e.recurrence && !e.series_id)).toBe(true);
+    expect(await seriesRow(outside)).toMatchObject({ series_id: null });
+  });
+});

@@ -98,7 +98,7 @@
   Hecho cuando: `npm test -- queries to-view-events` y `npm run test:db -- range-performance event-series` en verde. Cubre: RF-9, RF-11, RF-14, RF-16, RF-28 | Módulo: series-queries
   Evidencia (2026-10-30): La lógica pura de lectura quedó en `src/lib/recurrence/read-series.ts` (`expandRows`, `findOccurrence`, `isChanged`), testeada sin simular Supabase (`read-series.test.ts`, 11 tests; escrita junto al código, no en rojo previo). Las tres consultas de `getEventsInRange` y `getEvent`/`canSeeEvent` con ids de repetición se cubren con integración: `event-series` 28 tests (sueltos, excepciones y repeticiones juntos, fechas futuras de una serie sin fin, serie terminada fuera de rango, repetición virtual, excepción sin cambios y cambiada, id de la serie, ajenos, RF-28) y `range-performance` 3 tests (50 series largas frente a 50 sueltos, mejor de 3, menos de 300 ms de diferencia). `EventRecord` gana `rowId` y `series`; `load-event` no busca imágenes de una repetición sin fila. `to-view-events.test.ts` nuevo. `test:db -- event-images calendars-events preferences` 65 tests en verde. Verificación completa en verde (lint con los 2 avisos previos), `npm test` 1651 tests, build correcto.
 
-- [ ] T8 Conservar las series al copiar y juntar calendarios y prepararlas para subirlas
+- [x] T8 Conservar las series al copiar y juntar calendarios y prepararlas para subirlas
   Pasos:
   - Primero, ampliar `event-series.test.ts` en rojo:
     - `merge_calendars` con series, excepciones y categorías del mismo nombre conserva series, excepciones y categorías unificadas (R4); superar 500 series da `CF429`;
@@ -108,6 +108,7 @@
   - Después, la migración `series_copy_upload` (y, solo si falla R4, `merge_calendars`).
 
   Hecho cuando: `npm run test:db -- event-series merge-calendars copy-calendar import` en verde. Cubre: RF-25, RF-26, RF-27, RF-30 | Módulo: series-copy-upload
+  Evidencia (2026-10-30): rojo en copiar (RF-26) y subir (RF-30) antes de la migración; juntar (RF-25, R4) y el límite de 500 al juntar ya pasaban sin tocar `merge_calendars` (D15 confirmada). Migración `20261031120000_series_copy_upload.sql` aplicada en dev; `sync_attach_uploaded` ahora añade la fila de `synced_calendars` al final, tras quitar las series. `test:db -- event-series` 32 tests y `account-copy sync-write merge import event-images account-orphan` 8 archivos y 101 tests en verde (RF-27: la importación sin cambios). Verificación completa en verde (lint con los 2 avisos previos), build correcto.
 
 ### Iteración 2 — Interfaz, escritura y validación
 
