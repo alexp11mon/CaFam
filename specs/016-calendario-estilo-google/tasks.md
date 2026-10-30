@@ -26,7 +26,7 @@
   Hecho cuando: `npm test -- month-lanes swipe month-strip` en verde y la verificación completa reportada.
   Cubre: RF-21, RF-27, RF-34, RF-35, RF-36 | Módulo: month-lanes, swipe, month-strip
 
-- [ ] T2 Crear el feed puro de la agenda
+- [x] T2 Crear el feed puro de la agenda
   Pasos:
   - Primero, `tests/unit/agenda-feed.test.ts` en rojo. Comprueba:
     - banda al empezar cada mes;
