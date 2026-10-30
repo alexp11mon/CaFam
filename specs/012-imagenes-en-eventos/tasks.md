@@ -47,7 +47,7 @@
   Hecho cuando: `npm run test:db -- event-images` en verde. Cubre: RF-2, RF-4, RF-8, RF-20, RF-22, RF-23 | Módulo: images-functions
   Evidencia (2026-10-30): rojo antes de la migración (8 tests, funciones inexistentes). Migración `20261030110000_event_images_functions.sql` aplicada en dev y tipos regenerados. `test:db -- event-images` 19 tests en verde (incluida la reserva simultánea, que da exactamente 10). El código `CF429` lleva en el mensaje `event`, `user` o `total`. typecheck, lint y format en verde, `npm test` 1418 tests, build correcto.
 
-- [ ] T3 Crear el bucket privado y la matriz de permisos de Storage
+- [x] T3 Crear el bucket privado y la matriz de permisos de Storage
   Pasos:
   - Primero, `tests/integration/storage-images.test.ts` en rojo, con usuarios reales y la API de Storage:
     - sin reserva, subir a `event-images` falla; con reserva propia, `full.jpg` y `thumb.jpg` suben y otro nombre no;
@@ -60,6 +60,7 @@
   - Después, la migración con el bucket, las funciones `can_read_event_image`, `image_upload_allowed` e `image_purge_pending` y las políticas de `storage.objects`.
 
   Hecho cuando: `npm run test:db -- storage-images` en verde. Cubre: RF-25, RF-26, RF-30 | Módulo: images-schema
+  Evidencia (2026-10-30): rojo antes de la migración (6 tests). Migraciones `20261030120000_event_images_storage.sql` y `20261030120100_event_images_purge_claim.sql` aplicadas en dev. Dos hallazgos que ajustaron el plan (D5, D7): el CDN de Supabase seguía sirviendo la imagen a un Lector expulsado con la misma URL y token (se descarga con `?v=` aleatorio, que da `BYPASS`), y Postgres solo borra filas visibles por una política `SELECT` (los objetos se reclaman con el secreto y solo son visibles para `anon` 5 minutos). `test:db -- storage-images event-images` 27 tests en verde. typecheck, lint y format en verde, `npm test` 1418 tests, build correcto.
 
 - [ ] T4 Conservar las imágenes al copiar, sincronizar y subir a Google
   Pasos:

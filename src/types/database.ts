@@ -647,6 +647,7 @@ export type Database = {
         Row: {
           attempts: number
           bytes: number
+          claimed_at: string | null
           created_at: string
           object_id: string
           queued_at: string
@@ -654,6 +655,7 @@ export type Database = {
         Insert: {
           attempts?: number
           bytes: number
+          claimed_at?: string | null
           created_at?: string
           object_id: string
           queued_at?: string
@@ -661,6 +663,7 @@ export type Database = {
         Update: {
           attempts?: number
           bytes?: number
+          claimed_at?: string | null
           created_at?: string
           object_id?: string
           queued_at?: string
@@ -859,6 +862,7 @@ export type Database = {
         Args: { p_calendar_id: string }
         Returns: Database["public"]["Enums"]["calendar_role"]
       }
+      can_read_event_image: { Args: { p_name: string }; Returns: boolean }
       can_write: {
         Args: { "": Database["public"]["Tables"]["synced_calendars"]["Row"] }
         Returns: {
@@ -920,6 +924,9 @@ export type Database = {
           role: Database["public"]["Enums"]["calendar_role"]
         }[]
       }
+      image_object_id: { Args: { p_name: string }; Returns: string }
+      image_purge_pending: { Args: { p_name: string }; Returns: boolean }
+      image_upload_allowed: { Args: { p_name: string }; Returns: boolean }
       images_total_limit: { Args: never; Returns: number }
       import_calendar: {
         Args: { p_color: string; p_events: Json; p_name: string }
