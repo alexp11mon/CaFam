@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { getEventsInRange } from "@/lib/calendar/queries";
 import {
   admin,
   anonClient,
@@ -151,6 +152,29 @@ describe("reading event_images (RF-4, RF-25)", () => {
     expect(await visibleTo(viewer, id)).toBe(true);
     expect(await visibleTo(owner, id)).toBe(false);
     expect(await visibleTo(editor, id)).toBe(false);
+  });
+});
+
+describe("image count of the views (RF-12)", () => {
+  it("getEventsInRange counts the ready images only", async () => {
+    const withImages = await createEvent(calendar, "Con fotos");
+    const pendingOnly = await createEvent(calendar, "Pendiente");
+    const plain = await createEvent(calendar, "Sin fotos");
+    await seedImage(withImages, owner.id);
+    await seedImage(withImages, editor.id);
+    await seedImage(withImages, owner.id, { status: "pending" });
+    await seedImage(pendingOnly, owner.id, { status: "pending" });
+
+    const events = await getEventsInRange(
+      owner.client,
+      new Date(TIMES.starts_at),
+      new Date(TIMES.ends_at),
+    );
+    const count = (id: string) =>
+      events.find((event) => event.id === id)?.imageCount;
+    expect(count(withImages)).toBe(2);
+    expect(count(pendingOnly)).toBe(0);
+    expect(count(plain)).toBe(0);
   });
 });
 

@@ -105,6 +105,7 @@ async function CalendarContent({
     color:
       record.color ?? colors.get(record.calendarId) ?? DEFAULT_CALENDAR_COLOR,
     location: record.location,
+    imageCount: record.imageCount,
     calendarName: names.get(record.calendarId) ?? "",
   }));
   const canCreate = calendars.some(canWriteEvents);

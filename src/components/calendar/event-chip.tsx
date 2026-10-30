@@ -1,6 +1,32 @@
 import Link from "next/link";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { formatTime } from "@/lib/calendar/time-zone";
+import { ImageIcon } from "@/components/shell/icons";
+
+/**
+ * Mark of an event with images (spec 012 RF-12). The words always reach
+ * screen readers; the icon only where it fits.
+ */
+export function ImageMark({
+  count,
+  icon = true,
+}: {
+  count?: number;
+  icon?: boolean;
+}) {
+  if (!count) return null;
+  return (
+    <>
+      {icon ? (
+        <>
+          {" "}
+          <ImageIcon />
+        </>
+      ) : null}
+      <span className="sr-only"> Con imágenes</span>
+    </>
+  );
+}
 
 /**
  * One event as a link to its detail (RF-17, RF-36). The text stays in ink.
@@ -35,8 +61,9 @@ export function EventChip({
         />
         {/* not-sr-only allows wrapping again: one line with an ellipsis, as Google. */}
         <span className="sr-only min-w-0 sm:not-sr-only sm:truncate">
-          <span className="font-semibold tabular-nums">{time}</span>{" "}
-          {event.title}
+          <span className="font-semibold tabular-nums">{time}</span>
+          {/* Before the title: the ellipsis of a long one would hide it. */}
+          <ImageMark count={event.imageCount} /> {event.title}
         </span>
       </Link>
     );
@@ -50,7 +77,7 @@ export function EventChip({
         className="block h-1.5 truncate rounded-md text-xs font-semibold text-pastel-ink ring-1 ring-pastel-ink/15 sm:h-auto sm:px-1.5 sm:py-0.5"
       >
         <span className="sr-only sm:not-sr-only sm:block sm:truncate">
-          {event.title}
+          <ImageMark count={event.imageCount} /> {event.title}
         </span>
       </Link>
     );
@@ -64,6 +91,7 @@ export function EventChip({
     >
       {time ? `${time} ` : null}
       {event.title}
+      <ImageMark count={event.imageCount} />
     </Link>
   );
 }

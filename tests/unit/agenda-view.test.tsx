@@ -60,6 +60,21 @@ afterEach(() => {
 });
 
 describe("AgendaView days (RF-31, RF-32, RF-33)", () => {
+  it("marks the events with images (spec 012 RF-12)", () => {
+    renderAgenda([
+      event("Fotos", `${TODAY}T09:00:00Z`, `${TODAY}T10:00:00Z`, {
+        imageCount: 2,
+      }),
+      event("Nada", `${TODAY}T11:00:00Z`, `${TODAY}T12:00:00Z`),
+    ]);
+    expect(screen.getByRole("link", { name: /Fotos/ })).toHaveTextContent(
+      "Con imágenes",
+    );
+    expect(screen.getByRole("link", { name: /Nada/ })).not.toHaveTextContent(
+      "Con imágenes",
+    );
+  });
+
   it("shows 14 days, each named by its full date", () => {
     renderAgenda();
 

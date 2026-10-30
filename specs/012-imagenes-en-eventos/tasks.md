@@ -161,7 +161,7 @@
 
   Evidencia (2026-10-30): rojo (sin "Añadir imágenes" en el formulario ni `eventId` en la respuesta). `event-form.test.tsx` 21 tests (6 nuevos) y `event-actions.test.ts` 3 nuevos (con `images=1` devuelve `eventId` en la ventana, en la página completa y escribiendo en Google; sin imágenes sigue redirigiendo) en verde. Prueba real con `next start -p 3100`: en la página completa dos imágenes se suben y se llega al detalle con las dos miniaturas; en la ventana sobre el calendario se cierra con "Evento creado" y el evento tiene su imagen. Fallo encontrado en el navegador y corregido: `router.replace` al detalle lo interceptaba `@modal` y dejaba el formulario detrás; se navega con `window.location.assign`, igual que el `redirect` de `createEvent`. Capturas del alta a 390 y 1440 px en claro y oscuro. typecheck, lint y format en verde, `npm test` 1485 tests, build correcto.
 
-- [ ] T12 Marcar en las vistas los eventos con imágenes y proteger la caché sin conexión
+- [x] T12 Marcar en las vistas los eventos con imágenes y proteger la caché sin conexión
   Pasos:
   - Primero, en rojo:
     - `getEventsInRange` devuelve `imageCount` (test de `queries`);
@@ -170,6 +170,8 @@
   - Después, `ImageIcon` en `icons.tsx`, `event-row.tsx`, `event-chip.tsx`, `time-grid.tsx` y `lib/calendar/queries.ts`.
 
   Hecho cuando: `npm test -- agenda-view month-view week-view day-view sw-no-data queries` en verde y capturas de las cuatro vistas a 390 y 1440 px en los dos temas. Cubre: RF-12, RF-27 | Módulo: images-marks, images-queries
+
+  Evidencia (2026-10-30): rojo en las cuatro vistas (sin "Con imágenes") y en `event-images.test.ts` ("getEventsInRange counts the ready images only": `imageCount` indefinido). El test de `sw-no-data.test.ts` con `/storage/v1/object/` ya pasaba, porque `sw.js` no toca otros orígenes: se queda como guardia de RF-27. `getEventsInRange` cuenta solo las imágenes listas (`event_images(count)` con `event_images.status = ready`, porque quien reserva ve también sus pendientes). `ImageMark` (en `event-chip.tsx`) lleva el icono y el texto oculto; en semana y día el icono solo sale en bloques de 30 min o más, y en el mes va delante del título para que los puntos suspensivos no lo escondan. `agenda-view month-view week-view day-view event-chip time-grid sw-no-data` 52 tests en verde y el de integración en verde contra dev. Capturas de agenda, mes, semana y día a 390 y 1440 px en claro y oscuro. typecheck, lint y format en verde, `npm test` 1490 tests, build correcto.
 
 - [ ] T13 Validar las imágenes de punta a punta
   Pasos:

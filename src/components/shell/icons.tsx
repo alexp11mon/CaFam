@@ -21,6 +21,29 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
+/** Smaller than the rest: it sits next to the text of an event (spec 012 RF-12). */
+export function ImageIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      className="inline-block shrink-0 align-[-2px]"
+    >
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="9" cy="10" r="1.5" />
+      <path d="m21 16-5-5-9 9" />
+    </svg>
+  );
+}
+
 export function CalendarIcon() {
   return (
     <Icon>

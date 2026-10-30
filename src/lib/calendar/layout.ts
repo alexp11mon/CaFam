@@ -195,4 +195,6 @@ export interface CalendarEventItem extends LayoutEventInput {
   color: string;
   calendarId: string;
   categoryId: string | null;
+  /** Spec 012 RF-12: the views mark events with images. */
+  imageCount?: number;
 }

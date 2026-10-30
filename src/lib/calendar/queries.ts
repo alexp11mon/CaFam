@@ -297,6 +297,8 @@ export interface CalendarEventRecord {
   color: string | null;
   categoryId: string | null;
   location: string | null;
+  /** Ready images, for the mark of the views (spec 012 RF-12, plan D14). */
+  imageCount: number;
 }
 
 /**
@@ -311,8 +313,10 @@ export async function getEventsInRange(
   const { data, error } = await supabase
     .from("events")
     .select(
-      "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location",
+      "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location, event_images(count)",
     )
+    // The uploader also sees their pending images: count the ready ones only.
+    .eq("event_images.status", "ready")
     .lt("starts_at", to.toISOString())
     .gte("ends_at", from.toISOString())
     .order("starts_at");
@@ -328,6 +332,7 @@ export async function getEventsInRange(
     categoryId: row.category_id,
     // The agenda rows show the place (spec 005 RF-35).
     location: row.location,
+    imageCount: row.event_images[0]?.count ?? 0,
   }));
 }
 

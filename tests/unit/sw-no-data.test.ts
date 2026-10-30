@@ -112,6 +112,24 @@ describe("service worker keeps no calendar data", () => {
     expect(cached).toEqual([]);
   });
 
+  // Spec 012 RF-27: images of the private bucket never stay on the device.
+  it("ignores the images of Supabase Storage", async () => {
+    let handled = false;
+    handleFetch({
+      request: {
+        method: "GET",
+        url: "https://abc.supabase.co/storage/v1/object/authenticated/event-images/o1/full.jpg?v=1",
+        mode: "cors",
+      },
+      respondWith: () => {
+        handled = true;
+      },
+    });
+
+    expect(handled).toBe(false);
+    expect(cached).toEqual([]);
+  });
+
   it("shows the offline page, not stale data, when a page cannot load", async () => {
     networkDown = true;
 

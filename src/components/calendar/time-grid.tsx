@@ -10,7 +10,7 @@ import { calendarHref } from "@/lib/calendar/ranges";
 import type { MinuteRange } from "@/lib/calendar/slots";
 import { fromMinutes } from "@/lib/calendar/time-options";
 import { formatTime } from "@/lib/calendar/time-zone";
-import { EventChip } from "./event-chip";
+import { EventChip, ImageMark } from "./event-chip";
 import { ScrollOnMount } from "./scroll-on-mount";
 import { SlotLayer } from "./slot-layer";
 
@@ -200,6 +200,11 @@ export function TimeGrid({
                           {formatTime(slot.event.startsAt, timeZone)}
                         </span>{" "}
                         {slot.event.title}
+                        <ImageMark
+                          count={slot.event.imageCount}
+                          // A block under 30 min has no room for it (RF-12).
+                          icon={slot.endMinute - slot.startMinute >= 30}
+                        />
                       </Link>
                     );
                   })}

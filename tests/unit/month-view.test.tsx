@@ -58,6 +58,28 @@ describe("MonthView (RF-29, RF-37..RF-39)", () => {
     expect(screen.getByText("dom")).toBeInTheDocument();
   });
 
+  it("marks the events with images, timed and all-day (spec 012 RF-12)", () => {
+    renderMonth([
+      event("Fotos", "2026-10-21T09:00:00Z", "2026-10-21T10:00:00Z", {
+        imageCount: 1,
+      }),
+      event("Fiesta", "2026-10-22T00:00:00Z", "2026-10-23T00:00:00Z", {
+        allDay: true,
+        imageCount: 3,
+      }),
+      event("Nada", "2026-10-21T11:00:00Z", "2026-10-21T12:00:00Z"),
+    ]);
+    expect(screen.getByRole("link", { name: /Fotos/ })).toHaveTextContent(
+      "Con imágenes",
+    );
+    expect(screen.getByRole("link", { name: /Fiesta/ })).toHaveTextContent(
+      "Con imágenes",
+    );
+    expect(screen.getByRole("link", { name: /Nada/ })).not.toHaveTextContent(
+      "Con imágenes",
+    );
+  });
+
   it("marks today", () => {
     renderMonth();
 

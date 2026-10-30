@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { AgendaEntry } from "@/lib/calendar/agenda";
 import type { AgendaEvent } from "./agenda-view";
+import { ImageMark } from "./event-chip";
 
 /**
  * An event as a row of text: times, a thin bar in its color, title and place.
@@ -27,6 +28,7 @@ export function EventRow({ entry }: { entry: AgendaEntry<AgendaEvent> }) {
       <span className="flex min-w-0 flex-col gap-0.5">
         <span className="line-clamp-2 font-bold break-words">
           {event.title}
+          <ImageMark count={event.imageCount} />
         </span>
         {event.location ? (
           <span className="truncate text-sm text-muted">{event.location}</span>

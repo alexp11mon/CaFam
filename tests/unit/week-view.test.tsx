@@ -48,6 +48,27 @@ describe("WeekView (RF-29, RF-35, RF-40)", () => {
     );
   });
 
+  it("marks events with images, with the icon only in blocks of 30 min or more (spec 012 RF-12)", () => {
+    renderWeek([
+      event("Largo", "2026-10-21T08:00:00Z", "2026-10-21T09:00:00Z", {
+        imageCount: 1,
+      }),
+      event("Corto", "2026-10-21T10:00:00Z", "2026-10-21T10:15:00Z", {
+        imageCount: 1,
+      }),
+      event("Nada", "2026-10-21T12:00:00Z", "2026-10-21T13:00:00Z"),
+    ]);
+    const long = screen.getByRole("link", { name: /Largo/ });
+    const short = screen.getByRole("link", { name: /Corto/ });
+    expect(long).toHaveTextContent("Con imágenes");
+    expect(long.querySelector("svg")).not.toBeNull();
+    expect(short).toHaveTextContent("Con imágenes");
+    expect(short.querySelector("svg")).toBeNull();
+    expect(screen.getByRole("link", { name: /Nada/ })).not.toHaveTextContent(
+      "Con imágenes",
+    );
+  });
+
   it("places timed events by their time in the profile zone (RF-34)", () => {
     // 07:30Z-09:00Z is 08:30-10:00 in Madrid (UTC+2 until 25 Oct).
     renderWeek([
