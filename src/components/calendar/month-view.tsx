@@ -143,7 +143,7 @@ export function MonthView({
                   event={event}
                   timeZone={timeZone}
                   shape="line"
-                  imageIcon={false}
+                  icons={false}
                   className="pointer-events-auto mx-0.5 min-w-0"
                   style={{
                     gridColumn: `${start + 1} / span ${span}`,

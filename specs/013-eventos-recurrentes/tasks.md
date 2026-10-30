@@ -133,12 +133,13 @@
   Hecho cuando: `npm test -- event-form event-actions series-write` en verde y una serie creada en `next start -p 3100` aparece en mes, semana, día y agenda. Cubre: RF-1, RF-6, RF-7, RF-8, RF-29, RF-31 | Módulo: series-actions
   Evidencia (2026-10-30): rojo con «Repetir» ausente y `createEvent` sin series; `npm test -- event-form event-actions series-actions` en verde (8 tests de `createEvent`: cada opción, zona del perfil, inicio movido a la primera repetición, día completo sin zona, RF-8, valor inválido, calendario traído y límite de 500; 3 del formulario: envío, deshabilitado en traídos, error junto al campo). `npm test` 187 archivos y 1676 tests en verde; typecheck, format y build correctos, lint con los 2 avisos previos. En `next start -p 3100` una serie semanal creada desde el alta sale cada miércoles en mes, semana, día y agenda. «Más opciones» lleva al alta completa, que ya tiene «Repetir» (RF-7).
 
-- [ ] T11 Marcar las repeticiones en las vistas y en el detalle
+- [x] T11 Marcar las repeticiones en las vistas y en el detalle
   Pasos:
   - Primero, en rojo: `EventBlock` pinta `RepeatIcon` con `sr-only` "Se repite" cuando hay `seriesId` y cabe (las mismas reglas de tamaño que el icono de imágenes); el detalle muestra el resumen de la regla y "Cambiado solo en este evento" en una repetición cambiada.
   - Después, `event-block.tsx`, `event-detail.tsx` e `icons.tsx`.
 
   Hecho cuando: `npm test -- event-block event-detail design-tokens` en verde y capturas de agenda, mes, semana, día y detalle a 390, 768 y 1440 px. Cubre: RF-9, RF-10, RF-16 | Módulo: series-marks
+  Evidencia (2026-10-30): rojo con `RepeatIcon` y la fila «Se repite» inexistentes; `npm test -- event-block event-detail design-tokens` en verde (icono y «Se repite» en `sr-only` en las tres formas, sin icono donde no cabe con las mismas reglas que el de imágenes, prop `icons` común; resumen de la regla y «Cambiado solo en este evento» en el detalle). `npm test` 187 archivos y 1684 tests, typecheck, format y build correctos, lint con los 2 avisos previos. Capturas de agenda, mes, semana, día y detalle a 390, 768 y 1440 px en `next start -p 3100` con una serie semanal: el icono sale junto al título y el detalle de una repetición virtual dice «Cada semana el miércoles».
 
 - [ ] T12 Guardar cambios en una repetición eligiendo el alcance
   Pasos:

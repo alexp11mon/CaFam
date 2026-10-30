@@ -197,3 +197,37 @@ describe("EventDetail permissions and deletion (RF-23, RF-24, RF-26)", () => {
     expect(screen.getByText("Cuenta borrada")).toBeInTheDocument();
   });
 });
+
+// Spec 013 RF-10, RF-16: the detail of an occurrence names its rule.
+describe("EventDetail of a series", () => {
+  it("shows the summary of the rule", () => {
+    setup({
+      event: {
+        ...EVENT,
+        repeat: { summary: "Cada semana el lunes", changed: false },
+      },
+    });
+    expect(screen.getByText("Se repite")).toBeInTheDocument();
+    expect(screen.getByText("Cada semana el lunes")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Cambiado solo en este evento"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("says when this occurrence was changed on its own", () => {
+    setup({
+      event: {
+        ...EVENT,
+        repeat: { summary: "Cada semana el lunes", changed: true },
+      },
+    });
+    expect(
+      screen.getByText("Cambiado solo en este evento"),
+    ).toBeInTheDocument();
+  });
+
+  it("a single event has no repetition row", () => {
+    setup();
+    expect(screen.queryByText("Se repite")).not.toBeInTheDocument();
+  });
+});

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { formatTime } from "@/lib/calendar/time-zone";
-import { ImageIcon } from "@/components/shell/icons";
+import { ImageIcon, RepeatIcon } from "@/components/shell/icons";
 
 /**
  * Mark of an event with images (spec 012 RF-12). The words always reach
@@ -29,6 +29,22 @@ export function ImageMark({
   );
 }
 
+/** Mark of an occurrence of a series (spec 013 RF-9), as ImageMark. */
+function RepeatMark({ series, icon }: { series: boolean; icon: boolean }) {
+  if (!series) return null;
+  return (
+    <>
+      {icon ? (
+        <>
+          {" "}
+          <RepeatIcon />
+        </>
+      ) : null}
+      <span className="sr-only"> Se repite</span>
+    </>
+  );
+}
+
 const SHAPES = {
   // Month and all-day strip: one line, as Google (spec 016 RF-34, RF-40).
   line: "block h-[18px] truncate rounded-md px-1 text-xs leading-[18px]",
@@ -47,7 +63,7 @@ export function EventBlock({
   timeZone,
   shape,
   line,
-  imageIcon = true,
+  icons = true,
   style,
   className = "",
 }: {
@@ -56,7 +72,8 @@ export function EventBlock({
   shape: keyof typeof SHAPES;
   /** The agenda's second line ("A las 11:15–14:15 en …"). */
   line?: string | null;
-  imageIcon?: boolean;
+  /** The icons of images and series, where they fit. */
+  icons?: boolean;
   style?: CSSProperties;
   className?: string;
 }) {
@@ -75,14 +92,16 @@ export function EventBlock({
         <>
           <span className="truncate">
             <span className="font-bold">{event.title}</span>
-            <ImageMark count={event.imageCount} icon={imageIcon} />
+            <RepeatMark series={Boolean(event.seriesId)} icon={icons} />
+            <ImageMark count={event.imageCount} icon={icons} />
           </span>
           {line ? <span className="truncate">{line}</span> : null}
         </>
       ) : (
         <>
           <span className="font-bold">{event.title}</span>
-          <ImageMark count={event.imageCount} icon={imageIcon} />
+          <RepeatMark series={Boolean(event.seriesId)} icon={icons} />
+          <ImageMark count={event.imageCount} icon={icons} />
           {shape === "grid" && event.location ? (
             <span className="block">{event.location}</span>
           ) : null}

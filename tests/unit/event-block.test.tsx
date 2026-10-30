@@ -71,10 +71,41 @@ describe("EventBlock", () => {
 
   it("lets the grid hide the image icon in a short block, keeping the words", () => {
     const { container } = render(
-      <EventBlock event={EVENT} timeZone={TZ} shape="grid" imageIcon={false} />,
+      <EventBlock event={EVENT} timeZone={TZ} shape="grid" icons={false} />,
     );
 
     expect(container.querySelector("svg")).toBeNull();
     expect(link()).toHaveTextContent("Con imágenes");
+  });
+});
+
+// Spec 013 RF-9: an occurrence of a series says so.
+describe("EventBlock of a series", () => {
+  const SERIES = { ...EVENT, imageCount: 0, seriesId: "s1" };
+
+  it.each(["line", "grid", "card"] as const)(
+    "marks the %s block with the repeat icon and the words",
+    (shape) => {
+      const { container } = render(
+        <EventBlock event={SERIES} timeZone={TZ} shape={shape} />,
+      );
+      expect(container.querySelector("svg[data-icon=repeat]")).not.toBeNull();
+      expect(screen.getByText("Se repite", { exact: false })).toHaveClass(
+        "sr-only",
+      );
+    },
+  );
+
+  it("hides the icon where it does not fit, keeping the words", () => {
+    const { container } = render(
+      <EventBlock event={SERIES} timeZone={TZ} shape="grid" icons={false} />,
+    );
+    expect(container.querySelector("svg")).toBeNull();
+    expect(link()).toHaveTextContent("Se repite");
+  });
+
+  it("a single event has no mark", () => {
+    render(<EventBlock event={EVENT} timeZone={TZ} shape="card" />);
+    expect(link()).not.toHaveTextContent("Se repite");
   });
 });

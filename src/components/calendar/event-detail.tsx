@@ -20,6 +20,8 @@ export interface EventDetailData {
   author: string;
   /** Why a synced event cannot be changed from CaFam, if it cannot (spec 009 RF-8). */
   readOnly?: "google" | "reconnect" | null;
+  /** The rule of an occurrence and whether it was changed alone (spec 013 RF-10, RF-16). */
+  repeat?: { summary: string; changed: boolean } | null;
 }
 
 const READ_ONLY_TEXT = {
@@ -84,6 +86,16 @@ export function EventDetail({
             {formatEventWhen(event, timeZone)}
           </span>
         </Row>
+        {event.repeat ? (
+          <Row label="Se repite">
+            {event.repeat.summary}
+            {event.repeat.changed ? (
+              <span className="block text-sm text-muted">
+                Cambiado solo en este evento
+              </span>
+            ) : null}
+          </Row>
+        ) : null}
         {event.location ? <Row label="Lugar">{event.location}</Row> : null}
         {event.description ? (
           <Row label="Descripción">

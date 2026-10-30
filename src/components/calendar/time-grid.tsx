@@ -228,7 +228,7 @@ export function TimeGrid({
                         timeZone={timeZone}
                         shape="grid"
                         // A block under 30 min has no room for it (spec 012 RF-12).
-                        imageIcon={slot.endMinute - slot.startMinute >= 30}
+                        icons={slot.endMinute - slot.startMinute >= 30}
                         // A paper edge parts blocks that touch, as Google.
                         className="absolute border border-paper"
                         style={{

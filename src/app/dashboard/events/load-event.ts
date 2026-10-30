@@ -86,6 +86,9 @@ export async function loadEvent(id: string): Promise<EventData | null> {
       categoryName: category?.name ?? null,
       author: authorLabel(event.createdBy, members),
       readOnly: readOnlyReason(calendar.synced),
+      repeat: event.series
+        ? { summary: event.series.summary, changed: event.series.changed }
+        : null,
     },
     timeZone,
     canEdit,
