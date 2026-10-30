@@ -74,7 +74,7 @@
   Hecho cuando: `npm run test:db -- event-images account-orphans sync-worker` en verde. Cubre: RF-18, RF-31, RF-32 | Módulo: images-copy
   Evidencia (2026-10-30): rojo en la copia (0 filas copiadas); la sincronización, desconectar conservando y subir a Google ya cumplían por diseño (D6) y quedan cubiertos. Migraciones `20261030130000_copy_calendar_images.sql` y `20261030130100_copy_calendar_images_fix.sql` (la segunda porque `account-apply` hace varias copias en una transacción y la tabla temporal chocaba, `42P07`). `test:db -- event-images account-copy account-apply sync-worker` 62 tests en verde (los de la 006 se llaman `account-*`, no `account-orphans`). typecheck, lint y format en verde, `npm test` 1418 tests, build correcto.
 
-- [ ] T5 Limpiar Storage cada hora sin la clave secreta
+- [x] T5 Limpiar Storage cada hora sin la clave secreta
   Pasos:
   - Primero, en rojo:
     - `event-images.test.ts`: `images_claim_purge` con un secreto incorrecto da `42501`; con el correcto, caduca las reservas `pending` de más de 1 h, encola las carpetas sin fila de más de 1 h y devuelve la cola; `images_done_purge` la vacía; tras 5 intentos no reclama la fila; `sync_scheduled_jobs` (o su equivalente) incluye `images-purge`;
@@ -82,6 +82,7 @@
   - Después, `images_purge_trigger`, el `pg_cron` `images-purge`, `src/lib/images/purge.ts` y `src/app/api/images/purge/route.ts`.
 
   Hecho cuando: `npm run test:db -- event-images` y `npm test -- images-purge` en verde. Cubre: RF-16, RF-17, RF-18 | Módulo: images-purge-job
+  Evidencia (2026-10-30): rojo (6 tests de BD, ruta inexistente). Migración `20261030140000_images_purge.sql` (`images_claim_purge` con `p_object_ids` y `p_orphan_age` para poder probar sin tocar lo de otros tests, `images_done_purge`, `images_purge_trigger`, `images_scheduled_jobs` y el `pg_cron` `images-purge` a las `:15`), `src/lib/images/purge.ts`, `paths.ts` y la ruta. `test:db -- event-images storage-images` 37 tests y `npm test -- images-purge` 5 tests en verde. typecheck, lint y format en verde, `npm test` 1423 tests, build correcto.
 
 - [ ] T6 Escribir la lógica pura de las imágenes
   Pasos:

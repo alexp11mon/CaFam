@@ -927,6 +927,27 @@ export type Database = {
       image_object_id: { Args: { p_name: string }; Returns: string }
       image_purge_pending: { Args: { p_name: string }; Returns: boolean }
       image_upload_allowed: { Args: { p_name: string }; Returns: boolean }
+      images_claim_purge: {
+        Args: {
+          p_limit?: number
+          p_object_ids?: string[]
+          p_orphan_age?: string
+          p_secret: string
+        }
+        Returns: string[]
+      }
+      images_done_purge: {
+        Args: { p_object_ids: string[]; p_secret: string }
+        Returns: undefined
+      }
+      images_purge_trigger: { Args: { p_dry_run?: boolean }; Returns: Json }
+      images_scheduled_jobs: {
+        Args: never
+        Returns: {
+          jobname: string
+          schedule: string
+        }[]
+      }
       images_total_limit: { Args: never; Returns: number }
       import_calendar: {
         Args: { p_color: string; p_events: Json; p_name: string }

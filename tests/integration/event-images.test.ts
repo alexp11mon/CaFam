@@ -640,3 +640,127 @@ describe("synced calendars (RF-18, RF-32)", () => {
     expect(await visibleTo(owner, image.id)).toBe(true);
   });
 });
+
+// Spec 012, T5: the hourly purge, opened by the cron secret (plan D7; RF-16 to
+// RF-18). Claims are always limited to this test's objects, so other files
+// running at the same time keep theirs.
+async function claim(objectIds: string[], extra: Record<string, unknown> = {}) {
+  return anonClient().rpc("images_claim_purge", {
+    p_secret: SECRET,
+    p_object_ids: objectIds,
+    ...extra,
+  });
+}
+
+async function queueRow(objectId: string) {
+  const { data } = await admin
+    .from("image_purge_queue")
+    .select("attempts, claimed_at")
+    .eq("object_id", objectId)
+    .maybeSingle();
+  return data;
+}
+
+describe("images_claim_purge and images_done_purge (RF-16 to RF-18)", () => {
+  it("fail with a wrong secret", async () => {
+    const wrong = await anonClient().rpc("images_claim_purge", {
+      p_secret: "wrong",
+    });
+    expect(wrong.error?.code).toBe("42501");
+    const done = await anonClient().rpc("images_done_purge", {
+      p_secret: "wrong",
+      p_object_ids: [],
+    });
+    expect(done.error?.code).toBe("42501");
+  });
+
+  it("claims queued objects once every 5 minutes and forgets them when done", async () => {
+    const image = await seedImage(await createEvent(calendar), owner.id);
+    await deleteAs(owner, image.id);
+
+    const { data, error } = await claim([image.objectId]);
+    expect(error).toBeNull();
+    expect(data).toEqual([image.objectId]);
+    const row = await queueRow(image.objectId);
+    expect(row?.attempts).toBe(1);
+    expect(row?.claimed_at).not.toBeNull();
+    expect((await claim([image.objectId])).data).toEqual([]);
+
+    const done = await anonClient().rpc("images_done_purge", {
+      p_secret: SECRET,
+      p_object_ids: [image.objectId],
+    });
+    expect(done.error).toBeNull();
+    expect(await queued(image.objectId)).toBe(false);
+  });
+
+  it("gives up on an object after 5 attempts", async () => {
+    const image = await seedImage(await createEvent(calendar), owner.id);
+    await deleteAs(owner, image.id);
+    await admin
+      .from("image_purge_queue")
+      .update({ attempts: 5 })
+      .eq("object_id", image.objectId);
+    expect((await claim([image.objectId])).data).toEqual([]);
+  });
+
+  it("drops reservations older than an hour and claims their objects", async () => {
+    const event = await createEvent(calendar);
+    const stale = await seedImage(event, viewer.id, { status: "pending" });
+    const fresh = await seedImage(event, viewer.id, { status: "pending" });
+    await admin
+      .from("event_images")
+      .update({ created_at: new Date(Date.now() - 7_200_000).toISOString() })
+      .eq("id", stale.id);
+
+    const { data } = await claim([stale.objectId, fresh.objectId]);
+    expect(data).toEqual([stale.objectId]);
+    expect(await rowExists(stale.id)).toBe(false);
+    expect(await rowExists(fresh.id)).toBe(true);
+  });
+
+  it("queues objects of the bucket that no row uses", async () => {
+    const orphan = randomUUID();
+    objectIds.push(orphan);
+    const { error } = await admin.storage
+      .from("event-images")
+      .upload(
+        `${orphan}/full.jpg`,
+        new Blob([new Uint8Array(10)], { type: "image/jpeg" }),
+        {
+          contentType: "image/jpeg",
+        },
+      );
+    expect(error).toBeNull();
+
+    // A young orphan may be an upload about to be confirmed: it waits an hour.
+    expect((await claim([orphan])).data).toEqual([]);
+    const { data } = await claim([orphan], { p_orphan_age: "0 seconds" });
+    expect(data).toEqual([orphan]);
+
+    const { data: removed } = await anonClient()
+      .storage.from("event-images")
+      .remove([`${orphan}/full.jpg`]);
+    expect(removed).toHaveLength(1);
+  });
+});
+
+describe("images-purge job (plan D7)", () => {
+  it("is scheduled every hour and calls the purge route when there is work", async () => {
+    const { data: jobs } = await admin.rpc("images_scheduled_jobs");
+    expect(jobs).toContainEqual({
+      jobname: "images-purge",
+      schedule: "15 * * * *",
+    });
+
+    const image = await seedImage(await createEvent(calendar), owner.id);
+    await deleteAs(owner, image.id);
+    const { data: request, error } = await admin.rpc("images_purge_trigger", {
+      p_dry_run: true,
+    });
+    expect(error).toBeNull();
+    expect(
+      (request as { url: string } | null)?.url.endsWith("/api/images/purge"),
+    ).toBe(true);
+  });
+});
