@@ -149,7 +149,7 @@
   - la hora salía "9:07"; ahora "09:07" como en el resto de la app.
   Tras borrar, el visor pasa a la imagen que queda o se cierra si no queda ninguna. También: el `afterAll` de los tests de BD dejaba miles de filas en la cola de dev (limpiaba antes de borrar los usuarios); ahora borra después y por tandas con `deleteQueuedImages` (`helpers.ts`), y se limpiaron las 4.041 filas sobrantes. Capturas del detalle y del visor a 390, 768 y 1440 px, en claro y oscuro, con el acento rojo y el amarillo (24 capturas en el scratchpad de la sesión). El visor no añade animaciones propias. typecheck, lint y format en verde, `npm test` 1476 tests, `test:db -- event-images storage-images` 38 tests, build correcto.
 
-- [ ] T11 Adjuntar imágenes al crear un evento
+- [x] T11 Adjuntar imágenes al crear un evento
   Pasos:
   - Primero, en rojo:
     - `event-form.test.tsx`: en el alta completa hay "Añadir imágenes"; con imágenes pendientes envía `images=1`; con `{ done: "created", eventId }` sube y después cierra la ventana o navega al detalle; si una falla, el evento ya está guardado y queda "Reintentar";
@@ -158,6 +158,8 @@
   - Después, `event-form.tsx`, `events/actions.ts` y `lib/forms/form-state.ts` (`eventId`).
 
   Hecho cuando: `npm test -- event-form event-actions new-event` en verde y capturas del alta a 390 y 1440 px en los dos temas. Cubre: RF-7, RF-28 | Módulo: event-create-images
+
+  Evidencia (2026-10-30): rojo (sin "Añadir imágenes" en el formulario ni `eventId` en la respuesta). `event-form.test.tsx` 21 tests (6 nuevos) y `event-actions.test.ts` 3 nuevos (con `images=1` devuelve `eventId` en la ventana, en la página completa y escribiendo en Google; sin imágenes sigue redirigiendo) en verde. Prueba real con `next start -p 3100`: en la página completa dos imágenes se suben y se llega al detalle con las dos miniaturas; en la ventana sobre el calendario se cierra con "Evento creado" y el evento tiene su imagen. Fallo encontrado en el navegador y corregido: `router.replace` al detalle lo interceptaba `@modal` y dejaba el formulario detrás; se navega con `window.location.assign`, igual que el `redirect` de `createEvent`. Capturas del alta a 390 y 1440 px en claro y oscuro. typecheck, lint y format en verde, `npm test` 1485 tests, build correcto.
 
 - [ ] T12 Marcar en las vistas los eventos con imágenes y proteger la caché sin conexión
   Pasos:

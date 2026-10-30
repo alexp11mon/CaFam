@@ -27,6 +27,7 @@ async function NewEvent({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <EventForm
+      withImages
       action={createEvent}
       initial={data.initial}
       calendars={data.calendars}

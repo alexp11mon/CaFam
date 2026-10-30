@@ -1,6 +1,9 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { ImagePicker } from "@/components/images/image-picker";
+import { UploadList } from "@/components/images/upload-list";
+import { useImageUploads } from "@/components/images/use-image-uploads";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { LinkButton } from "@/components/ui/link-button";
@@ -34,6 +37,9 @@ export interface CategoryOption {
   calendarId: string;
 }
 
+// The form leaves after uploading: nothing to refresh in place.
+const NOTHING = () => {};
+
 /** Create / edit form of an event (RF-15..RF-22, RF-27, RF-28). */
 export function EventForm({
   action,
@@ -44,6 +50,7 @@ export function EventForm({
   pendingLabel,
   cancelHref,
   focusTitle = false,
+  withImages = false,
 }: {
   action: FormAction<EventFormState>;
   initial: EventFormValues;
@@ -55,6 +62,8 @@ export function EventForm({
   cancelHref: string;
   /** A new event starts with the cursor in the title (spec 008 RF-28). */
   focusTitle?: boolean;
+  /** Creating offers images, uploaded once the event exists (spec 012 RF-7). */
+  withImages?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, {
     values: initial,
@@ -67,12 +76,36 @@ export function EventForm({
 
   // Inside the window a success closes it instead of redirecting (spec 008 RF-8).
   // Effects run again each time Activity shows the route: handle each result once.
+  const uploads = useImageUploads(NOTHING);
+  const { upload } = uploads;
+  // The event saved with images still to upload (spec 012 RF-7, plan D11).
+  const savedId = state.done === "created" ? state.eventId : undefined;
+  const [uploadedFor, setUploadedFor] = useState<string>();
   const handled = useRef<EventFormState | null>(null);
+  const left = useRef<string | null>(null);
+
+  function leave(id: string) {
+    if (left.current === id) return;
+    left.current = id;
+    if (modal) modal.finish("created");
+    // A soft navigation would be intercepted by @modal: land on the full page,
+    // like the redirect of createEvent does.
+    else window.location.assign(`/dashboard/events/${id}`);
+  }
+
   useEffect(() => {
     if (!state.done || handled.current === state) return;
     handled.current = state;
-    modal?.finish(state.done);
-  }, [state, modal]);
+    if (!state.eventId) return modal?.finish(state.done);
+    const id = state.eventId;
+    void upload(id).then(() => setUploadedFor(id));
+  }, [state, modal, upload]);
+
+  // Once uploaded, go on unless an image failed: those stay to retry (RF-24).
+  const failed = uploads.items.length > 0;
+  useEffect(() => {
+    if (savedId && uploadedFor === savedId && !failed) leave(savedId);
+  });
 
   const [allDay, setAllDay] = useState(values.allDay === "on");
   const [calendarId, setCalendarId] = useState(values.calendarId);
@@ -117,6 +150,33 @@ export function EventForm({
     if (!categories.some((c) => c.id === categoryId && c.calendarId === id)) {
       setCategoryId("");
     }
+  }
+
+  if (savedId) {
+    return (
+      <div className="flex flex-col gap-4">
+        <p role="status" className="text-ink">
+          {uploadedFor === savedId && failed
+            ? "El evento se ha guardado, pero alguna imagen no se ha subido."
+            : "Evento guardado. Subiendo imágenes…"}
+        </p>
+        <UploadList
+          items={uploads.items}
+          notice={uploads.notice}
+          onCancel={uploads.remove}
+          onRetry={uploads.retry}
+        />
+        {uploadedFor === savedId && failed ? (
+          <Button
+            variant="secondary"
+            onClick={() => leave(savedId)}
+            className="self-start"
+          >
+            Continuar sin ellas
+          </Button>
+        ) : null}
+      </div>
+    );
   }
 
   // noValidate: errors come from the server in Spanish, not from the browser.
@@ -242,8 +302,27 @@ export function EventForm({
         emptyLabel="Color del calendario"
         error={errors.color}
       />
+      {withImages ? (
+        <section aria-label="Imágenes" className="flex flex-col gap-2">
+          {uploads.items.length > 0 ? (
+            <input type="hidden" name="images" value="1" />
+          ) : null}
+          <ImagePicker onPick={(files) => void uploads.add(files)} />
+          <UploadList
+            items={uploads.items}
+            notice={uploads.notice}
+            onCancel={uploads.remove}
+            onRetry={uploads.retry}
+          />
+        </section>
+      ) : null}
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={pending}>
+        <Button
+          type="submit"
+          disabled={
+            pending || uploads.items.some((item) => item.status === "preparing")
+          }
+        >
           {pending ? pendingLabel : submitLabel}
         </Button>
         {modal ? (

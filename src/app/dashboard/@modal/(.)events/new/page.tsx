@@ -26,6 +26,7 @@ async function InterceptedNewEvent({
         </div>
       ) : (
         <EventForm
+          withImages
           action={createEvent}
           initial={data.initial}
           calendars={data.calendars}

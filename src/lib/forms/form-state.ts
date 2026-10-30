@@ -11,6 +11,8 @@ export interface FormState<Field extends string> {
   values: Record<Field, string>;
   /** Success inside the event window, which closes itself instead of redirecting (spec 008 RF-8). */
   done?: Done;
+  /** The new event, when the form still has images to upload (spec 012 RF-7). */
+  eventId?: string;
 }
 
 /** "gone": deleted in Google while it was being changed (spec 009 RF-25). */

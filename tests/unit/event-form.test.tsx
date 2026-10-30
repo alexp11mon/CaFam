@@ -1,6 +1,6 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   EventForm,
   type EventFormValues,
@@ -8,6 +8,56 @@ import {
 import type { FormState } from "@/lib/forms/form-state";
 
 type State = FormState<keyof EventFormValues>;
+
+// Spec 012, T11: images chosen while creating are uploaded once the event exists.
+const images = vi.hoisted(() => ({
+  assign: vi.fn(),
+  reserveImages: vi.fn(),
+  confirmImage: vi.fn(),
+  cancelImage: vi.fn(),
+  prepareImage: vi.fn(),
+  uploadObject: vi.fn(),
+}));
+vi.mock("@/app/dashboard/events/image-actions", () => ({
+  reserveImages: images.reserveImages,
+  confirmImage: images.confirmImage,
+  cancelImage: images.cancelImage,
+}));
+vi.mock("@/lib/images/prepare-image", () => ({
+  prepareImage: images.prepareImage,
+}));
+vi.mock("@/lib/images/upload-object", () => ({
+  uploadObject: images.uploadObject,
+}));
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: {
+      getSession: async () => ({ data: { session: { access_token: "t" } } }),
+    },
+  }),
+}));
+
+beforeEach(() => {
+  for (const mock of Object.values(images)) mock.mockReset();
+  vi.stubGlobal("location", { ...window.location, assign: images.assign });
+  images.prepareImage.mockImplementation(async () => ({
+    full: new Blob(["full"], { type: "image/jpeg" }),
+    thumb: new Blob(["t"], { type: "image/jpeg" }),
+    width: 800,
+    height: 600,
+  }));
+  images.reserveImages.mockImplementation(
+    async (_event: string, specs: unknown[]) => ({
+      ids: specs.map((_, i) => `id-${i}`),
+    }),
+  );
+  images.uploadObject.mockResolvedValue("ok");
+  images.confirmImage.mockResolvedValue({});
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 const CALENDARS = [
   { id: "cal-a", name: "Clases Uni", color: "#A0C4FF" },
@@ -37,6 +87,7 @@ const INITIAL: EventFormValues = {
 function setup(
   implementation?: (prev: State, formData: FormData) => Promise<State>,
   initial: EventFormValues = INITIAL,
+  withImages = false,
 ) {
   const action = vi.fn<(prev: State, formData: FormData) => Promise<State>>(
     implementation ?? (async () => ({ values: INITIAL })),
@@ -50,6 +101,7 @@ function setup(
       submitLabel="Crear evento"
       pendingLabel="Creando…"
       cancelHref="/dashboard"
+      withImages={withImages}
     />,
   );
   return action;
@@ -295,5 +347,108 @@ describe("EventForm: times (spec 008)", () => {
     );
 
     expect(screen.getByLabelText("Título")).toHaveFocus();
+  });
+});
+
+describe("EventForm with images (spec 012 RF-7, RF-28)", () => {
+  const EVENT = "5b8f6c2e-3f0a-4d8e-9a51-2a8f1d7c9e10";
+
+  function fileInput() {
+    return document.querySelector<HTMLInputElement>('input[type="file"]')!;
+  }
+
+  it("offers Añadir imágenes only when creating with images", () => {
+    setup();
+    expect(
+      screen.queryByRole("button", { name: "Añadir imágenes" }),
+    ).toBeNull();
+  });
+
+  it("starts without images, also when duplicating (RF-28)", () => {
+    setup(undefined, { ...INITIAL, title: "Copia" }, true);
+    expect(
+      screen.getByRole("button", { name: "Añadir imágenes" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("progressbar")).toBeNull();
+  });
+
+  it("sends images=1 and uploads to the new event before going to it", async () => {
+    const action = setup(
+      async () => ({ done: "created", eventId: EVENT, values: INITIAL }),
+      INITIAL,
+      true,
+    );
+    await userEvent.type(screen.getByLabelText("Título"), "Viaje");
+    await userEvent.upload(fileInput(), [
+      new File(["x"], "playa.jpg", { type: "image/jpeg" }),
+    ]);
+    await screen.findByText("En espera");
+    await userEvent.click(screen.getByRole("button", { name: "Crear evento" }));
+
+    const sent = action.mock.calls[0][1] as FormData;
+    expect(sent.get("images")).toBe("1");
+    await waitFor(() =>
+      expect(images.reserveImages).toHaveBeenCalledWith(EVENT, [
+        { bytes: 5, width: 800, height: 600 },
+      ]),
+    );
+    await waitFor(() =>
+      expect(images.assign).toHaveBeenCalledWith(`/dashboard/events/${EVENT}`),
+    );
+    expect(images.confirmImage).toHaveBeenCalledWith("id-0");
+  });
+
+  it("without images it sends no images field", async () => {
+    const action = setup(undefined, INITIAL, true);
+    await userEvent.type(screen.getByLabelText("Título"), "Viaje");
+    await userEvent.click(screen.getByRole("button", { name: "Crear evento" }));
+    expect((action.mock.calls[0][1] as FormData).get("images")).toBeNull();
+  });
+
+  it("keeps the saved event and offers Reintentar when an image fails", async () => {
+    images.uploadObject.mockResolvedValue("network");
+    setup(
+      async () => ({ done: "created", eventId: EVENT, values: INITIAL }),
+      INITIAL,
+      true,
+    );
+    await userEvent.type(screen.getByLabelText("Título"), "Viaje");
+    await userEvent.upload(fileInput(), [
+      new File(["x"], "playa.jpg", { type: "image/jpeg" }),
+    ]);
+    await screen.findByText("En espera");
+    await userEvent.click(screen.getByRole("button", { name: "Crear evento" }));
+
+    expect(
+      await screen.findByText(
+        "El evento se ha guardado, pero alguna imagen no se ha subido.",
+      ),
+    ).toBeInTheDocument();
+    expect(images.assign).not.toHaveBeenCalled();
+
+    images.uploadObject.mockResolvedValue("ok");
+    await userEvent.click(screen.getByRole("button", { name: "Reintentar" }));
+    await waitFor(() =>
+      expect(images.assign).toHaveBeenCalledWith(`/dashboard/events/${EVENT}`),
+    );
+  });
+
+  it("lets the user go on without the failed images", async () => {
+    images.uploadObject.mockResolvedValue("network");
+    setup(
+      async () => ({ done: "created", eventId: EVENT, values: INITIAL }),
+      INITIAL,
+      true,
+    );
+    await userEvent.type(screen.getByLabelText("Título"), "Viaje");
+    await userEvent.upload(fileInput(), [
+      new File(["x"], "playa.jpg", { type: "image/jpeg" }),
+    ]);
+    await screen.findByText("En espera");
+    await userEvent.click(screen.getByRole("button", { name: "Crear evento" }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Continuar sin ellas" }),
+    );
+    expect(images.assign).toHaveBeenCalledWith(`/dashboard/events/${EVENT}`);
   });
 });

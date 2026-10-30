@@ -142,6 +142,29 @@ describe("event actions in the window", () => {
     expect(state).toEqual({ done: "deleted" });
   });
 
+  // Spec 012, T11: with images to upload the form needs the new id (RF-7).
+  it("createEvent with images=1 answers with the event id, also on the full page", async () => {
+    const state = await createEvent(EMPTY, form({ images: "1" }));
+    expect(state).toMatchObject({ done: "created", eventId: EVENT_ID });
+    const modal = await createEvent(
+      EMPTY,
+      form({ images: "1", mode: "modal" }),
+    );
+    expect(modal).toMatchObject({ done: "created", eventId: EVENT_ID });
+  });
+
+  it("createEvent with images=1 answers with the id written through Google", async () => {
+    h.writeEvent.mockResolvedValue({ status: "done", eventId: "synced-id" });
+    const state = await createEvent(EMPTY, form({ images: "1" }));
+    expect(state).toMatchObject({ done: "created", eventId: "synced-id" });
+  });
+
+  it("createEvent without images still redirects to the detail", async () => {
+    await expect(createEvent(EMPTY, form({}))).rejects.toThrow(
+      `REDIRECT:/dashboard/events/${EVENT_ID}`,
+    );
+  });
+
   it("still redirects outside the window (RF-10)", async () => {
     await expect(createEvent(EMPTY, form({}))).rejects.toThrow(
       `REDIRECT:/dashboard/events/${EVENT_ID}`,

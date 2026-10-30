@@ -172,7 +172,10 @@ export async function createEvent(
   }
 
   refresh();
-  if (inWindow(formData)) return { done: "created", values };
+  // With images to upload the form needs the id first (spec 012 RF-7, plan D11).
+  if (inWindow(formData) || formData.get("images") === "1") {
+    return { done: "created", values, eventId: id };
+  }
   redirect(`/dashboard/events/${id}`);
 }
 
