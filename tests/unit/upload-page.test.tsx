@@ -7,6 +7,53 @@ import { CalendarList } from "@/components/dashboard/calendar-list";
 // Spec 009, T11: what is copied before uploading and who may upload (RF-34,
 // RF-38, RF-42, RF-43).
 describe("UploadForm (RF-43)", () => {
+  // Spec 013 RF-30: series go up as single events.
+  it("warns that series go as single events and lose the rest", () => {
+    render(
+      <UploadForm
+        accounts={[{ id: "c1", email: "ana@gmail.com" }]}
+        toGoogle={30}
+        onlyCafam={0}
+        series={2}
+        occurrences={26}
+        action={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByText(
+        "2 series se subirán como 26 eventos sueltos; las repeticiones fuera de la ventana se perderán.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("names one series in singular and says nothing without series", () => {
+    const { unmount } = render(
+      <UploadForm
+        accounts={[{ id: "c1", email: "ana@gmail.com" }]}
+        toGoogle={1}
+        onlyCafam={0}
+        series={1}
+        occurrences={1}
+        action={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByText(
+        "1 serie se subirá como 1 evento suelto; las repeticiones fuera de la ventana se perderán.",
+      ),
+    ).toBeInTheDocument();
+    unmount();
+    render(
+      <UploadForm
+        accounts={[{ id: "c1", email: "ana@gmail.com" }]}
+        toGoogle={1}
+        onlyCafam={0}
+        action={vi.fn()}
+      />,
+    );
+    expect(screen.queryByText(/series? se/)).not.toBeInTheDocument();
+  });
+
   it("says how many events go to Google and how many stay in CaFam", () => {
     render(
       <UploadForm

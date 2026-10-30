@@ -7,7 +7,7 @@ import {
   ProviderError,
 } from "./providers/google";
 import { accessToken, type SyncDeps } from "./run-sync";
-import { planUpload } from "./upload-plan";
+import { planUpload, withOccurrences, type UploadRow } from "./upload-plan";
 import type { CalendarWriteResult } from "./write-calendar";
 import { writeFailureOf } from "./write-errors";
 
@@ -20,7 +20,7 @@ const CONCURRENCY = 4;
 const BUDGET_MS = 270_000;
 const RETRIES = 3;
 
-export interface UploadEvent extends WritableEvent {
+export interface UploadEvent extends WritableEvent, UploadRow {
   id: string;
 }
 
@@ -101,8 +101,11 @@ export async function uploadCalendar(
   const undo = () =>
     deleteCalendar(token, externalId, deps.fetchFn).catch(() => undefined);
 
-  const mapping: { event_id: string; external_id: string }[] = [];
-  const queue = [...planUpload(input.events, now).toGoogle];
+  // A row by its id; an occurrence of a series by its dates (spec 013 RF-30).
+  const mapping: Record<string, string>[] = [];
+  const queue = [
+    ...planUpload(withOccurrences(input.events, now).events, now).toGoogle,
+  ];
   try {
     const worker = async () => {
       for (let next = queue.shift(); next; next = queue.shift()) {
@@ -113,7 +116,16 @@ export async function uploadCalendar(
         const id = await withRetry(deps, () =>
           insertEvent(token, externalId, toGoogleEvent(event), deps.fetchFn),
         );
-        mapping.push({ event_id: event.id, external_id: id });
+        mapping.push(
+          event.seriesId
+            ? {
+                series_id: event.seriesId,
+                starts_at: event.starts_at,
+                ends_at: event.ends_at,
+                external_id: id,
+              }
+            : { event_id: event.id, external_id: id },
+        );
       }
     };
     await Promise.all(Array.from({ length: CONCURRENCY }, worker));

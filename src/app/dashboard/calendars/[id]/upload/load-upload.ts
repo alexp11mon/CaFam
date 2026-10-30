@@ -24,7 +24,7 @@ export async function uploadableCalendar(
     : null;
 }
 
-/** Every event of the calendar; PostgREST returns at most 1,000 per query. */
+/** Every row of the calendar; PostgREST returns at most 1,000 per query. */
 export async function calendarEvents(
   supabase: Supabase,
   calendarId: string,
@@ -33,7 +33,10 @@ export async function calendarEvents(
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
       .from("events")
-      .select("id, title, description, location, starts_at, ends_at, all_day")
+      // Series and exceptions too: the series go up as occurrences (spec 013 RF-30).
+      .select(
+        "id, title, description, location, starts_at, ends_at, all_day, recurrence, recurrence_tz, exdates, series_id, original_start",
+      )
       .eq("calendar_id", calendarId)
       .order("id")
       .range(from, from + PAGE - 1);

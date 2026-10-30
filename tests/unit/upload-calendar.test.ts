@@ -92,6 +92,46 @@ const upload = (events: UploadEvent[], extra: Partial<SyncDeps> = {}) =>
   });
 
 describe("uploadCalendar", () => {
+  it("uploads series as their occurrences and sends the mapping v2 (spec 013 RF-30)", async () => {
+    const result = await upload([
+      event("in-1", "2026-11-02"),
+      {
+        ...event("s1", "2026-11-02"),
+        recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=MO;COUNT=2",
+        recurrence_tz: "Europe/Madrid",
+        exdates: [],
+      },
+    ]);
+    expect(result).toEqual({ status: "done" });
+    expect(methods().filter((m) => m.includes("/events"))).toHaveLength(3);
+    const attach = calls.find((c) => c.fn === "sync_attach_uploaded")!.args;
+    const mapping = attach.p_mapping as Record<string, string>[];
+    expect(mapping.filter((m) => m.event_id).map((m) => m.event_id)).toEqual([
+      "in-1",
+    ]);
+    expect(
+      mapping
+        .filter((m) => m.series_id)
+        .map(({ series_id, starts_at, ends_at }) => ({
+          series_id,
+          starts_at,
+          ends_at,
+        }))
+        .sort((a, b) => a.starts_at.localeCompare(b.starts_at)),
+    ).toEqual([
+      {
+        series_id: "s1",
+        starts_at: "2026-11-02T10:00:00.000Z",
+        ends_at: "2026-11-02T11:00:00.000Z",
+      },
+      {
+        series_id: "s1",
+        starts_at: "2026-11-09T10:00:00.000Z",
+        ends_at: "2026-11-09T11:00:00.000Z",
+      },
+    ]);
+  });
+
   it("creates the calendar, copies only the events of the window and converts it (RF-34, RF-35, RF-42)", async () => {
     const result = await upload([
       event("in-1", "2026-11-02"),

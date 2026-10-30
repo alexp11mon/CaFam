@@ -7,7 +7,11 @@ import {
   type SyncedInfo,
 } from "@/lib/sync/read-only";
 import { GOOGLE_SCOPES, missingScopes } from "@/lib/sync/scopes";
-import { planUpload } from "@/lib/sync/upload-plan";
+import {
+  planUpload,
+  uploadCounts,
+  withOccurrences,
+} from "@/lib/sync/upload-plan";
 import { WRITE_ERRORS, writeFailureOf } from "@/lib/sync/write-errors";
 import { ProviderError } from "@/lib/sync/providers/google";
 
@@ -252,5 +256,57 @@ describe("planUpload (RF-35, RF-42, RF-43)", () => {
     const plan = planUpload(many, now);
     expect(plan.toGoogle).toHaveLength(2000);
     expect(plan.onlyCafam).toBe(100);
+  });
+});
+
+// Spec 013, T15: series go up as their occurrences of the window (RF-30).
+describe("uploads with series (spec 013 RF-30)", () => {
+  const now = new Date("2026-10-29T12:00:00Z");
+  const row = (id: string, extra: object = {}) => ({
+    id,
+    starts_at: "2026-11-02T10:00:00.000Z",
+    ends_at: "2026-11-02T11:00:00.000Z",
+    all_day: false,
+    recurrence: null,
+    recurrence_tz: null,
+    exdates: [],
+    series_id: null,
+    original_start: null,
+    ...extra,
+  });
+  // Every Monday for 4 weeks; the second is an exception, the third deleted.
+  const SERIES = row("s1", {
+    recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=MO;COUNT=4",
+    recurrence_tz: "Europe/Madrid",
+    exdates: ["2026-11-16T10:00:00.000Z"],
+  });
+  const EXCEPTION = row("x1", {
+    starts_at: "2026-11-09T12:00:00.000Z",
+    ends_at: "2026-11-09T13:00:00.000Z",
+    series_id: "s1",
+    original_start: "2026-11-09T10:00:00.000Z",
+  });
+
+  it("expands each series in the window, without exceptions or deleted dates", () => {
+    const { events, series } = withOccurrences(
+      [row("single"), SERIES, EXCEPTION],
+      now,
+    );
+    expect(series).toBe(1);
+    expect(events.map((e) => [e.id, e.starts_at, e.seriesId])).toEqual([
+      ["single", "2026-11-02T10:00:00.000Z", undefined],
+      ["x1", "2026-11-09T12:00:00.000Z", undefined],
+      ["s1_20261102T100000Z", "2026-11-02T10:00:00.000Z", "s1"],
+      ["s1_20261123T100000Z", "2026-11-23T10:00:00.000Z", "s1"],
+    ]);
+  });
+
+  it("counts each occurrence that goes to Google", () => {
+    expect(uploadCounts([row("single"), SERIES, EXCEPTION], now)).toEqual({
+      toGoogle: 4,
+      onlyCafam: 0,
+      series: 1,
+      occurrences: 2,
+    });
   });
 });

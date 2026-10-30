@@ -18,11 +18,16 @@ export function UploadForm({
   accounts,
   toGoogle,
   onlyCafam,
+  series = 0,
+  occurrences = 0,
   action,
 }: {
   accounts: { id: string; email: string }[];
   toGoogle: number;
   onlyCafam: number;
+  /** Series and the occurrences they go up as (spec 013 RF-30). */
+  series?: number;
+  occurrences?: number;
   action: FormAction<UploadState>;
 }) {
   const [state, formAction, pending] = useActionState(action, {
@@ -54,6 +59,16 @@ export function UploadForm({
             {onlyCafam === 1
               ? "se quedará solo en CaFam: está fuera del rango que se sincroniza (de 6 meses antes de hoy a 1 año después) o pasa del máximo de 2.000."
               : "se quedarán solo en CaFam: están fuera del rango que se sincroniza (de 6 meses antes de hoy a 1 año después) o pasan del máximo de 2.000."}
+          </p>
+        ) : null}
+        {series > 0 ? (
+          <p className="tabular-nums">
+            {series === 1 ? "1 serie se subirá" : `${series} series se subirán`}{" "}
+            como{" "}
+            {occurrences === 1
+              ? "1 evento suelto"
+              : `${occurrences} eventos sueltos`}
+            ; las repeticiones fuera de la ventana se perderán.
           </p>
         ) : null}
         <p className="text-sm text-muted">

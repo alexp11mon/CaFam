@@ -43,6 +43,8 @@ async function Upload({ params }: { params: Promise<{ id: string }> }) {
           accounts={accounts.map(({ id, email }) => ({ id, email }))}
           toGoogle={counts.toGoogle}
           onlyCafam={counts.onlyCafam}
+          series={counts.series}
+          occurrences={counts.occurrences}
           action={uploadToGoogle.bind(null, id)}
         />
       ) : (
