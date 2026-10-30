@@ -21,7 +21,7 @@ const SOURCES = files(ROOT).map((path) => ({
   code: readFileSync(path, "utf8"),
 }));
 
-// The floating shadow and glass only on what floats: dialogs, the "Más" sheet,
+// The floating shadow and glass only on what floats: dialogs, the "Más" sheet, the phone drawer,
 // the rail tooltips, the time list and the toast.
 const FLOATING = new Set([
   "src/components/calendar/confirm-dialog.tsx",
@@ -29,6 +29,7 @@ const FLOATING = new Set([
   "src/components/calendar/merge-form.tsx",
   "src/components/calendar/quick-create.tsx",
   "src/components/shell/more-sheet.tsx",
+  "src/components/shell/nav-drawer.tsx",
   "src/components/shell/side-rail.tsx",
   "src/components/ui/time-field.tsx",
   "src/components/ui/toast.tsx",

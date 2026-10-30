@@ -13,6 +13,7 @@ describe("AppFrame (RF-9)", () => {
       <AppFrame
         accent="blue"
         theme="system"
+        displayName="Ana López"
         signOutAction={vi.fn(async () => {})}
       >
         <p>Contenido</p>
@@ -26,6 +27,23 @@ describe("AppFrame (RF-9)", () => {
     expect(
       screen.getAllByRole("navigation", { name: "Principal" }),
     ).toHaveLength(2);
+  });
+
+  it("shows the phone header and leaves the bottom bar to tablets (spec 016 RF-6, RF-7)", () => {
+    render(
+      <AppFrame
+        accent="red"
+        theme="system"
+        displayName="Ana López"
+        signOutAction={vi.fn(async () => {})}
+      >
+        <p>Contenido</p>
+      </AppFrame>,
+    );
+
+    expect(screen.getByRole("banner")).toHaveClass("tab:hidden");
+    const [, bar] = screen.getAllByRole("navigation", { name: "Principal" });
+    expect(bar).toHaveClass("max-tab:hidden", "lg:hidden");
   });
 });
 

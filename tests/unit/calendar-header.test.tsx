@@ -24,7 +24,12 @@ function Reader() {
 }
 
 function Publisher({ title, onToday }: { title: string; onToday: () => void }) {
-  usePublishCalendarHeader({ title, onToday, picker: "months" });
+  usePublishCalendarHeader({
+    title,
+    today: "2026-10-30",
+    onToday,
+    picker: "months",
+  });
   return null;
 }
 

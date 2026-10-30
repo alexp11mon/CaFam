@@ -179,3 +179,61 @@ export function MoonIcon() {
     </Icon>
   );
 }
+
+/** The ≡ that opens the phone drawer (spec 016 RF-12). */
+export function MenuIcon() {
+  return (
+    <Icon>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </Icon>
+  );
+}
+
+/** A calendar page with today's number, as the "Hoy" button (spec 016 RF-9). */
+export function TodayIcon({ day }: { day: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="24"
+      height="24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect x="3" y="4" width="18" height="17" rx="3" />
+      <path d="M8 2.5v3M16 2.5v3" />
+      <text
+        x="12"
+        y="17"
+        textAnchor="middle"
+        fontSize="9"
+        fontWeight="700"
+        fill="currentColor"
+        stroke="none"
+      >
+        {day}
+      </text>
+    </svg>
+  );
+}
+
+/** The small caret next to the title that unfolds the picker (spec 016 RF-8). */
+export function CaretIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+      className={open ? "rotate-180" : undefined}
+    >
+      <path d="M7 10l5 5 5-5z" />
+    </svg>
+  );
+}

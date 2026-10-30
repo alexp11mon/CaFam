@@ -13,6 +13,8 @@ import {
 /** What the calendar puts in the phone header (spec 016 RF-8, RF-10, RF-20, RF-23). */
 export interface CalendarHeaderState {
   title: string;
+  /** Today in the profile's time zone, for the number of the "Hoy" button (RF-9). */
+  today: string;
   onToday: (() => void) | null;
   /** The month row in the month view, the mini month in the others. */
   picker: "months" | "mini" | null;
@@ -69,6 +71,7 @@ export function useCalendarHeader(): HeaderContext {
  */
 export function usePublishCalendarHeader({
   title,
+  today: todayKey,
   onToday,
   picker,
 }: CalendarHeaderState) {
@@ -82,10 +85,11 @@ export function usePublishCalendarHeader({
   useEffect(() => {
     publish({
       title,
+      today: todayKey,
       picker,
       onToday: hasToday ? () => today.current?.() : null,
     });
-  }, [publish, title, picker, hasToday]);
+  }, [publish, title, todayKey, picker, hasToday]);
 
   useEffect(() => () => publish(null), [publish]);
 }

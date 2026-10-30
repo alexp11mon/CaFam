@@ -59,7 +59,7 @@
   Hecho cuando: `npm test -- calendar-header use-is-phone` en verde y la verificación completa reportada.
   Cubre: RF-8, RF-13, RF-59 | Módulo: breakpoints, header-context, use-is-phone
 
-- [ ] T5 Montar la cabecera y el cajón del móvil en el marco
+- [x] T5 Montar la cabecera y el cajón del móvil en el marco
   Pasos:
   - Primero, los tests en rojo:
     - `tests/unit/top-bar.test.tsx`: ≡, título de la sección fuera del calendario, avatar con iniciales que enlaza a Ajustes, "Hoy" con el número del día solo en el calendario.

@@ -6,9 +6,14 @@ import { signOut } from "../(auth)/actions";
 // Reads the session, so it streams behind <Suspense> (cacheComponents, plan D3).
 async function AccentFrame({ children }: { children: ReactNode }) {
   const { supabase, userId } = await requireUser();
-  const { accent, theme } = await getAppearance(supabase, userId);
+  const { accent, theme, displayName } = await getAppearance(supabase, userId);
   return (
-    <AppFrame accent={accent} theme={theme} signOutAction={signOut}>
+    <AppFrame
+      accent={accent}
+      theme={theme}
+      displayName={displayName}
+      signOutAction={signOut}
+    >
       {children}
     </AppFrame>
   );

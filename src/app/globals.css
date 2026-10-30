@@ -287,6 +287,21 @@ body {
       opacity: 0;
     }
   }
+
+  /* The phone drawer slides in from the left instead (spec 016 RF-12). */
+  dialog[data-drawer] {
+    translate: -100% 0;
+  }
+
+  dialog[data-drawer][open] {
+    translate: 0 0;
+  }
+
+  @starting-style {
+    dialog[data-drawer][open] {
+      translate: -100% 0;
+    }
+  }
 }
 
 /* The notice rises in and fades out before it goes (RF-20). */

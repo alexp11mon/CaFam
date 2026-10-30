@@ -188,19 +188,23 @@ export async function getLastView(
 }
 
 /** The user's interface accent; red if the row cannot be read (spec 005 RF-9, RF-10). */
-/** The accent and theme of the profile, read together for the frame (spec 011 plan theme-boot). */
+/**
+ * The accent, theme and name of the profile, read together for the frame
+ * (spec 011 plan theme-boot; the name for the avatar, spec 016 plan D13).
+ */
 export async function getAppearance(
   supabase: Client,
   userId: string,
-): Promise<{ accent: AccentId; theme: ThemeId }> {
+): Promise<{ accent: AccentId; theme: ThemeId; displayName: string }> {
   const { data } = await supabase
     .from("profiles")
-    .select("accent, theme")
+    .select("accent, theme, display_name")
     .eq("id", userId)
     .maybeSingle();
   return {
     accent: isAccent(data?.accent) ? data.accent : DEFAULT_ACCENT,
     theme: parseTheme(data?.theme),
+    displayName: data?.display_name ?? "",
   };
 }
 
