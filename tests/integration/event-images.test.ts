@@ -4,6 +4,7 @@ import {
   admin,
   anonClient,
   createTestUser,
+  deleteQueuedImages,
   deleteTestMail,
   deleteTestUser,
   getOwnCalendarId,
@@ -41,13 +42,13 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await admin.from("image_purge_queue").delete().in("object_id", objectIds);
-  await deleteTestMail();
   await Promise.all(
     [owner, editor, viewer, stranger, ...extraUsers.map((id) => ({ id }))]
       .filter(Boolean)
       .map((user) => deleteTestUser(user.id)),
   );
+  await deleteTestMail();
+  await deleteQueuedImages(objectIds);
 });
 
 async function createCalendar(ownerId: string, name: string) {
@@ -425,6 +426,20 @@ describe("reserve_event_images (RF-2, RF-4, RF-8, RF-20)", () => {
       .select("id", { count: "exact", head: true })
       .eq("event_id", event);
     expect(count).toBe(10);
+  });
+});
+
+describe("reserve_event_images order (RF-9)", () => {
+  it("keeps the order of the chosen images in created_at", async () => {
+    const event = await createEvent(calendar);
+    const { data: ids } = await reserve(owner, event, 3);
+    const { data: rows } = await admin
+      .from("event_images")
+      .select("id, created_at")
+      .eq("event_id", event)
+      .order("created_at", { ascending: true });
+    expect(rows!.map((r) => r.id)).toEqual(ids);
+    expect(new Set(rows!.map((r) => r.created_at)).size).toBe(3);
   });
 });
 

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { EventImages } from "@/components/images/event-images";
 import { ImageUploader } from "@/components/images/image-uploader";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/ui/link-button";
+import type { EventImage } from "@/lib/images/queries";
 import type {
   ConfirmState,
   FormAction,
@@ -32,6 +34,7 @@ export function EventPanel({
   updateAction,
   deleteAction,
   canAttach = false,
+  images = [],
 }: {
   detail: EventDetailData;
   timeZone: string;
@@ -44,6 +47,8 @@ export function EventPanel({
   deleteAction: FormAction<ConfirmState>;
   /** Any member adds images, viewers included (spec 012 RF-1, RF-4). */
   canAttach?: boolean;
+  /** Ready images in upload order (spec 012 RF-9). */
+  images?: EventImage[];
 }) {
   const modal = useEventModal();
   const [editing, setEditing] = useState(false);
@@ -78,7 +83,16 @@ export function EventPanel({
       canEdit={canEdit}
       deleteAction={deleteAction}
       onDeleted={modal?.finish}
-      media={canAttach ? <ImageUploader eventId={detail.id} /> : null}
+      media={
+        <>
+          <EventImages
+            images={images}
+            title={detail.title}
+            timeZone={timeZone}
+          />
+          {canAttach ? <ImageUploader eventId={detail.id} /> : null}
+        </>
+      }
       actions={
         <>
           <Button variant="secondary" onClick={() => setEditing(true)}>

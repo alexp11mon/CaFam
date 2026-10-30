@@ -4,6 +4,7 @@ import {
   admin,
   anonClient,
   createTestUser,
+  deleteQueuedImages,
   deleteTestUser,
   getOwnCalendarId,
   type TestUser,
@@ -40,12 +41,12 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (paths.length) await admin.storage.from(BUCKET).remove(paths);
-  await admin.from("image_purge_queue").delete().in("object_id", objectIds);
   await Promise.all(
     [owner, viewer, stranger]
       .filter(Boolean)
       .map((user) => deleteTestUser(user.id)),
   );
+  await deleteQueuedImages(objectIds);
 });
 
 function jpeg(bytes = 2000, type = "image/jpeg") {

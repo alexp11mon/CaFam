@@ -101,3 +101,18 @@ export async function deleteTestMail(): Promise<void> {
     .like("to_email", "%@cafam.test");
   if (error) throw error;
 }
+
+/**
+ * Removes the purge queue rows of a test's image objects (spec 012). Call it
+ * after deleting the test users: their cascades queue objects too. In chunks,
+ * so the list of ids fits in the request URL.
+ */
+export async function deleteQueuedImages(objectIds: string[]): Promise<void> {
+  for (let i = 0; i < objectIds.length; i += 100) {
+    const { error } = await admin
+      .from("image_purge_queue")
+      .delete()
+      .in("object_id", objectIds.slice(i, i + 100));
+    if (error) throw error;
+  }
+}

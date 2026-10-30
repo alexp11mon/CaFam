@@ -20,6 +20,7 @@ async function Event({ params }: { params: Promise<{ id: string }> }) {
       timeZone={data.timeZone}
       canEdit={data.canEdit}
       canAttach={data.canAttach}
+      images={data.images}
       editInitial={data.editInitial}
       calendars={data.calendars}
       categories={data.categories}

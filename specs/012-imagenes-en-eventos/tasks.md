@@ -135,7 +135,7 @@
   Hecho cuando: `npm test -- image-uploader event-detail event-modal` en verde y capturas a 390, 768 y 1440 px en los dos temas. Cubre: RF-1, RF-2, RF-4, RF-6, RF-8, RF-20, RF-24 | Módulo: images-uploader
   Evidencia (2026-10-30): rojo (componentes inexistentes). `image-uploader.test.tsx` 7 tests y 2 nuevos en `event-panel.test.tsx`; `image-uploader event-detail event-modal event-panel` 36 tests en verde. `EventDetail` recibe `media` y `EventPanel` `canAttach` (páginas completa y ventana). La subida real al bucket y las capturas del detalle se hacen junto con la galería en la T10, que es la misma pantalla. typecheck, lint y format en verde, `npm test` 1466 tests, build correcto.
 
-- [ ] T10 Ver las imágenes en miniatura y a pantalla completa
+- [x] T10 Ver las imágenes en miniatura y a pantalla completa
   Pasos:
   - Primero, en rojo (`showModal` simulado, descarga de Storage simulada):
     - `tests/unit/event-images.test.tsx`: sin imágenes no hay galería; con imágenes, miniaturas en orden con su `alt` ("…, imagen 2 de 5"); los `blob:` se liberan al desmontar; una descarga denegada muestra un hueco con "No disponible";
@@ -143,6 +143,11 @@
   - Después, `event-images.tsx`, `use-image-blob.ts` e `image-viewer.tsx`, con `next/image` `unoptimized` (plan D10).
 
   Hecho cuando: `npm test -- event-images image-viewer` en verde y capturas a 390, 768 y 1440 px en los dos temas, también con movimiento reducido. Cubre: RF-9, RF-10, RF-11, RF-13, RF-14, RF-15, RF-25, RF-26 | Módulo: images-gallery, images-viewer
+  Evidencia (2026-10-30): rojo (componentes inexistentes). `event-images.test.tsx` 10 tests en verde (galería y visor en el mismo archivo). Prueba real con `next start -p 3100` y un usuario `@cafam.test`: un PNG de 3000×2000 y otro de 900×1600 se suben al bucket, la completa queda en 2048×1365 (25 KB) y la miniatura en 3,5 KB; las miniaturas se descargan del endpoint autenticado (200); borrar desde el visor quita la fila y los dos archivos del bucket. Tres fallos encontrados en el navegador y corregidos:
+  - dos imágenes de una tanda tenían el mismo `created_at` y el orden no seguía la selección (RF-9): migración `20261030150000_reserve_images_order.sql` con `clock_timestamp()` y su test en `event-images.test.ts`;
+  - `DownloadLink` y `ConfirmDialog` compartían `key` y se duplicaba "Descargar" (test añadido);
+  - la hora salía "9:07"; ahora "09:07" como en el resto de la app.
+  Tras borrar, el visor pasa a la imagen que queda o se cierra si no queda ninguna. También: el `afterAll` de los tests de BD dejaba miles de filas en la cola de dev (limpiaba antes de borrar los usuarios); ahora borra después y por tandas con `deleteQueuedImages` (`helpers.ts`), y se limpiaron las 4.041 filas sobrantes. Capturas del detalle y del visor a 390, 768 y 1440 px, en claro y oscuro, con el acento rojo y el amarillo (24 capturas en el scratchpad de la sesión). El visor no añade animaciones propias. typecheck, lint y format en verde, `npm test` 1476 tests, `test:db -- event-images storage-images` 38 tests, build correcto.
 
 - [ ] T11 Adjuntar imágenes al crear un evento
   Pasos:
