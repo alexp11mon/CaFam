@@ -50,7 +50,7 @@
   Hecho cuando: `npm test -- event-block palette` en verde y la verificación completa reportada.
   Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RF-56 | Módulo: event-block, palette-contrast
 
-- [ ] T4 Añadir la variante `tab`, el contexto de la cabecera y `useIsPhone`
+- [x] T4 Añadir la variante `tab`, el contexto de la cabecera y `useIsPhone`
   Pasos:
   - Primero, los tests en rojo:
     - `tests/unit/calendar-header.test.tsx`: un consumidor ve el título y el `onToday` publicados; al desmontar el publicador vuelven a `null`.

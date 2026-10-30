@@ -3,6 +3,12 @@
    RF-55). */
 @import "tailwindcss" source("..");
 
+/* `tab:` from 769 px and `max-tab:` up to 768 px included: the phone layout of
+   spec 016 covers "768 px or less" (plan D1); `md` would stop at 767 px. */
+@theme {
+  --breakpoint-tab: 48.0625rem;
+}
+
 /* Design tokens (constitution "Identidad visual y diseño de interfaz", P9;
    spec 005 and 011 plan "Modelo de datos"). Values mirror
    src/lib/theme/accents.ts and theme-css.test.ts keeps them equal;
