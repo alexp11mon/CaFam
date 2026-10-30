@@ -1085,3 +1085,96 @@ describe("copying, merging and uploading series (T8)", () => {
     expect(await seriesRow(outside)).toMatchObject({ series_id: null });
   });
 });
+
+describe("images of an occurrence (T14)", () => {
+  const SECRET = process.env.CRON_SECRET ?? "";
+
+  it("any member materializes an occurrence once, only through the server (RF-24)", async () => {
+    const series = await seedSeries(calendar);
+    const args = {
+      p_secret: SECRET,
+      p_series_id: series,
+      p_original_start: tuesday(1),
+    };
+    const { data: id, error } = await viewer.client.rpc(
+      "materialize_occurrence",
+      args,
+    );
+    expect(error).toBeNull();
+    const { data: again } = await editor.client.rpc(
+      "materialize_occurrence",
+      args,
+    );
+    expect(again).toBe(id);
+    const [row] = await rows(series);
+    expect(row).toMatchObject({ id, title: "Extraescolar" });
+    expect(ms(row!.original_start)).toBe(ms(tuesday(1)));
+
+    const { error: noSecret } = await viewer.client.rpc(
+      "materialize_occurrence",
+      { ...args, p_secret: "wrong", p_original_start: tuesday(2) },
+    );
+    expect(noSecret?.code).toBe("42501");
+    const { error: foreign } = await stranger.client.rpc(
+      "materialize_occurrence",
+      { ...args, p_original_start: tuesday(2) },
+    );
+    expect(foreign?.code).toBe("CF404");
+    const { error: before } = await editor.client.rpc(
+      "materialize_occurrence",
+      { ...args, p_original_start: tuesday(-1) },
+    );
+    expect(before?.code).toBe("CF404");
+  });
+
+  it("the images of the 2026 birthday are not in the 2027 one (RF-24)", async () => {
+    const birthday = await seedSeries(calendar, {
+      title: "Cumpleaños",
+      starts_at: "2026-03-14T00:00:00Z",
+      ends_at: "2026-03-15T00:00:00Z",
+      all_day: true,
+      recurrence: "FREQ=YEARLY;INTERVAL=1;BYMONTH=3;BYMONTHDAY=14",
+      recurrence_tz: null,
+    });
+    const { data: row2026 } = await viewer.client.rpc(
+      "materialize_occurrence",
+      {
+        p_secret: SECRET,
+        p_series_id: birthday,
+        p_original_start: "2026-03-14T00:00:00Z",
+      },
+    );
+    const { data: reserved, error } = await viewer.client.rpc(
+      "reserve_event_images",
+      {
+        p_event_id: row2026!,
+        p_images: [{ bytes: 1000, width: 100, height: 100 }],
+      },
+    );
+    expect(error).toBeNull();
+    await admin
+      .from("event_images")
+      .update({ status: "ready" })
+      .in("id", reserved ?? []);
+
+    const in2027 = await getEvent(
+      viewer.client,
+      occurrenceId(birthday, "2027-03-14T00:00:00Z"),
+    );
+    expect(in2027?.rowId).toBeNull();
+    const range = await getEventsInRange(
+      viewer.client,
+      new Date("2026-03-01T00:00:00Z"),
+      new Date("2027-04-01T00:00:00Z"),
+    );
+    const counts = range
+      .filter((e) => e.seriesId === birthday || e.id === row2026)
+      .map((e) => e.imageCount);
+    expect(counts).toEqual([1, 0]);
+    await admin
+      .from("event_images")
+      .delete()
+      .in("id", reserved ?? []);
+    await deleteQueuedImages(reserved ?? []);
+  });
+});

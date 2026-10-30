@@ -10,6 +10,13 @@ import {
 } from "@/lib/images/error-messages";
 import { FULL_SIDE, MAX_PER_EVENT } from "@/lib/images/limits";
 import { purgeDeps, purgeObjects } from "@/lib/images/purge";
+import {
+  RECURRENCE_MESSAGES,
+  recurrenceErrorMessage,
+} from "@/lib/recurrence/error-messages";
+import { parseEventId } from "@/lib/recurrence/occurrence-id";
+import { findOccurrence } from "@/lib/recurrence/read-series";
+import { cronSecret } from "@/lib/recurrence/server-secret";
 
 // Spec 012, plan "Server Actions": the bytes go straight from the browser to
 // Storage (plan D1); these only reserve, confirm and delete rows.
@@ -37,19 +44,62 @@ function refresh() {
   revalidatePath("/dashboard", "layout");
 }
 
+/**
+ * The row of an occurrence, created unchanged the first time: a series never
+ * holds images, each occurrence keeps its own (spec 013 RF-24, plan D7). Any
+ * member may, so it goes through materialize_occurrence with the cron secret
+ * once ical.js confirms the occurrence (SQL cannot expand rules, plan D8).
+ */
+export async function materializeOccurrence(
+  occurrenceId: string,
+): Promise<{ eventId: string } | { error: string }> {
+  const parsed = parseEventId(occurrenceId);
+  if (parsed?.kind !== "occurrence") return { error: RECURRENCE_MESSAGES.gone };
+  const { supabase } = await requireActionUser();
+  // RLS: only a member reads the series.
+  const { data: series, error: readError } = await supabase
+    .from("events")
+    .select(
+      "id, starts_at, ends_at, all_day, recurrence, recurrence_tz, exdates",
+    )
+    .eq("id", parsed.seriesId)
+    .maybeSingle();
+  if (readError) return { error: IMAGE_MESSAGES.upload };
+  if (!series || !findOccurrence(series, parsed.originalStart)) {
+    return { error: RECURRENCE_MESSAGES.gone };
+  }
+  const { data, error } = await supabase.rpc("materialize_occurrence", {
+    p_secret: cronSecret(),
+    p_series_id: parsed.seriesId,
+    p_original_start: parsed.originalStart,
+  });
+  if (error) {
+    return { error: recurrenceErrorMessage(error) ?? IMAGE_MESSAGES.upload };
+  }
+  return { eventId: data };
+}
+
 /** Reserves room for the chosen images; fewer ids than asked means the event is nearly full (RF-20). */
 export async function reserveImages(
   eventId: string,
   images: ImageSpec[],
 ): Promise<Reserved> {
-  const event = idSchema.safeParse(eventId);
+  const event = parseEventId(eventId);
   const specs = imagesSchema.safeParse(images);
-  if (!event.success || !specs.success) {
+  if (!event || !specs.success) {
     return { error: IMAGE_MESSAGES.upload };
+  }
+  let rowId: string;
+  if (event.kind === "occurrence") {
+    const row = await materializeOccurrence(eventId);
+    if ("error" in row) return row;
+    rowId = row.eventId;
+  } else {
+    rowId = event.id;
   }
   const { supabase } = await requireActionUser();
   const { data, error } = await supabase.rpc("reserve_event_images", {
-    p_event_id: event.data,
+    p_event_id: rowId,
     p_images: specs.data,
   });
   if (error) return { error: getImageErrorMessage(error) };

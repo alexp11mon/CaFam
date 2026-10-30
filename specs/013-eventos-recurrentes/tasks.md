@@ -160,12 +160,13 @@
   Hecho cuando: `npm test -- event-detail event-actions load-new-event` en verde. Cubre: RF-20, RF-22, RF-24b | Módulo: scope-ui, series-actions
   Evidencia (2026-10-30): rojo con `SeriesDelete`, `planSeriesDelete` y el alcance de `deleteEvent` inexistentes, y con `from` que rechazaba ids de repetición; `npm test -- event-detail event-actions series-actions series-write new-event-query` en verde (diálogo de borrado con alcance, aviso «Se perderán 2 imágenes.» y `confirmLoss`; `delete_occurrences` con cada alcance, `series_loss` con `p_only` para «Solo este evento», formulario leído también en la página completa). No hay `load-new-event.test`: el duplicado lo cubren `new-event-query` y `getEvent`, y se probó a mano. `npm test` 189 archivos y 1729 tests, typecheck, format y build correctos, lint con los 2 avisos previos. En `next start -p 3100`: «Solo este evento» borra el 12 y deja el 13; duplicar la repetición virtual del 13 abre el alta con «Natación club», 2026-11-13 y «No se repite».
 
-- [ ] T14 Añadir imágenes a una repetición
+- [x] T14 Añadir imágenes a una repetición
   Pasos:
   - Primero, en rojo: `materializeOccurrence` crea la excepción idéntica y devuelve su id, y la segunda vez devuelve el mismo; `ImageUploader` en una repetición virtual la materializa antes de reservar; las imágenes del cumpleaños de 2026 no salen en el de 2027.
   - Después, `image-actions.ts` e `image-uploader.tsx`.
 
   Hecho cuando: `npm test -- image-uploader image-actions` y `npm run test:db -- event-series` en verde. Cubre: RF-24 | Módulo: occurrence-images
+  Evidencia (2026-10-30): rojo con `materializeOccurrence` inexistente. Desviación del plan: `update_occurrence` da CF404 a los Lectores, que sí pueden añadir imágenes (spec 012 RF-4), así que se añadió la migración `20261031130000_materialize_occurrence.sql` (aplicada en dev): `materialize_occurrence(p_secret, p_series_id, p_original_start)`, `SECURITY DEFINER`, para cualquier miembro, idempotente y solo con el secreto de Vault, como las escrituras de la 009; la acción comprueba antes con `ical.js` que la fecha es una repetición (SQL no expande reglas, D8), y sin el secreto un Lector podría crear copias de la serie en cualquier fecha. La materialización va dentro de `reserveImages` en el servidor, así `ImageUploader` no cambia. `npm test -- image-actions image-uploader no-secrets` en verde (id idempotente, fecha que la regla no da rechazada sin llamar a la BD, reserva sobre la excepción, CF429). `npm run test:db -- event-series` 34 tests en verde (Lector materializa una vez, secreto incorrecto 42501, ajeno CF404, las imágenes del cumpleaños de 2026 no salen en el de 2027). `npm test` 189 archivos y 1733 tests, typecheck, format y build correctos, lint con los 2 avisos previos. En `next start -p 3100` una imagen añadida a la repetición virtual del 19 sale solo en el 19.
 
 - [ ] T15 Subir a Google calendarios con series
   Pasos:

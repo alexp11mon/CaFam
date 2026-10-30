@@ -998,6 +998,14 @@ export type Database = {
         }[]
       }
       list_tables_without_rls: { Args: never; Returns: string[] }
+      materialize_occurrence: {
+        Args: {
+          p_original_start: string
+          p_secret: string
+          p_series_id: string
+        }
+        Returns: string
+      }
       merge_calendars: {
         Args: {
           p_color?: string
