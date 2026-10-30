@@ -103,6 +103,27 @@ describe("spec 007 secrets (T14)", () => {
   });
 });
 
+// Spec 013, T5: ical.js stays on the server (plan R7).
+describe("spec 013 recurrence expansion (T5)", () => {
+  it("ical.js is imported only by the .ics parser and the expansion", () => {
+    expect(
+      FILES.filter(({ content }) => /from\s+["']ical\.js["']/.test(content))
+        .map((f) => f.path)
+        .sort(),
+    ).toEqual(["lib/ics/parse-ics.ts", "lib/recurrence/expand.ts"]);
+  });
+
+  it("no client component imports the expansion", () => {
+    const leaks = FILES.filter(({ content }) => isClient(content)).flatMap(
+      ({ path, content }) =>
+        importsOf(path, content.replace(/import\s+type\s[^;]*;/g, ""))
+          .filter((target) => target === "lib/recurrence/expand")
+          .map((target) => `${path} -> ${target}`),
+    );
+    expect(leaks).toEqual([]);
+  });
+});
+
 // Spec 009, T13: the write engine runs only on the server; client components
 // reach it through Server Actions, never by importing it.
 describe("spec 009 write engine (T13)", () => {

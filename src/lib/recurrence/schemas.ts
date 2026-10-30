@@ -6,6 +6,9 @@ import { MAX_COUNT, MAX_INTERVAL } from "./limits";
 export const WEEKDAYS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"] as const;
 export const weekdaySchema = z.enum(WEEKDAYS);
 
+/** Days of each month in a leap year. */
+const LONGEST_MONTHS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
 const interval = z.int().min(1).max(MAX_INTERVAL);
 
 const endSchema = z.discriminatedUnion("kind", [
@@ -47,10 +50,10 @@ export const recurrenceRuleSchema = z.discriminatedUnion("freq", [
   z.object({
     freq: z.literal("yearly"),
     interval,
-    yearly: z.object({
-      month: z.int().min(1).max(12),
-      day: z.int().min(1).max(31),
-    }),
+    // A day the month never has would leave the iterator looking forever.
+    yearly: z
+      .object({ month: z.int().min(1).max(12), day: z.int().min(1).max(31) })
+      .refine(({ month, day }) => day <= LONGEST_MONTHS[month - 1]!),
     end: endSchema,
   }),
 ]);

@@ -56,7 +56,7 @@
   Hecho cuando: `npm test -- recurrence-summary` en verde. Cubre: RF-5, RF-10 | Módulo: recurrence-summary
   Evidencia (2026-10-30): rojo sin `summarizeRule`; `npm test -- recurrence-summary` 13 tests en verde. Verificación completa en verde (lint con los 2 avisos previos), build correcto.
 
-- [ ] T5 Expandir series en un rango con `ical.js` e identificar repeticiones
+- [x] T5 Expandir series en un rango con `ical.js` e identificar repeticiones
   Pasos:
   - Primero, `tests/unit/recurrence-expand.test.ts` y `occurrence-id.test.ts` en rojo. Comprueban (R1 al principio):
     - una serie semanal a las 18:00 en `Europe/Madrid` sigue a las 18:00 de reloj antes y después de los cambios de marzo y octubre (UTC distinto);
@@ -70,6 +70,7 @@
   - Después, `src/lib/recurrence/expand.ts` y `occurrence-id.ts`.
 
   Hecho cuando: `npm test -- recurrence-expand occurrence-id no-secrets` en verde. Cubre: RF-6, RF-8, RF-11, RF-12, RF-13, RF-14, RF-17 | Módulo: recurrence-expand, occurrence-id
+  Evidencia (2026-10-30): rojo con los módulos inexistentes. `ical.js` omite por sí mismo el día 31 en los meses cortos y el 29 de febrero en los años no bisiestos (R1 resuelto, sin filtro propio). Para no hacer 4 llamadas a `Intl` por repetición se reutiliza el desfase anterior con una sola comprobación. La regla anual rechaza días que el mes nunca tiene (30 de febrero), que dejarían al iterador buscando sin fin. El test de tiempo (50 series en un mes) salía 66–223 ms según la carga de la suite: se quitó del unitario y el requisito de rendimiento se mide en `range-performance` (T7). `npm test -- recurrence-expand occurrence-id no-secrets recurrence-rule` en verde (19 + 7 + guardias + 31). Verificación completa: typecheck, format, `npm test` 182 archivos y 1638 tests, build correcto, lint con los 2 avisos previos.
 
 - [ ] T6 Cambiar y borrar repeticiones con funciones por alcance
   Pasos:
