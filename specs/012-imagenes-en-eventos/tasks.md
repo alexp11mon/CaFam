@@ -17,7 +17,7 @@
 
 ### Iteración 1 — Base de datos, Storage, limpieza y lógica pura
 
-- [ ] T1 Crear la tabla de imágenes con sus permisos y la cola de borrado
+- [x] T1 Crear la tabla de imágenes con sus permisos y la cola de borrado
   Pasos:
   - Primero, `tests/integration/event-images.test.ts` en rojo, sembrando filas con `service_role`. Comprueba:
     - propietario, Editor y Lector leen las filas `ready` de su calendario; un ajeno y `anon` no ven nada; las `pending` solo las ve quien las reservó;
@@ -30,6 +30,7 @@
   - Después, la migración `event_images` según "Modelo de datos" (tabla, RLS, cola y trigger).
 
   Hecho cuando: `npm run test:db -- event-images schema` en verde y `src/types/database.ts` con `event_images`. Cubre: RF-4, RF-15, RF-16, RF-17, RF-19, RF-29, RF-30 | Módulo: images-schema
+  Evidencia (2026-10-30): rojo antes de la migración (11 tests, tabla inexistente). Migración `20261030100000_event_images.sql` aplicada en dev y tipos regenerados con `event_images` e `image_purge_queue`. `test:db -- event-images schema` 5 archivos y 48 tests en verde (11 de `event-images`; `schema` cubre `list_tables_without_rls`). typecheck, lint y format en verde, `npm test` 159 archivos y 1418 tests, build correcto.
 
 - [ ] T2 Reservar y confirmar imágenes con los límites atómicos
   Pasos:

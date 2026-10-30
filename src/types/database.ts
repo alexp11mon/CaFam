@@ -519,6 +519,57 @@ export type Database = {
           },
         ]
       }
+      event_images: {
+        Row: {
+          bytes: number
+          created_at: string
+          event_id: string
+          height: number
+          id: string
+          object_id: string
+          status: string
+          uploaded_by: string | null
+          width: number
+        }
+        Insert: {
+          bytes: number
+          created_at?: string
+          event_id: string
+          height: number
+          id?: string
+          object_id: string
+          status?: string
+          uploaded_by?: string | null
+          width: number
+        }
+        Update: {
+          bytes?: number
+          created_at?: string
+          event_id?: string
+          height?: number
+          id?: string
+          object_id?: string
+          status?: string
+          uploaded_by?: string | null
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_images_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_images_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           all_day: boolean
@@ -591,6 +642,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      image_purge_queue: {
+        Row: {
+          attempts: number
+          bytes: number
+          created_at: string
+          object_id: string
+          queued_at: string
+        }
+        Insert: {
+          attempts?: number
+          bytes: number
+          created_at?: string
+          object_id: string
+          queued_at?: string
+        }
+        Update: {
+          attempts?: number
+          bytes?: number
+          created_at?: string
+          object_id?: string
+          queued_at?: string
+        }
+        Relationships: []
       }
       join_attempts: {
         Row: {
