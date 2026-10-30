@@ -6,6 +6,7 @@ import type {
 } from "@/components/calendar/event-form";
 import { authorLabel } from "@/lib/account/author-label";
 import { eventToFormDates } from "@/lib/calendar/format";
+import { getEventImages, type EventImage } from "@/lib/images/queries";
 import {
   getCalendar,
   getCategoriesForCalendars,
@@ -29,6 +30,10 @@ export interface EventData {
   editInitial: EventFormValues;
   calendars: CalendarOption[];
   categories: CategoryOption[];
+  /** Ready images in upload order (spec 012 RF-9). */
+  images: EventImage[];
+  /** Any member attaches images, viewers and synced calendars included (spec 012 RF-4, RF-8). */
+  canAttach: boolean;
 }
 
 /**
@@ -55,6 +60,13 @@ export async function loadEvent(id: string): Promise<EventData | null> {
   );
   const category = categories.find((c) => c.id === event.categoryId);
   const members = await getMembers(supabase, [event.calendarId]);
+  const images = await getEventImages(
+    supabase,
+    event.id,
+    userId,
+    calendar.role,
+    members,
+  );
 
   return {
     detail: {
@@ -86,5 +98,7 @@ export async function loadEvent(id: string): Promise<EventData | null> {
     },
     calendars: editable.map(({ id, name, color }) => ({ id, name, color })),
     categories,
+    images,
+    canAttach: true,
   };
 }

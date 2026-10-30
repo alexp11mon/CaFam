@@ -1,7 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
-import { purgeObjects } from "@/lib/images/purge";
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
-import type { Database } from "@/types/database";
+import { purgeDeps, purgeObjects } from "@/lib/images/purge";
 
 export const maxDuration = 60;
 
@@ -15,13 +12,8 @@ export async function POST(request: Request) {
     return Response.json({ ok: false }, { status: 401 });
   }
 
-  const supabase = createClient<Database>(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY,
-    { auth: { persistSession: false } },
-  );
   try {
-    const removed = await purgeObjects(supabase, secret);
+    const removed = await purgeObjects(purgeDeps().supabase, secret);
     return Response.json({ ok: true, removed });
   } catch {
     return Response.json({ ok: false }, { status: 500 });

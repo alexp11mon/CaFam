@@ -1,8 +1,19 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 import type { Database } from "@/types/database";
 import { IMAGES_BUCKET, objectPath } from "./paths";
 
 const BATCH = 100;
+
+/** Server only: the publishable key without a session plus the cron secret (plan D7, P4). */
+export function purgeDeps() {
+  return {
+    supabase: createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: false },
+    }),
+    secret: process.env.CRON_SECRET ?? "",
+  };
+}
 
 /**
  * Removes queued objects from Storage (spec 012, plan D7). The secret claims

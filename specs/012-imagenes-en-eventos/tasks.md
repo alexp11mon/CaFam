@@ -110,7 +110,7 @@
   Hecho cuando: `npm test -- prepare-image upload-object` en verde. Cubre: RF-3, RF-5, RF-6, RF-21, RF-24 | Módulo: images-prepare, images-upload
   Evidencia (2026-10-30): rojo (módulos inexistentes). `prepare-image.test.ts` 4 tests y `upload-object.test.ts` 5 tests en verde. `uploadObject` devuelve además `aborted` al cancelar y acepta como subido el 409 que Storage manda dentro de un 400. typecheck, lint y format en verde, `npm test` 1444 tests, build correcto.
 
-- [ ] T8 Reservar, confirmar, cancelar y borrar desde el servidor y cargar la galería
+- [x] T8 Reservar, confirmar, cancelar y borrar desde el servidor y cargar la galería
   Pasos:
   - Primero, en rojo, con Supabase simulado:
     - `tests/unit/image-actions.test.ts`: `reserveImages` valida y traduce `CF429` y `CF404`, y devuelve el aviso "Solo caben N" cuando hay menos `id`; `confirmImage`; `cancelImage` y `deleteImage` borran la fila y después los dos objetos; 0 filas da "ya no existe" o "sin permiso"; `deleteImage` revalida `/dashboard`;
@@ -119,6 +119,7 @@
   - Después, `src/app/dashboard/events/image-actions.ts`, `src/lib/images/queries.ts` y `load-event.ts`.
 
   Hecho cuando: `npm test -- image-actions images-queries load-event` en verde. Cubre: RF-2, RF-4, RF-8, RF-11, RF-15, RF-19, RF-20, RF-22, RF-23 | Módulo: images-actions, images-queries
+  Evidencia (2026-10-30): rojo (módulos inexistentes). `image-actions.test.ts` 13 tests e `images-queries.test.ts` 2 tests en verde. `load-event.ts` no tenía test propio: devuelve `images` (de `getEventImages`) y `canAttach: true` para cualquier miembro, porque llegar a cargarlo ya exige serlo (RLS); lo comprueban el tipado y los tests de interfaz de la T9. La purga inmediata usa `purgeDeps()` (clave publicable + `CRON_SECRET`), también desde la ruta. typecheck, lint y format en verde, `npm test` 1457 tests, build correcto.
 
 - [ ] T9 Añadir imágenes desde el detalle del evento con progreso, cancelar y reintentar
   Pasos:
