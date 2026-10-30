@@ -112,7 +112,7 @@
 
 ### Iteración 2 — Interfaz, escritura y validación
 
-- [ ] T9 Construir el campo "Repetir" y la ventana "Personalizado…"
+- [x] T9 Construir el campo "Repetir" y la ventana "Personalizado…"
   Pasos:
   - Primero, `tests/unit/repeat-field.test.tsx` y `recurrence-editor.test.tsx` en rojo, con Testing Library por rol y texto:
     - "Repetir" vale "No se repite"; las opciones cambian al cambiar la fecha del formulario;
@@ -123,6 +123,7 @@
   - Después, `components/recurrence/repeat-field.tsx` y `recurrence-editor.tsx`, solo con tokens.
 
   Hecho cuando: `npm test -- repeat-field recurrence-editor design-tokens` en verde. Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RF-29 | Módulo: repeat-ui
+  Evidencia (2026-10-30): rojo con los componentes inexistentes; `npm test -- repeat-field recurrence-editor` 14 tests en verde (opciones que siguen a la fecha, vuelta a «No se repite», editor por semanas, meses y fin por fecha, límites, cancelar, solo teclado, deshabilitado en traídos). El editor se añadió a la lista de lo que flota en `design-tokens.test.ts`. Una ejecución completa dio 3 timeouts de 5 s en tests ajenos por carga de la máquina; solos pasan (42) y la repetición de `npm test` dio 186 archivos y 1665 tests en verde. typecheck, format y build correctos, lint con los 2 avisos previos. Las capturas del campo y el editor van con T10, cuando están dentro del formulario.
 
 - [ ] T10 Crear series desde el alta completa y desde "Más opciones"
   Pasos:
