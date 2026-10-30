@@ -53,6 +53,7 @@ const EDIT: EventFormValues = {
   location: "Casa",
   color: "",
   categoryId: "",
+  repeat: "none",
 };
 
 function setup({

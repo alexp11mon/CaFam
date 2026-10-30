@@ -98,8 +98,15 @@ export async function loadEvent(id: string): Promise<EventData | null> {
       location: event.location ?? "",
       color: event.color ?? "",
       categoryId: event.categoryId ?? "",
+      // Spec 013: the scope dialog decides what changes; T12 fills it.
+      repeat: "none",
     },
-    calendars: editable.map(({ id, name, color }) => ({ id, name, color })),
+    calendars: editable.map(({ id, name, color, synced }) => ({
+      id,
+      name,
+      color,
+      synced: synced !== null,
+    })),
     categories,
     images,
     canAttach: true,

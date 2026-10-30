@@ -82,6 +82,7 @@ const INITIAL: EventFormValues = {
   location: "",
   color: "",
   categoryId: "",
+  repeat: "none",
 };
 
 function setup(
@@ -450,5 +451,61 @@ describe("EventForm with images (spec 012 RF-7, RF-28)", () => {
       await screen.findByRole("button", { name: "Continuar sin ellas" }),
     );
     expect(images.assign).toHaveBeenCalledWith(`/dashboard/events/${EVENT}`);
+  });
+});
+
+describe("EventForm: Repetir (spec 013 RF-1, RF-2, RF-29)", () => {
+  it("sends the chosen repetition with the form", async () => {
+    const user = userEvent.setup();
+    const action = setup();
+    const repeat = screen.getByLabelText("Repetir");
+    expect(repeat).toHaveDisplayValue("No se repite");
+    expect(optionNames(repeat)).toContain("Cada semana el lunes");
+    await user.selectOptions(repeat, "weekly");
+    await user.type(screen.getByLabelText("Título"), "Clase");
+    await user.click(screen.getByRole("button", { name: "Crear evento" }));
+    await waitFor(() => expect(action).toHaveBeenCalled());
+    expect(action.mock.calls[0]![1].get("repeat")).toBe("weekly");
+  });
+
+  it("is disabled with its reason in a calendar of Google", async () => {
+    const user = userEvent.setup();
+    render(
+      <EventForm
+        action={vi.fn(async () => ({ values: INITIAL }))}
+        initial={INITIAL}
+        calendars={[
+          ...CALENDARS,
+          { id: "cal-g", name: "Google", color: "#CAFFBF", synced: true },
+        ]}
+        categories={CATEGORIES}
+        submitLabel="Crear evento"
+        pendingLabel="Creando…"
+        cancelHref="/dashboard"
+      />,
+    );
+    expect(screen.getByLabelText("Repetir")).toBeEnabled();
+    await user.selectOptions(screen.getByLabelText("Calendario"), "cal-g");
+    expect(screen.getByLabelText("Repetir")).toBeDisabled();
+    expect(
+      screen.getByText(
+        "Los calendarios de Google no admiten repeticiones en CaFam.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the error of the server next to the field (RF-8)", async () => {
+    const user = userEvent.setup();
+    const message = "Con este final la serie no tiene ninguna repetición.";
+    setup(async () => ({
+      values: { ...INITIAL, repeat: "daily" },
+      fieldErrors: { repeat: message },
+    }));
+    await user.click(screen.getByRole("button", { name: "Crear evento" }));
+    await screen.findByText(message);
+    expect(screen.getByLabelText("Repetir")).toHaveAccessibleDescription(
+      message,
+    );
+    expect(screen.getByLabelText("Repetir")).toHaveDisplayValue("Cada día");
   });
 });

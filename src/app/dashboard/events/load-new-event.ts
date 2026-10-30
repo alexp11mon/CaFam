@@ -67,8 +67,15 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
         color: source.color ?? "",
         // A category only fits its own calendar (RF-28).
         categoryId: sameCalendar ? (source.categoryId ?? "") : "",
+        // A duplicated occurrence is a single event (spec 013 RF-22).
+        repeat: "none",
       },
-      calendars: editable.map(({ id, name, color }) => ({ id, name, color })),
+      calendars: editable.map(({ id, name, color, synced }) => ({
+        id,
+        name,
+        color,
+        synced: synced !== null,
+      })),
       categories,
     };
   }
@@ -87,8 +94,14 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
       location: "",
       color: "",
       categoryId: "",
+      repeat: "none",
     },
-    calendars: editable.map(({ id, name, color }) => ({ id, name, color })),
+    calendars: editable.map(({ id, name, color, synced }) => ({
+      id,
+      name,
+      color,
+      synced: synced !== null,
+    })),
     categories,
   };
 }

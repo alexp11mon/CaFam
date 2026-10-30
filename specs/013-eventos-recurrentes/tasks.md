@@ -125,12 +125,13 @@
   Hecho cuando: `npm test -- repeat-field recurrence-editor design-tokens` en verde. Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RF-29 | Módulo: repeat-ui
   Evidencia (2026-10-30): rojo con los componentes inexistentes; `npm test -- repeat-field recurrence-editor` 14 tests en verde (opciones que siguen a la fecha, vuelta a «No se repite», editor por semanas, meses y fin por fecha, límites, cancelar, solo teclado, deshabilitado en traídos). El editor se añadió a la lista de lo que flota en `design-tokens.test.ts`. Una ejecución completa dio 3 timeouts de 5 s en tests ajenos por carga de la máquina; solos pasan (42) y la repetición de `npm test` dio 186 archivos y 1665 tests en verde. typecheck, format y build correctos, lint con los 2 avisos previos. Las capturas del campo y el editor van con T10, cuando están dentro del formulario.
 
-- [ ] T10 Crear series desde el alta completa y desde "Más opciones"
+- [x] T10 Crear series desde el alta completa y desde "Más opciones"
   Pasos:
   - Primero, en rojo: `event-form` con "Repetir" en el alta (página y ventana) y en "Más opciones" de la ventana rápida; `createEvent` con cada tipo de `repeat` guarda `recurrence`, `recurrence_tz` del perfil y `recurrence_until`, mueve el inicio a la primera repetición, da el error de campo de RF-8 sin repeticiones, el de 500 series y el de calendario traído.
   - Después, `EventForm`, `actions.ts` (`createEvent`), `series-write.ts` y `error-messages.ts`.
 
   Hecho cuando: `npm test -- event-form event-actions series-write` en verde y una serie creada en `next start -p 3100` aparece en mes, semana, día y agenda. Cubre: RF-1, RF-6, RF-7, RF-8, RF-29, RF-31 | Módulo: series-actions
+  Evidencia (2026-10-30): rojo con «Repetir» ausente y `createEvent` sin series; `npm test -- event-form event-actions series-actions` en verde (8 tests de `createEvent`: cada opción, zona del perfil, inicio movido a la primera repetición, día completo sin zona, RF-8, valor inválido, calendario traído y límite de 500; 3 del formulario: envío, deshabilitado en traídos, error junto al campo). `npm test` 187 archivos y 1676 tests en verde; typecheck, format y build correctos, lint con los 2 avisos previos. En `next start -p 3100` una serie semanal creada desde el alta sale cada miércoles en mes, semana, día y agenda. «Más opciones» lleva al alta completa, que ya tiene «Repetir» (RF-7).
 
 - [ ] T11 Marcar las repeticiones en las vistas y en el detalle
   Pasos:

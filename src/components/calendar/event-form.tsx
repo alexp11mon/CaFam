@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { RepeatField } from "@/components/recurrence/repeat-field";
 import { ImagePicker } from "@/components/images/image-picker";
 import { UploadList } from "@/components/images/upload-list";
 import { useImageUploads } from "@/components/images/use-image-uploads";
@@ -18,6 +19,7 @@ import {
 } from "@/lib/calendar/time-options";
 import type { EventFormField, EventFormValues } from "@/lib/calendar/schemas";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
+import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
 import { ColorPicker } from "./color-picker";
 import { useEventModal } from "./event-modal";
 
@@ -29,6 +31,8 @@ export interface CalendarOption {
   id: string;
   name: string;
   color: string;
+  /** Brought from Google: no series there (spec 013 RF-29). */
+  synced?: boolean;
 }
 
 export interface CategoryOption {
@@ -266,6 +270,17 @@ export function EventForm({
           />
         )}
       </div>
+      <RepeatField
+        startDate={startDate}
+        allDay={allDay}
+        defaultValue={values.repeat}
+        disabledReason={
+          calendars.find((c) => c.id === calendarId)?.synced
+            ? RECURRENCE_MESSAGES.synced
+            : undefined
+        }
+        error={errors.repeat}
+      />
       <TextArea
         label="Descripción"
         name="description"

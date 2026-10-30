@@ -79,6 +79,7 @@ const EMPTY = {
     location: "",
     color: "",
     categoryId: "",
+    repeat: "none",
   },
 };
 

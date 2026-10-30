@@ -23,6 +23,13 @@ import {
   type ConfirmState,
   type FormState,
 } from "@/lib/forms/form-state";
+import {
+  RECURRENCE_MESSAGES,
+  recurrenceErrorMessage,
+} from "@/lib/recurrence/error-messages";
+import { resolveRepeat } from "@/lib/recurrence/presets";
+import type { RecurrenceRule } from "@/lib/recurrence/rule";
+import { seriesColumns } from "@/lib/recurrence/series-write";
 import { writeEngineDeps } from "@/lib/sync/engine";
 import { WRITE_ERRORS } from "@/lib/sync/write-errors";
 import {
@@ -48,6 +55,7 @@ function readEventValues(formData: FormData): EventFormValues {
     location: readString(formData, "location"),
     color: readString(formData, "color"),
     categoryId: readString(formData, "categoryId"),
+    repeat: readString(formData, "repeat") || "none",
   };
 }
 
@@ -132,6 +140,46 @@ function parseForm(values: EventFormValues, timeZone: string) {
   );
 }
 
+/**
+ * A new series (spec 013 RF-6, RF-8): never in a calendar of Google (RF-29),
+ * starting at its first occurrence, with the creator's zone (RF-12).
+ */
+async function createSeries(
+  supabase: Supabase,
+  userId: string,
+  input: {
+    data: EventData;
+    rule: RecurrenceRule;
+    timeZone: string;
+    values: EventFormValues;
+  },
+): Promise<{ id: string } | EventFormState> {
+  const { data, rule, timeZone, values } = input;
+  const { data: synced, error: syncedError } = await supabase
+    .from("synced_calendars")
+    .select("calendar_id")
+    .eq("calendar_id", data.calendarId)
+    .maybeSingle();
+  if (syncedError) return failure(syncedError, values);
+  if (synced) {
+    return { fieldErrors: { repeat: RECURRENCE_MESSAGES.synced }, values };
+  }
+  const columns = seriesColumns(data, rule, timeZone);
+  if (!columns) {
+    return { fieldErrors: { repeat: RECURRENCE_MESSAGES.empty }, values };
+  }
+  const { data: row, error } = await supabase
+    .from("events")
+    .insert({ ...toRow(data), ...columns, created_by: userId })
+    .select("id")
+    .single();
+  if (error) {
+    const message = recurrenceErrorMessage(error);
+    return message ? { formError: message, values } : failure(error, values);
+  }
+  return { id: row.id };
+}
+
 export async function createEvent(
   _prevState: EventFormState,
   formData: FormData,
@@ -142,30 +190,48 @@ export async function createEvent(
   let id: string;
   try {
     // The zone comes from the profile, never from the client (RF-34).
-    const parsed = parseForm(
-      values,
-      await getProfileTimeZone(supabase, userId),
-    );
-    if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values };
-
-    const synced = await syncedWrite(supabase, {
-      op: "create",
-      row: toRow(parsed.data),
-    });
-    if (synced.status === "failed") {
-      return { formError: WRITE_ERRORS[synced.failure], values };
+    const timeZone = await getProfileTimeZone(supabase, userId);
+    const parsed = parseForm(values, timeZone);
+    const repeat = resolveRepeat(values.repeat, values.startDate);
+    if (!parsed.ok || !repeat.ok) {
+      return {
+        fieldErrors: {
+          ...(parsed.ok ? {} : parsed.fieldErrors),
+          ...(repeat.ok ? {} : { repeat: RECURRENCE_MESSAGES.invalid }),
+        },
+        values,
+      };
     }
-    if (synced.status === "dbError") return failure(synced.error, values);
-    if (synced.status === "done") {
-      id = synced.eventId;
+
+    if (repeat.rule) {
+      const created = await createSeries(supabase, userId, {
+        data: parsed.data,
+        rule: repeat.rule,
+        timeZone,
+        values,
+      });
+      if (!("id" in created)) return created;
+      id = created.id;
     } else {
-      const { data, error } = await supabase
-        .from("events")
-        .insert({ ...toRow(parsed.data), created_by: userId })
-        .select("id")
-        .single();
-      if (error) return failure(error, values);
-      id = data.id;
+      const synced = await syncedWrite(supabase, {
+        op: "create",
+        row: toRow(parsed.data),
+      });
+      if (synced.status === "failed") {
+        return { formError: WRITE_ERRORS[synced.failure], values };
+      }
+      if (synced.status === "dbError") return failure(synced.error, values);
+      if (synced.status === "done") {
+        id = synced.eventId;
+      } else {
+        const { data, error } = await supabase
+          .from("events")
+          .insert({ ...toRow(parsed.data), created_by: userId })
+          .select("id")
+          .single();
+        if (error) return failure(error, values);
+        id = data.id;
+      }
     }
   } catch (error) {
     return failure(error, values);

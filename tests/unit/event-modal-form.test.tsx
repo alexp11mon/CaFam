@@ -42,6 +42,7 @@ const INITIAL: EventFormValues = {
   location: "",
   color: "",
   categoryId: "",
+  repeat: "none",
 };
 
 function setup(result: (formData: FormData) => State) {

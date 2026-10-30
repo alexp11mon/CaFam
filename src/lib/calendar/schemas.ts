@@ -64,8 +64,11 @@ export type EventField =
   | "color"
   | "categoryId";
 
-/** Every field of the event form; `allDay` is "on" or empty because it is a checkbox. */
-export type EventFormField = EventField | "allDay";
+/**
+ * Every field of the event form; `allDay` is "on" or empty because it is a
+ * checkbox, and `repeat` the value of "Repetir" (spec 013 RF-1, plan D13).
+ */
+export type EventFormField = EventField | "allDay" | "repeat";
 export type EventFormValues = Record<EventFormField, string>;
 
 /** Raw form values; dates are YYYY-MM-DD and times HH:mm in the profile's zone. */
