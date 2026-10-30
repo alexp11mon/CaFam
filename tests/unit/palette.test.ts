@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { THEME_INKS } from "@/lib/theme/accents";
 import {
   CALENDAR_COLORS,
   DEFAULT_CALENDAR_COLOR,
@@ -73,4 +74,19 @@ describe("ink on every palette color", () => {
       expect(contrastRatio("#141414", color.value)).toBeGreaterThanOrEqual(4.5);
     }
   });
+});
+
+// Spec 016 RF-3: every event is now a filled block, in both themes.
+describe("text of the event blocks on every palette color", () => {
+  it.each(["light", "dark"] as const)(
+    "reaches 4.5:1 in the %s theme",
+    (theme) => {
+      for (const color of CALENDAR_COLORS) {
+        expect(
+          contrastRatio(THEME_INKS[theme].pastelInk, color.value),
+          `${theme} ${color.label}`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    },
+  );
 });

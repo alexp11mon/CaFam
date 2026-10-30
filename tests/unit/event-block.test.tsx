@@ -1,0 +1,80 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { EventBlock } from "@/components/calendar/event-block";
+import type { CalendarEventItem } from "@/lib/calendar/layout";
+
+// Spec 016 RF-1..RF-5, RF-41, RF-54..RF-56: every event is a filled block.
+const TZ = "Europe/Madrid";
+
+const EVENT: CalendarEventItem = {
+  id: "e1",
+  title: "Examen de Electrónica",
+  startsAt: "2026-11-06T10:15:00Z",
+  endsAt: "2026-11-06T13:15:00Z",
+  allDay: false,
+  color: "#FFADAD",
+  calendarId: "cal",
+  categoryId: null,
+  location: "4D - AULA 1.3",
+  imageCount: 2,
+};
+
+function link() {
+  return screen.getByRole("link");
+}
+
+describe("EventBlock", () => {
+  it.each(["line", "grid", "card"] as const)(
+    "fills the %s block with the event color and links to its detail",
+    (shape) => {
+      render(<EventBlock event={EVENT} timeZone={TZ} shape={shape} />);
+
+      expect(link()).toHaveAttribute("href", "/dashboard/events/e1");
+      expect(link()).toHaveStyle({ backgroundColor: "#FFADAD" });
+      expect(link()).toHaveClass("text-pastel-ink");
+      expect(screen.getByText("Examen de Electrónica")).toHaveClass(
+        "font-bold",
+      );
+      expect(link()).toHaveTextContent("Con imágenes");
+    },
+  );
+
+  it("keeps the month line to the title, with the hour only for screen readers", () => {
+    render(<EventBlock event={EVENT} timeZone={TZ} shape="line" />);
+
+    expect(link()).toHaveClass("truncate");
+    expect(screen.getByText("11:15,")).toHaveClass("sr-only");
+    expect(screen.queryByText("4D - AULA 1.3")).not.toBeInTheDocument();
+  });
+
+  it("shows the place under the title in the hour grid", () => {
+    render(<EventBlock event={EVENT} timeZone={TZ} shape="grid" />);
+
+    expect(screen.getByText("4D - AULA 1.3")).toBeInTheDocument();
+    expect(link()).toHaveClass("overflow-hidden");
+  });
+
+  it("writes the agenda line and cuts it with an ellipsis", () => {
+    render(
+      <EventBlock
+        event={EVENT}
+        timeZone={TZ}
+        shape="card"
+        line="A las 11:15–14:15 en 4D - AULA 1.3"
+      />,
+    );
+
+    expect(screen.getByText("A las 11:15–14:15 en 4D - AULA 1.3")).toHaveClass(
+      "truncate",
+    );
+  });
+
+  it("lets the grid hide the image icon in a short block, keeping the words", () => {
+    const { container } = render(
+      <EventBlock event={EVENT} timeZone={TZ} shape="grid" imageIcon={false} />,
+    );
+
+    expect(container.querySelector("svg")).toBeNull();
+    expect(link()).toHaveTextContent("Con imágenes");
+  });
+});

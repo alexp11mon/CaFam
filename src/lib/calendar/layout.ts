@@ -197,4 +197,6 @@ export interface CalendarEventItem extends LayoutEventInput {
   categoryId: string | null;
   /** Spec 012 RF-12: the views mark events with images. */
   imageCount?: number;
+  /** Shown under the title in the hour grid and the agenda (spec 016 RF-41, RF-54). */
+  location?: string | null;
 }

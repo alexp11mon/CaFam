@@ -41,7 +41,7 @@
   Hecho cuando: `npm test -- agenda-feed` en verde y la verificación completa reportada.
   Cubre: RF-47, RF-51, RF-52, RF-53, RF-54, RF-55, RF-57, RF-58 | Módulo: agenda-feed
 
-- [ ] T3 Crear `EventBlock` y comprobar el contraste de la paleta en los dos temas
+- [x] T3 Crear `EventBlock` y comprobar el contraste de la paleta en los dos temas
   Pasos:
   - Primero, los tests en rojo:
     - `tests/unit/event-block.test.tsx`: las formas `line`, `grid` y `card`; el color de fondo es el del evento; título en negrita; lugar debajo en `grid` y `card`; `ImageMark` con su texto oculto; enlace al detalle.
