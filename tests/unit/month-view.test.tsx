@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { MonthView } from "@/components/calendar/month-view";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { getVisibleRange } from "@/lib/calendar/ranges";
@@ -40,22 +40,69 @@ function renderMonth(events: CalendarEventItem[] = []) {
   );
 }
 
+// Each events row measures `height` px: 2 lanes of 18 px and a 2 px gap fit in 40.
+function observeRows(height: number) {
+  window.ResizeObserver = class {
+    constructor(private callback: ResizeObserverCallback) {}
+    observe() {
+      this.callback(
+        [{ contentRect: { height } } as ResizeObserverEntry],
+        this as unknown as ResizeObserver,
+      );
+    }
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+}
+
+afterEach(() => {
+  // @ts-expect-error jsdom has none; each test sets its own.
+  delete window.ResizeObserver;
+});
+
 function cell(date: string) {
   return screen
     .getAllByTestId("day-cell")
     .find((el) => el.getAttribute("data-date") === date)!;
 }
 
-describe("MonthView (RF-29, RF-37..RF-39)", () => {
-  it("shows full weeks starting on Monday", () => {
+describe("MonthView (spec 016 RF-30..RF-37)", () => {
+  it("shows full weeks starting on Monday, with the initials on top (RF-30)", () => {
     renderMonth();
 
     const cells = screen.getAllByTestId("day-cell");
     expect(cells).toHaveLength(35);
     expect(cells[0]).toHaveAttribute("data-date", "2026-09-28");
     expect(cells.at(-1)).toHaveAttribute("data-date", "2026-11-01");
-    expect(screen.getByText("lun")).toBeInTheDocument();
-    expect(screen.getByText("dom")).toBeInTheDocument();
+    const initials = screen.getByTestId("weekday-initials");
+    expect(initials).toHaveTextContent("LMXJVSD");
+  });
+
+  it("marks today's initial in the accent and its number in a circle (RF-31, RF-32)", () => {
+    renderMonth();
+
+    const initials = screen.getByTestId("weekday-initials").children;
+    expect(initials[2]).toHaveClass("text-accent-ink");
+    expect(initials[3]).not.toHaveClass("text-accent-ink");
+    const number = within(cell("2026-10-21")).getByRole("link", {
+      name: "miércoles, 21 de octubre de 2026",
+    });
+    expect(number).toHaveAttribute("aria-current", "date");
+    expect(number).toHaveClass("bg-accent", "rounded-full");
+    expect(
+      within(cell("2026-10-22")).getByRole("link").getAttribute("aria-current"),
+    ).toBeNull();
+  });
+
+  it("greys the numbers of the days of other months (RF-33)", () => {
+    renderMonth();
+
+    expect(within(cell("2026-09-28")).getByRole("link")).toHaveClass(
+      "text-muted",
+    );
+    expect(within(cell("2026-10-14")).getByRole("link")).toHaveClass(
+      "text-ink",
+    );
   });
 
   it("marks the events with images, timed and all-day (spec 012 RF-12)", () => {
@@ -80,20 +127,7 @@ describe("MonthView (RF-29, RF-37..RF-39)", () => {
     );
   });
 
-  it("marks today", () => {
-    renderMonth();
-
-    expect(
-      within(cell("2026-10-21")).getByRole("link", {
-        name: "miércoles, 21 de octubre de 2026",
-      }),
-    ).toHaveAttribute("aria-current", "date");
-    expect(
-      within(cell("2026-10-22")).getByRole("link").getAttribute("aria-current"),
-    ).toBeNull();
-  });
-
-  it("opens the day view when a day is pressed (RF-37)", () => {
+  it("opens the day view when a day is pressed", () => {
     renderMonth();
 
     expect(
@@ -103,53 +137,57 @@ describe("MonthView (RF-29, RF-37..RF-39)", () => {
     ).toHaveAttribute("href", "/dashboard/calendar?view=day&date=2026-10-14");
   });
 
-  it("shows an event in its color, with its time in the profile zone (RF-17, RF-34)", () => {
+  it("shows a timed event as a filled block of one line, the time only for screen readers (RF-34)", () => {
     renderMonth([
       event("Clase", "2026-10-14T06:00:00Z", "2026-10-14T07:00:00Z"),
     ]);
 
-    const chip = within(cell("2026-10-14")).getByRole("link", {
-      name: /Clase/,
-    });
-    expect(chip).toHaveTextContent("08:00");
-    expect(chip).toHaveAttribute("href", "/dashboard/events/Clase");
-    // A timed event is a dot of its color; the text stays in ink (spec 008 RF-48).
-    expect(within(chip).getByTestId("event-dot")).toHaveStyle({
-      backgroundColor: "#A0C4FF",
-    });
+    const block = screen.getByRole("link", { name: /Clase/ });
+    expect(block).toHaveAttribute("href", "/dashboard/events/Clase");
+    expect(block).toHaveStyle({ backgroundColor: "#A0C4FF" });
+    expect(block).toHaveClass("truncate");
+    expect(within(block).getByText("08:00,")).toHaveClass("sr-only");
+    expect(block).toHaveStyle({ gridColumn: "3 / span 1" });
   });
 
-  it("shows multi-day and all-day events in every day they occupy (RF-21)", () => {
+  it("draws a three-day event as one block across its days (RF-35)", () => {
     renderMonth([
       event("Viaje", "2026-10-20T00:00:00Z", "2026-10-23T00:00:00Z", {
         allDay: true,
       }),
     ]);
 
-    for (const date of ["2026-10-20", "2026-10-21", "2026-10-22"]) {
-      expect(
-        within(cell(date)).getByRole("link", { name: /Viaje/ }),
-      ).toBeVisible();
-    }
-    expect(
-      within(cell("2026-10-23")).queryByRole("link", { name: /Viaje/ }),
-    ).toBeNull();
+    const blocks = screen.getAllByRole("link", { name: /Viaje/ });
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]).toHaveStyle({ gridColumn: "2 / span 3" });
   });
 
-  it("shows three events and a +N más link to the day view (RF-39)", () => {
+  it("shows what fits and +N, which opens the day view (RF-36, RF-37)", () => {
+    observeRows(40);
+    const events = [1, 2, 3, 4].map((n) =>
+      event(`E${n}`, `2026-10-14T0${n}:00:00Z`, `2026-10-14T0${n}:30:00Z`),
+    );
+    renderMonth(events);
+
+    expect(screen.getAllByRole("link", { name: /E\d/ })).toHaveLength(1);
+    const more = screen.getByRole("link", { name: /^\+3/ });
+    expect(more).toHaveAttribute(
+      "href",
+      "/dashboard/calendar?view=day&date=2026-10-14",
+    );
+    expect(more).toHaveAccessibleName(
+      "+3 más, miércoles, 14 de octubre de 2026",
+    );
+  });
+
+  it("fits three lanes before measuring", () => {
     const events = [1, 2, 3, 4, 5].map((n) =>
       event(`E${n}`, `2026-10-14T0${n}:00:00Z`, `2026-10-14T0${n}:30:00Z`),
     );
     renderMonth(events);
 
-    const day = within(cell("2026-10-14"));
-    expect(day.getAllByRole("link", { name: /^\d{2}:\d{2} E\d/ })).toHaveLength(
-      3,
-    );
-    expect(day.getByRole("link", { name: "+2 más" })).toHaveAttribute(
-      "href",
-      "/dashboard/calendar?view=day&date=2026-10-14",
-    );
+    expect(screen.getAllByRole("link", { name: /E\d/ })).toHaveLength(2);
+    expect(screen.getByRole("link", { name: /^\+3/ })).toBeInTheDocument();
   });
 
   it("says there are no events when the period is empty (RF-38)", () => {

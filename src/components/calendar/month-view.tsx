@@ -1,17 +1,45 @@
+"use client";
+
 import Link from "next/link";
-import { formatDateKeyFull, weekdayLabel } from "@/lib/calendar/format";
-import {
-  dayEvents,
-  splitVisible,
-  type CalendarEventItem,
-} from "@/lib/calendar/layout";
+import { useEffect, useRef, useState } from "react";
+import { formatDateKeyFull } from "@/lib/calendar/format";
+import type { CalendarEventItem } from "@/lib/calendar/layout";
+import { fitWeek, layoutMonthWeek } from "@/lib/calendar/month-lanes";
 import { boxOf, type Box } from "@/lib/calendar/popover";
 import { calendarHref } from "@/lib/calendar/ranges";
-import { EventChip } from "./event-chip";
+import { weekdayIndex } from "@/lib/calendar/time-zone";
+import { EventBlock } from "./event-block";
 
-const MAX_VISIBLE = 3;
+const INITIALS = ["L", "M", "X", "J", "V", "S", "D"];
+// A lane is an 18 px block and a 2 px gap (EventBlock "line", gap-y-0.5).
+const LANE_PX = 20;
+// Before measuring (server, first paint) three lanes, as the month had until spec 016.
+const DEFAULT_LANES = 3;
 
-/** Month grid, Monday first: events per day, "+N más" and a link to the day view (RF-37..RF-39). */
+/** How many lanes fit in the events area of a week, measured on resize (plan D7). */
+function useLanes() {
+  const area = useRef<HTMLDivElement>(null);
+  const [lanes, setLanes] = useState(DEFAULT_LANES);
+  useEffect(() => {
+    const element = area.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return;
+      setLanes(
+        Math.max(1, Math.floor((entry.contentRect.height + 2) / LANE_PX)),
+      );
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  return [area, lanes] as const;
+}
+
+/**
+ * Month grid at full height, Monday first, each week in lanes so a multi-day
+ * event is one block, "+N" when a day does not fit (spec 016 RF-30..RF-37,
+ * plan D6, D7). Creating from an empty day is kept (spec 008 RF-19, RF-46).
+ */
 export function MonthView({
   date,
   days,
@@ -21,7 +49,7 @@ export function MonthView({
   onCreate,
   draft,
 }: {
-  /** Reference date: days of other months are dimmed. */
+  /** Reference date: days of other months are greyed. */
   date: string;
   days: string[];
   events: CalendarEventItem[];
@@ -32,83 +60,115 @@ export function MonthView({
   /** The event being created, shown in its day (spec 008 RF-40). */
   draft?: { day: string; title: string } | null;
 }) {
+  const [area, lanes] = useLanes();
   const month = date.slice(0, 7);
-  const perDay = days.map((day) => ({
-    day,
-    ...splitVisible(dayEvents(events, day, timeZone), MAX_VISIBLE),
-  }));
-  const isEmpty = perDay.every((cell) => cell.visible.length === 0);
+  const weeks = Array.from({ length: days.length / 7 }, (_, index) => {
+    const weekDays = days.slice(index * 7, index * 7 + 7);
+    return {
+      days: weekDays,
+      ...fitWeek(layoutMonthWeek(events, weekDays, timeZone), lanes),
+    };
+  });
+  const todayColumn = days.includes(today) ? weekdayIndex(today) : -1;
 
   return (
-    <div className="flex flex-col gap-3">
+    // Fills the screen under the header: the rows grow, never the cells (RF-30, RF-36).
+    <div className="flex h-[calc(100dvh-4.5rem-env(safe-area-inset-top))] flex-col gap-2 tab:h-[max(32rem,calc(100dvh-14rem))]">
       <div
         aria-hidden="true"
-        className="grid grid-cols-7 text-center text-xs font-semibold text-muted"
+        data-testid="weekday-initials"
+        className="grid grid-cols-7 text-center text-xs font-semibold"
       >
-        {days.slice(0, 7).map((day) => (
-          <span key={day}>{weekdayLabel(day)}</span>
+        {INITIALS.map((initial, column) => (
+          <span
+            key={initial}
+            className={
+              column === todayColumn ? "text-accent-ink" : "text-muted"
+            }
+          >
+            {initial}
+          </span>
         ))}
       </div>
-      <ol className="grid grid-cols-7 gap-px overflow-hidden rounded-3xl bg-line">
-        {perDay.map(({ day, visible, hidden }) => (
+      <ol className="flex min-h-0 flex-1 flex-col gap-px overflow-hidden rounded-3xl bg-line max-tab:-mx-4 max-tab:rounded-none">
+        {weeks.map((week, index) => (
           <li
-            key={day}
-            data-testid="day-cell"
-            data-date={day}
-            className={`relative flex min-h-20 min-w-0 flex-col gap-1 p-1 ${day.slice(0, 7) === month ? "bg-paper" : "bg-stone"}`}
+            key={week.days[0]}
+            className="relative grid min-h-0 flex-1 grid-cols-7 gap-px"
           >
-            {onCreate ? (
-              // The whole empty space creates; the number and the events sit above it (RF-19, RF-22).
-              <button
-                type="button"
-                aria-label={`Crear evento el ${formatDateKeyFull(day)}`}
-                onClick={(event) => onCreate(day, boxOf(event.currentTarget))}
-                className="absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
-              />
-            ) : null}
-            <Link
-              href={calendarHref("day", day)}
-              aria-label={formatDateKeyFull(day)}
-              aria-current={day === today ? "date" : undefined}
-              className={`relative inline-flex size-7 items-center justify-center self-start rounded-full text-sm font-semibold ${day === today ? "border border-accent-edge bg-accent font-extrabold text-on-accent" : "text-ink"}`}
-            >
-              {Number(day.slice(8))}
-            </Link>
-            {/* Gaps between events still reach the create button below. */}
-            <ul className="pointer-events-none relative flex min-w-0 flex-col gap-0.5">
-              {visible.map(({ event, banner }) => (
-                <li key={event.id} className="pointer-events-auto min-w-0">
-                  {/* All-day and multi-day as a bar, timed as a dot (spec 008 RF-48). */}
-                  <EventChip
-                    event={event}
-                    timeZone={timeZone}
-                    variant={banner ? "bar" : "dot"}
-                  />
-                </li>
-              ))}
-              {draft?.day === day ? (
-                <li
-                  aria-hidden="true"
-                  className="truncate rounded-md border border-dashed border-ink bg-paper px-1.5 py-0.5 text-xs font-semibold text-ink"
-                >
-                  {draft.title || "(Sin título)"}
-                </li>
-              ) : null}
-            </ul>
-            {hidden > 0 ? (
-              <Link
-                href={calendarHref("day", day)}
-                className="relative text-xs font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
+            {week.days.map((day) => (
+              <div
+                key={day}
+                data-testid="day-cell"
+                data-date={day}
+                className="relative flex min-w-0 flex-col items-center bg-paper pt-1"
               >
-                +{hidden} más
-              </Link>
-            ) : null}
+                {onCreate ? (
+                  // The whole empty space creates; the number and the events sit above it (spec 008 RF-19, RF-22).
+                  <button
+                    type="button"
+                    aria-label={`Crear evento el ${formatDateKeyFull(day)}`}
+                    onClick={(event) =>
+                      onCreate(day, boxOf(event.currentTarget))
+                    }
+                    className="absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+                  />
+                ) : null}
+                <Link
+                  href={calendarHref("day", day)}
+                  aria-label={formatDateKeyFull(day)}
+                  aria-current={day === today ? "date" : undefined}
+                  className={`relative inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums ${day === today ? "border border-accent-edge bg-accent text-on-accent" : day.slice(0, 7) === month ? "text-ink" : "text-muted"}`}
+                >
+                  {Number(day.slice(8))}
+                </Link>
+                {draft?.day === day ? (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0.5 bottom-0.5 z-10 truncate rounded-md border border-dashed border-ink bg-paper px-1 text-xs font-semibold text-ink"
+                  >
+                    {draft.title || "(Sin título)"}
+                  </span>
+                ) : null}
+              </div>
+            ))}
+            {/* Events over the cells; the gaps still reach the create buttons (RF-34, RF-35). */}
+            <div
+              ref={index === 0 ? area : undefined}
+              className="pointer-events-none absolute inset-x-0 top-8 bottom-0.5 grid auto-rows-[18px] grid-cols-7 content-start gap-y-0.5 overflow-hidden"
+            >
+              {week.visible.map(({ event, start, span, lane }) => (
+                <EventBlock
+                  key={event.id}
+                  event={event}
+                  timeZone={timeZone}
+                  shape="line"
+                  imageIcon={false}
+                  className="pointer-events-auto mx-0.5 min-w-0"
+                  style={{
+                    gridColumn: `${start + 1} / span ${span}`,
+                    gridRow: lane + 1,
+                  }}
+                />
+              ))}
+              {week.hidden.map((count, column) =>
+                count > 0 ? (
+                  <Link
+                    key={column}
+                    href={calendarHref("day", week.days[column]!)}
+                    aria-label={`+${count} más, ${formatDateKeyFull(week.days[column]!)}`}
+                    style={{ gridColumn: column + 1, gridRow: lanes }}
+                    className="pointer-events-auto mx-0.5 truncate rounded-md px-1 text-xs leading-[18px] font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink"
+                  >
+                    +{count}
+                  </Link>
+                ) : null,
+              )}
+            </div>
           </li>
         ))}
       </ol>
-      {isEmpty ? (
-        <p className="text-center text-muted">No hay eventos</p>
-      ) : null}
+      {events.length === 0 ? <p className="sr-only">No hay eventos</p> : null}
     </div>
   );
 }

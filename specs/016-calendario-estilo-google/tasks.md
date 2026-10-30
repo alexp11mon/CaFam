@@ -89,7 +89,7 @@
 
 ### Iteración 2 — Vistas y validación
 
-- [ ] T7 Rehacer la vista mes con carriles a toda la altura y "+N"
+- [x] T7 Rehacer la vista mes con carriles a toda la altura y "+N"
   Pasos:
   - Primero, `month-view.test.tsx` en rojo. Comprueba:
     - iniciales arriba, con la de hoy en el acento;

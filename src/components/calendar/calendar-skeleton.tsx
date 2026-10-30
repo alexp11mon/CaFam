@@ -15,7 +15,8 @@ export function CalendarSkeleton({ view }: { view: CalendarView }) {
       aria-label="Cargando calendario…"
       className="flex flex-col gap-4"
     >
-      <div aria-hidden="true" className="flex gap-2">
+      {/* On a phone the header replaces the toolbar (spec 016 RF-19). */}
+      <div aria-hidden="true" className="flex gap-2 max-tab:hidden">
         <div className={`h-11 w-20 ${BLOCK}`} />
         <div className={`h-11 w-24 ${BLOCK}`} />
         <div className={`h-11 w-48 ${BLOCK}`} />
@@ -34,12 +35,13 @@ export function CalendarSkeleton({ view }: { view: CalendarView }) {
               ))}
             </div>
           ) : view === "month" ? (
-            <div className="grid grid-cols-7 gap-1">
+            // The month's full height, as the view it stands for (spec 016 RF-30).
+            <div className="grid h-[calc(100dvh-4.5rem-env(safe-area-inset-top))] grid-cols-7 grid-rows-5 gap-1 tab:h-[max(32rem,calc(100dvh-14rem))]">
               {Array.from({ length: 35 }, (_, index) => (
                 <div
                   key={index}
                   data-testid="skeleton-month-cell"
-                  className={`h-20 ${BLOCK}`}
+                  className={BLOCK}
                 />
               ))}
             </div>

@@ -226,7 +226,7 @@ export default function CalendarPage({
   searchParams: SearchParams;
 }) {
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 max-tab:pt-2 max-tab:pb-0 sm:px-6">
       {/* The phone header already names the month (spec 016 RF-8). */}
       <h1 className="text-2xl font-bold text-ink max-tab:sr-only">
         Calendario
