@@ -46,7 +46,7 @@ export function CalendarSkeleton({ view }: { view: CalendarView }) {
               ))}
             </div>
           ) : (
-            <div className="flex h-[max(28rem,calc(100dvh-17rem))] gap-1">
+            <div className="flex h-[calc(100dvh-4.5rem-env(safe-area-inset-top))] gap-1 tab:h-[max(32rem,calc(100dvh-14rem))]">
               {Array.from({ length: view === "week" ? 7 : 1 }, (_, index) => (
                 <div
                   key={index}

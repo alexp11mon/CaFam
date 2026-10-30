@@ -102,7 +102,7 @@
   Hecho cuando: `npm test -- month-view` en verde, la verificación completa reportada y capturas de la vista mes junto a `IMG_1843`.
   Cubre: RF-30, RF-31, RF-32, RF-33, RF-34, RF-35, RF-36, RF-37, RF-46 | Módulo: month-view, skeleton
 
-- [ ] T8 Rehacer semana y día: cabecera fija, bloques rellenos y línea de ahora
+- [x] T8 Rehacer semana y día: cabecera fija, bloques rellenos y línea de ahora
   Pasos:
   - Primero, `time-grid.test.tsx` en rojo. Comprueba:
     - cabecera con inicial y número, y hoy en círculo;

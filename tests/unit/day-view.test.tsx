@@ -61,7 +61,7 @@ describe("DayView (RF-29, RF-35, RF-38, RF-40)", () => {
     renderDay();
 
     expect(screen.getAllByTestId("day-header")).toHaveLength(1);
-    expect(screen.getByTestId("day-header")).toHaveTextContent("mié");
+    expect(screen.getByTestId("day-header")).toHaveTextContent("X21");
   });
 
   it("shows timed events at their local time and all-day events in the strip", () => {

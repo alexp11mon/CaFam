@@ -1,16 +1,21 @@
+"use client";
+
 import Link from "next/link";
-import { formatDateKeyFull, weekdayLabel } from "@/lib/calendar/format";
+import { formatDateKeyFull } from "@/lib/calendar/format";
 import {
   dayEvents,
+  isBanner,
   layoutTimedDay,
   type CalendarEventItem,
 } from "@/lib/calendar/layout";
+import { layoutMonthWeek } from "@/lib/calendar/month-lanes";
 import type { Box } from "@/lib/calendar/popover";
 import { calendarHref } from "@/lib/calendar/ranges";
 import type { MinuteRange } from "@/lib/calendar/slots";
 import { fromMinutes } from "@/lib/calendar/time-options";
-import { formatTime } from "@/lib/calendar/time-zone";
-import { EventChip, ImageMark } from "./event-chip";
+import { utcToZonedParts, weekdayIndex } from "@/lib/calendar/time-zone";
+import { useNow } from "@/lib/hooks/use-now";
+import { EventBlock } from "./event-block";
 import { ScrollOnMount } from "./scroll-on-mount";
 import { SlotLayer } from "./slot-layer";
 
@@ -32,12 +37,20 @@ const HOUR_PX = 48;
 const MIN_SLOT_PX = 22;
 const FIRST_VISIBLE_HOUR = 7;
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
+const INITIALS = ["L", "M", "X", "J", "V", "S", "D"];
 
 const percent = (value: number) => `${Number(value.toFixed(4))}%`;
 
+function minuteOfDay(instant: number, timeZone: string) {
+  const { hour, minute } = utcToZonedParts(instant, timeZone);
+  return hour * 60 + minute;
+}
+
 /**
- * Hour grid shared by the week and day views: a strip for all-day and multi-day
- * events and a column per day with side-by-side overlaps (RF-35, RF-40).
+ * Hour grid shared by the week and day views, as Google: a fixed header with
+ * the initial and a big number, a strip of one-line blocks for all-day and
+ * multi-day events, filled blocks side by side and the now line (spec 016
+ * RF-38..RF-46). Creating on a slot is kept (spec 008 RF-20, RF-36).
  */
 export function TimeGrid({
   days,
@@ -58,75 +71,99 @@ export function TimeGrid({
   onCreate?: CreateInGrid;
   draft?: GridDraft | null;
 }) {
+  const now = useNow();
   const columns = {
     gridTemplateColumns: `3rem repeat(${days.length}, minmax(0, 1fr))`,
   };
-  const perDay = days.map((day) => ({
-    day,
-    banners: dayEvents(events, day, timeZone).filter((item) => item.banner),
-    slots: layoutTimedDay(events, day, timeZone),
-  }));
-  const hasBanners = perDay.some((cell) => cell.banners.length > 0);
+  const banners = layoutMonthWeek(
+    events.filter((event) => isBanner(event, timeZone)),
+    days,
+    timeZone,
+  );
   const isEmpty = days.every(
     (day) => dayEvents(events, day, timeZone).length === 0,
   );
+  const showsToday = days.includes(today);
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* The grid scrolls on its own so a narrow screen never scrolls the whole page. */}
-      <div className="overflow-x-auto rounded-3xl bg-paper">
-        <div style={{ minWidth: days.length > 1 ? "40rem" : undefined }}>
+    // The screen height under the header, never under 28 rem on a larger screen.
+    <div className="flex h-[calc(100dvh-4.5rem-env(safe-area-inset-top))] flex-col gap-3 tab:h-[max(32rem,calc(100dvh-14rem))]">
+      {/* The grid scrolls on its own; the day header and the strip stay on top (RF-38). */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-x-auto rounded-3xl bg-paper max-tab:-mx-4 max-tab:rounded-none">
+        <div
+          className={`flex min-h-0 flex-1 flex-col ${days.length > 1 ? "tab:min-w-[40rem]" : ""}`}
+        >
           <div className="grid border-b border-line" style={columns}>
             <div />
-            {perDay.map(({ day }) => (
-              <div
-                key={day}
-                data-testid="day-header"
-                className="flex flex-col items-center py-1 text-xs font-semibold text-muted"
-              >
-                <span>{weekdayLabel(day)}</span>
-                {linkDays ? (
-                  <Link
-                    href={calendarHref("day", day)}
-                    aria-label={formatDateKeyFull(day)}
-                    aria-current={day === today ? "date" : undefined}
-                    className={`inline-flex size-7 items-center justify-center rounded-full text-sm ${day === today ? "border border-accent-edge bg-accent font-extrabold text-on-accent" : "text-ink"}`}
-                  >
-                    {Number(day.slice(8))}
-                  </Link>
-                ) : (
+            {days.map((day) => {
+              const isToday = day === today;
+              const number = `inline-flex size-10 items-center justify-center rounded-full text-2xl font-semibold tabular-nums ${isToday ? "border border-accent-edge bg-accent text-on-accent" : "text-ink"}`;
+              return (
+                <div
+                  key={day}
+                  data-testid="day-header"
+                  className="flex flex-col items-center py-1"
+                >
                   <span
-                    aria-current={day === today ? "date" : undefined}
-                    className={`inline-flex size-7 items-center justify-center rounded-full text-sm ${day === today ? "border border-accent-edge bg-accent font-extrabold text-on-accent" : "text-ink"}`}
+                    className={`text-xs font-semibold ${isToday ? "text-accent-ink" : "text-muted"}`}
                   >
-                    {Number(day.slice(8))}
+                    {INITIALS[weekdayIndex(day)]}
                   </span>
-                )}
-              </div>
-            ))}
+                  {linkDays ? (
+                    <Link
+                      href={calendarHref("day", day)}
+                      aria-label={formatDateKeyFull(day)}
+                      aria-current={isToday ? "date" : undefined}
+                      className={`${number} focus-visible:outline-2 focus-visible:outline-ink`}
+                    >
+                      {Number(day.slice(8))}
+                    </Link>
+                  ) : (
+                    <span
+                      aria-label={formatDateKeyFull(day)}
+                      aria-current={isToday ? "date" : undefined}
+                      className={number}
+                    >
+                      {Number(day.slice(8))}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          {hasBanners ? (
+          {banners.length > 0 ? (
+            // One block per event across its days, in lanes as the month (RF-40).
             <div
               data-testid="banner-strip"
-              className="grid border-b border-line bg-stone"
+              className="grid gap-y-0.5 border-b border-line py-0.5"
               style={columns}
             >
-              <span className="p-1 text-[11px] text-muted">Todo el día</span>
-              {perDay.map(({ day, banners }) => (
-                <ul key={day} className="flex min-w-0 flex-col gap-0.5 p-0.5">
-                  {banners.map(({ event }) => (
-                    <li key={event.id} className="min-w-0">
-                      <EventChip event={event} timeZone={timeZone} />
-                    </li>
-                  ))}
-                </ul>
+              <span className="sr-only">Todo el día</span>
+              {banners.map(({ event, start, span, lane }) => (
+                <EventBlock
+                  key={event.id}
+                  event={event}
+                  timeZone={timeZone}
+                  shape="line"
+                  className="mx-0.5 min-w-0"
+                  style={{
+                    gridColumn: `${start + 2} / span ${span}`,
+                    gridRow: lane + 1,
+                  }}
+                />
               ))}
             </div>
           ) : null}
           <ScrollOnMount
-            top={FIRST_VISIBLE_HOUR * HOUR_PX}
-            // The screen height below the toolbar, as Google, never under 28 rem (spec 008 RF-47).
-            className="max-h-[max(28rem,calc(100dvh-17rem))] overflow-y-auto"
+            scrollKey={`${days[0]}|${showsToday}`}
+            // The current hour less one with today in view, else the morning (RF-45).
+            top={() =>
+              showsToday
+                ? Math.max(0, minuteOfDay(Date.now(), timeZone) / 60 - 1) *
+                  HOUR_PX
+                : FIRST_VISIBLE_HOUR * HOUR_PX
+            }
+            className="min-h-0 flex-1 overflow-y-auto"
           >
             <div data-testid="time-grid" className="grid" style={columns}>
               <div>
@@ -134,15 +171,19 @@ export function TimeGrid({
                   <div
                     key={hour}
                     style={{ height: HOUR_PX }}
-                    className="border-t border-transparent pr-1 text-right text-[11px] text-muted"
+                    className="pr-1 text-right text-[11px] text-muted tabular-nums"
                   >
-                    {String(hour).padStart(2, "0")}:00
+                    {/* "9:00" on its line, as Google; midnight has no label (RF-44). */}
+                    {hour > 0 ? (
+                      <span className="block -translate-y-1/2">{hour}:00</span>
+                    ) : null}
                   </div>
                 ))}
               </div>
-              {perDay.map(({ day, slots }) => (
+              {days.map((day) => (
                 <div
                   key={day}
+                  data-day={day}
                   className="relative border-l border-line"
                   style={{ height: 24 * HOUR_PX }}
                 >
@@ -180,43 +221,50 @@ export function TimeGrid({
                       </span>
                     </div>
                   ) : null}
-                  {slots.map((slot) => {
+                  {layoutTimedDay(events, day, timeZone).map((slot) => {
                     const width = 100 / slot.columns;
                     return (
-                      <Link
+                      <EventBlock
                         key={slot.event.id}
-                        href={`/dashboard/events/${slot.event.id}`}
+                        event={slot.event}
+                        timeZone={timeZone}
+                        shape="grid"
+                        // A block under 30 min has no room for it (spec 012 RF-12).
+                        imageIcon={slot.endMinute - slot.startMinute >= 30}
+                        // A paper edge parts blocks that touch, as Google.
+                        className="absolute border border-paper"
                         style={{
                           top: `${(slot.startMinute / 60) * HOUR_PX}px`,
                           height: `${Math.max(((slot.endMinute - slot.startMinute) / 60) * HOUR_PX, MIN_SLOT_PX)}px`,
                           left: percent(slot.column * width),
                           width: percent(width),
-                          // The color marks, the text stays in ink (spec 005 RF-4).
-                          borderLeftColor: slot.event.color,
                         }}
-                        className="absolute overflow-hidden rounded-md border-l-4 bg-stone px-1 text-xs text-ink ring-1 ring-paper"
-                      >
-                        <span className="font-semibold">
-                          {formatTime(slot.event.startsAt, timeZone)}
-                        </span>{" "}
-                        {slot.event.title}
-                        <ImageMark
-                          count={slot.event.imageCount}
-                          // A block under 30 min has no room for it (RF-12).
-                          icon={slot.endMinute - slot.startMinute >= 30}
-                        />
-                      </Link>
+                      />
                     );
                   })}
+                  {day === today && now !== null ? (
+                    // The current time: a line with a dot at its start (RF-43).
+                    <div
+                      data-testid="now-line"
+                      aria-hidden="true"
+                      style={{
+                        top: `${(minuteOfDay(now, timeZone) / 60) * HOUR_PX}px`,
+                      }}
+                      className="pointer-events-none absolute inset-x-0 z-20 h-0.5 bg-accent-ink"
+                    >
+                      <span
+                        data-now-dot=""
+                        className="absolute -top-[5px] -left-1.5 size-3 rounded-full bg-accent-ink"
+                      />
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
           </ScrollOnMount>
         </div>
       </div>
-      {isEmpty ? (
-        <p className="text-center text-muted">No hay eventos</p>
-      ) : null}
+      {isEmpty ? <p className="sr-only">No hay eventos</p> : null}
     </div>
   );
 }

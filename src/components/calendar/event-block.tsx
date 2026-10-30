@@ -68,7 +68,7 @@ export function EventBlock({
       style={{ ...style, backgroundColor: event.color }}
       className={`${SHAPES[shape]} text-pastel-ink ring-1 ring-pastel-ink/15 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink ${className}`}
     >
-      {shape === "line" && time ? (
+      {shape !== "card" && time ? (
         <span className="sr-only">{time}, </span>
       ) : null}
       {shape === "card" ? (

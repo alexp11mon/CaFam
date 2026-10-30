@@ -37,7 +37,7 @@ describe("WeekView (RF-29, RF-35, RF-40)", () => {
 
     const headers = screen.getAllByTestId("day-header");
     expect(headers).toHaveLength(7);
-    expect(headers[0]).toHaveTextContent("lun");
+    expect(headers[0]).toHaveTextContent("L");
     expect(within(headers[0]!).getByRole("link")).toHaveAttribute(
       "href",
       "/dashboard/calendar?view=day&date=2026-10-19",
@@ -79,8 +79,8 @@ describe("WeekView (RF-29, RF-35, RF-40)", () => {
     expect(slot).toHaveTextContent("08:30");
     expect(slot.style.top).toBe("408px"); // 8.5 h * 48 px
     expect(slot.style.height).toBe("72px"); // 1.5 h * 48 px
-    // The color is a bar; the text stays in ink (spec 005 RF-4).
-    expect(slot).toHaveStyle({ borderLeftColor: "#A0C4FF" });
+    // A block filled with its color (spec 016 RF-41).
+    expect(slot).toHaveStyle({ backgroundColor: "#A0C4FF" });
   });
 
   it("puts overlapping events side by side without covering each other (RF-40)", () => {
@@ -103,8 +103,9 @@ describe("WeekView (RF-29, RF-35, RF-40)", () => {
     ]);
 
     const strip = screen.getByTestId("banner-strip");
+    // One continuous block over its two days (spec 016 RF-40).
     expect(within(strip).getAllByRole("link", { name: /Viaje/ })).toHaveLength(
-      2,
+      1,
     );
     expect(
       within(screen.getByTestId("time-grid")).queryByRole("link"),
@@ -124,7 +125,7 @@ describe("WeekView (RF-29, RF-35, RF-40)", () => {
   it("labels the hours", () => {
     renderWeek();
 
-    expect(screen.getByText("08:00")).toBeInTheDocument();
+    expect(screen.getByText("8:00")).toBeInTheDocument();
     expect(screen.getByText("23:00")).toBeInTheDocument();
   });
 
