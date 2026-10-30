@@ -158,6 +158,14 @@ describe("ImageViewer", () => {
     );
   });
 
+  it("shows the enlarged image with rounded corners and a small frame", async () => {
+    const dialog = await open(0);
+    const image = await within(dialog).findByRole("img", {
+      name: "Cumpleaños de Ana, imagen 1 de 3",
+    });
+    expect(image).toHaveClass("rounded-2xl", "bg-paper", "p-1.5", "ring-1");
+  });
+
   it("moves with the buttons, the arrow keys and a swipe (RF-10)", async () => {
     const dialog = await open(0);
     await userEvent.click(

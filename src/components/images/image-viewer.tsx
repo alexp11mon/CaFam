@@ -33,7 +33,8 @@ function FullImage({ image, alt }: { image: EventImage; alt: string }) {
       width={image.width}
       height={image.height}
       unoptimized
-      className="max-h-full w-auto max-w-full object-contain"
+      // A thin paper frame; the padding rounds the photo inside it too.
+      className="max-h-full w-auto max-w-full rounded-2xl bg-paper object-contain p-1.5 ring-1 ring-line"
     />
   );
 }
