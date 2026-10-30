@@ -100,7 +100,7 @@
 
 ### Iteración 2 — Navegador, interfaz y validación
 
-- [ ] T7 Reducir y subir imágenes desde el navegador
+- [x] T7 Reducir y subir imágenes desde el navegador
   Pasos:
   - Primero, en rojo, con `createImageBitmap`, canvas y `XMLHttpRequest` simulados en jsdom:
     - `tests/unit/prepare-image.test.ts`: rechaza más de 20 MB y un tipo no admitido sin decodificar; un fallo al decodificar da "Este navegador no puede leer esta imagen"; dibuja a las medidas de `fitWithin`, exporta JPEG con la calidad del plan y cierra el bitmap;
@@ -108,6 +108,7 @@
   - Después, `src/lib/images/prepare-image.ts` y `upload-object.ts`.
 
   Hecho cuando: `npm test -- prepare-image upload-object` en verde. Cubre: RF-3, RF-5, RF-6, RF-21, RF-24 | Módulo: images-prepare, images-upload
+  Evidencia (2026-10-30): rojo (módulos inexistentes). `prepare-image.test.ts` 4 tests y `upload-object.test.ts` 5 tests en verde. `uploadObject` devuelve además `aborted` al cancelar y acepta como subido el 409 que Storage manda dentro de un 400. typecheck, lint y format en verde, `npm test` 1444 tests, build correcto.
 
 - [ ] T8 Reservar, confirmar, cancelar y borrar desde el servidor y cargar la galería
   Pasos:
