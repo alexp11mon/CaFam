@@ -146,7 +146,7 @@
   Hecho cuando: `npm test -- agenda-view view-toolbar design-tokens` en verde, la verificación completa reportada y capturas de la agenda junto a `IMG_1846`, en el móvil y a 1440 px.
   Cubre: RF-47, RF-48, RF-49, RF-50, RF-51, RF-52, RF-53, RF-57, RF-58, RF-59, RF-60 | Módulo: agenda-view, view-toolbar, skeleton, design-guard
 
-- [ ] T11 Retirar `EventChip` y `EventRow` y comprobar que no cambia lo que debe seguir igual
+- [x] T11 Retirar `EventChip` y `EventRow` y comprobar que no cambia lo que debe seguir igual
   Pasos:
   - Borrar `event-chip.tsx` y `event-row.tsx` y llevar `ImageMark` a `event-block.tsx`.
   - Comprobar que siguen en verde, sin tocar su lógica, los tests de atajos, ventana de evento, ventana rápida, vista recordada, filtros, grupos y solo lectura.
