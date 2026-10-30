@@ -73,8 +73,8 @@
   --danger: #f97066;
   --on-ink: #141414;
   --pastel-ink: #141414;
-  --mark: #141414;
-  --on-mark: #e8e5dd;
+  --mark: #e8e5dd;
+  --on-mark: #141414;
   --glass-bg: #211f1beb;
   --glass-edge: rgb(255 255 255 / 0.06);
   --backdrop: radial-gradient(120% 80% at 50% 0%, #171612 0%, #0f0e0b 100%);
@@ -95,8 +95,8 @@
     --danger: #f97066;
     --on-ink: #141414;
     --pastel-ink: #141414;
-    --mark: #141414;
-    --on-mark: #e8e5dd;
+    --mark: #e8e5dd;
+    --on-mark: #141414;
     --glass-bg: #211f1beb;
     --glass-edge: rgb(255 255 255 / 0.06);
     --backdrop: radial-gradient(120% 80% at 50% 0%, #171612 0%, #0f0e0b 100%);

@@ -57,7 +57,8 @@ export const DARK_NEUTRALS: Record<keyof typeof NEUTRALS, string> = {
 
 /**
  * Text on the ink button, text on the pastel calendar colors and the brand
- * mark (spec 011 RF-10, plan D5): pastel text and the mark never flip.
+ * mark (spec 011 RF-10, plan D5): pastel text never flips; the mark inverts in
+ * dark so the square still stands out on the dark stone.
  */
 export const THEME_INKS = {
   light: {
@@ -69,8 +70,8 @@ export const THEME_INKS = {
   dark: {
     onInk: NEUTRALS.ink,
     pastelInk: NEUTRALS.ink,
-    mark: NEUTRALS.ink,
-    onMark: NEUTRALS.stone,
+    mark: NEUTRALS.stone,
+    onMark: NEUTRALS.ink,
   },
 } as const;
 

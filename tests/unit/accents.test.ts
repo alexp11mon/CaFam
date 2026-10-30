@@ -159,9 +159,13 @@ describe("pastel ink (RF-10)", () => {
     }
   });
 
-  it("keeps the brand mark the same in both themes (D5)", () => {
-    expect(THEME_INKS.light.mark).toBe(THEME_INKS.dark.mark);
-    expect(THEME_INKS.light.onMark).toBe(THEME_INKS.dark.onMark);
+  it("keeps the brand mark visible on the stone of each theme (D5)", () => {
+    const stones = { light: NEUTRALS.stone, dark: DARK_NEUTRALS.stone };
+    for (const theme of ["light", "dark"] as const) {
+      const { mark, onMark } = THEME_INKS[theme];
+      expect(ratio(mark, stones[theme])).toBeGreaterThanOrEqual(3);
+      expect(ratio(onMark, mark)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });
 
