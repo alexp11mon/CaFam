@@ -1,16 +1,19 @@
-import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { act, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AgendaView,
+  requestAgendaToday,
   type AgendaEvent,
 } from "@/components/calendar/agenda-view";
 import { getVisibleRange } from "@/lib/calendar/ranges";
 
-// Spec 005, T8: the agenda view as the user sees it
-// (RF-4, RF-5, RF-30, RF-32, RF-35, RF-37, RF-38, RF-39, RF-42; plan D15).
+// Spec 016, T10: the continuous agenda (RF-47..RF-60).
+const push = vi.hoisted(() => vi.fn());
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+
 const TZ = "Europe/Madrid";
 const TODAY = "2026-11-02";
+// 19 October to 13 December: 14 days before and 42 after (plan, flow 7.1).
 const DAYS = getVisibleRange("agenda", TODAY, TZ).days;
 
 function event(
@@ -34,238 +37,312 @@ function event(
   };
 }
 
-function renderAgenda(events: AgendaEvent[] = [], canCreate = true) {
-  render(
+// A stand-in IntersectionObserver that the test fires by hand.
+let observers: {
+  callback: IntersectionObserverCallback;
+  targets: Set<Element>;
+}[] = [];
+
+function intersect(target: Element) {
+  act(() => {
+    for (const observer of observers) {
+      if (observer.targets.has(target)) {
+        observer.callback(
+          [
+            {
+              target,
+              isIntersecting: true,
+              boundingClientRect: { top: 0 } as DOMRectReadOnly,
+            } as IntersectionObserverEntry,
+          ],
+          {} as IntersectionObserver,
+        );
+      }
+    }
+  });
+}
+
+const scrolled: Element[] = [];
+
+beforeEach(() => {
+  observers = [];
+  scrolled.length = 0;
+  push.mockClear();
+  window.IntersectionObserver = class {
+    entry = {
+      callback: (() => {}) as IntersectionObserverCallback,
+      targets: new Set<Element>(),
+    };
+    constructor(callback: IntersectionObserverCallback) {
+      this.entry.callback = callback;
+      observers.push(this.entry);
+    }
+    observe(target: Element) {
+      this.entry.targets.add(target);
+    }
+    unobserve(target: Element) {
+      this.entry.targets.delete(target);
+    }
+    disconnect() {
+      this.entry.targets.clear();
+    }
+  } as unknown as typeof IntersectionObserver;
+  HTMLElement.prototype.scrollIntoView = function scrollIntoView() {
+    scrolled.push(this);
+  };
+});
+
+afterEach(() => {
+  // @ts-expect-error jsdom has none; each test sets its own.
+  delete window.IntersectionObserver;
+});
+
+function renderAgenda(
+  events: AgendaEvent[] = [],
+  extra: Partial<Parameters<typeof AgendaView>[0]> = {},
+) {
+  return render(
     <AgendaView
       days={DAYS}
       events={events}
       timeZone={TZ}
       today={TODAY}
-      canCreate={canCreate}
+      {...extra}
     />,
   );
 }
 
-function day(label: RegExp) {
-  return screen.getByRole("region", { name: label });
-}
-
-beforeEach(() => {
-  vi.useFakeTimers({ toFake: ["Date"] });
-  vi.setSystemTime(new Date("2026-11-02T11:00:00Z"));
-});
-
-afterEach(() => {
-  vi.useRealTimers();
-});
-
-describe("AgendaView days (RF-31, RF-32, RF-33)", () => {
-  it("marks the events with images (spec 012 RF-12)", () => {
-    renderAgenda([
-      event("Fotos", `${TODAY}T09:00:00Z`, `${TODAY}T10:00:00Z`, {
-        imageCount: 2,
-      }),
-      event("Nada", `${TODAY}T11:00:00Z`, `${TODAY}T12:00:00Z`),
-    ]);
-    expect(screen.getByRole("link", { name: /Fotos/ })).toHaveTextContent(
-      "Con imágenes",
-    );
-    expect(screen.getByRole("link", { name: /Nada/ })).not.toHaveTextContent(
-      "Con imágenes",
-    );
-  });
-
-  it("shows 14 days, each named by its full date", () => {
+describe("AgendaView layout", () => {
+  it("opens each month with its band and each week with its range (RF-50, RF-51)", () => {
     renderAgenda();
 
-    expect(screen.getAllByRole("region")).toHaveLength(14);
     expect(
-      screen.getByRole("region", {
-        name: "lunes, 2 de noviembre de 2026, hoy",
-      }),
+      screen.getByRole("heading", { level: 2, name: "noviembre" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("region", { name: "domingo, 15 de noviembre de 2026" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "octubre" })).toHaveClass(
+      "bg-agenda-band",
+    );
+    expect(screen.getByText("2–8 de noviembre")).toBeInTheDocument();
+    expect(screen.getByText("26–31 de octubre")).toBeInTheDocument();
   });
 
-  it("draws the big day number and the weekday", () => {
-    renderAgenda();
-
-    const second = day(/^martes, 3 de noviembre/);
-    expect(within(second).getByText("03")).toBeInTheDocument();
-    expect(within(second).getByText("mar")).toBeInTheDocument();
-  });
-
-  it("marks today with a word, not only a color (RF-5)", () => {
-    renderAgenda();
-
-    expect(within(day(/, hoy$/)).getByText("Hoy")).toBeInTheDocument();
-    expect(
-      within(day(/^martes, 3 /)).queryByText("Hoy"),
-    ).not.toBeInTheDocument();
-  });
-});
-
-describe("AgendaView events (RF-35, RF-42, RF-4)", () => {
-  it("shows start, end, title, place and calendar, linking to the detail", () => {
+  it("says Sin eventos under an empty week and lists only days with events (RF-47, RF-57)", () => {
     renderAgenda([
-      event("Dentista", "2026-11-03T08:00:00Z", "2026-11-03T09:30:00Z", {
-        location: "Calle Mayor 3",
-      }),
+      event("Reunión", "2026-11-04T11:00:00Z", "2026-11-04T12:00:00Z"),
     ]);
 
-    const link = within(day(/^martes, 3 /)).getByRole("link", {
-      name: /Dentista/,
-    });
-    expect(link).toHaveAttribute("href", "/dashboard/events/Dentista");
-    expect(link).toHaveTextContent("09:00");
-    expect(link).toHaveTextContent("10:30");
-    expect(link).toHaveTextContent("Calle Mayor 3");
-    expect(link).toHaveAccessibleName(/Calendario Casa/);
+    // 10 weeks from 19 October to 13 December, cut at the end of each
+    // month, one with an event.
+    expect(screen.getAllByText("Sin eventos")).toHaveLength(9);
+    expect(screen.getAllByTestId("agenda-day")).toHaveLength(1);
   });
 
-  it("keeps the title in ink and the calendar color as a bar", () => {
+  it("shows the weekday and the number of each day, today in a circle (RF-52, RF-53)", () => {
     renderAgenda([
-      event("Dentista", "2026-11-03T08:00:00Z", "2026-11-03T09:30:00Z", {
-        color: "#BDB2FF",
-      }),
+      event("Hoy", "2026-11-02T11:00:00Z", "2026-11-02T12:00:00Z"),
+      event("Otro", "2026-11-04T11:00:00Z", "2026-11-04T12:00:00Z"),
     ]);
 
-    const link = screen.getByRole("link", { name: /Dentista/ });
-    expect(link.querySelector("[data-color-bar]")).toHaveStyle({
-      backgroundColor: "#BDB2FF",
+    const today = screen.getByRole("region", {
+      name: "lunes, 2 de noviembre de 2026, hoy",
     });
-    expect(link).not.toHaveStyle({ backgroundColor: "#BDB2FF" });
+    expect(within(today).getByText("2")).toHaveClass(
+      "bg-accent",
+      "rounded-full",
+    );
+    expect(within(today).getByText("lun")).toHaveClass("text-accent-ink");
+    const other = screen.getByRole("region", {
+      name: "miércoles, 4 de noviembre de 2026",
+    });
+    expect(within(other).getByText("4")).not.toHaveClass("bg-accent");
   });
 
-  it("says Todo el día for all-day events", () => {
+  it("draws each event as a card with its line (RF-54, RF-55, RF-56)", () => {
     renderAgenda([
-      event("Cumple", "2026-11-03T00:00:00Z", "2026-11-04T00:00:00Z", {
+      event("Clase", "2026-11-04T10:15:00Z", "2026-11-04T13:15:00Z", {
+        location: "Academia",
+      }),
+      event("Fiesta", "2026-11-05T00:00:00Z", "2026-11-06T00:00:00Z", {
         allDay: true,
       }),
     ]);
 
-    expect(screen.getByRole("link", { name: /Cumple/ })).toHaveTextContent(
-      "Todo el día",
+    const card = screen.getByRole("link", { name: /Clase/ });
+    expect(card).toHaveAttribute("href", "/dashboard/events/Clase");
+    expect(card).toHaveStyle({ backgroundColor: "#FFADAD" });
+    expect(within(card).getByText("A las 11:15–14:15 en Academia")).toHaveClass(
+      "truncate",
+    );
+    expect(screen.getByRole("link", { name: /Fiesta/ })).toHaveTextContent(
+      /^Fiesta$/,
     );
   });
 
-  it("cuts a long title without hiding the time (casos límite)", () => {
-    const title = "Reunión ".repeat(20).trim();
-    renderAgenda([
-      event("long", "2026-11-03T08:00:00Z", "2026-11-03T09:00:00Z", { title }),
-    ]);
+  it("applies the visibility filter (plan agenda-view)", () => {
+    renderAgenda(
+      [
+        event("Visible", "2026-11-04T11:00:00Z", "2026-11-04T12:00:00Z"),
+        event("Oculto", "2026-11-04T13:00:00Z", "2026-11-04T14:00:00Z", {
+          calendarId: "hidden",
+        }),
+      ],
+      { isShown: (item) => item.calendarId !== "hidden" },
+    );
 
-    const link = screen.getByRole("link", { name: /Reunión/ });
-    expect(within(link).getByText(title)).toHaveClass("line-clamp-2");
-    expect(link).toHaveTextContent("09:00");
+    expect(screen.getByRole("link", { name: /Visible/ })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Oculto/ })).toBeNull();
   });
 });
 
-describe("AgendaView empty days and creating (RF-37, RF-38)", () => {
-  it("says Sin eventos on a day without events", () => {
-    renderAgenda([
-      event("Dentista", "2026-11-03T08:00:00Z", "2026-11-03T09:30:00Z"),
-    ]);
+describe("AgendaView loading", () => {
+  it("loads the next 28 days at the end of the list (RF-48)", async () => {
+    const loadEvents = vi.fn(async () => ({
+      events: [
+        event("Lejano", "2026-12-20T11:00:00Z", "2026-12-20T12:00:00Z"),
+        event("Filtrado", "2026-12-21T11:00:00Z", "2026-12-21T12:00:00Z", {
+          calendarId: "hidden",
+        }),
+      ],
+    }));
+    renderAgenda([], {
+      loadEvents,
+      isShown: (item) => item.calendarId !== "hidden",
+    });
 
+    intersect(screen.getByTestId("agenda-end"));
+
+    expect(loadEvents).toHaveBeenCalledWith("2026-12-14", "2027-01-10");
     expect(
-      within(day(/^lunes, 2/)).getByText("Sin eventos"),
+      await screen.findByRole("link", { name: /Lejano/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Filtrado/ })).toBeNull();
+    expect(
+      screen.getByRole("heading", { name: "enero de 2027" }),
+    ).toBeInTheDocument();
+  });
+
+  it("loads the 28 days before at the start of the list (RF-49)", async () => {
+    const loadEvents = vi.fn(async () => ({
+      events: [event("Antes", "2026-09-25T10:00:00Z", "2026-09-25T11:00:00Z")],
+    }));
+    renderAgenda([], { loadEvents });
+
+    intersect(screen.getByTestId("agenda-start"));
+
+    expect(loadEvents).toHaveBeenCalledWith("2026-09-21", "2026-10-18");
+    expect(
+      await screen.findByRole("link", { name: /Antes/ }),
     ).toBeInTheDocument();
     expect(
-      within(day(/^martes, 3 /)).queryByText("Sin eventos"),
-    ).not.toBeInTheDocument();
+      screen.getByRole("heading", { name: "septiembre" }),
+    ).toBeInTheDocument();
   });
 
-  it("offers to create an event on each day", () => {
-    renderAgenda();
+  it("keeps at most 120 days, letting go of the other end (plan D9)", async () => {
+    const loadEvents = vi.fn(async () => ({ events: [] }));
+    renderAgenda([], { loadEvents });
 
-    const links = screen.getAllByRole("link", { name: /^Crear evento el / });
-    expect(links).toHaveLength(14);
-    expect(
-      within(day(/^martes, 3 /)).getByRole("link", {
-        name: /^Crear evento el /,
-      }),
-    ).toHaveAttribute("href", "/dashboard/events/new?date=2026-11-03");
+    for (const month of ["enero", "febrero", "marzo"]) {
+      intersect(screen.getByTestId("agenda-end"));
+      await screen.findByRole(
+        "heading",
+        { name: `${month} de 2027` },
+        { timeout: 3000 },
+      );
+    }
+
+    // 56 + 3 × 28 = 140 days: the first 56 go.
+    expect(screen.queryByRole("heading", { name: "octubre" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "noviembre" })).toBeNull();
   });
 
-  it("does not offer it without an editable calendar", () => {
-    renderAgenda([], false);
+  it("says when a chunk could not be loaded and lets retry", async () => {
+    const loadEvents = vi
+      .fn()
+      .mockResolvedValueOnce({ error: "No se ha podido conectar." })
+      .mockResolvedValueOnce({ events: [] });
+    renderAgenda([], { loadEvents });
 
+    intersect(screen.getByTestId("agenda-end"));
     expect(
-      screen.queryByRole("link", { name: /^Crear evento/ }),
-    ).not.toBeInTheDocument();
+      await screen.findByText("No se ha podido conectar."),
+    ).toBeInTheDocument();
+    act(() => screen.getByRole("button", { name: "Reintentar" }).click());
+    intersect(screen.getByTestId("agenda-end"));
+    await vi.waitFor(() => expect(loadEvents).toHaveBeenCalledTimes(2));
   });
 });
 
-describe("AgendaView now line (RF-39)", () => {
-  it("sits today between started and upcoming events", () => {
+describe("AgendaView position", () => {
+  it("reports the month at the top for the header (RF-59)", () => {
+    const onMonthChange = vi.fn();
+    renderAgenda([], { onMonthChange });
+
+    intersect(screen.getByRole("heading", { name: "diciembre" }));
+    expect(onMonthChange).toHaveBeenLastCalledWith("2026-12");
+  });
+
+  it("opens on today, or the next day with events when today has none (RF-58)", () => {
     renderAgenda([
-      event("Antes", "2026-11-02T08:00:00Z", "2026-11-02T09:00:00Z"),
-      event("Después", "2026-11-02T15:00:00Z", "2026-11-02T16:00:00Z"),
-      event("Mañana", "2026-11-03T15:00:00Z", "2026-11-03T16:00:00Z"),
+      event("Ayer", "2026-11-01T11:00:00Z", "2026-11-01T12:00:00Z"),
+      event("Mañana", "2026-11-03T11:00:00Z", "2026-11-03T12:00:00Z"),
     ]);
 
-    const today = day(/, hoy$/);
-    const items = within(today).getAllByRole("listitem");
-    expect(items.map((item) => item.textContent)).toEqual([
-      expect.stringContaining("Antes"),
-      expect.stringContaining("Hora actual"),
-      expect.stringContaining("Después"),
-    ]);
-    expect(items[1]).toHaveTextContent("12:00");
-    expect(within(day(/^martes, 3 /)).queryByText(/Hora actual/)).toBeNull();
+    expect(scrolled.at(-1)).toHaveAttribute("data-day", "2026-11-03");
   });
-});
 
-// Spec 008, T19: back to the current time (RF-23, RF-24).
-describe("AgendaView: 'Hora actual'", () => {
-  it("is always there and scrolls to the line of the current time (RF-23, RF-24)", async () => {
-    const scrolled: Element[] = [];
-    const original = HTMLElement.prototype.scrollIntoView;
-    HTMLElement.prototype.scrollIntoView = function scrollIntoView() {
-      scrolled.push(this);
-    };
+  it("goes back there when Hoy is pressed", () => {
     renderAgenda([
-      event("Antes", "2026-11-02T08:00:00Z", "2026-11-02T09:00:00Z"),
-      event("Después", "2026-11-02T15:00:00Z", "2026-11-02T16:00:00Z"),
+      event("Hoy", "2026-11-02T11:00:00Z", "2026-11-02T12:00:00Z"),
     ]);
+    scrolled.length = 0;
 
-    await userEvent.click(screen.getByRole("button", { name: "Hora actual" }));
+    act(() => requestAgendaToday());
 
-    expect(scrolled).toHaveLength(1);
-    expect(scrolled[0]).toHaveTextContent("12:00");
-    HTMLElement.prototype.scrollIntoView = original;
+    expect(scrolled.at(-1)).toHaveAttribute("data-day", "2026-11-02");
+    expect(push).not.toHaveBeenCalled();
   });
 
-  it("goes to today when today has no events, so no line", async () => {
-    const scrolled: Element[] = [];
-    const original = HTMLElement.prototype.scrollIntoView;
-    HTMLElement.prototype.scrollIntoView = function scrollIntoView() {
-      scrolled.push(this);
-    };
-    renderAgenda();
+  it("comes back to the server's days when Hoy is pressed far away", async () => {
+    const loadEvents = vi.fn(async () => ({ events: [] }));
+    renderAgenda(
+      [event("Hoy", "2026-11-02T11:00:00Z", "2026-11-02T12:00:00Z")],
+      { loadEvents },
+    );
+    for (const month of ["enero", "febrero", "marzo"]) {
+      intersect(screen.getByTestId("agenda-end"));
+      await screen.findByRole(
+        "heading",
+        { name: `${month} de 2027` },
+        { timeout: 3000 },
+      );
+    }
+    scrolled.length = 0;
 
-    await userEvent.click(screen.getByRole("button", { name: "Hora actual" }));
+    act(() => requestAgendaToday());
 
-    expect(scrolled[0]).toBe(day(/, hoy$/));
-    HTMLElement.prototype.scrollIntoView = original;
+    expect(
+      screen.getByRole("heading", { name: "noviembre" }),
+    ).toBeInTheDocument();
+    expect(scrolled.at(-1)).toHaveAttribute("data-day", "2026-11-02");
+    expect(push).not.toHaveBeenCalled();
   });
 
-  it("takes to the agenda of today when today is not shown", () => {
+  it("opens the agenda of today when today is not loaded", () => {
     render(
       <AgendaView
-        days={getVisibleRange("agenda", "2026-12-01", TZ).days}
+        days={getVisibleRange("agenda", "2027-06-01", TZ).days}
         events={[]}
         timeZone={TZ}
         today={TODAY}
-        canCreate
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Hora actual" })).toHaveAttribute(
-      "href",
-      "/dashboard/calendar?view=agenda&date=2026-11-02#ahora",
+    act(() => requestAgendaToday());
+
+    expect(push).toHaveBeenCalledWith(
+      "/dashboard/calendar?view=agenda&date=2026-11-02",
+      expect.anything(),
     );
   });
 });

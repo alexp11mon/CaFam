@@ -124,7 +124,7 @@
   Hecho cuando: `npm test -- agenda-actions` en verde y la verificación completa reportada.
   Cubre: RF-48, RF-49 | Módulo: agenda-loader
 
-- [ ] T10 Rehacer la agenda como lista continua con bandas de mes
+- [x] T10 Rehacer la agenda como lista continua con bandas de mes
   Pasos:
   - Primero, `agenda-view.test.tsx` en rojo, con `IntersectionObserver` simulado. Comprueba:
     - banda del mes;

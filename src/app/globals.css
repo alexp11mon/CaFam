@@ -233,6 +233,19 @@ body {
   background-image: var(--backdrop);
 }
 
+/* Band that opens each month of the agenda (spec 016 RF-50): the same for every
+   month, made of tokens, so it follows the accent and the theme. Defined here
+   and not on :root because the accent lives on the app frame. */
+@utility bg-agenda-band {
+  --gradient-agenda-band: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--accent) 22%, var(--paper)) 0%,
+    var(--paper) 75%
+  );
+  background-color: var(--paper);
+  background-image: var(--gradient-agenda-band);
+}
+
 /* Microinteraction of buttons and controls (RF-16, plan D13). */
 @utility press {
   transition-property:

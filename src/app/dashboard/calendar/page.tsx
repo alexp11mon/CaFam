@@ -27,6 +27,7 @@ import {
 import { toViewEvents } from "@/lib/calendar/to-view-events";
 import { canWriteEvents } from "@/lib/sync/read-only";
 import { createEvent } from "../events/actions";
+import { loadAgendaEvents } from "./agenda-actions";
 import { loadMonthMarks } from "./mini-month-actions";
 import {
   saveLastView,
@@ -182,6 +183,7 @@ async function CalendarContent({
         )}
         loadMonthMarks={loadMonthMarks}
         saveLastView={saveLastView}
+        loadAgendaEvents={loadAgendaEvents}
         editableCalendars={calendars
           .filter(canWriteEvents)
           .map(({ id, name, color }) => ({ id, name, color }))}

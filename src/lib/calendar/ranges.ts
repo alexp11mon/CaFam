@@ -23,6 +23,8 @@ export function isCalendarView(value: unknown): value is CalendarView {
 
 /** Days in a row shown by the agenda (spec 005 RF-31). */
 export const AGENDA_DAYS = 14;
+export const AGENDA_BEFORE = 14;
+export const AGENDA_AFTER = 42;
 
 export interface VisibleRange {
   view: CalendarView;
@@ -78,8 +80,9 @@ export function getVisibleRange(
     first = weekStart(dateKey);
     count = 7;
   } else if (view === "agenda") {
-    first = dateKey;
-    count = AGENDA_DAYS;
+    // The continuous agenda opens with room above and below (spec 016 plan, flow 7.1).
+    first = addDays(dateKey, -AGENDA_BEFORE);
+    count = AGENDA_BEFORE + AGENDA_AFTER;
   } else {
     first = dateKey;
     count = 1;

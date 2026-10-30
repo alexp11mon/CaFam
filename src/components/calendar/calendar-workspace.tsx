@@ -19,6 +19,7 @@ import {
 } from "@/components/shell/calendar-header";
 import { FormAlert } from "@/components/ui/form-alert";
 import { monthLabel } from "@/lib/calendar/agenda-feed";
+import { requestAgendaToday } from "@/lib/calendar/agenda-today";
 import type { Draft } from "@/lib/calendar/draft";
 import type { Box } from "@/lib/calendar/popover";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
@@ -185,6 +186,7 @@ export function CalendarWorkspace({
   monthMarks,
   loadMonthMarks,
   saveLastView,
+  loadAgendaEvents,
   editableCalendars = [],
   createAction,
 }: {
@@ -213,6 +215,11 @@ export function CalendarWorkspace({
   ) => Promise<{ marks: MonthMarks } | { error: string }>;
   /** Remembers a view chosen with a shortcut (spec 008 RF-25). */
   saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
+  /** More days for the continuous agenda (spec 016 RF-48, RF-49). */
+  loadAgendaEvents?: (
+    from: string,
+    to: string,
+  ) => Promise<{ events: AgendaEvent[] } | { error: string }>;
   /** Calendars the user can write to, for the quick window (spec 008 RF-37). */
   editableCalendars?: CalendarOption[];
   createAction?: FormAction<FormState<keyof EventFormValues>>;
@@ -237,13 +244,28 @@ export function CalendarWorkspace({
   const isPhone = useIsPhone();
   const onCalendarPage = usePathname() === "/dashboard/calendar";
   const { drawerSlot, pickerOpen, setPickerOpen } = useCalendarHeader();
+  // In the agenda the title follows the month at the top (RF-59).
+  const [agendaMonth, setAgendaMonth] = useState<{
+    date: string;
+    month: string;
+  } | null>(null);
+  const onAgendaMonth = useCallback(
+    (month: string) => setAgendaMonth({ date, month }),
+    [date],
+  );
+  const titleMonth =
+    view === "agenda" && agendaMonth?.date === date
+      ? agendaMonth.month
+      : date.slice(0, 7);
   usePublishCalendarHeader({
-    title: monthLabel(date.slice(0, 7), today),
+    title: monthLabel(titleMonth, today),
     today,
     onToday: () =>
-      router.push(calendarHref(view, today), {
-        transitionTypes: typesOf(todayType(date, today)),
-      }),
+      view === "agenda"
+        ? requestAgendaToday()
+        : router.push(calendarHref(view, today), {
+            transitionTypes: typesOf(todayType(date, today)),
+          }),
     picker: view === "month" ? "months" : "mini",
   });
   // Sliding a finger changes the period of the month, the week and the day (RF-25..RF-29).
@@ -410,11 +432,10 @@ export function CalendarWorkspace({
       group.calendars.filter((c) => c.visible).map((c) => c.id),
     ),
   );
-  const shown = events.filter(
-    (event) =>
-      visibleCalendars.has(event.calendarId) &&
-      !(event.categoryId && hiddenCategories.has(event.categoryId)),
-  );
+  const isShown = (event: AgendaEvent) =>
+    visibleCalendars.has(event.calendarId) &&
+    !(event.categoryId && hiddenCategories.has(event.categoryId));
+  const shown = events.filter(isShown);
 
   const colors = Object.fromEntries(
     groups.flatMap((group) => group.calendars.map((c) => [c.id, c.color])),
@@ -502,7 +523,7 @@ export function CalendarWorkspace({
         </div>
       ) : null}
       {/* On a phone the drawer and the header take the panel's place (RF-19). */}
-      <div className="flex flex-col gap-3 max-tab:hidden lg:w-84 lg:shrink-0">
+      <div className="flex flex-col gap-3 max-tab:hidden lg:sticky lg:top-6 lg:w-84 lg:shrink-0">
         {nextEvents && loadedAt !== undefined ? (
           <NextEventCard
             events={nextEvents}
@@ -557,10 +578,12 @@ export function CalendarWorkspace({
           {view === "agenda" ? (
             <AgendaView
               days={days}
-              events={shown}
+              events={events}
+              isShown={isShown}
               timeZone={timeZone}
               today={today}
-              canCreate={canCreate}
+              loadEvents={loadAgendaEvents}
+              onMonthChange={onAgendaMonth}
             />
           ) : view === "month" ? (
             <MonthView

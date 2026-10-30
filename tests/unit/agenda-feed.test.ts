@@ -157,5 +157,6 @@ describe("weekLabel (spec 016 RF-51)", () => {
     expect(weekLabel("2026-10-26", "2026-11-01")).toBe(
       "26 de octubre – 1 de noviembre",
     );
+    expect(weekLabel("2026-11-01", "2026-11-01")).toBe("1 de noviembre");
   });
 });

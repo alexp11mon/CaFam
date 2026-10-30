@@ -116,15 +116,16 @@ describe("parseViewParams (RF-30; spec 005 RF-15, RF-44)", () => {
 });
 
 describe("agenda range (spec 005 RF-31, RF-40)", () => {
-  it("shows 14 days in a row from the start date", () => {
+  it("reads 14 days before the date and 42 from it (spec 016, plan flow 7.1)", () => {
     const range = getVisibleRange("agenda", "2026-10-21", MADRID);
 
-    expect(range.days).toHaveLength(14);
-    expect(range.days[0]).toBe("2026-10-21");
-    expect(range.days[13]).toBe("2026-11-03");
+    expect(range.days).toHaveLength(56);
+    expect(range.days[0]).toBe("2026-10-07");
+    expect(range.days[14]).toBe("2026-10-21");
+    expect(range.days[55]).toBe("2026-12-01");
     // Covers local midnight of the first day and UTC all-day dates (plan D6).
-    expect(range.from.toISOString()).toBe("2026-10-20T22:00:00.000Z");
-    expect(range.to.toISOString()).toBe("2026-11-04T00:00:00.000Z");
+    expect(range.from.toISOString()).toBe("2026-10-06T22:00:00.000Z");
+    expect(range.to.toISOString()).toBe("2026-12-02T00:00:00.000Z");
   });
 
   it("moves 14 days back and forth", () => {

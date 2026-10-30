@@ -25,12 +25,14 @@ export function CalendarSkeleton({ view }: { view: CalendarView }) {
         <div className={`hidden h-96 lg:block lg:w-84 lg:shrink-0 ${BLOCK}`} />
         <div className="min-w-0 flex-1">
           {view === "agenda" ? (
+            // The month band and a few days, as the agenda (spec 016 RF-50).
             <div className="flex flex-col gap-3">
+              <div className={`h-28 ${BLOCK}`} />
               {Array.from({ length: 4 }, (_, index) => (
                 <div
                   key={index}
                   data-testid="skeleton-agenda-row"
-                  className={`h-24 ${BLOCK}`}
+                  className={`ml-14 h-14 ${BLOCK}`}
                 />
               ))}
             </div>

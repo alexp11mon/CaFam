@@ -7,6 +7,7 @@ import {
   navigate,
   type CalendarView,
 } from "@/lib/calendar/ranges";
+import { requestAgendaToday } from "@/lib/calendar/agenda-today";
 import { shortcutFor } from "@/lib/calendar/shortcuts";
 import {
   CAL_VIEW,
@@ -52,6 +53,9 @@ export function useCalendarShortcuts({
       event.preventDefault();
       if (shortcut === "new") {
         router.push(`/dashboard/events/new?date=${date}`);
+      } else if (shortcut === "today" && view === "agenda") {
+        // The continuous agenda scrolls instead (spec 016 RF-58).
+        requestAgendaToday();
       } else if (shortcut === "today") {
         router.push(calendarHref(view, today), {
           transitionTypes: typesOf(todayType(date, today)),

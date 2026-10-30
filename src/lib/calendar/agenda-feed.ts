@@ -53,6 +53,7 @@ const dayNumber = (key: string) => String(Number(key.slice(8, 10)));
 
 /** "2–8 de noviembre" or "26 de octubre – 1 de noviembre". */
 export function weekLabel(first: string, last: string): string {
+  if (first === last) return `${dayNumber(first)} de ${monthName(first)}`;
   if (first.slice(0, 7) === last.slice(0, 7)) {
     return `${dayNumber(first)}–${dayNumber(last)} de ${monthName(last)}`;
   }

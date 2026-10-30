@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ChevronIcon } from "@/components/shell/icons";
+import { requestAgendaToday } from "@/lib/calendar/agenda-today";
 import { formatPeriodTitle } from "@/lib/calendar/format";
 import {
   calendarHref,
@@ -75,35 +76,49 @@ export function ViewToolbar({
   return (
     <nav aria-label="Navegación del calendario" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Link
-          href={calendarHref(view, today)}
-          transitionTypes={typesOf(todayType(date, today))}
-          aria-keyshortcuts="T"
-          className={BUTTON}
-        >
-          Hoy
-        </Link>
-        <Link
-          href={calendarHref(view, navigate(view, date, -1))}
-          transitionTypes={[CAL_PREV]}
-          aria-label={current.previous}
-          aria-keyshortcuts="ArrowLeft"
-          className={BUTTON}
-        >
-          <ChevronIcon direction="left" />
-        </Link>
-        <Link
-          href={calendarHref(view, navigate(view, date, 1))}
-          transitionTypes={[CAL_NEXT]}
-          aria-label={current.next}
-          aria-keyshortcuts="ArrowRight"
-          className={BUTTON}
-        >
-          <ChevronIcon direction="right" />
-        </Link>
-        <h2 className="min-w-0 flex-1 text-lg font-bold text-ink tabular-nums first-letter:uppercase">
-          {formatPeriodTitle(view, date)}
-        </h2>
+        {view === "agenda" ? (
+          // The agenda is one continuous list: "Hoy" scrolls it, no previous or next (spec 016 RF-47, RF-58).
+          <button
+            type="button"
+            onClick={requestAgendaToday}
+            aria-keyshortcuts="T"
+            className={BUTTON}
+          >
+            Hoy
+          </button>
+        ) : (
+          <>
+            <Link
+              href={calendarHref(view, today)}
+              transitionTypes={typesOf(todayType(date, today))}
+              aria-keyshortcuts="T"
+              className={BUTTON}
+            >
+              Hoy
+            </Link>
+            <Link
+              href={calendarHref(view, navigate(view, date, -1))}
+              transitionTypes={[CAL_PREV]}
+              aria-label={current.previous}
+              aria-keyshortcuts="ArrowLeft"
+              className={BUTTON}
+            >
+              <ChevronIcon direction="left" />
+            </Link>
+            <Link
+              href={calendarHref(view, navigate(view, date, 1))}
+              transitionTypes={[CAL_NEXT]}
+              aria-label={current.next}
+              aria-keyshortcuts="ArrowRight"
+              className={BUTTON}
+            >
+              <ChevronIcon direction="right" />
+            </Link>
+            <h2 className="min-w-0 flex-1 text-lg font-bold text-ink tabular-nums first-letter:uppercase">
+              {formatPeriodTitle(view, date)}
+            </h2>
+          </>
+        )}
       </div>
       <div className="flex gap-1 self-start rounded-full bg-paper p-1 max-sm:self-stretch">
         {VIEWS.map((item) => (
