@@ -84,7 +84,7 @@
   Hecho cuando: `npm run test:db -- event-images` y `npm test -- images-purge` en verde. Cubre: RF-16, RF-17, RF-18 | Módulo: images-purge-job
   Evidencia (2026-10-30): rojo (6 tests de BD, ruta inexistente). Migración `20261030140000_images_purge.sql` (`images_claim_purge` con `p_object_ids` y `p_orphan_age` para poder probar sin tocar lo de otros tests, `images_done_purge`, `images_purge_trigger`, `images_scheduled_jobs` y el `pg_cron` `images-purge` a las `:15`), `src/lib/images/purge.ts`, `paths.ts` y la ruta. `test:db -- event-images storage-images` 37 tests y `npm test -- images-purge` 5 tests en verde. typecheck, lint y format en verde, `npm test` 1423 tests, build correcto.
 
-- [ ] T6 Escribir la lógica pura de las imágenes
+- [x] T6 Escribir la lógica pura de las imágenes
   Pasos:
   - Primero, `tests/unit/images-core.test.ts` en rojo:
     - `fitWithin` (horizontal, vertical, cuadrada, ya pequeña, 2048 y 400);
@@ -96,6 +96,7 @@
   - Después, `src/lib/images/limits.ts`, `fit.ts`, `alt.ts`, `paths.ts` y `error-messages.ts`.
 
   Hecho cuando: `npm test -- images-core` en verde. Cubre: RF-3, RF-5, RF-14, RF-20, RF-21, RF-22, RF-23 | Módulo: images-core
+  Evidencia (2026-10-30): rojo (módulos inexistentes). `images-core.test.ts` 12 tests en verde. Los huecos libres los calcula la base de datos, así que `slotsLeft` no hace falta: basta `fitNotice(pedidas, reservadas)`. `isAcceptedType` mira la extensión cuando el navegador no da tipo (algunos HEIC). typecheck, lint y format en verde, `npm test` 1435 tests, build correcto.
 
 ### Iteración 2 — Navegador, interfaz y validación
 
