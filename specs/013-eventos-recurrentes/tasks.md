@@ -176,7 +176,7 @@
   Hecho cuando: `npm test -- upload-plan upload-calendar upload-form` en verde. Cubre: RF-30 | Módulo: upload-series
   Evidencia (2026-10-30): rojo con `withOccurrences` inexistente, `uploadCounts` sin series y el formulario sin aviso; `npm test -- upload-page upload-calendar sync-write-core` en verde (las series se expanden en la ventana sin las excepciones ni las fechas borradas; cuentas con `series` y `occurrences`; `uploadCalendar` sube las repeticiones como eventos sueltos y manda `p_mapping` v2 con `{series_id, starts_at, ends_at}` junto a `{event_id}`; aviso «N series se subirán como M eventos sueltos; las repeticiones fuera de la ventana se perderán.» en singular y plural). `planUpload` sigue en `sync-write-core.test.ts`, no en un `upload-plan.test`. La conversión en la BD ya la cubre `event-series` (T8). `npm test` 189 archivos y 1738 tests, typecheck, format y build correctos, lint con los 2 avisos previos. Sin prueba manual contra Google: en el puerto 3100 no se puede conectar una cuenta (trampa del OAuth en dev).
 
-- [ ] T16 Validar las repeticiones de punta a punta y cerrar
+- [x] T16 Validar las repeticiones de punta a punta y cerrar
   Pasos:
   - Verificación completa con la salida reportada, incluido `npm run test:db` entero.
   - Prueba manual en móvil (≤ 768 px) y escritorio: crear, cambiar y borrar cada tipo de regla en los tres alcances, con un evento de día completo y uno de varios días.
@@ -184,6 +184,7 @@
   - Evidencia RF por RF en este archivo y `AGENTS.md` actualizado (estado, esquema, `ical.js` en `expand.ts`, trampas nuevas).
 
   Hecho cuando: la tabla de evidencias cubre RF-1 a RF-32 con su test o captura y el usuario aprueba cerrar la spec. Cubre: todos | Módulo: validation
+  Evidencia (2026-10-30): tabla de evidencias RF-1 a RF-32 en este archivo; `npm run test:db` entero 37 archivos y 404 tests, `npm test` 189 archivos y 1738 tests, typecheck, format y build correctos; prueba manual a 390 y 1440 px y 48 capturas. El usuario aprobó cerrar la spec el 2026-10-31.
 
 ## Evidencias RF por RF (T16, 2026-10-30)
 

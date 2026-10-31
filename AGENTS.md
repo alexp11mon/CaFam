@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-10-30, al terminar las tareas de la spec 013 (eventos recurrentes), pendiente de que el usuario la cierre; sus migraciones están en dev y faltan en prod.
+> Última actualización: 2026-10-31, al cerrar la spec 013 (eventos recurrentes); sus 6 migraciones están en dev y faltan en prod.
 
 ## 1. Qué es
 
@@ -40,7 +40,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 010-renombrar-cafam | Renombrar todo el proyecto a CaFam (interfaz, PWA, correos, configuración, tests, documentación, specs cerradas y repositorio) | **Cerrada** (2026-10-29), T1–T8 hechas; migración `rename_cafam` aplicada en prod, paneles de correo revisados y repositorio renombrado |
 | 011-rediseno-visual | Modo oscuro con selector, transparencias (glassmorphism), animaciones, microinteracciones y transiciones entre vistas | **Cerrada** (2026-10-30), T1–T13 hechas; migración `profile_theme` aplicada en prod |
 | 012-imagenes-en-eventos | Imágenes en los eventos con Supabase Storage, también de Lectores y en calendarios traídos de Google | **Cerrada** (2026-10-30), T1–T13 hechas; migraciones aplicadas en prod |
-| 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Implementada** (2026-10-30), T1–T15 hechas y T16 a falta de la aprobación para cerrar; 6 migraciones en dev, **pendientes en prod** |
+| 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Cerrada** (2026-10-31), T1–T16 hechas; 6 migraciones en dev, **pendientes en prod** |
 | 014-comentarios-en-eventos | Comentarios en los eventos por cualquier miembro, Lectores incluidos | **Spec aprobada** (2026-10-29), sin plan |
 | 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | **Spec aprobada** (2026-10-29), sin plan |
 | 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Cerrada** (2026-10-30), T1–T13 hechas; sin migraciones. La prueba en el iPhone se hace en producción |
@@ -143,7 +143,7 @@ Añadido por la spec 016 (en producción desde el 2026-10-30, sin migraciones; c
 - **Semana y día**: cabecera fija con inicial y número grande, franja de día completo, horas "9:00", bloques redondeados con título y lugar que parten el texto en varias líneas, y línea de ahora con un punto. Al abrir en hoy se desplaza a la hora actual.
 - **Agenda continua en todas las anchuras**: bandas de mes con degradado (`bg-agenda-band`), separadores de semana ("2–8 de noviembre", "Sin eventos"), día a la izquierda y bloques "A las 11:15–14:15 en <lugar>". Carga tramos de 28 días al llegar a un extremo con `loadAgendaEvents` (como mucho 120 días en memoria, sin saltos al cargar hacia arriba), el título de la cabecera sigue el mes visible y "Hoy" (botón, cabecera o T) vuelve a hoy sin recargar si puede.
 
-Añadido por la spec 013 (implementada el 2026-10-30; migraciones en dev, pendientes en prod):
+Añadido por la spec 013 (cerrada el 2026-10-31; migraciones en dev, pendientes en prod):
 
 - **"Repetir"** en el alta y la edición (`RepeatField`): "No se repite", opciones rápidas calculadas con la fecha (cada día, semana, mes por día o por posición, último, año, laborables) y "Personalizado…" (`RecurrenceEditor`: cada N días, semanas, meses o años, días de la semana, fin Nunca, El <fecha> o Tras <n>, con resumen en español). El campo envía `repeat` (`none`, el tipo de opción rápida o `custom:<RRULE>`) y el servidor lo resuelve con la fecha. Deshabilitado en calendarios traídos de Google, con su motivo.
 - **Una serie es una fila** de `events` con `recurrence`; sus repeticiones se expanden al leer (`getEventsInRange`, `getEvent`) con `ical.js`, a la hora de reloj de `recurrence_tz` (la zona del perfil de quien la creó). Una repetición sin fila propia tiene el id `<uuid de la serie>_<YYYYMMDDTHHMMSSZ>` (`occurrenceId`, `parseEventId`). Una **excepción** es una fila con `series_id` y `original_start`; si no difiere de la serie solo existe para guardar imágenes y se muestra como una repetición normal.
@@ -607,6 +607,6 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **011 (rediseño visual)** está cerrada y en producción (2026-10-30), con `profile_theme` aplicada en prod.
 - La **012 (imágenes)** está cerrada y en producción (2026-10-30), con sus 8 migraciones aplicadas en prod.
 - La **016 (calendario al estilo Google)** está cerrada (2026-10-30). Las previews de Vercel están protegidas con su inicio de sesión: para verlas en el móvil hay que entrar en Vercel o usar "Share".
-- La **013 (eventos recurrentes)** tiene T1–T15 hechas y la evidencia de T16 en su `tasks.md`; falta que el usuario apruebe cerrarla y aplique sus 6 migraciones en prod (`npx supabase link --project-ref yznbdoskvtxeasujtirk`, `npx supabase db push`, volver a enlazar dev) antes del merge a `main`.
+- La **013 (eventos recurrentes)** está cerrada (2026-10-31); falta aplicar sus 6 migraciones en prod (`npx supabase link --project-ref yznbdoskvtxeasujtirk`, `npx supabase db push`, volver a enlazar dev) antes del merge a `main`.
 - **Siguiente:** por orden y cada una con su plan y sus tareas aprobados: 017 (mover arrastrando, menú y "Deshacer"; spec aprobada, enmienda 5 ya en la constitución; tendrá que decidir el alcance al soltar una repetición), 014 (comentarios) y 015 (asistente de chat). Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.
