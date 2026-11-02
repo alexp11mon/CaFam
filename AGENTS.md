@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-02, al cerrar la spec 019 (escritorio, móvil y tiempo real); faltan aprobar el cierre de la 015 y aplicar las migraciones de las dos en prod.
+> Última actualización: 2026-11-02, al cerrar la spec 019 (escritorio, móvil y tiempo real); sus migraciones y la `assistant` de la 015 ya están en prod; falta aprobar el cierre de la 015.
 
 ## 1. Qué es
 
@@ -42,8 +42,8 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 012-imagenes-en-eventos | Imágenes en los eventos con Supabase Storage, también de Lectores y en calendarios traídos de Google | **Cerrada** (2026-10-30), T1–T13 hechas; migraciones aplicadas en prod |
 | 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Cerrada** (2026-10-31), T1–T16 hechas; 6 migraciones aplicadas en prod |
 | 014-comentarios-en-eventos | Comentarios en los eventos por cualquier miembro, Lectores incluidos | **Cerrada** (2026-11-01), T1–T11 hechas; 2 migraciones aplicadas en prod |
-| 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | T1–T13 hechas (2026-11-02); falta la aprobación del cierre, la migración `assistant` en prod y `GROQ_API_KEY` en Vercel |
-| 019-escritorio-movil-tiempo-real | Tarjeta de detalle junto al evento en el ordenador, barra lateral plegable, ocultar fines de semana, duración de un evento nuevo, tecla C, bloque provisional ajustable en el móvil y calendario en tiempo real con Supabase Realtime (enmienda 7) | **Cerrada** (2026-11-02), T1–T14 hechas; migraciones `live_changes` y `profile_view_options` pendientes de aplicar en prod |
+| 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | T1–T13 hechas (2026-11-02); migración `assistant` aplicada en prod; falta la aprobación del cierre y `GROQ_API_KEY` en Vercel |
+| 019-escritorio-movil-tiempo-real | Tarjeta de detalle junto al evento en el ordenador, barra lateral plegable, ocultar fines de semana, duración de un evento nuevo, tecla C, bloque provisional ajustable en el móvil y calendario en tiempo real con Supabase Realtime (enmienda 7) | **Cerrada** (2026-11-02), T1–T14 hechas; migraciones `live_changes` y `profile_view_options` aplicadas en prod |
 | 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Cerrada** (2026-10-30), T1–T13 hechas; sin migraciones. La prueba en el iPhone se hace en producción |
 | 017-mover-eventos-y-menu | Mover y redimensionar arrastrando, menú contextual en el ordenador, "Deshacer" en los avisos, detalle en hoja inferior en el móvil, pellizcar para ampliar y atajos nuevos (enmienda 5) | **Cerrada** (2026-11-01), T1–T16 hechas; 2 migraciones aplicadas en prod |
 | 018-sincronizacion-icloud | Calendarios de iCloud (iPhone) por CalDAV con contraseña específica de app, con el mismo alcance que Google en la 007 y la 009 (leer, escribir, renombrar, crear y subir). Dependencia `tsdav` aprobada; se instala en la primera tarea | **Cerrada** (2026-11-01), T1–T15 hechas; 2 migraciones aplicadas en prod; enmienda 6 aplicada |
@@ -198,7 +198,7 @@ Añadido por la spec 015 (proveedor **Groq**, capa gratuita; elegido en el plan 
 - **Calidad**: `npm run eval:assistant` siembra un usuario `@cafam.test` en dev, hace 35 preguntas a Groq de verdad (`tests/assistant-eval/questions.ts`) y exige el 90 % de aciertos, ningún evento inventado ni revelado y el 90 % por debajo de 10 s. Tarda unos 9 minutos por la pausa entre preguntas (8K tokens por minuto). No corre en `npm test` ni en `test:db`.
 - **Privacidad**: sección "Asistente de chat" en `/privacy`.
 
-Añadido por la spec 019 (en dev; pendiente de aplicar en prod):
+Añadido por la spec 019 (migraciones aplicadas en prod el 2026-11-02):
 
 - **Tarjeta de detalle** (`EventCard`, desde 769 px): un clic izquierdo sin modificadores en un evento abre junto a él un `<dialog open>` **no modal** (`placeCard` en `popover.ts`: derecha, izquierda, debajo o encima, dentro de la pantalla) con lo que ya tiene la vista y, al llegar, descripción, autor, repetición y motivo de solo lectura (`loadEventCard`, `events/card-actions.ts`). Editar (`/dashboard/events/<id>?edit=1`, que abre el detalle ya en edición), Duplicar, Borrar (con "Deshacer") y Abrir. Se cierra con Escape, "Cerrar", un clic fuera o al estrechar la ventana, y devuelve el foco al evento; E, Supr y Ctrl+C como en el detalle. Con Ctrl/⌘/Mayús o en el móvil el bloque sigue siendo un enlace. La abre `openCard` de `useEventInteractions()`.
 - **Barra lateral plegable** (desde 1024 px): botón ≡ "Plegar el panel" en `ViewToolbar`; plegada, la columna del panel (`calendar-side-panel`) desaparece y junto al título hay una flecha "Elegir fecha" con el mini calendario flotante. Se recuerda en el dispositivo (`localStorage` `cafam-sidebar`, `use-sidebar-collapsed.ts`).
@@ -470,14 +470,14 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `event_trash` (copia del evento, sus imágenes `ready` y sus comentarios, con `deleted_by`): RLS sin políticas y sin permisos para clientes; solo la tocan las funciones. Se guarda la última copia de cada usuario.
   - `snapshot_event(p_event_id, …)` (owner o editor, antes del borrado normal) y `restore_event(p_trash_id, p_event_id default null)` (solo quien borró, en el primer minuto y con el rol aún vigente; `p_event_id` cuelga imágenes y comentarios del evento recreado en Google). `trash_row(p_trash_id)` devuelve la fila guardada a quien borró. Una repetición sin fila se restaura quitando su fecha de `exdates`.
   - `images_claim_purge` deja en la cola los objetos de los últimos 2 minutos, así las imágenes sobreviven al "Deshacer". `pg_cron` `event-trash-purge` (05:00 UTC) borra las copias de más de 1 h; `trash_scheduled_jobs()` es la ayuda de tests.
-- Añadido por la spec 015 (migración `assistant`; en dev, **pendiente en prod**):
+- Añadido por la spec 015 (migración `assistant`; en dev y en prod):
   - `profiles.share_availability` (`boolean`, por defecto `false`), protegida por las políticas de `profiles`.
   - `assistant_questions (id, user_id default auth.uid(), asked_at)`: el usuario lee e inserta solo las suyas (`insert (user_id)`), nadie las cambia ni borra; `pg_cron` `assistant-purge-questions` (04:30 UTC) borra las de más de 2 días. `assistant_scheduled_jobs()` es la ayuda de tests.
   - `assistant_people()` (personas que comparten calendario con el llamante, con `shares_availability`) y `assistant_busy(p_person_ids, p_from, p_to)` (`SECURITY DEFINER`: solo intervalos ocupados, sin títulos, de personas que consienten y comparten calendario; `22023` si el periodo pasa de 32 días).
 - Añadido por la spec 018 (migraciones `icloud_provider` y `sync_write_context_provider`; en dev y en prod (2026-11-01)):
   - Los `check` de `provider` en `calendar_connections` y `synced_calendars` admiten `'icloud'`. `google_access` guarda también el permiso de un calendario de iCloud (no se renombra; lo explica un comentario).
   - `sync_write_context` devuelve además `provider`. El resto de funciones de la 007 y la 009 no cambian: `connect_account` guarda en Vault la credencial de iCloud como guarda el token de Google, y `sync_claim_*` ya devolvían `provider`.
-- Añadido por la spec 019 (migraciones `live_changes` y `profile_view_options`; en dev, **pendientes en prod**):
+- Añadido por la spec 019 (migraciones `live_changes` y `profile_view_options`; en dev y en prod):
   - `live_notify(p_calendar_id, p_extra_user)` (`SECURITY DEFINER`): llama a `realtime.send({actor: auth.uid()}, 'changed', 'user:<id>', true)` para cada miembro, sin repetir usuario en la misma transacción (marcas `cafam_live.*` con `set_config`), y si Realtime falla solo deja un aviso: nunca tumba la escritura. Triggers `live_events_changed` (también los dos calendarios al mover), `live_calendars_changed` y `live_members_changed` (avisa también al que sale o es expulsado). `actor` es nulo en la sincronización y en lo que escribe el servidor sin sesión.
   - Política "live: own topic" en `realtime.messages`: cada usuario solo se suscribe a `user:<su id>`.
   - `profiles.show_weekends` (`boolean`, por defecto `true`) y `profiles.default_event_minutes` (`int`, por defecto 60, `check` en 15, 30, 45, 60, 90 y 120), protegidas por las políticas de `profiles`.
@@ -710,6 +710,6 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **014 (comentarios)** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod.
 - La **017 (mover eventos, menú y "Deshacer")** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod. Al soltar, cambiar el color o borrar una repetición se pregunta el alcance; "Deshacer" solo con "Solo este evento".
 - La **018 (iCloud)** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod. La comprobación con una cuenta real confirmó `MOVE` y renombrar.
-- La **015 (asistente de chat)** tiene T1–T13 hechas (2026-11-02). Para cerrarla faltan la aprobación del usuario, la migración `assistant` en prod y `GROQ_API_KEY` (clave "CaFam prod") en Vercel.
-- La **019 (escritorio, móvil y tiempo real)** está cerrada (2026-11-02). Faltan sus migraciones `live_changes` y `profile_view_options` en prod, que deben aplicarse antes de llevar la rama a `main`. La 020 (disponibilidad en la rejilla y sincronización rápida) está redactada y sin aprobar.
+- La **015 (asistente de chat)** tiene T1–T13 hechas (2026-11-02). Su migración `assistant` ya está en prod; para cerrarla faltan la aprobación del usuario y `GROQ_API_KEY` (clave "CaFam prod") en Vercel.
+- La **019 (escritorio, móvil y tiempo real)** está cerrada (2026-11-02). Sus migraciones `live_changes` y `profile_view_options` están aplicadas en prod (2026-11-02). La 020 (disponibilidad en la rejilla y sincronización rápida) está redactada y sin aprobar.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.
