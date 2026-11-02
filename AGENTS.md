@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-01, al cerrar la spec 018 (sincronización con iCloud), con sus 2 migraciones aplicadas en prod.
+> Última actualización: 2026-11-02, al terminar las tareas de la spec 015 (asistente de chat); falta aprobar el cierre y aplicar su migración en prod.
 
 ## 1. Qué es
 
@@ -42,7 +42,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 012-imagenes-en-eventos | Imágenes en los eventos con Supabase Storage, también de Lectores y en calendarios traídos de Google | **Cerrada** (2026-10-30), T1–T13 hechas; migraciones aplicadas en prod |
 | 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Cerrada** (2026-10-31), T1–T16 hechas; 6 migraciones aplicadas en prod |
 | 014-comentarios-en-eventos | Comentarios en los eventos por cualquier miembro, Lectores incluidos | **Cerrada** (2026-11-01), T1–T11 hechas; 2 migraciones aplicadas en prod |
-| 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | **Spec aprobada** (2026-10-29); plan y tareas aprobados (2026-11-02), sin empezar |
+| 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | T1–T13 hechas (2026-11-02); falta la aprobación del cierre, la migración `assistant` en prod y `GROQ_API_KEY` en Vercel |
 | 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Cerrada** (2026-10-30), T1–T13 hechas; sin migraciones. La prueba en el iPhone se hace en producción |
 | 017-mover-eventos-y-menu | Mover y redimensionar arrastrando, menú contextual en el ordenador, "Deshacer" en los avisos, detalle en hoja inferior en el móvil, pellizcar para ampliar y atajos nuevos (enmienda 5) | **Cerrada** (2026-11-01), T1–T16 hechas; 2 migraciones aplicadas en prod |
 | 018-sincronizacion-icloud | Calendarios de iCloud (iPhone) por CalDAV con contraseña específica de app, con el mismo alcance que Google en la 007 y la 009 (leer, escribir, renombrar, crear y subir). Dependencia `tsdav` aprobada; se instala en la primera tarea | **Cerrada** (2026-11-01), T1–T15 hechas; 2 migraciones aplicadas en prod; enmienda 6 aplicada |
@@ -187,6 +187,16 @@ Añadido por la spec 018 (en producción desde el 2026-11-01):
 - **Textos con el proveedor** (`lib/sync/provider-labels.ts`): errores de escritura (`writeErrorText`), del motor (`syncErrorText`), solo lectura, "Traído de iCloud", "Solo lectura en iCloud", la ficha de la cuenta ("Cuenta conectada"), crear calendario, desconectar (en iCloud recuerda revocar la contraseña en account.apple.com y que allí no se borra nada), la subida (elige cuenta de Google o iCloud) y el aviso de evento borrado (`done: "goneIcloud"`). El aviso `sync_revoked` de iCloud explica que cambiar la contraseña del Apple ID invalida las específicas de app y enlaza a `new?provider=icloud&reconnect=<id>` (`getNotices` busca la conexión por el correo). "Repetir" sigue deshabilitado en los calendarios traídos de los dos.
 - **Privacidad**: sección "Calendarios de iCloud" en `/privacy`.
 
+Añadido por la spec 015 (proveedor **Groq**, capa gratuita; elegido en el plan D1):
+
+- **Pantalla "Asistente"** (`/dashboard/assistant`, en `NAV_ITEMS`: barra lateral, hoja "Más" y cajón): frase de privacidad con enlace a `/privacy` y tres ejemplos en la conversación vacía, hilo en `role="log"`, "Pensando…" con "Cancelar" (aborta y devuelve la pregunta al campo), error con "Reintentar", "Nueva conversación" y lista de eventos citados que abren su detalle (`AssistantChat`, `CitedEvents`). Intro envía y Mayús+Intro salta de línea. La conversación vive solo en el componente: no se guarda en ningún sitio.
+- **`POST /api/assistant`** (`maxDuration` 30): valida el hilo (`assistantRequestSchema`, preguntas de 1 a 500 caracteres, últimos 20 mensajes), cuenta las preguntas del día en la zona del perfil (30, tabla `assistant_questions`; 429 con `QUOTA_TEXT`), ejecuta `runAssistant` y responde `{answer, events, remaining}`. 503 si falla el proveedor, 499 si se cancela; solo cuenta las respondidas.
+- **Bucle** (`lib/assistant/run.ts`): prompt con la fecha, los 14 días siguientes con su día de la semana, esta semana, la que viene y el fin de semana (`dateContext`); hasta 3 rondas de herramientas y luego respuesta obligada. Las herramientas (`list_events`, `search_events`, `find_free_time`, solo lectura) se atan en la ruta a la sesión del usuario: el hilo no puede cambiar quién consulta (RF-29). El modelo cita eventos con referencias `[e1]` (`createRefs`, `extractCitations`), nunca con ids; las inventadas se descartan. El `notice` de una herramienta (persona sin permiso) lo añade el servidor si el modelo lo omite.
+- **Proveedor** (`lib/assistant/provider.ts`, único que lee `GROQ_API_KEY`): `fetch` a la API compatible con OpenAI de Groq, plazo de 8 s, `openai/gpt-oss-120b` y, si responde 429, una vez `qwen/qwen3.8-27b` (`ASSISTANT_MODELS`). Groq no entrena con los datos y la retención cero está activada en su consola (`PROVIDER_TRAINS_ON_DATA = false`; si fuera `true`, se excluirían los calendarios traídos, RF-31).
+- **Disponibilidad**: `find_free_time` calcula los huecos en TypeScript (`freeSlots`, franjas por defecto mañana 08–14, tarde 16–21 y noche 21–24, o las pedidas; como mucho 31 días). De otras personas solo usa sus eventos privados si activaron en Ajustes "Permitir que el asistente de otros consulte mi disponibilidad" (`profiles.share_availability`, desactivado por defecto; `AvailabilitySetting` y `setShareAvailability`), y solo como libre u ocupado (`assistant_busy`). Las personas se buscan por nombre (`matchPerson`: ambigua o no encontrada).
+- **Calidad**: `npm run eval:assistant` siembra un usuario `@cafam.test` en dev, hace 35 preguntas a Groq de verdad (`tests/assistant-eval/questions.ts`) y exige el 90 % de aciertos, ningún evento inventado ni revelado y el 90 % por debajo de 10 s. Tarda unos 9 minutos por la pausa entre preguntas (8K tokens por minuto). No corre en `npm test` ni en `test:db`.
+- **Privacidad**: sección "Asistente de chat" en `/privacy`.
+
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 
 - **Flujo SDD (P7):** no se escribe código sin `spec.md` → `plan.md` → `tasks.md` aprobados explícitamente por el usuario, en ese orden. Cada spec vive en `specs/NNN-nombre/`. Se implementa **una tarea `Tn` cada vez y con el test primero** (rojo → verde). Cada commit cita su tarea.
@@ -277,6 +287,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── recurrence/        # spec 013: repeat-field, recurrence-editor, series-scope-dialog, series-delete
 │   │   ├── comments/          # spec 014: event-comments (sección con sondeo), comment-item, comment-text, comment-form, comments-skeleton
 │   │   ├── images/            # spec 012: image-picker, upload-list, use-image-uploads (cola de subidas), image-uploader (detalle), event-images (galería), image-viewer (visor), use-image-blob
+│   │   ├── assistant/         # spec 015: assistant-chat, cited-events
 │   │   ├── connections/       # spec 007: connection-list, provider-notice, calendar-picker, sync-status, sync-now-button, disconnect-dialog; spec 018: icloud-notice, icloud-connect-form
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
@@ -292,6 +303,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── comments/          # spec 014: limits, schemas, linkify, relative-time, error-messages (puras) y queries.ts (`listComments`, `commentRowFor`)
 │   │   ├── recurrence/        # spec 013: limits, schemas, rule (RRULE ↔ regla), presets, summary, occurrence-id y error-messages (puras); expand (ical.js), read-series y series-write (`seriesColumns`, `planSeriesChange`, `planSeriesDelete`), solo servidor; server-secret
 │   │   ├── images/            # spec 012: paths, limits, fit, alt, error-messages (puras), prepare-image (canvas), upload-object (XHR con progreso), download-image, queries.ts, purge.ts
+│   │   ├── assistant/         # spec 015. Puras: limits, dates, free-slots, error-messages, schemas, people-match, serialize, citations, prompt, tool-definitions. Con red o BD: provider (único que llama a Groq), tools (con la sesión), run (bucle con dependencias inyectadas)
 │   │   ├── sync/              # spec 007. Puras y testeadas: limits, window, limit-events, nearest-color, event-row, google-events, oauth-state, summary, error-messages, schemas, read-only (canWriteEvents, canMerge). Con red o BD: providers/google.ts (único cliente HTTP de Google), google-config, run-sync (motor con dependencias inyectadas), engine.ts (entrada del servidor), queries.ts (lecturas con RLS)
 │   │   └── supabase/          # env.ts, server.ts, client.ts, proxy.ts
 │   └── types/database.ts      # GENERADO con `npm run db:types`; no editar a mano
@@ -358,6 +370,8 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/manifest.webmanifest`, `/sw.js`, `/icons/*` | pública | PWA |
 | `/api/images/purge` | `Authorization: Bearer ${CRON_SECRET}` (POST) | Spec 012: borra en Storage los objetos de la cola de purga; `maxDuration` 60 |
 | `/api/cron/keep-alive` | `Authorization: Bearer ${CRON_SECRET}` | `200 {"ok":true}` / `401` / `500` |
+| `/dashboard/assistant` | con sesión | Asistente de chat (spec 015) |
+| `/api/assistant` | con sesión (POST; sin sesión → `401`) | Una pregunta del asistente (spec 015): `200`, `400`, `429` (cuota), `499` (cancelada), `503` (proveedor) |
 
 La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSession)`, en `src/lib/auth/route-access.ts` (testeada en `route-access.test.ts`). Para proteger una ruta nueva se cambia **ahí**, no en cada página. El `matcher` de `src/proxy.ts` excluye estáticos, `sw.js` y el manifest.
 
@@ -446,6 +460,10 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `event_trash` (copia del evento, sus imágenes `ready` y sus comentarios, con `deleted_by`): RLS sin políticas y sin permisos para clientes; solo la tocan las funciones. Se guarda la última copia de cada usuario.
   - `snapshot_event(p_event_id, …)` (owner o editor, antes del borrado normal) y `restore_event(p_trash_id, p_event_id default null)` (solo quien borró, en el primer minuto y con el rol aún vigente; `p_event_id` cuelga imágenes y comentarios del evento recreado en Google). `trash_row(p_trash_id)` devuelve la fila guardada a quien borró. Una repetición sin fila se restaura quitando su fecha de `exdates`.
   - `images_claim_purge` deja en la cola los objetos de los últimos 2 minutos, así las imágenes sobreviven al "Deshacer". `pg_cron` `event-trash-purge` (05:00 UTC) borra las copias de más de 1 h; `trash_scheduled_jobs()` es la ayuda de tests.
+- Añadido por la spec 015 (migración `assistant`; en dev, **pendiente en prod**):
+  - `profiles.share_availability` (`boolean`, por defecto `false`), protegida por las políticas de `profiles`.
+  - `assistant_questions (id, user_id default auth.uid(), asked_at)`: el usuario lee e inserta solo las suyas (`insert (user_id)`), nadie las cambia ni borra; `pg_cron` `assistant-purge-questions` (04:30 UTC) borra las de más de 2 días. `assistant_scheduled_jobs()` es la ayuda de tests.
+  - `assistant_people()` (personas que comparten calendario con el llamante, con `shares_availability`) y `assistant_busy(p_person_ids, p_from, p_to)` (`SECURITY DEFINER`: solo intervalos ocupados, sin títulos, de personas que consienten y comparten calendario; `22023` si el periodo pasa de 32 días).
 - Añadido por la spec 018 (migraciones `icloud_provider` y `sync_write_context_provider`; en dev y en prod (2026-11-01)):
   - Los `check` de `provider` en `calendar_connections` y `synced_calendars` admiten `'icloud'`. `google_access` guarda también el permiso de un calendario de iCloud (no se renombra; lo explica un comentario).
   - `sync_write_context` devuelve además `provider`. El resto de funciones de la 007 y la 009 no cambian: `connect_account` guarda en Vault la credencial de iCloud como guarda el token de Google, y `sync_claim_*` ya devolvían `provider`.
@@ -508,6 +526,7 @@ Variables (documentadas en `.env.example`):
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `.env.local`, `.env.test.local`, Vercel | Pública (`sb_publishable_…`) |
 | `CRON_SECRET` | Vercel, `.env.local` y `.env.test.local` | Secreto del servidor. Desde la spec 007 debe ser igual que `cron_secret` en Vault (los tests de `sync-worker` lo usan) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `.env.local` y Vercel | Cliente OAuth de Google (spec 007), solo servidor. En dev, con la URI `http://localhost:3000/api/oauth/google/callback` |
+| `GROQ_API_KEY` | `.env.local`, `.env.test.local` y Vercel | Clave de Groq del asistente (spec 015), solo servidor y solo en `lib/assistant/provider.ts`. Dev y prod con claves distintas |
 | `SUPABASE_SECRET_KEY` | **Solo `.env.test.local`** | Crea y borra usuarios en `test:db`. Nunca en Vercel ni en `src/` |
 
 **Permisos registrados en Google** (pantalla de consentimiento, proyecto `CaFam`), todos con el prefijo `https://www.googleapis.com/auth/`:
@@ -531,6 +550,7 @@ npm test               # vitest proyecto unit (jsdom)        → npm test -- <fi
 npm run test:db        # vitest proyecto db contra Supabase dev → npm run test:db -- <filtro>
 npm run db:push        # aplica migraciones al proyecto enlazado (dev)
 npm run db:types       # regenera src/types/database.ts
+npm run eval:assistant # spec 015: 35 preguntas a Groq contra dev (~9 min, gasta cuota)
 ```
 
 ## 9. Patrones del código (síguelos)
@@ -650,11 +670,13 @@ npm run db:types       # regenera src/types/database.ts
 - **Arneses de test de las vistas:** pasa arrays estables (fuera del render); un array nuevo en cada render reinicia los cambios optimistas del contexto y el test parece no guardar.
 - **iCloud empareja las repeticiones por la hora de pared de la serie** (spec 018): `ical.js` no relaciona un `RECURRENCE-ID` o `EXDATE` en UTC con una serie en `TZID` sin `VTIMEZONE`. Por eso `icloud-ics.ts` los escribe con la misma `TZID` que el `DTSTART` de la serie. El `external_id` sí va en UTC.
 - **El aviso `sync_revoked` solo guarda el correo de la cuenta**: con el mismo correo en Google y como Apple ID, `getNotices` elige la conexión en `needs_reauth`.
+- **La cuota de Groq es por organización, no por clave** (spec 015): 200K tokens al día y 8K por minuto por modelo, compartidos por dev, `eval:assistant` (unos 70K por ejecución) y prod si su clave está en la misma organización. Se repone a unos 140 tokens por minuto. Agotada, el asistente responde "no disponible" (503). No lances el eval más de una o dos veces al día.
+- **Vitest 5 oculta los `console.log` de los tests que pasan**: `eval:assistant` lleva `--silent=false` para ver el informe (en la configuración del proyecto no surte efecto).
 - **Parar `next start` en segundo plano:** detener la tarea no mata el proceso de Node y el puerto 3100 queda ocupado; mata el PID que escucha en él (`netstat -ano | grep :3100`).
 
 ## 11. Fuera de alcance hasta su spec
 
-Vistas de año y de 4 días, búsqueda, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. El asistente (015) ya tiene spec aprobada: se implementa siguiendo su plan y sus tareas cuando estén aprobados.
+Vistas de año y de 4 días, búsqueda, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. El asistente (015) está hecho: crear o cambiar eventos desde el asistente, guardar conversaciones o responder por voz necesitan otra spec.
 
 ## 12. Cómo continuar
 
@@ -670,5 +692,5 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **014 (comentarios)** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod.
 - La **017 (mover eventos, menú y "Deshacer")** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod. Al soltar, cambiar el color o borrar una repetición se pregunta el alcance; "Deshacer" solo con "Solo este evento".
 - La **018 (iCloud)** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod. La comprobación con una cuenta real confirmó `MOVE` y renombrar.
-- **Siguiente:** 015 (asistente de chat), con su plan y sus tareas aprobados. Las specs de la 011 a la 015 están aprobadas desde el 2026-10-29.
+- La **015 (asistente de chat)** tiene T1–T13 hechas (2026-11-02). Para cerrarla faltan la aprobación del usuario, la migración `assistant` en prod y `GROQ_API_KEY` (clave "CaFam prod") en Vercel.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.

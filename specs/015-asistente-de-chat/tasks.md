@@ -178,6 +178,19 @@
   - Actualizar `AGENTS.md` y la línea "Resuelta en la spec 015" de la constitución con el proveedor elegido; preparar los pasos de producción (migración, `GROQ_API_KEY` en Vercel).
 
   Hecho cuando: tabla de evidencias completa, verificación con la salida reportada y aprobación del usuario para cerrar. Cubre: todos | Módulo: validation
+  Evidencia (2026-11-02), pendiente de la aprobación del usuario para cerrar:
+  - Tabla "Evidencias RF por RF" más abajo, con RF-1 a RF-33.
+  - Verificación: typecheck, lint (2 avisos previos), format:check, `npm test` (224 archivos, 2148 tests) y build en verde. `npm run test:db -- --no-file-parallelism`: 43 archivos y 482 tests en verde. Las dos primeras ejecuciones chocaron con el límite de Auth de Supabase, que es la trampa conocida, y dejaron 125 usuarios `@cafam.test` que se borraron.
+  - Prueba manual con `next start -p 3100` y dos usuarios. Luis activó el permiso en Ajustes, que se guardó (`share_availability = true`; Marta `false` por defecto), y es Editor del calendario de Marta.
+    - Marta preguntó "¿Cuándo estamos libres Luis y yo el lunes 9 por la tarde?" y la respuesta fue "de 18:00 a 19:00", sin revelar el evento privado de Luis.
+    - "Cancelar" devuelve la pregunta al campo y "Nueva conversación" vacía el hilo.
+    - Sin conexión: "No hay conexión…" con "Reintentar" y la pregunta en el campo.
+    - Cuota simulada con 30 filas en dev: mensaje, campo y "Enviar" deshabilitados.
+    - Con la cuota diaria de Groq agotada, la pantalla muestra "El asistente no está disponible ahora mismo" con "Reintentar" (RF-28).
+  - Capturas: a 390, 768 y 1440 px en claro con rojo (T9) y en oscuro con amarillo, y Ajustes a 390 y 1440 px.
+  - Se borraron los usuarios de prueba y `.playwright-cli/`.
+  - No se pudo repetir en el navegador abrir un evento citado desde una respuesta real, por la cuota diaria de Groq agotada. Lo cubre `assistant-chat.test.tsx`.
+  - `AGENTS.md` y la constitución (proveedor Groq) están actualizados, y los pasos de producción, abajo.
 
 ## Evidencias RF por RF (T13, 2026-11-02)
 
@@ -219,6 +232,19 @@ Unitarios en `tests/unit/`, de base de datos en `tests/integration/` y del conju
 | RF-31 | `assistant-provider.test.ts` (`PROVIDER_TRAINS_ON_DATA` es `false`), `assistant-tools.test.ts` (`excludeSynced`) |
 | RF-32 | `privacy-page.test.tsx` (sección "Asistente de chat") |
 | RF-33 | `assistant-chat.test.tsx` (frase con enlace a `/privacy`), `privacy-page.test.tsx` |
+
+## Pasos de producción (los ejecuta el usuario)
+
+1. Clave de Groq de producción: en console.groq.com → API Keys, crear "CaFam prod" y añadirla en Vercel → Settings → Environment Variables como `GROQ_API_KEY` (Production; Preview si se quiere probar ahí). Comprobar que Data Controls → Zero Data Retention sigue activada. La cuota es por organización: si la clave está en la misma organización que la de dev, comparten los 200K tokens diarios por modelo.
+2. Subir la rama: `git push -u origin 015-asistente-de-chat` (Vercel hace una preview, que apunta a la base de datos de producción).
+3. Migración a producción, con el enlace devuelto a dev al terminar:
+   ```
+   npx supabase link --project-ref yznbdoskvtxeasujtirk
+   npx supabase db push
+   npx supabase link --project-ref uthubyzhonrtrmbcqcjh
+   ```
+4. Integrar en `main` (despliega a producción): `git checkout main && git merge --ff-only 015-asistente-de-chat && git push`.
+5. Probar en producción: abrir "Asistente", hacer una pregunta y abrir un evento citado.
 
 ## Trazabilidad RF → tareas
 
