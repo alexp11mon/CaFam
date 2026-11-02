@@ -121,7 +121,7 @@
   - Después, `src/app/api/assistant/route.ts` (`maxDuration` 30) y, si hace falta, `getRouteAccess`.
 
   Hecho cuando: `npm test -- assistant-route route-access` en verde. Cubre: RF-3, RF-4, RF-27, RF-28 | Módulo: assistant-route
-  Evidencia (2026-11-02): rojo sin la ruta. `npm test -- assistant-route route-access` en verde (7 tests de la ruta). `getRouteAccess` no cambia: `/api/assistant` no está bajo `/dashboard` y la ruta responde 401 sin sesión; una cancelación responde 499 sin anotar la pregunta. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 222 archivos y 2127 tests.
+  Evidencia (2026-11-02): rojo sin la ruta. `npm test -- assistant-route route-access` en verde (7 tests de la ruta). `getRouteAccess` no cambia: `/api/assistant` no está bajo `/dashboard` y la ruta responde 401 sin sesión; una cancelación responde 499 sin anotar la pregunta. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 222 archivos y 2126 tests.
 
 ## Iteración 2 — Interfaz y validación
 
