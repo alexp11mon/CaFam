@@ -3,6 +3,7 @@ import { EventClipboardProvider } from "@/components/calendar/event-clipboard";
 import { ToastProvider } from "@/components/ui/toast";
 import type { AccentId } from "@/lib/theme/accents";
 import type { ThemeId } from "@/lib/theme/theme";
+import { AssistantFab } from "./assistant-fab";
 import { BottomBar } from "./bottom-bar";
 import { CalendarHeaderProvider } from "./calendar-header";
 import { SideRail } from "./side-rail";
@@ -33,7 +34,7 @@ export function AppFrame({
     <div
       data-app-frame=""
       data-accent={accent}
-      className="flex min-h-full flex-1 flex-col"
+      className="group/frame flex min-h-full flex-1 flex-col"
     >
       <ThemeSync theme={theme} />
       <ToastProvider>
@@ -44,6 +45,7 @@ export function AppFrame({
             <div className="flex flex-1 flex-col pt-[calc(3.5rem+env(safe-area-inset-top))] tab:pt-0 tab:pb-24 lg:pb-0 lg:pl-20">
               {children}
             </div>
+            <AssistantFab />
             <BottomBar signOutAction={signOutAction} />
           </CalendarHeaderProvider>
         </EventClipboardProvider>

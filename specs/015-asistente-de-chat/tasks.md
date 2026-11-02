@@ -223,13 +223,15 @@ Rama `015-comentarios-y-boton` desde `main`. Sin migraciones: no hace falta `db 
 
   Hecho cuando: tests en verde y `npm run eval:assistant` con al menos el 90 % de aciertos, 0 inventados y el 90 % por debajo de 10 s, con la salida anotada aquí. Cubre: RF-26, RF-32, RF-34, RF-36, RF-37, RF-38 | Módulo: assistant-core, privacy, validation
 
-- [ ] T16 Añadir el botón flotante del asistente
+- [x] T16 Añadir el botón flotante del asistente
   Pasos:
   - Primero, `tests/unit/assistant-fab.test.tsx` en rojo: enlace "Asistente" a `/dashboard/assistant` con su icono; no aparece en `/dashboard/assistant`; el "+" del calendario lleva `data-fab`; `design-tokens` sigue en verde (solo tokens, `shadow-float` y `glass-float` en lo que flota).
   - Después, `src/components/shell/assistant-fab.tsx` en `AppFrame` y `data-fab` en `calendar/fab.tsx`, con la colocación de D18, usando la skill `design-taste-frontend`.
   - Capturas a 390, 768 y 1440 px en claro con rojo y oscuro con amarillo: calendario con el "+", una pantalla sin él (Ajustes) y un aviso visible; comprobar que no tapa la barra inferior, el "+" ni los avisos (R9). Con teclado: el botón se alcanza con Tab y tiene foco visible.
 
   Hecho cuando: `npm test -- assistant-fab design-tokens nav` en verde y capturas revisadas. Cubre: RF-1, RF-39 | Módulo: assistant-ui
+
+  Evidencia (2026-11-02): rojo sin `assistant-fab.tsx`. `npm test -- assistant-fab design-tokens nav app-frame toast fab` 55 tests en verde. Dos cambios frente a D18, sin cambiar ningún RF: (1) el "+" no se detecta con `:has([data-fab])`, porque Activity deja el calendario oculto en el DOM y el botón se quedaba subido en Ajustes; el "+" marca el marco con `data-has-fab` en un efecto, que Activity limpia al ocultar, y el botón y los avisos usan `max-tab:group-data-[has-fab]/frame:`. (2) Solo `glass-float` (ya trae el borde de cristal y el respaldo en papel); `bg-paper` y `border-control` encima lo tapaban. Los avisos suben a `bottom-40` con el "+" en el móvil y entre 769 y 1023 px (R9). Capturas con `next start -p 3100` y un usuario @cafam.test borrado al terminar, a 390, 768 y 1440 px en claro con rojo y oscuro con amarillo: calendario con el "+" (el botón encima, sin tocarlo), Ajustes (en la esquina), la pantalla del asistente (sin botón) y "Evento creado" visible sin solaparse; con foco, anillo visible en los dos temas. No se capturó la franja de 769–1023 px con la barra inferior. typecheck, lint (2 avisos previos), formato de `src`, `tests` y `scripts`, `npm test` (235 archivos, 2245 tests) y build en verde.
 
 ## Evidencias RF por RF (T13, 2026-11-02)
 
