@@ -114,7 +114,7 @@
 
 ### Iteración 2
 
-- [ ] T9 Colocar la tarjeta y cargar sus datos
+- [x] T9 Colocar la tarjeta y cargar sus datos
   Pasos:
   - Primero, tests en rojo:
     - `tests/unit/popover.test.ts` para `placeCard`: a la derecha si cabe, si no a la izquierda, si no encima o debajo según el sitio, siempre dentro de la pantalla;
@@ -122,6 +122,7 @@
   - Después, `placeCard` y `card-actions.ts`, reutilizando lo que ya hace `loadEvent`.
 
   Hecho cuando: `npm test -- popover card-actions` en verde. Cubre: RF-2, RF-4, RF-5, RF-7 | Módulo: event-card, card-loader
+  Evidencia (2026-11-02): rojo antes de implementar (4 tests de `placeCard` y `card-actions` sin resolver). `placeCard` en `popover.ts` y `loadEventCard` en `card-actions.ts`, que reutiliza `getEvent`, `getCalendar`, `getMembers`, `authorLabel`, `readOnlyReason` y `canWriteEvents`. `npm test -- popover card-actions` 12 en verde. typecheck, format y build correctos, lint con los 2 avisos previos.
 
 - [ ] T10 Abrir la tarjeta de detalle al pulsar un evento en el ordenador
   Pasos:
