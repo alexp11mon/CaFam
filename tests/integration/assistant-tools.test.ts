@@ -267,7 +267,7 @@ describe("list_events (RF-8, RF-10, RF-12)", () => {
     ).toEqual(["2026-11-03", "2026-11-10", "2026-11-17", "2026-11-24"]);
   });
 
-  it("returns an empty list, or the first 50 of many", async () => {
+  it("returns an empty list, or the first 30 of many", async () => {
     expect(
       await call(
         "list_events",
@@ -286,7 +286,7 @@ describe("list_events (RF-8, RF-10, RF-12)", () => {
     );
     expect(many.total).toBe(60);
     expect(many.truncated).toBe(true);
-    expect(many.events).toHaveLength(50);
+    expect(many.events).toHaveLength(30);
   });
 
   it("never lists a calendar the user does not see", async () => {

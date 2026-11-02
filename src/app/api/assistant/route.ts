@@ -76,7 +76,10 @@ export async function POST(request: Request) {
   } catch (error) {
     // The user cancelled (RF-4): nobody reads this answer.
     if (request.signal.aborted) return new Response(null, { status: 499 });
-    if (!(error instanceof AssistantUnavailable)) console.error(error);
+    // The reason (status and Groq's code, no user data) shows in Vercel's logs.
+    if (error instanceof AssistantUnavailable) {
+      console.warn(`assistant unavailable: ${error.message}`);
+    } else console.error(error);
     return Response.json({ error: UNAVAILABLE_TEXT }, { status: 503 });
   }
 

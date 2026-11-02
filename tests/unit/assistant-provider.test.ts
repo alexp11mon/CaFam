@@ -134,12 +134,47 @@ describe("chat", () => {
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
-  it.each([401, 403, 500, 503])("is unavailable on %i", async (status) => {
-    const fetcher = vi.fn().mockResolvedValue(reply({ error: {} }, status));
+  it.each([401, 403, 400])(
+    "is unavailable on %i, without the fallback",
+    async (status) => {
+      const fetcher = vi
+        .fn()
+        .mockResolvedValue(
+          reply({ error: { code: "invalid_api_key" } }, status),
+        );
+      await expect(
+        chat(MESSAGES, TOOLS, undefined, false, fetcher),
+      ).rejects.toThrow(`status ${status} invalid_api_key`);
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  // Fix after T13: a month of events went over the 8K tokens per minute (413),
+  // and gpt-oss sometimes writes a broken tool call (400 tool_use_failed).
+  it.each([
+    [413, "rate_limit_exceeded"],
+    [400, "tool_use_failed"],
+    [500, "internal_server_error"],
+    [503, "service_unavailable"],
+  ])("tries the fallback model on %i %s", async (status, code) => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(reply({ error: { code } }, status))
+      .mockResolvedValueOnce(textReply("Hola"));
+    const result = await chat(MESSAGES, TOOLS, undefined, false, fetcher);
+    expect(result.content).toBe("Hola");
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("says why in the error when both models fail", async () => {
+    const fetcher = vi
+      .fn()
+      .mockImplementation(async () =>
+        reply({ error: { code: "rate_limit_exceeded" } }, 413),
+      );
     await expect(
       chat(MESSAGES, TOOLS, undefined, false, fetcher),
-    ).rejects.toBeInstanceOf(AssistantUnavailable);
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    ).rejects.toThrow("status 413 rate_limit_exceeded");
   });
 
   it("is unavailable on a network error or a malformed answer", async () => {

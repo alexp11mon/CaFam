@@ -96,6 +96,27 @@ async function callModel(
   }
 }
 
+/** Groq's error code, for the logs: never the message, which may quote the request. */
+async function errorCode(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { error?: { code?: unknown } };
+    return typeof body.error?.code === "string" ? body.error.code : "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * The other model has its own limits and may manage: per-minute quota (429,
+ * 413 for a request over the 8K tokens), a broken tool call or a server error.
+ * A bad key or request would fail the same way.
+ */
+const worthFallback = (status: number, code: string) =>
+  status === 429 ||
+  status === 413 ||
+  status >= 500 ||
+  (status === 400 && code === "tool_use_failed");
+
 export async function chat(
   messages: readonly ProviderMessage[],
   tools: readonly ToolDefinition[],
@@ -108,6 +129,7 @@ export async function chat(
   if (!key) throw new AssistantUnavailable("missing GROQ_API_KEY");
 
   let response: Response | undefined;
+  let failure = "";
   for (const model of ASSISTANT_MODELS) {
     response = await callModel(
       model,
@@ -118,11 +140,12 @@ export async function chat(
       requireTool,
       fetcher,
     );
-    if (response.status !== 429) break;
+    if (response.ok) break;
+    const code = await errorCode(response);
+    failure = `status ${response.status} ${code}`.trim();
+    if (!worthFallback(response.status, code)) break;
   }
-  if (!response?.ok) {
-    throw new AssistantUnavailable(`status ${response?.status}`);
-  }
+  if (!response?.ok) throw new AssistantUnavailable(failure);
 
   let message: Extract<ProviderMessage, { role: "assistant" }> | undefined;
   try {

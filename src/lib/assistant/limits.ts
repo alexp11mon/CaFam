@@ -12,8 +12,11 @@ export const DAILY_QUESTIONS = 30;
 export const MAX_FREE_DAYS = 31;
 /** Longest period for list_events (plan contract). */
 export const MAX_LIST_DAYS = 62;
-/** Edge case "muchos eventos": events sent to the model per list. */
-export const MAX_LISTED_EVENTS = 50;
+/**
+ * Edge case "muchos eventos": events sent to the model per list. 50 took a
+ * month question to the 8K tokens per minute of Groq's free tier.
+ */
+export const MAX_LISTED_EVENTS = 30;
 /** RF-9: matches returned by search_events. */
 export const MAX_SEARCH_RESULTS = 20;
 /** search_events looks this many days back and ahead (plan D11). */

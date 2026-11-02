@@ -25,7 +25,7 @@ describe("limits", () => {
     expect(QUESTION_MAX).toBe(500);
     expect(DAILY_QUESTIONS).toBe(30);
     expect(MAX_FREE_DAYS).toBe(31);
-    expect(MAX_LISTED_EVENTS).toBe(50);
+    expect(MAX_LISTED_EVENTS).toBe(30);
     expect(DEFAULT_RANGES).toEqual([
       { start: "08:00", end: "14:00" },
       { start: "16:00", end: "21:00" },
