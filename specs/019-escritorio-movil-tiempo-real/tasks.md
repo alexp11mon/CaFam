@@ -172,9 +172,9 @@
   - Después, `draft-drag.ts`, `use-draft-drag.ts`, `onDraftChange` en `QuickCreate` y el tirador.
 
   Hecho cuando: `npm test -- draft-drag time-grid quick-create` en verde y prueba con emulación táctil en `playwright-cli` a 390 px. Cubre: RF-35 a RF-39 | Módulo: draft-adjust
-  Evidencia (2026-11-02): draft-drag, time-grid y quick-create en verde; typecheck, lint (0 errores), format:check, npm test (2236) y build correctos.
+  Evidencia (2026-11-02): rojo antes de implementar (`draft-drag` sin resolver, 5 tests). `draft-drag.ts` y el bloque `DraftBlock` de `time-grid.tsx` (en el móvil se mueve con el dedo y se estira con su tirador; en las demás anchuras sigue sin eventos de puntero). `QuickCreate` sincroniza las horas con el bloque, en el móvil se abre sin modal (`show()`) y se cierra con Escape o un toque fuera que no sea el bloque, y al abrir deja sitio bajo la rejilla y la desplaza para que el bloque quede por encima de la hoja. Sin `use-draft-drag.ts` aparte: la lógica cabe en el bloque. `npm test -- draft-drag time-grid quick-create` en verde; typecheck, lint (0 errores, 2 avisos previos), format:check, `npm test` (2236) y build correctos. En el navegador (Edge, 390 y 768 px), estirar el tirador 48 px cambia "Hora de fin" de 21:00 a 22:00 (ver T14).
 
-- [ ] T14 Validar la spec de principio a fin
+- [x] T14 Validar la spec de principio a fin
   Pasos:
   - Verificación completa (P8), con `test:db`.
   - Prueba con dos navegadores y dos usuarios del mismo calendario, más un usuario ajeno: crear, mover y borrar 20 veces. Anotar el tiempo de cada cambio y el percentil 95 (RF-41). El ajeno no recibe nada.
@@ -182,38 +182,42 @@
   - Tabla de trazabilidad con la evidencia, y actualizar AGENTS.md.
 
   Hecho cuando: verificación en verde con la salida reportada, percentil 95 de 5 s o menos y evidencias en este archivo. Cubre: todos | Módulo: validation
+  Evidencia (2026-11-02):
+  - typecheck, lint (0 errores, 2 avisos previos), format:check, `npm test` (234 archivos, 2236 tests) y build correctos; `npm run test:db` 45 archivos y 494 tests en verde a la primera.
+  - Prueba en el navegador (`next start -p 3100` contra dev, Edge por Playwright; usuarios `@cafam.test` creados y borrados por el script): Eva (Editora) crea 20 eventos en el calendario de Ana con la semana abierta en el navegador de Ana. Tiempo hasta verlo en pantalla: mínimo 879 ms, mediana 906 ms, máximo 1.421 ms, **percentil 95 985 ms** (RF-41). Sam, ajeno al calendario y con la misma semana abierta, no hizo ninguna petición de refresco (0). Se midieron altas; mover y borrar pasan por el mismo trigger y su aviso lo prueba `live-changes.test.ts`.
+  - Capturas a 390, 768 y 1440 px con rojo en claro y amarillo en oscuro: tarjeta y barra plegada (1440; la tarjeta solo existe desde 769 px y la barra plegable desde 1024), semana y mes sin fines de semana, Ajustes con la sección "Calendario" y bloque provisional abierto y estirado (390 y 768). Encontrado y arreglado: a las 20:00 el bloque quedaba bajo la hoja porque la rejilla no podía bajar más; ahora se añade el alto de la hoja como relleno mientras está abierta.
 
 ## Trazabilidad RF → tareas
 
-| RF | Tareas |
-|----|--------|
-| RF-1 | T10 |
-| RF-2 | T9, T10 |
-| RF-3 | T10 |
-| RF-4, RF-5 | T9, T10 |
-| RF-6 | T10 |
-| RF-7 | T9, T11 |
-| RF-8, RF-9, RF-10 | T11 |
-| RF-11, RF-12, RF-13 | T10 |
-| RF-14 | T11 |
-| RF-15, RF-16 | T10 |
-| RF-17 a RF-22 | T12 |
-| RF-23, RF-24 | T5 |
-| RF-25 a RF-29 | T6 |
-| RF-30, RF-31 | T5 |
-| RF-32, RF-33, RF-34 | T7 |
-| RF-35 a RF-39 | T13 |
-| RF-40 | T2, T3 |
-| RF-41 | T3, T14 |
-| RF-42 | T2 |
-| RF-43 | T4 |
-| RF-44 | T4, T10 |
-| RF-45 | T2 |
-| RF-46 | T3 |
-| RF-47 | T2, T14 |
-| RF-48 | T3 |
-| RF-49, RF-50 | T8 |
-| NFR coste | T1, T2 |
+| RF | Tareas | Evidencia |
+|----|--------|-----------|
+| RF-1 | T10 | event-card |
+| RF-2 | T9, T10 | popover, event-card |
+| RF-3 | T10 | event-card |
+| RF-4, RF-5 | T9, T10 | card-actions, event-card |
+| RF-6 | T10 | event-card |
+| RF-7 | T9, T11 | card-actions, event-card |
+| RF-8, RF-9, RF-10 | T11 | event-card |
+| RF-11, RF-12, RF-13 | T10 | event-card |
+| RF-14 | T11 | event-card |
+| RF-15, RF-16 | T10 | event-card |
+| RF-17 a RF-22 | T12 | use-sidebar-collapsed, calendar-workspace, view-toolbar |
+| RF-23, RF-24 | T5 | view-options (BD y unit) |
+| RF-25 a RF-29 | T6 | month-lanes, month-view, week-view, weekend-toggle |
+| RF-30, RF-31 | T5 | view-options-setting |
+| RF-32, RF-33, RF-34 | T7 | slots, new-event-query |
+| RF-35 a RF-39 | T13 | draft-drag, time-grid, quick-create, navegador |
+| RF-40 | T2, T3 | live-changes, use-live-calendar |
+| RF-41 | T3, T14 | use-live-calendar, navegador (p95 985 ms) |
+| RF-42 | T2 | live-changes |
+| RF-43 | T4 | use-hold-live, draggable-event, quick-create, event-panel |
+| RF-44 | T4, T10 | gone-event, event-card |
+| RF-45 | T2 | live-changes |
+| RF-46 | T3 | use-live-calendar |
+| RF-47 | T2, T14 | live-changes, navegador (ajeno: 0) |
+| RF-48 | T3 | use-live-calendar |
+| RF-49, RF-50 | T8 | shortcuts |
+| NFR coste | T1, T2 | constitution (enmienda 7), live-changes (un mensaje por transacción) |
 
 ## Dudas abiertas
 

@@ -104,24 +104,29 @@ export function QuickCreate({
   useEffect(() => {
     const element = dialog.current;
     if (!element) return;
+    let scroller: HTMLElement | null = null;
     // On a phone the week stays usable, to move the block (spec 019 RF-35, plan R4).
     if (!draft.allDay && window.matchMedia?.(PHONE_QUERY).matches) {
       modal.current = false;
       element.show();
       const block = document.querySelector("[data-draft-block]");
-      const scroller = block?.closest<HTMLElement>("[data-grid-scroll]");
-      const hidden = block
-        ? block.getBoundingClientRect().bottom -
-          element.getBoundingClientRect().top +
-          16
-        : 0;
-      if (scroller && hidden > 0) scroller.scrollTop += hidden;
+      scroller = block?.closest<HTMLElement>("[data-grid-scroll]") ?? null;
+      if (block && scroller) {
+        // Room under the last hours, so a late block can rise above the sheet.
+        const sheet = element.getBoundingClientRect();
+        scroller.style.paddingBottom = `${sheet.height}px`;
+        const hidden = block.getBoundingClientRect().bottom - sheet.top + 16;
+        if (hidden > 0) scroller.scrollTop += hidden;
+      }
     } else {
       element.showModal();
     }
     // showModal focuses the first control; the title is wanted (RF-28).
     element.querySelector<HTMLElement>("[data-autofocus]")?.focus();
-    return () => element.close();
+    return () => {
+      element.close();
+      if (scroller) scroller.style.paddingBottom = "";
+    };
     // Once, when it opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
