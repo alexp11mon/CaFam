@@ -110,7 +110,7 @@
   Hecho cuando: `npm test -- assistant-run` en verde. Cubre: RF-5, RF-11, RF-13, RF-25, RF-26, RF-29 | Módulo: assistant-run
   Evidencia (2026-11-02): rojo sin `run.ts`. `npm test -- assistant-run assistant-provider` 22 tests en verde. `TOOL_DEFINITIONS` pasó a `tool-definitions.ts` (puro) para probar el bucle sin el cliente del servidor; el proveedor omite `tools` en la última ronda. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 221 archivos y 2119 tests.
 
-- [ ] T8 Exponer el asistente en `POST /api/assistant`
+- [x] T8 Exponer el asistente en `POST /api/assistant`
   Pasos:
   - Primero, `tests/unit/assistant-route.test.ts` (`// @vitest-environment node`) en rojo, con Supabase y `runAssistant` simulados:
     - sin sesión → 401; petición no válida → 400 con el mensaje;
@@ -121,6 +121,7 @@
   - Después, `src/app/api/assistant/route.ts` (`maxDuration` 30) y, si hace falta, `getRouteAccess`.
 
   Hecho cuando: `npm test -- assistant-route route-access` en verde. Cubre: RF-3, RF-4, RF-27, RF-28 | Módulo: assistant-route
+  Evidencia (2026-11-02): rojo sin la ruta. `npm test -- assistant-route route-access` en verde (7 tests de la ruta). `getRouteAccess` no cambia: `/api/assistant` no está bajo `/dashboard` y la ruta responde 401 sin sesión; una cancelación responde 499 sin anotar la pregunta. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 222 archivos y 2127 tests.
 
 ## Iteración 2 — Interfaz y validación
 
