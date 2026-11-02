@@ -55,7 +55,7 @@
   Hecho cuando: `npm test -- assistant-slots` en verde. Cubre: RF-7, RF-14, RF-17, RF-17b, RF-18, RF-19, RF-24 | Módulo: assistant-core
   Evidencia (2026-11-02): rojo sin los módulos. `npm test -- assistant-slots` 14 tests en verde (dos expectativas del test estaban mal calculadas y se corrigieron: las 23:30 de Madrid siguen siendo el día 2, y del 1-11 al 1-12 son 31 días, ahora caso límite permitido). typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 218 archivos y 2084 tests.
 
-- [ ] T4 Escribir la validación, las personas, las citas y el prompt
+- [x] T4 Escribir la validación, las personas, las citas y el prompt
   Pasos:
   - Primero, `tests/unit/assistant-core.test.ts` en rojo:
     - `schemas.ts`: la petición (1–20 mensajes, última del usuario de 1 a 500 caracteres, mensajes en español del error) y los argumentos de cada herramienta;
@@ -67,6 +67,7 @@
   - Después, esos módulos en `src/lib/assistant/`.
 
   Hecho cuando: `npm test -- assistant-core` en verde. Cubre: RF-3, RF-7, RF-11, RF-12, RF-13, RF-16, RF-22, RF-26, RF-27, RF-28, RF-30 | Módulo: assistant-core
+  Evidencia (2026-11-02): rojo sin los módulos. `npm test -- assistant-core` 13 tests en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 219 archivos y 2097 tests.
 
 - [ ] T5 Llamar a Groq desde el servidor
   Pasos:
