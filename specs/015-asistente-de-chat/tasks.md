@@ -14,15 +14,21 @@
 
 ## Iteración 1 — Proveedor y servidor
 
-- [ ] T1 Comprobar Groq y preparar la clave del servidor
+- [x] T1 Comprobar Groq y preparar la clave del servidor
   Pasos:
   - El usuario crea la cuenta de Groq (sin tarjeta) y una clave; la pone en `.env.local` y `.env.test.local` como `GROQ_API_KEY`.
   - Comprobar en la consola y en las condiciones de Groq, y anotarlo en la evidencia con los enlaces: sin tarjeta, usable desde la UE, que no entrena con los datos, retención cero activada en *Data Controls* y límites por minuto y por día de `openai/gpt-oss-120b` y `llama-3.3-70b-versatile`.
-  - Probar los dos modelos a mano con `curl` y una herramienta de ejemplo (llamada a herramienta y respuesta en español) y elegir `ASSISTANT_MODEL` (D1).
+  - Probar los modelos disponibles con una conversación de ejemplo con herramientas (llamada a herramienta y respuesta en español) y elegir el principal y el de reserva (D1).
   - Primero, ampliar `tests/unit/no-secrets.test.ts` en rojo: `GROQ_API_KEY` en `SERVER_SECRETS` (nunca con `NEXT_PUBLIC_`, nunca en un componente `"use client"`). Después, `.env.example` documentado.
   - Si alguna condición de D1 no se cumple, parar y volver al plan.
 
-  Hecho cuando: evidencia de las condiciones y límites anotada aquí, modelo elegido y `npm test -- no-secrets` en verde. Cubre: RF-28, RF-31, RF-32 | Módulo: assistant-provider
+  Hecho cuando: evidencia de las condiciones y límites anotada aquí, modelos elegidos y `npm test -- no-secrets` en verde. Cubre: RF-28, RF-31, RF-32 | Módulo: assistant-provider
+  Evidencia (2026-11-02):
+  - Condiciones: el [Services Agreement](https://console.groq.com/docs/legal/services-agreement) (4.2) prohíbe a Groq usar entradas o salidas para entrenar o ajustar modelos salvo permiso del cliente; los clientes del EEE contratan con Groq UK Limited (16.2), así que es usable desde la UE. Según [Your Data](https://console.groq.com/docs/your-data), sin retención de inferencia por defecto, salvo hasta 30 días por fiabilidad o abuso, que se desactiva con ZDR; lo retenido está en EE. UU. con cláusulas contractuales tipo (va a `/privacy`, T11). Cuenta creada sin tarjeta y Global ZDR activada en *Data Controls*.
+  - Límites de la organización (consola, plan gratuito), por modelo: `gpt-oss-120b`, `gpt-oss-20b` y `qwen3.8-27b` con 30 RPM, 1.000 RPD, 8.000 TPM (7.000 de entrada) y 200.000 TPD. Los Llama de chat ya no existen en Groq.
+  - Prueba con la clave de dev (prompt, 3 herramientas y eventos sintéticos): 1.000–2.700 tokens y 0,2–1,7 s por pregunta. `gpt-oss-120b` llamó bien a las herramientas, pero tomó "la semana que viene" como esta y no dijo que el 31 de febrero no existe (a corregir en el prompt, T4 y T12); `qwen3.8-27b` acertó fechas y huecos y agotó el límite por minuto tras 4 preguntas; `gpt-oss-20b` falló con "Failed to parse tool call arguments as JSON". Los tres rechazaron la pregunta fuera de tema y el intento de saltarse las reglas.
+  - Elegido: `openai/gpt-oss-120b` principal y `qwen/qwen3.8-27b` de reserva ante un 429 (D1 y R1 cambiados con aprobación del usuario).
+  - `GROQ_API_KEY` en `.env.local` y `.env.test.local` (responde 200) y documentada en `.env.example`. `no-secrets.test.ts` con dos casos nuevos (fallan con un archivo de prueba que expone la clave). Verificación: typecheck y format correctos, lint con los 2 avisos previos, `npm test` 217 archivos y 2070 tests, build correcto.
 
 - [ ] T2 Crear el esquema del asistente con sus permisos
   Pasos:
@@ -66,6 +72,7 @@
     - envía el modelo, la temperatura 0, los mensajes y las herramientas con `Authorization: Bearer` y la señal;
     - devuelve el texto o las llamadas a herramientas;
     - 401, 403, 429, 5xx, error de red, plazo de 8 s y respuesta mal formada → `AssistantUnavailable`; la señal abortada → `AbortError` sin convertir;
+    - un 429 del modelo principal repite la llamada una vez con el de reserva; un 429 de los dos → `AssistantUnavailable`;
     - sin `GROQ_API_KEY` → `AssistantUnavailable`;
     - `PROVIDER_TRAINS_ON_DATA` es `false`.
   - Después, `src/lib/assistant/provider.ts`.

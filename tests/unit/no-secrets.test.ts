@@ -175,3 +175,34 @@ describe("spec 018 iCloud (T14)", () => {
     expect(leaks).toEqual([]);
   });
 });
+
+// Spec 015, T1: the Groq key is read only by the assistant's provider client
+// (plan assistant-provider, P4).
+describe("spec 015 assistant key (T1)", () => {
+  it("never exposes GROQ_API_KEY with NEXT_PUBLIC_", () => {
+    expect(
+      FILES.filter(({ content }) =>
+        /NEXT_PUBLIC_\w*GROQ_API_KEY/.test(content),
+      ).map((f) => f.path),
+    ).toEqual([]);
+  });
+
+  it("reads GROQ_API_KEY only in the provider client, which no client component imports", () => {
+    const holders = FILES.filter(({ content }) =>
+      content.includes("GROQ_API_KEY"),
+    );
+    expect(
+      holders
+        .map((f) => f.path)
+        .filter((path) => path !== "lib/assistant/provider.ts"),
+    ).toEqual([]);
+
+    const leaks = FILES.filter(({ content }) => isClient(content)).filter(
+      ({ path, content }) =>
+        importsOf(path, content.replace(/import\s+type\s[^;]*;/g, "")).includes(
+          "lib/assistant/provider",
+        ),
+    );
+    expect(leaks.map((f) => f.path)).toEqual([]);
+  });
+});
