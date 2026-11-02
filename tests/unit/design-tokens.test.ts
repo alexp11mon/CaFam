@@ -26,6 +26,7 @@ const SOURCES = files(ROOT).map((path) => ({
 const FLOATING = new Set([
   "src/components/calendar/confirm-dialog.tsx",
   "src/components/calendar/draggable-event.tsx",
+  "src/components/calendar/event-card.tsx",
   "src/components/calendar/event-menu.tsx",
   "src/components/calendar/go-to-date-dialog.tsx",
   "src/components/calendar/shortcuts-help.tsx",

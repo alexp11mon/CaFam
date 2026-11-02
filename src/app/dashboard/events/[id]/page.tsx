@@ -7,11 +7,20 @@ import { updateEvent } from "../actions";
 import { deleteFromDetail } from "../quick-actions";
 import { loadEvent } from "../load-event";
 
+type SearchParams = Promise<{ edit?: string | string[] }>;
+
 export const metadata: Metadata = { title: "Evento" };
 
 // Reads the session and the route param, so it streams behind <Suspense> (cacheComponents).
-async function Event({ params }: { params: Promise<{ id: string }> }) {
+async function Event({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: SearchParams;
+}) {
   const { id } = await params;
+  const { edit } = await searchParams;
   const data = await loadEvent(id);
   if (!data) notFound();
 
@@ -28,14 +37,18 @@ async function Event({ params }: { params: Promise<{ id: string }> }) {
       categories={data.categories}
       updateAction={updateEvent.bind(null, id)}
       deleteAction={deleteFromDetail.bind(null, id)}
+      // "Editar" of the detail card (spec 019 RF-9).
+      startEditing={edit === "1" && data.canEdit}
     />
   );
 }
 
 export default function EventPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: SearchParams;
 }) {
   return (
     <PageShell
@@ -44,7 +57,7 @@ export default function EventPage({
       backLabel="Volver al calendario"
     >
       <Suspense fallback={<p className="text-muted">Cargando…</p>}>
-        <Event params={params} />
+        <Event params={params} searchParams={searchParams} />
       </Suspense>
     </PageShell>
   );

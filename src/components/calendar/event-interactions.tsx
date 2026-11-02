@@ -35,6 +35,9 @@ import { useEventDrag, type DragMode } from "@/lib/hooks/use-event-drag";
 import { useEventKeys } from "@/lib/hooks/use-event-keys";
 import { useHoldLive } from "@/lib/hooks/use-hold-live";
 import { useEventClipboard } from "./event-clipboard";
+import { EventCard } from "./event-card";
+import { boxOf, type Box } from "@/lib/calendar/popover";
+import { takeRemoteRefresh } from "@/lib/calendar/live-hold";
 import { EventMenu, type MenuChoice } from "./event-menu";
 import { useUndoToast } from "./use-undo-toast";
 
@@ -71,6 +74,8 @@ export interface EventInteractionsApi {
     notice: ChangeNotice,
   ) => Promise<void>;
   remove: (event: CalendarEventItem) => Promise<void>;
+  /** The detail card beside the event, from 769 px (spec 019 RF-1, RF-12). */
+  openCard: (event: CalendarEventItem, anchor: HTMLElement) => void;
 }
 
 const EventInteractionsContext = createContext<EventInteractionsApi | null>(
@@ -147,6 +152,15 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
     () => new Map(),
   );
   const [scopeRequest, setScopeRequest] = useState<ScopeRequest | null>(null);
+  // The detail card and whether its event came from `events`, so a refresh
+  // that drops it means someone deleted it (spec 019 RF-44).
+  const [card, setCard] = useState<{
+    event: CalendarEventItem;
+    anchor: Box;
+    tracked: boolean;
+  } | null>(null);
+  // The block that opened it, where the focus goes back (RF-13).
+  const cardOpener = useRef<HTMLElement | null>(null);
   const answer = useRef<((value: ScopeAnswer) => void) | null>(null);
 
   // Fresh server data replaces the changes already saved (plan R4).
@@ -287,8 +301,17 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
         );
         settle(event, result, UNDO_NOTICES.deleted);
       },
+      openCard: (event, anchor) => {
+        cardOpener.current = anchor;
+        setCard({
+          event,
+          anchor: boxOf(anchor),
+          tracked: events.some((item) => item.id === event.id),
+        });
+      },
     }),
     [
+      events,
       change,
       drag.start,
       dragging,
@@ -375,6 +398,25 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
     },
   });
 
+  const closeCard = useCallback((restoreFocus: boolean) => {
+    const opener = cardOpener.current;
+    if (restoreFocus && opener?.isConnected) opener.focus();
+    setCard(null);
+  }, []);
+  // Someone else deleted the card's event: the refresh no longer brings it (RF-44).
+  const cardGone =
+    card !== null &&
+    card.tracked &&
+    !events.some((item) => item.id === card.event.id);
+  useEffect(() => {
+    if (!cardGone) return;
+    show(
+      takeRemoteRefresh()
+        ? "Otra persona ha borrado este evento"
+        : UNDO_NOTICES.deleted,
+    );
+  }, [cardGone, show]);
+
   const closeMenu = useCallback(
     (restoreFocus: boolean) => {
       menuFor.current = null;
@@ -396,6 +438,22 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
 
   const dialog = (
     <>
+      {card && !cardGone ? (
+        <EventCard
+          // Another event is another card: placed, focused and read again (RF-12).
+          key={card.event.id}
+          event={card.event}
+          anchor={card.anchor}
+          timeZone={timeZone}
+          canEdit={editableCalendarIds.has(card.event.calendarId)}
+          onClose={closeCard}
+          onDelete={() => {
+            const event = card.event;
+            setCard(null);
+            void api.remove(event);
+          }}
+        />
+      ) : null}
       {menu ? (
         <EventMenu
           event={menu.event}

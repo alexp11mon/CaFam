@@ -18,6 +18,9 @@ vi.mock("@/app/dashboard/events/quick-actions", () => ({
   deleteForUndo: vi.fn(),
   undoAction: vi.fn(),
 }));
+vi.mock("@/app/dashboard/events/card-actions", () => ({
+  loadEventCard: vi.fn(() => new Promise(() => undefined)),
+}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: h.refresh }),
 }));
@@ -269,7 +272,10 @@ describe("DraggableEvent", () => {
     move(12);
     await act(async () => up(12));
     expect(fireEvent.click(block("Cena"))).toBe(false);
-    expect(fireEvent.click(block("Cena"))).toBe(true);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // The next click opens it: the detail card from 769 px (spec 019 RF-1).
+    fireEvent.click(block("Cena"));
+    expect(screen.getByRole("dialog", { name: "Cena" })).toBeVisible();
   });
 
   it("an event the user cannot write to is a plain link (RF-2)", async () => {

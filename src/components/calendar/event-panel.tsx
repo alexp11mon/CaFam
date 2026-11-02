@@ -44,7 +44,10 @@ export function EventPanel({
   canAttach = false,
   images = [],
   series,
+  startEditing = false,
 }: {
+  /** "Editar" of the detail card opens straight in the form (spec 019 RF-9). */
+  startEditing?: boolean;
   detail: EventDetailData;
   timeZone: string;
   /** Owner or editor; readers get no buttons (RF-26, spec 008 RF-36). */
@@ -62,7 +65,7 @@ export function EventPanel({
   series?: { limitReached: boolean } | null;
 }) {
   const modal = useEventModal();
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(startEditing);
   useHoldLive(editing);
   const router = useRouter();
   const showUndo = useUndoToast();

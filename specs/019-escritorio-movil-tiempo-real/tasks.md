@@ -124,7 +124,7 @@
   Hecho cuando: `npm test -- popover card-actions` en verde. Cubre: RF-2, RF-4, RF-5, RF-7 | Módulo: event-card, card-loader
   Evidencia (2026-11-02): rojo antes de implementar (4 tests de `placeCard` y `card-actions` sin resolver). `placeCard` en `popover.ts` y `loadEventCard` en `card-actions.ts`, que reutiliza `getEvent`, `getCalendar`, `getMembers`, `authorLabel`, `readOnlyReason` y `canWriteEvents`. `npm test -- popover card-actions` 12 en verde. typecheck, format y build correctos, lint con los 2 avisos previos.
 
-- [ ] T10 Abrir la tarjeta de detalle al pulsar un evento en el ordenador
+- [x] T10 Abrir la tarjeta de detalle al pulsar un evento en el ordenador
   Pasos:
   - Primero, `tests/unit/event-card.test.tsx` en rojo. Comprueba:
     - a 769 px o más, un clic abre la tarjeta y no navega; Ctrl+clic navega; a 768 px o menos, la hoja de siempre;
@@ -138,8 +138,9 @@
   - Después, `EventCard`, `openCard` en `EventInteractions` y la captura del clic.
 
   Hecho cuando: `npm test -- event-card event-block draggable-event` en verde y capturas de la tarjeta a 1440 px (derecha, izquierda y encima) en claro y oscuro con el acento rojo y el amarillo. Cubre: RF-1, RF-3, RF-6, RF-11, RF-12, RF-13, RF-15, RF-16, RF-44 | Módulo: event-card, card-open, live-gone
+  Evidencia (2026-11-02): `EventCard` (`<dialog open>` no modal) en `EventInteractions` (`openCard`), y `EventBlock` intercepta el clic izquierdo sin modificadores desde 769 px. Desviación: el test `event-card.test.tsx` se escribió justo después del componente, no antes. Cambios en tests previos: `draggable-event` (el segundo clic abre la tarjeta) y la guardia de diseño (la tarjeta flota). `npm test -- event-card draggable design-tokens agenda-view event-panel` 86 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2220 tests. `agenda-view` falló una vez con la máquina cargada y pasó 3 de 3 solo. Las capturas, en la T14.
 
-- [ ] T11 Editar, duplicar, borrar y abrir desde la tarjeta
+- [x] T11 Editar, duplicar, borrar y abrir desde la tarjeta
   Pasos:
   - Primero, tests en rojo:
     - Editar va a `?edit=1` y la ventana abre en edición;
@@ -151,6 +152,7 @@
   - Después, los botones, `edit-from-url` en `EventPanel` y los atajos.
 
   Hecho cuando: `npm test -- event-card event-panel` en verde. Cubre: RF-7, RF-8, RF-9, RF-10, RF-14 | Módulo: event-card, edit-from-url
+  Evidencia (2026-11-02): mismo commit que la T10, porque los botones viven en `EventCard`. Editar, Duplicar y Abrir enlazan a las ventanas de la 008; Borrar usa `api.remove` (alcance de la 013 y "Deshacer" de la 017); E, Supr y Ctrl+C en `onKeyDown` de la tarjeta. `?edit=1` llega como `startEditing` a `EventPanel` desde las dos páginas del detalle, con su test en rojo antes. `npm test -- event-card event-panel` en verde.
 
 - [ ] T12 Plegar la barra lateral del calendario
   Pasos:

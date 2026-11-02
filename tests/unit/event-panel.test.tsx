@@ -71,9 +71,11 @@ function setup({
   canEdit = true,
   deleteAction = vi.fn(async (): Promise<ConfirmState> => ({})),
   inWindow = false,
+  startEditing = false,
 } = {}) {
   const panel = (
     <EventPanel
+      startEditing={startEditing}
       detail={DETAIL}
       timeZone="Europe/Madrid"
       canEdit={canEdit}
@@ -131,6 +133,12 @@ describe("EventPanel", () => {
       screen.getByRole("button", { name: "Volver al detalle" }),
     );
     expect(screen.queryByLabelText("Título")).toBeNull();
+  });
+
+  it("opens in the form from the card's Editar (spec 019 RF-9)", () => {
+    setup({ startEditing: true });
+
+    expect(screen.getByLabelText("Título")).toHaveValue("Cena familiar");
   });
 
   it("holds others' changes while the form is open (spec 019 RF-43)", async () => {

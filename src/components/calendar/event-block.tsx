@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { formatTime } from "@/lib/calendar/time-zone";
 import { CommentIcon, ImageIcon, RepeatIcon } from "@/components/shell/icons";
+import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
+import { useEventInteractions } from "./event-interactions";
 
 /**
  * Mark of an event with images (spec 012 RF-12). The words always reach
@@ -108,11 +112,30 @@ export function EventBlock({
   children?: ReactNode;
 }) {
   const time = event.allDay ? null : formatTime(event.startsAt, timeZone);
+  const interactions = useEventInteractions();
 
   return (
     <Link
       {...anchor}
       href={`/dashboard/events/${event.id}`}
+      onClick={(click) => {
+        anchor?.onClick?.(click);
+        // From 769 px a plain click opens the card beside the block instead of
+        // the window; Ctrl, ⌘, Shift or the middle button keep the link (spec 019 RF-1, RF-16).
+        if (
+          !interactions ||
+          click.defaultPrevented ||
+          click.button !== 0 ||
+          click.ctrlKey ||
+          click.metaKey ||
+          click.shiftKey ||
+          click.altKey ||
+          window.matchMedia?.(PHONE_QUERY).matches
+        )
+          return;
+        click.preventDefault();
+        interactions.openCard(event, click.currentTarget);
+      }}
       // The keys of a focused event find it by this (spec 017 RF-64).
       data-event-id={event.id}
       style={{ ...style, backgroundColor: event.color }}
