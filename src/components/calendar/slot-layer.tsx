@@ -34,8 +34,11 @@ export function SlotLayer({
   day,
   dayLabel,
   onCreate,
+  duration = 60,
 }: {
   day: string;
+  /** The account's length of a new event (spec 019 RF-32). */
+  duration?: number;
   /** "miércoles, 21 de octubre de 2026", for the keyboard button. */
   dayLabel: string;
   onCreate: (day: string, range: MinuteRange, anchor: Box) => void;
@@ -122,7 +125,7 @@ export function SlotLayer({
     if (!current || current.pointerId !== event.pointerId) return;
     const range = current.dragging
       ? dragRange(minute(current.y, 15), minute(event.clientY, 15))
-      : clickRange(minute(current.y, 30));
+      : clickRange(minute(current.y, 30), duration);
     stop();
     // A finger's click comes after its pointerup: opening now, that click would
     // land on the new window's backdrop and close it. Its click opens it.

@@ -11,6 +11,7 @@ import {
   getEvent,
   getMyCalendars,
   getProfileTimeZone,
+  getViewOptions,
   requireUser,
 } from "@/lib/calendar/queries";
 
@@ -31,9 +32,10 @@ export type NewEventData =
  */
 export async function loadNewEvent(query: Query): Promise<NewEventData> {
   const { supabase, userId } = await requireUser();
-  const [calendars, timeZone] = await Promise.all([
+  const [calendars, timeZone, viewOptions] = await Promise.all([
     getMyCalendars(supabase, userId),
     getProfileTimeZone(supabase, userId),
+    getViewOptions(supabase, userId),
   ]);
   // Only calendars where the user can write (RF-27), synced ones included when
   // their account writes (spec 009 RF-9).
@@ -48,6 +50,7 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
     query,
     editable.map((calendar) => calendar.id),
     todayKey(timeZone),
+    viewOptions.duration,
   );
 
   // "Duplicar": the same event as a new one, nothing saved until confirmed (spec 008 RF-35).

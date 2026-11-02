@@ -65,7 +65,10 @@ export function TimeGrid({
   linkDays,
   onCreate,
   draft,
+  duration,
 }: {
+  /** The account's length of a new event (spec 019 RF-32). */
+  duration?: number;
   days: string[];
   events: CalendarEventItem[];
   timeZone: string;
@@ -224,6 +227,7 @@ export function TimeGrid({
                       day={day}
                       dayLabel={formatDateKeyFull(day)}
                       onCreate={onCreate}
+                      duration={duration}
                     />
                   ) : null}
                   {draft?.day === day ? (

@@ -22,10 +22,13 @@ export function minuteAt(y: number, height: number, step: 15 | 30): number {
   return clampDay(steps * step);
 }
 
-/** A click: the half hour pressed and one hour, up to 23:59 (spec 008 RF-20, RF-30). */
-export function clickRange(minute: number): MinuteRange {
+/**
+ * A click: the half hour pressed and the account's duration, one hour by
+ * default, up to 23:59 (spec 008 RF-20, RF-30; spec 019 RF-32, RF-33).
+ */
+export function clickRange(minute: number, duration = 60): MinuteRange {
   const start = Math.floor(clampDay(minute) / 30) * 30;
-  return { start, end: clampEnd(start + 60) };
+  return { start, end: clampEnd(start + duration) };
 }
 
 /**

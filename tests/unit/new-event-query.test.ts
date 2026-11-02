@@ -104,3 +104,30 @@ describe("parseNewEventQuery: duplicating (spec 008 RF-35)", () => {
     expect(parseNewEventQuery({ from: id }, CALENDARS, TODAY).from).toBe(id);
   });
 });
+
+describe("parseNewEventQuery with the account's duration (spec 019 RF-32, RF-33)", () => {
+  it("ends the chosen minutes after the given start", () => {
+    const values = parseNewEventQuery({ start: "09:00" }, CALENDARS, TODAY, 90);
+    expect(values.endTime).toBe("10:30");
+  });
+
+  it("ends the chosen minutes after 09:00 without a start", () => {
+    const values = parseNewEventQuery({}, CALENDARS, TODAY, 30);
+    expect(values).toMatchObject({ startTime: "09:00", endTime: "09:30" });
+  });
+
+  it("stops at 23:59", () => {
+    const values = parseNewEventQuery({ start: "23:30" }, CALENDARS, TODAY, 60);
+    expect(values.endTime).toBe("23:59");
+  });
+
+  it("keeps a later end given in the URL (a drag, RF-34)", () => {
+    const values = parseNewEventQuery(
+      { start: "09:00", end: "12:00" },
+      CALENDARS,
+      TODAY,
+      30,
+    );
+    expect(values.endTime).toBe("12:00");
+  });
+});

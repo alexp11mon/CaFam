@@ -205,6 +205,7 @@ export function CalendarWorkspace({
   createAction,
   userId,
   showWeekends = true,
+  defaultDuration = 60,
 }: {
   view: CalendarView;
   date: string;
@@ -243,6 +244,8 @@ export function CalendarWorkspace({
   userId?: string;
   /** Week and month come without Saturday and Sunday when false (spec 019 RF-25, RF-26). */
   showWeekends?: boolean;
+  /** The length of a new event from a slot (spec 019 RF-32). */
+  defaultDuration?: number;
 }) {
   const [keyDialog, setKeyDialog] = useState<"goto" | "help" | null>(null);
   useCalendarShortcuts({
@@ -680,6 +683,7 @@ export function CalendarWorkspace({
                 timeZone={timeZone}
                 today={today}
                 onCreate={createInGrid}
+                duration={defaultDuration}
                 draft={gridDraft}
               />
             ) : (
@@ -689,6 +693,7 @@ export function CalendarWorkspace({
                 timeZone={timeZone}
                 today={today}
                 onCreate={createInGrid}
+                duration={defaultDuration}
                 draft={gridDraft}
               />
             )}

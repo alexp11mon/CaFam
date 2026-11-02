@@ -1,4 +1,4 @@
-import { DEFAULT_END_TIME, DEFAULT_START_TIME } from "./format";
+import { DEFAULT_START_TIME } from "./format";
 import { clampEnd, fromMinutes, toMinutes } from "./time-options";
 import { parseEventId } from "@/lib/recurrence/occurrence-id";
 import { parseDateKey } from "./time-zone";
@@ -32,6 +32,8 @@ export function parseNewEventQuery(
   query: Query,
   editableCalendarIds: string[],
   today: string,
+  /** The account's length of a new event (spec 019 RF-32). */
+  duration = 60,
 ): NewEventDefaults {
   const calendar = single(query, "calendar");
   const date = single(query, "date");
@@ -41,14 +43,12 @@ export function parseNewEventQuery(
   const from = single(query, "from");
 
   const startTime = start && TIME.test(start) ? start : DEFAULT_START_TIME;
-  // The end follows the start one hour later unless a later one is given,
-  // never past the day (spec 008 RF-30).
+  // The end follows the start by the account's duration unless a later one is
+  // given, never past the day (spec 008 RF-30; spec 019 RF-32 to RF-34).
   const endTime =
     end && TIME.test(end) && toMinutes(end) > toMinutes(startTime)
       ? end
-      : start && TIME.test(start)
-        ? fromMinutes(clampEnd(toMinutes(startTime) + 60))
-        : DEFAULT_END_TIME;
+      : fromMinutes(clampEnd(toMinutes(startTime) + duration));
 
   return {
     calendarId:

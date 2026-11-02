@@ -9,6 +9,7 @@ export function WeekView(props: {
   today: string;
   onCreate?: CreateInGrid;
   draft?: GridDraft | null;
+  duration?: number;
 }) {
   return <TimeGrid {...props} linkDays />;
 }

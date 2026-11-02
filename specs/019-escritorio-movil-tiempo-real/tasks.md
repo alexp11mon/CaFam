@@ -90,7 +90,7 @@
   Hecho cuando: `npm test -- month-lanes week-view month-view day-view weekend-toggle drag` en verde y capturas a 1440 px y 390 px de semana y mes sin fines de semana. Cubre: RF-25 a RF-29 | Módulo: weekdays-views, weekend-toggle
   Evidencia (2026-11-02): rojo antes de implementar (2 tests y `weekend-toggle` sin resolver). La página filtra con `visibleDays` solo en semana y mes; el mes reparte las columnas con `days`; `layoutMonthWeek` ya recortaba por `weekDays.indexOf`. `WeekendToggle` en la barra de vista y en el cajón. `npm test -- month-lanes month-view week-view weekend-toggle view-toolbar calendar-workspace day-view drag` 122 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2186 tests. Arrastrar no puede caer en sábado ni domingo porque no hay columna (`targetAt` solo ve `data-time-col` visibles); las capturas, en la T14.
 
-- [ ] T7 Proponer la duración elegida al crear un evento
+- [x] T7 Proponer la duración elegida al crear un evento
   Pasos:
   - Primero, tests en rojo:
     - `slots`: `clickRange(600, 30)` → 10:00–10:30; `clickRange(1430, 15)` → 23:50–23:59; `dragRange` no cambia;
@@ -99,6 +99,7 @@
   - Después, el parámetro `duration` y su lectura en la página y en `load-new-event.ts`.
 
   Hecho cuando: `npm test -- slots new-event-query calendar-workspace` en verde. Cubre: RF-32, RF-33, RF-34 | Módulo: default-duration
+  Evidencia (2026-11-02): rojo antes de implementar (5 tests). `clickRange(minute, duration)`, `parseNewEventQuery(…, duration)` (sin `start`, 09:00 más la duración), la duración llega de la página a `SlotLayer` por semana y día, y `loadNewEvent` la lee para "+", N, C y el alta completa. `npm test -- slots new-event-query slot-layer calendar-workspace time-grid` 72 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2194 tests.
 
 - [ ] T8 Crear un evento con la tecla C
   Pasos:

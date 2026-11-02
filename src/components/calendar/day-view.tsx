@@ -9,7 +9,9 @@ export function DayView({
   today,
   onCreate,
   draft,
+  duration,
 }: {
+  duration?: number;
   day: string;
   events: CalendarEventItem[];
   timeZone: string;
@@ -26,6 +28,7 @@ export function DayView({
       linkDays={false}
       onCreate={onCreate}
       draft={draft}
+      duration={duration}
     />
   );
 }

@@ -200,6 +200,7 @@ async function CalendarContent({
         createAction={createEvent}
         userId={userId}
         showWeekends={viewOptions.showWeekends}
+        defaultDuration={viewOptions.duration}
       />
     </>
   );

@@ -52,3 +52,15 @@ describe("dragRange (RF-42, RF-43)", () => {
     expect(dragRange(1440, 1440)).toEqual({ start: 1424, end: 1439 });
   });
 });
+
+describe("clickRange with the account's duration (spec 019 RF-32, RF-33)", () => {
+  it("proposes the start plus the chosen minutes", () => {
+    expect(clickRange(600, 30)).toEqual({ start: 600, end: 630 });
+    expect(clickRange(600, 120)).toEqual({ start: 600, end: 720 });
+  });
+
+  it("never ends past 23:59", () => {
+    expect(clickRange(1430, 15)).toEqual({ start: 1410, end: 1425 });
+    expect(clickRange(1410, 90)).toEqual({ start: 1410, end: 1439 });
+  });
+});

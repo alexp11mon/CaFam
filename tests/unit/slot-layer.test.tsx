@@ -7,7 +7,7 @@ import { SlotLayer } from "@/components/calendar/slot-layer";
 const HOUR = 48;
 const DAY_PX = 24 * HOUR;
 
-function setup() {
+function setup(duration?: number) {
   const onCreate = vi.fn();
   render(
     <div style={{ position: "relative", height: DAY_PX }}>
@@ -15,6 +15,7 @@ function setup() {
         day="2026-10-21"
         dayLabel="miércoles, 21 de octubre de 2026"
         onCreate={onCreate}
+        duration={duration}
       />
     </div>,
   );
@@ -66,6 +67,33 @@ describe("SlotLayer", () => {
       "2026-10-21",
       { start: 600, end: 660 },
       expect.objectContaining({ top: at(10), height: HOUR }),
+    );
+  });
+
+  it("a click lasts the account's duration (spec 019 RF-32)", () => {
+    const { onCreate, layer } = setup(30);
+
+    pointer("pointerDown", layer, 10.2);
+    pointer("pointerUp", layer, 10.2);
+
+    expect(onCreate).toHaveBeenCalledWith(
+      "2026-10-21",
+      { start: 600, end: 630 },
+      expect.anything(),
+    );
+  });
+
+  it("a drag keeps its interval whatever the duration (spec 019 RF-34)", () => {
+    const { onCreate, layer } = setup(30);
+
+    pointer("pointerDown", layer, 10);
+    pointer("pointerMove", layer, 12);
+    pointer("pointerUp", layer, 12);
+
+    expect(onCreate).toHaveBeenCalledWith(
+      "2026-10-21",
+      { start: 600, end: 720 },
+      expect.anything(),
     );
   });
 
