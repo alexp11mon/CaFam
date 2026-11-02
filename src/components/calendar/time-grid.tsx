@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  moveDraft,
+  resizeDraft,
+  type DraftRange,
+} from "@/lib/calendar/draft-drag";
 import { formatDateKeyFull } from "@/lib/calendar/format";
 import {
   dayEvents,
@@ -20,6 +25,7 @@ import {
   zonedDateKey,
 } from "@/lib/calendar/time-zone";
 import { useGridZoom } from "@/lib/hooks/use-grid-zoom";
+import { useIsPhone } from "@/lib/hooks/use-is-phone";
 import { useNow } from "@/lib/hooks/use-now";
 import { DraggableEvent } from "./draggable-event";
 import { ScrollOnMount } from "./scroll-on-mount";
@@ -66,7 +72,10 @@ export function TimeGrid({
   onCreate,
   draft,
   duration,
+  onDraftChange,
 }: {
+  /** The provisional block moved or stretched on a phone (spec 019 RF-35 to RF-38). */
+  onDraftChange?: (range: DraftRange) => void;
   /** The account's length of a new event (spec 019 RF-32). */
   duration?: number;
   days: string[];
@@ -231,23 +240,11 @@ export function TimeGrid({
                     />
                   ) : null}
                   {draft?.day === day ? (
-                    <div
-                      data-testid="draft-block"
-                      aria-hidden="true"
-                      style={{
-                        top: `${(draft.startMinute / 60) * hourPx}px`,
-                        height: `${Math.max(((draft.endMinute - draft.startMinute) / 60) * hourPx, MIN_SLOT_PX)}px`,
-                      }}
-                      className="pointer-events-none absolute inset-x-0.5 z-10 overflow-hidden rounded-md border border-dashed border-ink bg-paper px-1 text-xs text-ink"
-                    >
-                      <span className="block font-semibold">
-                        {draft.title || "(Sin título)"}
-                      </span>
-                      <span className="block tabular-nums">
-                        {fromMinutes(draft.startMinute)} –{" "}
-                        {fromMinutes(draft.endMinute)}
-                      </span>
-                    </div>
+                    <DraftBlock
+                      draft={draft}
+                      hourPx={hourPx}
+                      onChange={onDraftChange}
+                    />
                   ) : null}
                   {layoutTimedDay(events, day, timeZone).map((slot) => {
                     const width = 100 / slot.columns;
@@ -302,6 +299,92 @@ export function TimeGrid({
         </div>
       </div>
       {isEmpty ? <p className="sr-only">No hay eventos</p> : null}
+    </div>
+  );
+}
+
+/**
+ * The event being created (spec 008 RF-40). On a phone it moves with the
+ * finger and stretches from its handle in quarters (spec 019 RF-35 to RF-38);
+ * the quick window shows the same hours (RF-39).
+ */
+function DraftBlock({
+  draft,
+  hourPx,
+  onChange,
+}: {
+  draft: GridDraft;
+  hourPx: number;
+  onChange?: (range: DraftRange) => void;
+}) {
+  const phone = useIsPhone();
+  const drag = useRef<{
+    kind: "move" | "resize";
+    y: number;
+    range: DraftRange;
+  } | null>(null);
+  const editable = phone && onChange !== undefined;
+
+  function grab(
+    kind: "move" | "resize",
+    pointer: ReactPointerEvent<HTMLElement>,
+  ) {
+    if (!editable) return;
+    pointer.stopPropagation();
+    pointer.currentTarget.setPointerCapture?.(pointer.pointerId);
+    drag.current = {
+      kind,
+      y: pointer.clientY,
+      range: { startMinute: draft.startMinute, endMinute: draft.endMinute },
+    };
+  }
+
+  function move(pointer: ReactPointerEvent<HTMLElement>) {
+    const current = drag.current;
+    if (!current || !onChange) return;
+    const minutes = ((pointer.clientY - current.y) / hourPx) * 60;
+    onChange(
+      current.kind === "move"
+        ? moveDraft(current.range, minutes)
+        : resizeDraft(current.range, current.range.endMinute + minutes),
+    );
+  }
+
+  const release = () => {
+    drag.current = null;
+  };
+
+  return (
+    <div
+      data-testid="draft-block"
+      aria-hidden="true"
+      data-draft-block=""
+      onPointerDown={(pointer) => grab("move", pointer)}
+      onPointerMove={move}
+      onPointerUp={release}
+      onPointerCancel={release}
+      style={{
+        top: `${(draft.startMinute / 60) * hourPx}px`,
+        height: `${Math.max(((draft.endMinute - draft.startMinute) / 60) * hourPx, MIN_SLOT_PX)}px`,
+      }}
+      className={`absolute inset-x-0.5 z-10 overflow-hidden rounded-md border border-dashed border-ink bg-paper px-1 text-xs text-ink ${editable ? "touch-none select-none" : "pointer-events-none"}`}
+    >
+      <span className="block font-semibold">
+        {draft.title || "(Sin título)"}
+      </span>
+      <span className="block tabular-nums">
+        {fromMinutes(draft.startMinute)} – {fromMinutes(draft.endMinute)}
+      </span>
+      {editable ? (
+        // The handle is bigger than it looks, for a finger (RF-35).
+        <span
+          data-testid="draft-handle"
+          onPointerDown={(pointer) => grab("resize", pointer)}
+          className="absolute inset-x-0 -bottom-1 flex h-6 items-end justify-center pb-1.5"
+        >
+          <span className="h-1 w-8 rounded-full bg-ink" />
+        </span>
+      ) : null}
     </div>
   );
 }

@@ -164,7 +164,7 @@
   Hecho cuando: `npm test -- use-sidebar-collapsed calendar-workspace view-toolbar` en verde y capturas a 1440 px con la barra plegada y desplegada. Cubre: RF-17 a RF-22 | Módulo: sidebar-collapse
   Evidencia (2026-11-02): rojo antes de implementar (imports sin resolver). `use-sidebar-collapsed.ts` (estado del módulo con `localStorage` `cafam-sidebar` y `useSyncExternalStore`), botón ≡ en `ViewToolbar` desde 1024 px con `aria-expanded`, `aria-controls` y "Plegar el panel" o "Desplegar el panel", flecha "Elegir fecha" junto al título y mini calendario flotante en el workspace, que se cierra al elegir un día o con Escape. La guardia de diseño admite el workspace en la lista de lo que flota. `npm test -- use-sidebar calendar-workspace view-toolbar weekend-toggle design-tokens` 54 en verde. Las capturas, en la T14.
 
-- [ ] T13 Alargar y mover el bloque provisional en el móvil
+- [x] T13 Alargar y mover el bloque provisional en el móvil
   Pasos:
   - Primero, tests en rojo:
     - `tests/unit/draft-drag.test.ts`: pasos de 15 min, conservar la duración al mover, mínimo de 15 min, dentro de 00:00–23:59;
@@ -172,6 +172,7 @@
   - Después, `draft-drag.ts`, `use-draft-drag.ts`, `onDraftChange` en `QuickCreate` y el tirador.
 
   Hecho cuando: `npm test -- draft-drag time-grid quick-create` en verde y prueba con emulación táctil en `playwright-cli` a 390 px. Cubre: RF-35 a RF-39 | Módulo: draft-adjust
+  Evidencia (2026-11-02): draft-drag, time-grid y quick-create en verde; typecheck, lint (0 errores), format:check, npm test (2236) y build correctos.
 
 - [ ] T14 Validar la spec de principio a fin
   Pasos:

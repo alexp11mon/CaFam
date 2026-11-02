@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TimeGrid } from "@/components/calendar/time-grid";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
@@ -149,5 +149,81 @@ describe("TimeGrid", () => {
   it("keeps creating on the slots for whoever can create (RF-46)", () => {
     renderGrid({ onCreate: vi.fn() });
     expect(screen.getAllByTestId("slot-layer")).toHaveLength(7);
+  });
+});
+
+// Spec 019, T13: the provisional block can be stretched and moved on a phone (RF-35 to RF-37).
+describe("TimeGrid draft on a phone", () => {
+  const DRAFT = {
+    day: "2026-10-21",
+    startMinute: 600,
+    endMinute: 660,
+    title: "Cena",
+  };
+
+  function phone(matches: boolean) {
+    window.matchMedia = vi.fn(() => ({
+      matches,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    })) as unknown as typeof matchMedia;
+  }
+
+  function renderDraft(onDraftChange = vi.fn()) {
+    render(
+      <TimeGrid
+        days={WEEK}
+        events={[]}
+        timeZone={TZ}
+        today="2026-10-21"
+        linkDays
+        onCreate={vi.fn()}
+        draft={DRAFT}
+        onDraftChange={onDraftChange}
+      />,
+    );
+    return onDraftChange;
+  }
+
+  function drag(target: Element, dy: number) {
+    fireEvent.pointerDown(target, {
+      clientY: 500,
+      pointerId: 3,
+      pointerType: "touch",
+    });
+    fireEvent.pointerMove(target, { clientY: 500 + dy, pointerId: 3 });
+    fireEvent.pointerUp(target, { clientY: 500 + dy, pointerId: 3 });
+  }
+
+  afterEach(() => {
+    // @ts-expect-error jsdom has none by default
+    delete window.matchMedia;
+  });
+
+  it("moves the block in quarters keeping its length (RF-37)", () => {
+    phone(true);
+    const onDraftChange = renderDraft();
+    // 48 px an hour by default: 48 px is one hour later.
+    drag(screen.getByTestId("draft-block"), 48);
+    expect(onDraftChange).toHaveBeenLastCalledWith({
+      startMinute: 660,
+      endMinute: 720,
+    });
+  });
+
+  it("stretches the end from its handle (RF-35, RF-36)", () => {
+    phone(true);
+    const onDraftChange = renderDraft();
+    drag(screen.getByTestId("draft-handle"), 24);
+    expect(onDraftChange).toHaveBeenLastCalledWith({
+      startMinute: 600,
+      endMinute: 690,
+    });
+  });
+
+  it("has no handle on a wider screen", () => {
+    phone(false);
+    renderDraft();
+    expect(screen.queryByTestId("draft-handle")).toBeNull();
   });
 });

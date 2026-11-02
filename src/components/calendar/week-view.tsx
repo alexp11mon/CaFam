@@ -1,3 +1,4 @@
+import type { DraftRange } from "@/lib/calendar/draft-drag";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { TimeGrid, type CreateInGrid, type GridDraft } from "./time-grid";
 
@@ -9,6 +10,7 @@ export function WeekView(props: {
   today: string;
   onCreate?: CreateInGrid;
   draft?: GridDraft | null;
+  onDraftChange?: (range: DraftRange) => void;
   duration?: number;
 }) {
   return <TimeGrid {...props} linkDays />;

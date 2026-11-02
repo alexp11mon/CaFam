@@ -1,3 +1,4 @@
+import type { DraftRange } from "@/lib/calendar/draft-drag";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { TimeGrid, type CreateInGrid, type GridDraft } from "./time-grid";
 
@@ -10,6 +11,7 @@ export function DayView({
   onCreate,
   draft,
   duration,
+  onDraftChange,
 }: {
   duration?: number;
   day: string;
@@ -18,6 +20,7 @@ export function DayView({
   today: string;
   onCreate?: CreateInGrid;
   draft?: GridDraft | null;
+  onDraftChange?: (range: DraftRange) => void;
 }) {
   return (
     <TimeGrid
@@ -29,6 +32,7 @@ export function DayView({
       onCreate={onCreate}
       draft={draft}
       duration={duration}
+      onDraftChange={onDraftChange}
     />
   );
 }

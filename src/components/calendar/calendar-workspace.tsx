@@ -22,6 +22,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { monthLabel } from "@/lib/calendar/agenda-feed";
 import { requestAgendaToday } from "@/lib/calendar/agenda-today";
 import type { Draft } from "@/lib/calendar/draft";
+import type { DraftRange } from "@/lib/calendar/draft-drag";
 import type { Box } from "@/lib/calendar/popover";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { useCalendarShortcuts } from "@/lib/hooks/use-calendar-shortcuts";
@@ -282,6 +283,13 @@ export function CalendarWorkspace({
   // The event being created from an empty slot (spec 008 RF-37, RF-40).
   const [draft, setDraft] = useState<Draft | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
+  // Each slot opens a new window; moving its block does not (spec 019 RF-39).
+  const [draftKey, setDraftKey] = useState(0);
+  const changeDraft = useCallback(
+    (range: DraftRange) =>
+      setDraft((current) => current && { ...current, ...range }),
+    [],
+  );
   const [anchor, setAnchor] = useState<Box | null>(null);
   const closeDraft = useCallback(() => setDraft(null), []);
 
@@ -354,6 +362,7 @@ export function CalendarWorkspace({
   function openDraft(next: Draft, at: Box) {
     if (dragging) return;
     setDraftTitle("");
+    setDraftKey((key) => key + 1);
     setAnchor(at);
     setDraft(next);
   }
@@ -724,6 +733,7 @@ export function CalendarWorkspace({
                 onCreate={createInGrid}
                 duration={defaultDuration}
                 draft={gridDraft}
+                onDraftChange={changeDraft}
               />
             ) : (
               <DayView
@@ -734,6 +744,7 @@ export function CalendarWorkspace({
                 onCreate={createInGrid}
                 duration={defaultDuration}
                 draft={gridDraft}
+                onDraftChange={changeDraft}
               />
             )}
           </div>
@@ -742,7 +753,7 @@ export function CalendarWorkspace({
         {draft && quickCreate && defaultCalendarId ? (
           <QuickCreate
             // A new slot starts a new window.
-            key={`${draft.day}-${draft.allDay}-${draft.startMinute}-${draft.endMinute}`}
+            key={draftKey}
             draft={draft}
             anchor={anchor}
             calendars={editableCalendars}
@@ -750,6 +761,7 @@ export function CalendarWorkspace({
             action={createAction}
             onClose={closeDraft}
             onTitleChange={setDraftTitle}
+            onDraftChange={changeDraft}
           />
         ) : null}
         {interactive.dialog}

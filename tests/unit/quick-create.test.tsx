@@ -18,6 +18,9 @@ beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function showModal() {
     this.setAttribute("open", "");
   };
+  HTMLDialogElement.prototype.show = function show() {
+    this.setAttribute("open", "");
+  };
   HTMLDialogElement.prototype.close = function close() {
     this.removeAttribute("open");
   };
@@ -52,7 +55,8 @@ function setup(
   );
   const onClose = vi.fn();
   const onTitleChange = vi.fn();
-  render(
+  const onDraftChange = vi.fn();
+  const view = render(
     <ToastProvider>
       <QuickCreate
         draft={draft}
@@ -62,10 +66,11 @@ function setup(
         action={action}
         onClose={onClose}
         onTitleChange={onTitleChange}
+        onDraftChange={onDraftChange}
       />
     </ToastProvider>,
   );
-  return { action, onClose, onTitleChange };
+  return { action, onClose, onTitleChange, onDraftChange, view };
 }
 
 describe("QuickCreate", () => {
@@ -196,5 +201,63 @@ describe("QuickCreate", () => {
     expect(screen.getByRole("dialog").className).toMatch(
       /max-\[48\.0625rem\]:bottom-0/,
     );
+  });
+});
+
+// Spec 019, T13: the hours of the sheet and the provisional block are one (RF-36, RF-37, RF-39).
+describe("QuickCreate and the provisional block", () => {
+  it("moves the block when the hours change in the window (RF-39)", async () => {
+    const { onDraftChange } = setup();
+    const start = screen.getByRole("combobox", { name: "Hora de inicio" });
+    await userEvent.clear(start);
+    await userEvent.type(start, "16:00");
+    await userEvent.tab();
+
+    // The end follows the start, keeping the hour.
+    expect(onDraftChange).toHaveBeenLastCalledWith({
+      startMinute: 960,
+      endMinute: 1020,
+    });
+  });
+
+  it("shows the hours of a block moved or stretched on the grid (RF-36, RF-37)", () => {
+    const { view, onDraftChange } = setup();
+    view.rerender(
+      <ToastProvider>
+        <QuickCreate
+          draft={{ ...TIMED, startMinute: 15 * 60, endMinute: 16 * 60 + 15 }}
+          anchor={null}
+          calendars={CALENDARS}
+          defaultCalendarId="cal-b"
+          action={vi.fn()}
+          onClose={vi.fn()}
+          onTitleChange={vi.fn()}
+          onDraftChange={onDraftChange}
+        />
+      </ToastProvider>,
+    );
+
+    expect(
+      screen.getByRole("combobox", { name: "Hora de inicio" }),
+    ).toHaveValue("15:00");
+    expect(screen.getByRole("combobox", { name: "Hora de fin" })).toHaveValue(
+      "16:15",
+    );
+  });
+
+  it("leaves the week usable on a phone: not modal (RF-35)", () => {
+    window.matchMedia = vi.fn(() => ({
+      matches: true,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    })) as unknown as typeof matchMedia;
+    const showModal = vi.spyOn(HTMLDialogElement.prototype, "showModal");
+    setup();
+    expect(showModal).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("dialog", { name: "Nuevo evento" }),
+    ).toHaveAttribute("open");
+    // @ts-expect-error jsdom has none by default
+    delete window.matchMedia;
   });
 });

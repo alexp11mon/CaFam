@@ -21,9 +21,13 @@ import { placePopover, type Box } from "@/lib/calendar/popover";
 import {
   endOptions,
   fromMinutes,
+  normalizeTime,
   shiftEnd,
   startOptions,
+  toMinutes,
 } from "@/lib/calendar/time-options";
+import type { DraftRange } from "@/lib/calendar/draft-drag";
+import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import type { CalendarOption, EventFormValues } from "./event-form";
 import { useHoldLive } from "@/lib/hooks/use-hold-live";
@@ -46,7 +50,10 @@ export function QuickCreate({
   action,
   onClose,
   onTitleChange,
+  onDraftChange,
 }: {
+  /** The hours typed move the provisional block (spec 019 RF-39). */
+  onDraftChange?: (range: DraftRange) => void;
   draft: Draft;
   /** The slot on screen, to sit beside it. */
   anchor: Box | null;
@@ -62,6 +69,7 @@ export function QuickCreate({
   const { show } = useToast();
   const dialog = useRef<HTMLDialogElement>(null);
   const headingId = useId();
+  const modal = useRef(true);
   const [state, formAction, pending] = useActionState(action, {
     values: {} as State["values"],
   });
@@ -72,16 +80,74 @@ export function QuickCreate({
   const [start, setStart] = useState(fromMinutes(draft.startMinute));
   const [end, setEnd] = useState(fromMinutes(draft.endMinute));
   const [endTouched, setEndTouched] = useState(false);
+  // The block moved or stretched on the grid sets the hours (spec 019 RF-39).
+  const [seen, setSeen] = useState([draft.startMinute, draft.endMinute]);
+  if (seen[0] !== draft.startMinute || seen[1] !== draft.endMinute) {
+    setSeen([draft.startMinute, draft.endMinute]);
+    setStart(fromMinutes(draft.startMinute));
+    setEnd(fromMinutes(draft.endMinute));
+  }
+
+  function changeHours(nextStart: string, nextEnd: string) {
+    setStart(nextStart);
+    setEnd(nextEnd);
+    const from = normalizeTime(nextStart);
+    const to = normalizeTime(nextEnd);
+    if (!onDraftChange || !from || !to) return;
+    const range = { startMinute: toMinutes(from), endMinute: toMinutes(to) };
+    if (range.endMinute <= range.startMinute) return;
+    onDraftChange(range);
+  }
   const [calendarId, setCalendarId] = useState(defaultCalendarId);
   const errors = state.fieldErrors ?? {};
 
   useEffect(() => {
     const element = dialog.current;
-    element?.showModal();
+    if (!element) return;
+    // On a phone the week stays usable, to move the block (spec 019 RF-35, plan R4).
+    if (!draft.allDay && window.matchMedia?.(PHONE_QUERY).matches) {
+      modal.current = false;
+      element.show();
+      const block = document.querySelector("[data-draft-block]");
+      const scroller = block?.closest<HTMLElement>("[data-grid-scroll]");
+      const hidden = block
+        ? block.getBoundingClientRect().bottom -
+          element.getBoundingClientRect().top +
+          16
+        : 0;
+      if (scroller && hidden > 0) scroller.scrollTop += hidden;
+    } else {
+      element.showModal();
+    }
     // showModal focuses the first control; the title is wanted (RF-28).
-    element?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
-    return () => element?.close();
+    element.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    return () => element.close();
+    // Once, when it opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Not modal on a phone: Escape and a touch outside close it, but not on the block.
+  useEffect(() => {
+    const onKey = (key: KeyboardEvent) => {
+      if (key.key === "Escape" && !modal.current) {
+        onClose();
+      }
+    };
+    const onPointerDown = (pointer: PointerEvent) => {
+      const element = dialog.current;
+      const target = pointer.target as Element | null;
+      if (!element || modal.current || !target) return;
+      if (element.contains(target) || target.closest("[data-draft-block]"))
+        return;
+      onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointerDown, true);
+    };
+  }, [onClose]);
 
   // Saved: close, refresh the calendar and say so (RF-38, RF-32). Once per result.
   const handled = useRef<State | null>(null);
@@ -137,7 +203,7 @@ export function QuickCreate({
           : undefined
       }
       // Up to 768 px it is a sheet anchored to the bottom (RF-41).
-      className={`max-h-[calc(100dvh-2rem)] w-96 overflow-y-auto rounded-3xl glass-float p-0 text-ink backdrop:bg-scrim/10 ${place ? "m-0 left-(--quick-left) top-(--quick-top)" : "m-auto"} max-[48.0625rem]:inset-x-0 max-[48.0625rem]:top-auto max-[48.0625rem]:bottom-0 max-[48.0625rem]:m-0 max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-b-none`}
+      className={`max-h-[calc(100dvh-2rem)] w-96 overflow-y-auto rounded-3xl glass-float p-0 text-ink backdrop:bg-scrim/10 ${place ? "m-0 left-(--quick-left) top-(--quick-top)" : "m-auto"} max-[48.0625rem]:fixed max-[48.0625rem]:z-40 max-[48.0625rem]:inset-x-0 max-[48.0625rem]:top-auto max-[48.0625rem]:bottom-0 max-[48.0625rem]:m-0 max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-b-none`}
     >
       <form action={formAction} noValidate className="flex flex-col gap-4 p-5">
         <h2 id={headingId} className="sr-only">
@@ -184,10 +250,12 @@ export function QuickCreate({
                 label="Hora de inicio"
                 name="startTime"
                 value={start}
-                onValueChange={(next) => {
-                  if (!endTouched) setEnd(shiftEnd(start, next, end));
-                  setStart(next);
-                }}
+                onValueChange={(next) =>
+                  changeHours(
+                    next,
+                    endTouched ? end : shiftEnd(start, next, end),
+                  )
+                }
                 options={startOptions()}
                 error={errors.startTime}
               />
@@ -197,7 +265,7 @@ export function QuickCreate({
                 value={end}
                 onValueChange={(next) => {
                   setEndTouched(true);
-                  setEnd(next);
+                  changeHours(start, next);
                 }}
                 options={endOptions(start)}
                 error={errors.endTime}
