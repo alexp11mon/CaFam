@@ -889,10 +889,12 @@ export type Database = {
         Row: {
           accent: string
           created_at: string
+          default_event_minutes: number
           display_name: string
           id: string
           last_view: string | null
           share_availability: boolean
+          show_weekends: boolean
           theme: string
           time_zone: string
           updated_at: string
@@ -900,10 +902,12 @@ export type Database = {
         Insert: {
           accent?: string
           created_at?: string
+          default_event_minutes?: number
           display_name: string
           id: string
           last_view?: string | null
           share_availability?: boolean
+          show_weekends?: boolean
           theme?: string
           time_zone?: string
           updated_at?: string
@@ -911,10 +915,12 @@ export type Database = {
         Update: {
           accent?: string
           created_at?: string
+          default_event_minutes?: number
           display_name?: string
           id?: string
           last_view?: string | null
           share_availability?: boolean
+          show_weekends?: boolean
           theme?: string
           time_zone?: string
           updated_at?: string

@@ -65,7 +65,7 @@
   Hecho cuando: `npm test -- live-hold gone-event draggable quick-create event-form` en verde. Cubre: RF-43, RF-44 | Módulo: live-client, live-gone
   Evidencia (2026-11-02): rojo antes de implementar (4 tests). `useHoldLive` en el arrastre (`dragging`), `QuickCreate` y la edición de `EventPanel`; la marca de refresco remoto dura 3 s y `GoneEvent` la lee. `npm test -- gone-event use-hold-live event-panel quick-create draggable-event live` 61 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2170 tests.
 
-- [ ] T5 Guardar en la cuenta los fines de semana y la duración de un evento nuevo
+- [x] T5 Guardar en la cuenta los fines de semana y la duración de un evento nuevo
   Pasos:
   - Primero, tests en rojo:
     - `tests/integration/view-options.test.ts`: los valores por defecto son `true` y `60`; un valor fuera de la lista da `23514`; un usuario no lee ni cambia los de otro; `visible_people()` no los expone;
@@ -74,6 +74,7 @@
   - Después, la migración `profile_view_options`, `getViewOptions`, las dos acciones y la sección "Calendario" de Ajustes.
 
   Hecho cuando: `npm run test:db -- view-options schema` y `npm test -- view-options` en verde. Cubre: RF-23, RF-24, RF-30, RF-31 | Módulo: view-options-schema, view-options, settings-ui
+  Evidencia (2026-11-02): rojo antes de implementar (4 tests de BD y 2 archivos unitarios). Migración `20261102130000_profile_view_options.sql` aplicada en dev y tipos regenerados. `test:db -- view-options profile-theme schema` 56 en verde y `npm test -- view-options settings` 24. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2178 tests. Las capturas de Ajustes se hacen en la T14.
 
 - [ ] T6 Pintar semana y mes de lunes a viernes
   Pasos:

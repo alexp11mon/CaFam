@@ -10,8 +10,19 @@ import { ThemePicker } from "@/components/settings/theme-picker";
 import { FormAlert } from "@/components/ui/form-alert";
 import { getConfirmNotice } from "@/lib/account/confirm-type";
 import { getAccountEmails, getProfile } from "@/lib/account/queries";
-import { getAppearance, requireUser } from "@/lib/calendar/queries";
-import { setAccent, setShareAvailability, setTheme } from "./actions";
+import {
+  getAppearance,
+  getViewOptions,
+  requireUser,
+} from "@/lib/calendar/queries";
+import { ViewOptionsSetting } from "@/components/settings/view-options-setting";
+import {
+  setAccent,
+  setDefaultDuration,
+  setShareAvailability,
+  setShowWeekends,
+  setTheme,
+} from "./actions";
 import {
   changePassword,
   deleteAccount,
@@ -58,6 +69,19 @@ async function AssistantSection() {
     <AvailabilitySetting
       current={data?.share_availability ?? false}
       save={setShareAvailability}
+    />
+  );
+}
+
+async function CalendarSection() {
+  const { supabase, userId } = await requireUser();
+  const { showWeekends, duration } = await getViewOptions(supabase, userId);
+  return (
+    <ViewOptionsSetting
+      showWeekends={showWeekends}
+      duration={duration}
+      saveWeekends={setShowWeekends}
+      saveDuration={setDefaultDuration}
     />
   );
 }
@@ -125,6 +149,11 @@ export default function SettingsPage({
       <Section id="settings-profile" title="Perfil">
         <Suspense fallback={LOADING}>
           <ProfileSection />
+        </Suspense>
+      </Section>
+      <Section id="settings-calendar" title="Calendario">
+        <Suspense fallback={LOADING}>
+          <CalendarSection />
         </Suspense>
       </Section>
       <Section id="settings-assistant" title="Asistente">

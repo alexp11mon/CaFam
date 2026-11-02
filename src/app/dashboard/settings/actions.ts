@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import { requireActionUser } from "@/lib/calendar/queries";
+import { durationSchema } from "@/lib/calendar/view-options";
 import { accentSchema } from "@/lib/theme/accents";
 import {
   THEME_COOKIE,
@@ -80,4 +81,38 @@ export async function setShareAvailability(share: boolean): Promise<Result> {
   }
   revalidatePath("/dashboard", "layout");
   return {};
+}
+
+const VIEW_NOT_SAVED = "No se ha podido guardar. Inténtalo de nuevo.";
+
+type ViewOptionsUpdate =
+  { show_weekends: boolean } | { default_event_minutes: number };
+
+async function saveViewOption(update: ViewOptionsUpdate): Promise<Result> {
+  const { supabase, userId } = await requireActionUser();
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(update)
+      .eq("id", userId)
+      .select("id");
+    if (error || !data?.length) return { error: VIEW_NOT_SAVED };
+  } catch {
+    return { error: CALENDAR_MESSAGES.connection };
+  }
+  revalidatePath("/dashboard", "layout");
+  return {};
+}
+
+/** "Mostrar fines de semana", for every device of the account (spec 019 RF-23, RF-24). */
+export async function setShowWeekends(show: boolean): Promise<Result> {
+  if (typeof show !== "boolean") return { error: VIEW_NOT_SAVED };
+  return saveViewOption({ show_weekends: show });
+}
+
+/** The length of a new event (spec 019 RF-30, RF-31). */
+export async function setDefaultDuration(minutes: number): Promise<Result> {
+  const parsed = durationSchema.safeParse(minutes);
+  if (!parsed.success) return { error: parsed.error.issues[0]!.message };
+  return saveViewOption({ default_event_minutes: parsed.data });
 }

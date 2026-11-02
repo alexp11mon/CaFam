@@ -1,5 +1,6 @@
 // Read access for the spec 002 pages. Everything goes through RLS: a user only
 // ever gets rows of calendars they belong to (P3).
+import { parseDuration, type Duration } from "./view-options";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { z } from "zod";
@@ -216,6 +217,22 @@ export async function getAppearance(
     accent: isAccent(data?.accent) ? data.accent : DEFAULT_ACCENT,
     theme: parseTheme(data?.theme),
     displayName: data?.display_name ?? "",
+  };
+}
+
+/** Weekends and the default duration of the account (spec 019 RF-23, RF-30). */
+export async function getViewOptions(
+  supabase: Client,
+  userId: string,
+): Promise<{ showWeekends: boolean; duration: Duration }> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("show_weekends, default_event_minutes")
+    .eq("id", userId)
+    .maybeSingle();
+  return {
+    showWeekends: data?.show_weekends ?? true,
+    duration: parseDuration(data?.default_event_minutes),
   };
 }
 
