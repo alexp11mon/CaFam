@@ -5,12 +5,13 @@ import { EmailForm } from "@/components/account/email-form";
 import { PasswordForm } from "@/components/account/password-form";
 import { ProfileForm } from "@/components/account/profile-form";
 import { AccentPicker } from "@/components/settings/accent-picker";
+import { AvailabilitySetting } from "@/components/settings/availability-setting";
 import { ThemePicker } from "@/components/settings/theme-picker";
 import { FormAlert } from "@/components/ui/form-alert";
 import { getConfirmNotice } from "@/lib/account/confirm-type";
 import { getAccountEmails, getProfile } from "@/lib/account/queries";
 import { getAppearance, requireUser } from "@/lib/calendar/queries";
-import { setAccent, setTheme } from "./actions";
+import { setAccent, setShareAvailability, setTheme } from "./actions";
 import {
   changePassword,
   deleteAccount,
@@ -42,6 +43,21 @@ async function ProfileSection() {
       action={saveProfile}
       initial={profile}
       timeZones={Intl.supportedValuesOf("timeZone")}
+    />
+  );
+}
+
+async function AssistantSection() {
+  const { supabase, userId } = await requireUser();
+  const { data } = await supabase
+    .from("profiles")
+    .select("share_availability")
+    .eq("id", userId)
+    .maybeSingle();
+  return (
+    <AvailabilitySetting
+      current={data?.share_availability ?? false}
+      save={setShareAvailability}
     />
   );
 }
@@ -88,7 +104,7 @@ function Section({
 
 const LOADING = <p className="text-muted">Cargando…</p>;
 
-/** Ajustes: theme (spec 011), interface accent (spec 005) and the account (spec 006). */
+/** Ajustes: theme (spec 011), interface accent (spec 005), the account (spec 006) and the assistant (spec 015). */
 export default function SettingsPage({
   searchParams,
 }: {
@@ -109,6 +125,11 @@ export default function SettingsPage({
       <Section id="settings-profile" title="Perfil">
         <Suspense fallback={LOADING}>
           <ProfileSection />
+        </Suspense>
+      </Section>
+      <Section id="settings-assistant" title="Asistente">
+        <Suspense fallback={LOADING}>
+          <AssistantSection />
         </Suspense>
       </Section>
       <Section id="settings-email" title="Email">

@@ -143,13 +143,14 @@
   Hecho cuando: `npm test -- assistant-chat nav design-tokens` en verde y capturas revisadas. Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RF-6, RF-11, RF-27, RF-28, RF-33 | Módulo: assistant-ui
   Evidencia (2026-11-02): `assistant-chat.test.tsx` (9 tests: aviso y ejemplos, enviar con Intro y Mayús+Intro, validación, Cancelar devuelve la pregunta, hilo completo y Nueva conversación, Reintentar en 503, sin conexión, cuota, abortar al desmontar) y `nav.test.ts`/`nav-drawer.test.tsx` con el destino Asistente. typecheck, lint (2 avisos previos), format:check, `npm test` (223 archivos, 2136 tests) y build en verde. En el navegador (next start -p 3100, usuario @cafam.test borrado al terminar) a 390, 768 y 1440 px: aviso de privacidad, ejemplos, respuesta real de Groq y sin errores en consola.
 
-- [ ] T10 Añadir el permiso de disponibilidad en Ajustes
+- [x] T10 Añadir el permiso de disponibilidad en Ajustes
   Pasos:
   - Primero, `tests/unit/availability-setting.test.tsx` y casos en `tests/unit/settings-actions.test.ts` en rojo: casilla "Permitir que el asistente de otros consulte mi disponibilidad" desmarcada por defecto, con la explicación de que solo se ve libre u ocupado; `setShareAvailability` valida, guarda y revalida; error traducido.
   - Después, `availability-setting.tsx`, la acción y la sección en `settings/page.tsx`.
   - Capturas de Ajustes a 390 y 1440 px.
 
   Hecho cuando: `npm test -- availability-setting settings-actions` en verde. Cubre: RF-20, RF-21 | Módulo: availability-setting
+  Evidencia (2026-11-02): `availability-setting.test.tsx` (3 tests: desmarcada con la explicación, guarda al momento, deshace y muestra el error) y 3 casos de `setShareAvailability` en `settings-actions.test.ts`; sección "Asistente" en Ajustes. typecheck, lint (2 avisos previos), format:check, `npm test` (224 archivos, 2142 tests) y build en verde. Las capturas de Ajustes se hacen en la prueba del navegador de T13.
 
 - [ ] T11 Explicar el asistente en la política de privacidad
   Pasos:

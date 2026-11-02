@@ -52,7 +52,7 @@ vi.mock("@/lib/calendar/queries", () => ({
   requireActionUser: async () => ({ supabase: fakeSupabase(), userId: ME }),
 }));
 
-const { setAccent, setTheme } =
+const { setAccent, setShareAvailability, setTheme } =
   await import("@/app/dashboard/settings/actions");
 
 beforeEach(() => {
@@ -165,5 +165,35 @@ describe("setTheme (RF-4)", () => {
     expect(result.error).toBe(
       "No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.",
     );
+  });
+});
+
+// Spec 015, T10: the consent to show availability (RF-20, RF-21).
+describe("setShareAvailability (RF-20)", () => {
+  it("saves the consent in the user's own row", async () => {
+    expect(await setShareAvailability(true)).toEqual({});
+    expect(state.updates).toEqual([
+      {
+        table: "profiles",
+        values: { share_availability: true },
+        eq: ["id", ME],
+      },
+    ]);
+    expect(state.revalidated).toEqual([["/dashboard", "layout"]]);
+  });
+
+  it("rejects anything but a boolean without touching the database", async () => {
+    const result = await setShareAvailability("yes" as unknown as boolean);
+    expect(result.error).toBeDefined();
+    expect(state.updates).toEqual([]);
+  });
+
+  it("explains a failed save and a lost connection", async () => {
+    state.result = { data: [], error: null };
+    expect((await setShareAvailability(false)).error).toBe(
+      "No se ha podido guardar el permiso. Inténtalo de nuevo.",
+    );
+    state.throws = true;
+    expect((await setShareAvailability(false)).error).toMatch(/conectar/);
   });
 });
