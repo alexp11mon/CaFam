@@ -2,7 +2,7 @@
 
 Spec de origen: `specs/019-escritorio-movil-tiempo-real/spec.md`, aprobada por el usuario el 2026-11-02 al pedir este plan. Constitución: `docs/constitution.md`.
 
-> Estado: **Aprobado** por el usuario el 2026-11-02, con la enmienda 7.
+> Estado: **Aprobado** por el usuario el 2026-11-02, con la enmienda 7. Spec **cerrada** el 2026-11-02.
 
 Sin dependencias nuevas (P6): Supabase Realtime viene dentro de `@supabase/supabase-js` 2.118, que ya está instalado. La constitución, en cambio, nombra uno a uno los servicios de Supabase permitidos y Realtime no está entre ellos. Hace falta la **enmienda 7**, que se aplica en la T1 (D1).
 

@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-02, al terminar las tareas de la spec 019 (escritorio, móvil y tiempo real); faltan aprobar el cierre de la 015 y la 019 y aplicar sus migraciones en prod.
+> Última actualización: 2026-11-02, al cerrar la spec 019 (escritorio, móvil y tiempo real); faltan aprobar el cierre de la 015 y aplicar las migraciones de las dos en prod.
 
 ## 1. Qué es
 
@@ -43,7 +43,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 013-eventos-recurrentes | Eventos repetidos con reglas personalizables y edición de una repetición, de las siguientes o de toda la serie | **Cerrada** (2026-10-31), T1–T16 hechas; 6 migraciones aplicadas en prod |
 | 014-comentarios-en-eventos | Comentarios en los eventos por cualquier miembro, Lectores incluidos | **Cerrada** (2026-11-01), T1–T11 hechas; 2 migraciones aplicadas en prod |
 | 015-asistente-de-chat | Asistente de chat sobre los eventos y la disponibilidad común, con un proveedor LLM gratuito (no Gemini) | T1–T13 hechas (2026-11-02); falta la aprobación del cierre, la migración `assistant` en prod y `GROQ_API_KEY` en Vercel |
-| 019-escritorio-movil-tiempo-real | Tarjeta de detalle junto al evento en el ordenador, barra lateral plegable, ocultar fines de semana, duración de un evento nuevo, tecla C, bloque provisional ajustable en el móvil y calendario en tiempo real con Supabase Realtime (enmienda 7) | T1–T14 hechas (2026-11-02); falta la aprobación del cierre y las migraciones `live_changes` y `profile_view_options` en prod |
+| 019-escritorio-movil-tiempo-real | Tarjeta de detalle junto al evento en el ordenador, barra lateral plegable, ocultar fines de semana, duración de un evento nuevo, tecla C, bloque provisional ajustable en el móvil y calendario en tiempo real con Supabase Realtime (enmienda 7) | **Cerrada** (2026-11-02), T1–T14 hechas; migraciones `live_changes` y `profile_view_options` pendientes de aplicar en prod |
 | 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Cerrada** (2026-10-30), T1–T13 hechas; sin migraciones. La prueba en el iPhone se hace en producción |
 | 017-mover-eventos-y-menu | Mover y redimensionar arrastrando, menú contextual en el ordenador, "Deshacer" en los avisos, detalle en hoja inferior en el móvil, pellizcar para ampliar y atajos nuevos (enmienda 5) | **Cerrada** (2026-11-01), T1–T16 hechas; 2 migraciones aplicadas en prod |
 | 018-sincronizacion-icloud | Calendarios de iCloud (iPhone) por CalDAV con contraseña específica de app, con el mismo alcance que Google en la 007 y la 009 (leer, escribir, renombrar, crear y subir). Dependencia `tsdav` aprobada; se instala en la primera tarea | **Cerrada** (2026-11-01), T1–T15 hechas; 2 migraciones aplicadas en prod; enmienda 6 aplicada |
@@ -711,5 +711,5 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **017 (mover eventos, menú y "Deshacer")** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod. Al soltar, cambiar el color o borrar una repetición se pregunta el alcance; "Deshacer" solo con "Solo este evento".
 - La **018 (iCloud)** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod. La comprobación con una cuenta real confirmó `MOVE` y renombrar.
 - La **015 (asistente de chat)** tiene T1–T13 hechas (2026-11-02). Para cerrarla faltan la aprobación del usuario, la migración `assistant` en prod y `GROQ_API_KEY` (clave "CaFam prod") en Vercel.
-- La **019 (escritorio, móvil y tiempo real)** tiene T1–T14 hechas (2026-11-02). Para cerrarla faltan la aprobación del usuario y las migraciones `live_changes` y `profile_view_options` en prod. La 020 (disponibilidad en la rejilla y sincronización rápida) está redactada y sin aprobar.
+- La **019 (escritorio, móvil y tiempo real)** está cerrada (2026-11-02). Faltan sus migraciones `live_changes` y `profile_view_options` en prod, que deben aplicarse antes de llevar la rama a `main`. La 020 (disponibilidad en la rejilla y sincronización rápida) está redactada y sin aprobar.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.

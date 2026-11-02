@@ -1,6 +1,6 @@
 # Tasks 019 - Escritorio, móvil y cambios al momento
 
-> Estado: **Aprobadas** por el usuario (2026-11-02).
+> Estado: **Cerradas** (2026-11-02). T1–T14 hechas; el usuario aprobó cerrar la spec.
 > Spec: `specs/019-escritorio-movil-tiempo-real/spec.md`, aprobada el 2026-11-02. Plan: `specs/019-escritorio-movil-tiempo-real/plan.md`, aprobado el 2026-11-02.
 > 14 tareas en dos iteraciones:
 >

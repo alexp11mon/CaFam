@@ -1,5 +1,7 @@
 # Spec 019 — Escritorio, móvil y cambios al momento
 
+> Estado: **Cerrada** (2026-11-02). Aprobada por el usuario el 2026-11-02; la enmienda 7 de la constitución se aplicó al aprobarla. Las migraciones `live_changes` y `profile_view_options` las aplica el usuario en prod.
+
 ## Contexto y objetivo
 
 La auditoría de Google Calendar del 2026-11-02 (`analisis-google-calendar.md`, en esta carpeta) confirmó que CaFam ya iguala a Google en crear, mover, redimensionar, el menú contextual, "Deshacer" y los atajos de vista. En el día a día del ordenador quedan cuatro diferencias:
