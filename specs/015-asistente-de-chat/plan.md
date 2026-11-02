@@ -1,6 +1,6 @@
 # Plan 015 — Asistente de chat
 
-Spec de origen: `specs/015-asistente-de-chat/spec.md` (aprobada el 2026-10-29). Constitución: `docs/constitution.md` (enmienda 3: proveedor LLM gratuito sin tarjeta, llamado con `fetch` desde el servidor y sin SDK). Plan aprobado el 2026-11-02; D1 y R1 cambiados con aprobación del usuario el 2026-11-02 tras la comprobación de T1. Sin dependencias nuevas.
+Spec de origen: `specs/015-asistente-de-chat/spec.md` (aprobada el 2026-10-29). Constitución: `docs/constitution.md` (enmienda 3: proveedor LLM gratuito sin tarjeta, llamado con `fetch` desde el servidor y sin SDK). Plan aprobado el 2026-11-02; D1 y R1 cambiados con aprobación del usuario el 2026-11-02 tras la comprobación de T1. Sin dependencias nuevas. La ampliación del 2026-11-02 (comentarios y botón, RF-34 a RF-39) está al final, en "Ampliación del 2026-11-02", **aprobada por el usuario el 2026-11-02**.
 
 ## Resumen de arquitectura
 
@@ -180,6 +180,67 @@ Reglas fijas en español: responde siempre en español; solo sobre los eventos y
 - **R5: tiempo de respuesta.** Mitigación: plazo de 8 s por llamada a Groq y 25 s en total, `maxDuration` 30, región `dub1`. El RNF de 10 s se mide en el conjunto de prueba.
 - **R6: Activity conserva la pantalla oculta con una petición en marcha** (trampa de la 008). Mitigación: la limpieza del efecto aborta la petición pendiente; la conversación conservada al volver no contradice RF-6, porque nunca sale del navegador.
 - **R7: Groq cambia sus condiciones o sus modelos.** Mitigación: modelo en una constante, proveedor aislado en `provider.ts` y `/privacy` lo declara; un cambio de proveedor exige revisar RF-31 y P1.
+
+## Arreglos en producción del 2026-11-02 (ya en `main`)
+
+Tras publicarlo, dos preguntas reales dieron "no disponible". Cambian lo que dicen D1, el contrato de `list_events` y T7:
+
+- `ee20a4e`: el modelo de reserva se usa también con 413 (petición por encima de los 8.000 tokens por minuto), 5xx y 400 `tool_use_failed`; el error lleva el estado y el código de Groq y la ruta lo anota en los logs de Vercel (`assistant unavailable: …`, sin datos del usuario); `list_events` envía como mucho **30** eventos (no 50).
+- `216d876`: en la ronda final, sin herramientas, gpt-oss seguía intentando llamar a una (400 `tool_use_failed`): ahora se le envía antes un mensaje de sistema (`FINAL_ROUND`). Los eventos de calendarios traídos llevan `source: "Google" | "iCloud"` (sin la cuenta, RF-30) y el prompt dice cómo usarlo.
+
+## Ampliación del 2026-11-02: comentarios y botón (RF-34 a RF-39)
+
+**Aprobada por el usuario el 2026-11-02.** Sin migraciones ni dependencias nuevas: los comentarios se leen con la sesión del usuario y la RLS de `event_comments` (spec 014), y `getEventsInRange` ya devuelve `commentCount`.
+
+### Módulos
+
+| Módulo | Archivos | Qué cambia | RF |
+|--------|----------|-----------|----|
+| assistant-core | `serialize.ts`, `limits.ts`, `schemas.ts`, `prompt.ts` | `ModelEvent.comments?: number` (solo si hay); `toModelComment` (autor, fecha local, texto recortado); límites `MAX_COMMENT_EVENTS = 10`, `MAX_COMMENTS_PER_EVENT = 5`, `COMMENT_CHARS = 300`; argumentos de `get_comments`; reglas nuevas del prompt | RF-26, RF-30, RF-34, RF-35, RF-37, RF-38 |
+| assistant-tools | `tools.ts`, `tool-definitions.ts` | Herramienta nueva `get_comments`; `search_events` busca también en el texto de los comentarios | RF-34, RF-35, RF-36, RF-37 |
+| assistant-ui | `src/components/shell/assistant-fab.tsx`, `app-frame.tsx`, `calendar/fab.tsx` | Botón flotante en el marco | RF-1, RF-39 |
+| privacy | `src/app/privacy/page.tsx` | Los comentarios y el nombre de su autor entre lo que recibe Groq | RF-32 |
+| validation | `tests/assistant-eval/questions.ts`, `scripts/assistant-eval.ts` | Serie con comentarios en algunas repeticiones y preguntas nuevas | RNF de calidad, RF-34, RF-36, RF-37 |
+
+### Contratos
+
+| Herramienta | Argumentos | Devuelve |
+|-------------|-----------|----------|
+| `list_events`, `search_events` | igual que antes | cada `ModelEvent` lleva `comments: N` si tiene comentarios |
+| `get_comments` (nueva) | `refs: string[]` (1–10 referencias `eN` ya devueltas en esta pregunta) | `{ events: { ref, total, comments: { author, date, text }[] }[] }`: los 5 más recientes de cada evento en orden cronológico, texto recortado a 300 caracteres con "…"; una referencia desconocida va en `unknown: string[]` |
+| `search_events` | `query` | además de título, lugar y descripción, coincidencias en el texto de los comentarios: el evento lleva `matchedComment: { author, date, text }` (el más reciente que coincide, recortado) |
+
+- **Por qué referencias y no ids** (D5): el modelo solo conoce `eN`; `get_comments` resuelve con la tabla de la pregunta. Así no puede pedir comentarios de un evento que no le ha dado una herramienta (RF-35).
+- **Repeticiones** (RF-37): una repetición con comentarios tiene fila propia (excepción materializada, spec 013/014), así que `list_events` ya da su id y su `commentCount`; una repetición sin fila tiene 0 y `get_comments` la responde vacía sin consultar.
+- **Autor**: el nombre sale de `listComments` (`lib/comments/queries.ts`), que ya resuelve "un antiguo miembro" y "Cuenta borrada"; nunca el email (RF-30).
+
+### Decisiones
+
+- **D15: leer comentarios con una herramienta aparte, `get_comments`, y no dentro de cada evento.** Descartado meter los comentarios en `list_events`: 30 eventos con comentarios de hasta 1.000 caracteres pasarían de los 8.000 tokens por minuto (R1, arreglo `ee20a4e`). Con `comments: N` en cada evento el modelo sabe a cuáles pedírselos. Cuesta una ronda más, dentro de las 3. Cubre: RF-34, RNF de cuota.
+- **D16: `search_events` busca en los comentarios con `ilike` sobre `event_comments.body` con RLS**, en la misma ventana de un año, y une los eventos encontrados con los de título, lugar o descripción (como mucho 20 en total). Descartada una columna `tsvector`, como en D11. El evento de una serie cuyo comentario coincide es la excepción materializada, así que su fecha es la de esa repetición (RF-37). Cubre: RF-36.
+- **D17: el texto de un comentario se envía como dato JSON** dentro del resultado de la herramienta, nunca en el prompt; la regla de ignorar instrucciones de los datos ya existe y se cita para los comentarios. El modelo no tiene herramientas de escritura, así que un comentario con instrucciones no puede cambiar nada (RF-25, RF-29, RF-38).
+- **D18: botón `AssistantFab` en `AppFrame`, un `Link` a `/dashboard/assistant`**, oculto en esa ruta (`activeSection`). En el móvil, `size-14` como el "+" pero en papel (`bg-paper` con borde `control`, `glass-float`), para que el "+" de tinta siga siendo la acción principal. Se coloca solo con CSS, sin estado: abajo a la derecha (`bottom-6`), en el móvil sube encima del "+" cuando existe (el "+" lleva `data-fab` y el marco usa `group-has-[[data-fab]]`), entre 769 y 1023 px queda encima de la barra inferior (`bottom-24`) y desde 1024 px a `right-6 bottom-6`. Descartados un panel sobre la pantalla (fuera de alcance) y un contexto de React para saber si hay "+" (más código para lo que resuelve `:has`). Cubre: RF-1, RF-39.
+- **D19: el prompt amplía RF-26**: preguntar si se irá a un evento, qué se dijo de él o quién lleva qué es del calendario; para eso, buscar el evento, mirar `comments` y llamar a `get_comments`. Cubre: RF-26, RF-34.
+
+### Riesgos
+
+- **R8: más rondas, más tokens.** Buscar la serie y leer comentarios son dos rondas. Mitigación: topes de D15, solo se piden cuando hay `comments: N`, y el eval mide el tiempo y los fallos por el límite por minuto.
+- **R9: el botón tapa contenido o los avisos.** Los avisos están a `bottom-28` por debajo de 1024 px; con el "+" el botón ocupa hasta unos 9,5 rem. Mitigación: capturas a 390, 768 y 1440 px con el "+" y un aviso visibles; si se solapan, los avisos suben cuando hay "+" con la misma regla `group-has`.
+
+### Trazabilidad de la ampliación
+
+| RF | Módulos |
+|----|---------|
+| RF-1 | assistant-ui (`AssistantFab`) |
+| RF-26 | assistant-core (`prompt`), validation |
+| RF-30 | assistant-core (`serialize`: autor sin email) |
+| RF-32 | privacy |
+| RF-34 | assistant-tools (`get_comments`), assistant-core (`prompt`, límites), validation |
+| RF-35 | assistant-tools (RLS de `event_comments`, solo referencias de la pregunta) |
+| RF-36 | assistant-tools (`search_events` en comentarios), validation |
+| RF-37 | assistant-tools (excepciones materializadas), validation |
+| RF-38 | assistant-core (`prompt`), assistant-run (sin escritura) |
+| RF-39 | assistant-ui (`AssistantFab`, `Fab` con `data-fab`) |
 
 ## Dudas abiertas
 
