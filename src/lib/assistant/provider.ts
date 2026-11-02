@@ -73,7 +73,12 @@ async function callModel(
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ model, temperature: 0, messages, tools }),
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        messages,
+        ...(tools.length > 0 ? { tools } : {}),
+      }),
       signal: signal
         ? AbortSignal.any([signal, timeout.signal])
         : timeout.signal,

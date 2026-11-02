@@ -60,6 +60,14 @@ describe("chat", () => {
     });
   });
 
+  it("leaves out the tools when there are none (last round, T7)", async () => {
+    const fetcher = vi.fn().mockResolvedValue(textReply("Listo."));
+    await chat(MESSAGES, [], undefined, fetcher);
+    expect(JSON.parse(fetcher.mock.calls[0]![1].body)).not.toHaveProperty(
+      "tools",
+    );
+  });
+
   it("returns the tool calls", async () => {
     const toolCall = {
       id: "call_1",

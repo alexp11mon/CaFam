@@ -96,7 +96,7 @@
   Hecho cuando: `npm run test:db -- assistant-tools` en verde. Cubre: RF-8, RF-9, RF-10, RF-12, RF-14, RF-15, RF-16, RF-18, RF-20, RF-22, RF-23, RF-24, RF-25, RF-29, RF-31 | Módulo: assistant-tools
   Evidencia (2026-11-02): rojo sin `tools.ts`. `test:db -- assistant-tools assistant.test` 27 tests en verde (16 de las herramientas; el total del 7 al 10 de noviembre era 6 y no 5 por la clase del martes 10). La persona sin permiso no añade consultas: sus eventos que ve quien pregunta ya le ocupan a él (RF-22). typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 220 archivos y 2110 tests.
 
-- [ ] T7 Orquestar la conversación con el modelo
+- [x] T7 Orquestar la conversación con el modelo
   Pasos:
   - Primero, `tests/unit/assistant-run.test.ts` en rojo, con proveedor y herramientas simulados:
     - envía el prompt y el hilo entero (RF-5); ejecuta las herramientas pedidas y devuelve sus resultados al modelo;
@@ -108,6 +108,7 @@
   - Después, `src/lib/assistant/run.ts`.
 
   Hecho cuando: `npm test -- assistant-run` en verde. Cubre: RF-5, RF-11, RF-13, RF-25, RF-26, RF-29 | Módulo: assistant-run
+  Evidencia (2026-11-02): rojo sin `run.ts`. `npm test -- assistant-run assistant-provider` 22 tests en verde. `TOOL_DEFINITIONS` pasó a `tool-definitions.ts` (puro) para probar el bucle sin el cliente del servidor; el proveedor omite `tools` en la última ronda. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 221 archivos y 2119 tests.
 
 - [ ] T8 Exponer el asistente en `POST /api/assistant`
   Pasos:
