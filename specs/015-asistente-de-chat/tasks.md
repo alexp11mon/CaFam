@@ -69,7 +69,7 @@
   Hecho cuando: `npm test -- assistant-core` en verde. Cubre: RF-3, RF-7, RF-11, RF-12, RF-13, RF-16, RF-22, RF-26, RF-27, RF-28, RF-30 | Módulo: assistant-core
   Evidencia (2026-11-02): rojo sin los módulos. `npm test -- assistant-core` 13 tests en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 219 archivos y 2097 tests.
 
-- [ ] T5 Llamar a Groq desde el servidor
+- [x] T5 Llamar a Groq desde el servidor
   Pasos:
   - Primero, `tests/unit/assistant-provider.test.ts` (`// @vitest-environment node`) en rojo, con `fetch` simulado:
     - envía el modelo, la temperatura 0, los mensajes y las herramientas con `Authorization: Bearer` y la señal;
@@ -81,6 +81,7 @@
   - Después, `src/lib/assistant/provider.ts`.
 
   Hecho cuando: `npm test -- assistant-provider no-secrets` en verde. Cubre: RF-4, RF-28, RF-31 | Módulo: assistant-provider
+  Evidencia (2026-11-02): rojo sin `provider.ts`. `npm test -- assistant-provider no-secrets` 24 tests en verde (el plazo usa `setTimeout` con `AbortController` porque `AbortSignal.timeout` no sigue los temporizadores falsos). typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 220 archivos y 2110 tests.
 
 - [ ] T6 Ejecutar las herramientas con la sesión del usuario
   Pasos:
