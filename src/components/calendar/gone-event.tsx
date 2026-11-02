@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/toast";
+import { takeRemoteRefresh } from "@/lib/calendar/live-hold";
 
 /**
  * The window's event no longer exists, usually because it was just deleted
@@ -14,7 +15,12 @@ export function GoneEvent() {
   const { show } = useToast();
 
   useEffect(() => {
-    show("Evento borrado");
+    // Someone else deleted it if a live refresh brought this (spec 019 RF-44).
+    show(
+      takeRemoteRefresh()
+        ? "Otra persona ha borrado este evento"
+        : "Evento borrado",
+    );
     router.back();
   }, [router, show]);
 

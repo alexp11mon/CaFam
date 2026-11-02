@@ -55,7 +55,7 @@
   Hecho cuando: `npm test -- live use-live-calendar calendar-workspace` en verde. Cubre: RF-40, RF-41, RF-46, RF-48 | Módulo: live-client
   Evidencia (2026-11-02): rojo antes de implementar (imports sin resolver). `live.ts`, `live-hold.ts` y `use-live-calendar.ts`, con `userId` en el workspace y la región `aria-live` "Calendario actualizado a las HH:MM:SS". `npm test -- live use-live-calendar calendar-workspace` 30 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2165 tests.
 
-- [ ] T4 Esperar mientras se edita y cerrar lo que otro ha borrado
+- [x] T4 Esperar mientras se edita y cerrar lo que otro ha borrado
   Pasos:
   - Primero, tests en rojo:
     - `live-hold`: con un arrastre, la hoja rápida o el formulario de edición abiertos, el refresco espera y se hace al soltarlos;
@@ -63,6 +63,7 @@
   - Después, `live-hold.ts`, `useHoldLive` en el arrastre (`dragging`), `QuickCreate` y `EventForm` en edición, y la marca de refresco remoto que lee `GoneEvent`. La tarjeta lo usa en la T10.
 
   Hecho cuando: `npm test -- live-hold gone-event draggable quick-create event-form` en verde. Cubre: RF-43, RF-44 | Módulo: live-client, live-gone
+  Evidencia (2026-11-02): rojo antes de implementar (4 tests). `useHoldLive` en el arrastre (`dragging`), `QuickCreate` y la edición de `EventPanel`; la marca de refresco remoto dura 3 s y `GoneEvent` la lee. `npm test -- gone-event use-hold-live event-panel quick-create draggable-event live` 61 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2170 tests.
 
 - [ ] T5 Guardar en la cuenta los fines de semana y la duración de un evento nuevo
   Pasos:

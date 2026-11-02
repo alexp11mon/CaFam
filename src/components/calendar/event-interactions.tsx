@@ -33,6 +33,7 @@ import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
 import { UNDO_NOTICES, type Change } from "@/lib/calendar/undo";
 import { useEventDrag, type DragMode } from "@/lib/hooks/use-event-drag";
 import { useEventKeys } from "@/lib/hooks/use-event-keys";
+import { useHoldLive } from "@/lib/hooks/use-hold-live";
 import { useEventClipboard } from "./event-clipboard";
 import { EventMenu, type MenuChoice } from "./event-menu";
 import { useUndoToast } from "./use-undo-toast";
@@ -123,6 +124,7 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
   const { show } = useToast();
   const showUndo = useUndoToast();
   const [dragging, setDragging] = useState(false);
+  useHoldLive(dragging);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [liftedId, setLiftedId] = useState<string | null>(null);
   const [menu, setMenu] = useState<{

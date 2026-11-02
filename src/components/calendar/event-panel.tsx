@@ -26,6 +26,7 @@ import { useToast } from "@/components/ui/toast";
 import { useEventClipboard } from "./event-clipboard";
 import { DONE_MESSAGES, useEventModal } from "./event-modal";
 import { useUndoToast } from "./use-undo-toast";
+import { useHoldLive } from "@/lib/hooks/use-hold-live";
 
 /**
  * An event's detail, which turns into its edit form in the same place
@@ -62,6 +63,7 @@ export function EventPanel({
 }) {
   const modal = useEventModal();
   const [editing, setEditing] = useState(false);
+  useHoldLive(editing);
   const router = useRouter();
   const showUndo = useUndoToast();
   const { show } = useToast();

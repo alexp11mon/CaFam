@@ -6,6 +6,7 @@ import { QuickCreate } from "@/components/calendar/quick-create";
 import { ToastProvider } from "@/components/ui/toast";
 import type { Draft } from "@/lib/calendar/draft";
 import type { FormState } from "@/lib/forms/form-state";
+import { isLiveHeld } from "@/lib/calendar/live-hold";
 
 // Spec 008, T14: the quick window next to the chosen slot (RF-28, RF-37..RF-39, RF-41).
 type State = FormState<keyof EventFormValues>;
@@ -81,6 +82,14 @@ describe("QuickCreate", () => {
       "15:30",
     );
     expect(screen.getByLabelText("Calendario")).toHaveValue("cal-b");
+  });
+
+  it("holds others' changes while open (spec 019 RF-43)", () => {
+    const view = render(<span />);
+    expect(isLiveHeld()).toBe(false);
+    view.unmount();
+    setup();
+    expect(isLiveHeld()).toBe(true);
   });
 
   it("passes each typed title on to the slot block (RF-40)", async () => {

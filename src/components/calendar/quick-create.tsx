@@ -26,6 +26,7 @@ import {
 } from "@/lib/calendar/time-options";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import type { CalendarOption, EventFormValues } from "./event-form";
+import { useHoldLive } from "@/lib/hooks/use-hold-live";
 
 type State = FormState<keyof EventFormValues>;
 
@@ -65,6 +66,8 @@ export function QuickCreate({
     values: {} as State["values"],
   });
   const [title, setTitle] = useState("");
+  // The provisional block stays put while the window is open (spec 019 RF-43).
+  useHoldLive(true);
   const [allDay, setAllDay] = useState(draft.allDay);
   const [start, setStart] = useState(fromMinutes(draft.startMinute));
   const [end, setEnd] = useState(fromMinutes(draft.endMinute));

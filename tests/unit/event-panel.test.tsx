@@ -8,6 +8,7 @@ import { EventModal } from "@/components/calendar/event-modal";
 import { EventPanel } from "@/components/calendar/event-panel";
 import { ToastProvider } from "@/components/ui/toast";
 import type { ConfirmState } from "@/lib/forms/form-state";
+import { isLiveHeld } from "@/lib/calendar/live-hold";
 
 // Spec 008, T6: the event detail with Editar, Duplicar and Borrar (RF-2, RF-3, RF-35, RF-36).
 const router = vi.hoisted(() => ({ back: vi.fn(), refresh: vi.fn() }));
@@ -130,6 +131,19 @@ describe("EventPanel", () => {
       screen.getByRole("button", { name: "Volver al detalle" }),
     );
     expect(screen.queryByLabelText("Título")).toBeNull();
+  });
+
+  it("holds others' changes while the form is open (spec 019 RF-43)", async () => {
+    setup();
+    expect(isLiveHeld()).toBe(false);
+
+    await userEvent.click(screen.getByRole("button", { name: "Editar" }));
+    expect(isLiveHeld()).toBe(true);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Volver al detalle" }),
+    );
+    expect(isLiveHeld()).toBe(false);
   });
 
   it("closes the window and says so after deleting there", async () => {

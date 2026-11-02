@@ -1,3 +1,4 @@
+import { isLiveHeld } from "@/lib/calendar/live-hold";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -195,6 +196,15 @@ describe("DraggableEvent", () => {
       {},
     );
     expect(await screen.findByText("Evento movido")).toBeVisible();
+  });
+
+  it("holds others' changes while dragging (spec 019 RF-43)", async () => {
+    setup();
+    down(block("Cena"), 10.25);
+    move(12.25);
+    expect(isLiveHeld()).toBe(true);
+    await act(async () => up(12.25));
+    expect(isLiveHeld()).toBe(false);
   });
 
   it("goes to another day of the week (RF-7)", async () => {

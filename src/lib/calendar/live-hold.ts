@@ -5,7 +5,9 @@
  */
 let holds = 0;
 const listeners = new Set<() => void>();
-let remote = false;
+/** A remote refresh is the cause of what renders within this time. */
+const REMOTE_MS = 3000;
+let remoteAt = -Infinity;
 
 /** Starts a hold; the returned function ends it (only once). */
 export function holdLive(): () => void {
@@ -31,12 +33,12 @@ export function onLiveRelease(listener: () => void): () => void {
 
 /** The next render comes from someone else's change (RF-44). */
 export function markRemoteRefresh() {
-  remote = true;
+  remoteAt = Date.now();
 }
 
 /** Whether the last refresh was someone else's; reading it clears it. */
 export function takeRemoteRefresh(): boolean {
-  const value = remote;
-  remote = false;
+  const value = Date.now() - remoteAt < REMOTE_MS;
+  remoteAt = -Infinity;
   return value;
 }
