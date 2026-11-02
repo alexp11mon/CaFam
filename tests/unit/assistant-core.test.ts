@@ -157,6 +157,8 @@ describe("toModelEvent (RF-8, RF-30)", () => {
     expect(sent).toEqual({
       ref: "e1",
       date: "2026-11-07",
+      // T12: the model got weekdays wrong when it had to work them out.
+      weekday: "sábado",
       start: "10:00",
       end: "11:30",
       title: "Fútbol de Pablo",
@@ -185,6 +187,7 @@ describe("toModelEvent (RF-8, RF-30)", () => {
     ).toEqual({
       ref: "e2",
       date: "2026-12-14",
+      weekday: "lunes",
       endDate: "2026-12-15",
       allDay: true,
       title: "Viaje",
@@ -216,6 +219,15 @@ describe("citations (RF-11, RF-13)", () => {
     expect(result.cited).toEqual([{ id: "a" }]);
     expect(result.text).toBe("Cena y comida");
   });
+
+  it("accepts spaces inside the brackets, as the model writes them sometimes (T12)", () => {
+    const refs = createRefs<{ id: string }>();
+    refs.add({ id: "a" });
+    refs.add({ id: "b" });
+    const result = extractCitations("Fútbol [ e1 ] y cine [ e2 ,e1 ]", refs);
+    expect(result.cited).toEqual([{ id: "a" }, { id: "b" }]);
+    expect(result.text).toBe("Fútbol y cine");
+  });
 });
 
 describe("systemPrompt (RF-7, RF-12, RF-13, RF-17, RF-22, RF-26)", () => {
@@ -235,6 +247,14 @@ describe("systemPrompt (RF-7, RF-12, RF-13, RF-17, RF-22, RF-26)", () => {
     );
   });
 
+  it("asks for plain text, weekdays and to look before refusing (T12)", () => {
+    expect(prompt).toContain("sin Markdown");
+    expect(prompt).toContain("nunca en formato AAAA-MM-DD");
+    expect(prompt).toContain("busca con las herramientas antes de decir");
+    expect(prompt).toContain("No puedo crear, cambiar ni borrar eventos");
+    expect(prompt).toContain("nunca lo deduzcas de list_events");
+  });
+
   it("carries the rules", () => {
     for (const rule of [
       "Solo puedo ayudarte con tu calendario",
@@ -243,7 +263,7 @@ describe("systemPrompt (RF-7, RF-12, RF-13, RF-17, RF-22, RF-26)", () => {
       "08:00",
       "16:00",
       "21:00",
-      "withoutConsent",
+      "notice",
       "no existe",
       "español",
     ]) {

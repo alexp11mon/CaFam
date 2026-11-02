@@ -19,7 +19,8 @@ export function createRefs<T>(): Refs<T> {
   };
 }
 
-const MARKER = /\s*\[(e\d+(?:\s*,\s*e\d+)*)\]/g;
+// The model sometimes writes "[ e1 ]", with (non-breaking) spaces inside.
+const MARKER = /\s*\[\s*(e\d+(?:\s*,\s*e\d+)*)\s*\]/g;
 
 export function extractCitations<T>(
   answer: string,

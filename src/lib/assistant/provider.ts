@@ -62,6 +62,7 @@ async function callModel(
   messages: readonly ProviderMessage[],
   tools: readonly ToolDefinition[],
   signal: AbortSignal | undefined,
+  requireTool: boolean,
   fetcher: Fetcher,
 ): Promise<Response> {
   const timeout = new AbortController();
@@ -78,6 +79,7 @@ async function callModel(
         temperature: 0,
         messages,
         ...(tools.length > 0 ? { tools } : {}),
+        ...(requireTool ? { tool_choice: "required" } : {}),
       }),
       signal: signal
         ? AbortSignal.any([signal, timeout.signal])
@@ -98,6 +100,8 @@ export async function chat(
   messages: readonly ProviderMessage[],
   tools: readonly ToolDefinition[],
   signal?: AbortSignal,
+  /** The model must call a tool before it may answer (T12, RF-13). */
+  requireTool = false,
   fetcher: Fetcher = fetch,
 ): Promise<ProviderReply> {
   const key = process.env.GROQ_API_KEY;
@@ -105,7 +109,15 @@ export async function chat(
 
   let response: Response | undefined;
   for (const model of ASSISTANT_MODELS) {
-    response = await callModel(model, key, messages, tools, signal, fetcher);
+    response = await callModel(
+      model,
+      key,
+      messages,
+      tools,
+      signal,
+      requireTool,
+      fetcher,
+    );
     if (response.status !== 429) break;
   }
   if (!response?.ok) {

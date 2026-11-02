@@ -160,13 +160,14 @@
   Hecho cuando: `npm test -- privacy` en verde. Cubre: RF-32, RF-33 | Módulo: privacy
   Evidencia (2026-11-02): caso nuevo en `privacy-page.test.tsx` (Groq, qué recibe y qué no, sin entrenamiento, retención cero, CaFam no guarda la conversación, disponibilidad consentida); fecha de actualización al 2 de noviembre de 2026. typecheck, lint (2 avisos previos), format:check, `npm test` (224 archivos, 2143 tests) y build en verde.
 
-- [ ] T12 Medir la calidad con el conjunto de preguntas de prueba
+- [x] T12 Medir la calidad con el conjunto de preguntas de prueba
   Pasos:
   - `tests/assistant-eval/questions.ts`: al menos 30 preguntas con su respuesta esperada (eventos de un día y de una semana, búsqueda por nombre, huecos con y sin permiso, franjas pedidas, "no hay eventos", día 5 sin mes, 31 de febrero, más de 50 eventos, periodo de más de 31 días, persona ambigua y desconocida, seguimiento "¿y el domingo?", pregunta fuera de tema, en otro idioma e intento de saltarse las reglas).
   - `scripts/assistant-eval.ts` y `npm run eval:assistant`: siembra un usuario `@cafam.test` en dev con eventos fijos, ejecuta `runAssistant` con Groq real, compara fechas, citas y huecos, mide el tiempo, informa el porcentaje y borra el usuario.
   - Ajustar el prompt (o el modelo dentro de Groq) hasta llegar al objetivo, sin cambiar ningún RF.
 
   Hecho cuando: `npm run eval:assistant` con al menos el 90 % de aciertos, ningún evento inventado y el 90 % de respuestas en menos de 10 s, con la salida anotada aquí. Cubre: RF-7, RF-8, RF-9, RF-12, RF-13, RF-14, RF-16, RF-17b, RF-24, RF-26, RF-29 | Módulo: validation
+  Evidencia (2026-11-02): `tests/assistant-eval/questions.ts` (35 preguntas) y `npm run eval:assistant` (proyecto `eval` de Vitest con `--silent=false`; siembra 6 usuarios @cafam.test en dev, pregunta a Groq de verdad con 20 s entre preguntas y borra los usuarios). Primera ejecución: 26/35 (74 %). Fallos y arreglos: el modelo escribía `[ e1 ]` con espacios (la cita no se reconocía y la referencia se veía en el texto: `extractCitations` los acepta), se equivocaba de día de la semana (`weekday` en cada evento y en cada día libre), usaba Markdown y fechas AAAA-MM-DD, tomaba "¿Dónde es el fútbol?" por fuera de tema, contestaba "Solo puedo ayudarte…" a "Crea una cena" (RF-25) y a veces no decía que Ana no ha dado permiso (RF-22: el servidor añade el `notice` de `find_free_time` si el modelo lo omite; regla de usar siempre `find_free_time` para otras personas). Resultado con `openai/gpt-oss-120b`: 35/35 (100 %), 0 inventados ni revelados, 100 % por debajo de 10 s (p90 1,4 s); tras endurecer RF-25, 34/35 (97 %), 0 inventados, p90 1,5–2,0 s. Forzando el modelo de reserva (`EVAL_MODEL=qwen/qwen3.8-27b`) se vio que contestaba "no tienes eventos" en 0,3 s sin consultar nada: ahora la primera ronda exige llamar a una herramienta (`tool_choice: "required"`, RF-12, RF-13). **Pendiente**: repetir `npm run eval:assistant` con ese cambio, porque las 10 ejecuciones de hoy agotaron los 200K tokens diarios de los dos modelos (Groq los repone a unos 140 por minuto).
 
 - [ ] T13 Validar la spec RF por RF
   Pasos:
@@ -177,6 +178,47 @@
   - Actualizar `AGENTS.md` y la línea "Resuelta en la spec 015" de la constitución con el proveedor elegido; preparar los pasos de producción (migración, `GROQ_API_KEY` en Vercel).
 
   Hecho cuando: tabla de evidencias completa, verificación con la salida reportada y aprobación del usuario para cerrar. Cubre: todos | Módulo: validation
+
+## Evidencias RF por RF (T13, 2026-11-02)
+
+Unitarios en `tests/unit/`, de base de datos en `tests/integration/` y del conjunto de preguntas (`npm run eval:assistant`, numeradas como en `tests/assistant-eval/questions.ts`).
+
+| RF | Evidencia |
+|----|-----------|
+| RF-1 | `nav.test.ts` y `nav-drawer.test.tsx` (destino "Asistente" y sección activa); pantalla vista en el navegador a 390, 768 y 1440 px |
+| RF-2 | `assistant-chat.test.tsx` (tres ejemplos que se envían al pulsarlos) |
+| RF-3 | `assistant-core.test.ts` (`assistantRequestSchema`), `assistant-route.test.ts` (400 con el mensaje), `assistant-chat.test.tsx` (error enlazado) |
+| RF-4 | `assistant-provider.test.ts` (cancelación como `AbortError`), `assistant-run.test.ts` (para al cancelar), `assistant-route.test.ts` (499, no cuenta), `assistant-chat.test.tsx` ("Cancelar" devuelve la pregunta) |
+| RF-5 | `assistant-run.test.ts` (hilo entero al modelo), `assistant-chat.test.tsx` (hilo en la siguiente pregunta), eval 3 |
+| RF-6 | `assistant-chat.test.tsx` ("Nueva conversación"); la ruta no guarda el hilo (`assistant-route.test.ts` solo inserta `user_id`) |
+| RF-7 | `assistant-slots.test.ts` (`dateContext`, `parsePeriod`, día de la cuota), `assistant-core.test.ts` (prompt), eval 4–13 |
+| RF-8 | `assistant-tools.test.ts` (`list_events`), eval 1, 2, 4–6, 9–12 |
+| RF-9 | `assistant-tools.test.ts` (`search_events`), eval 14–21 |
+| RF-10 | `assistant-tools.test.ts` (calendario oculto incluido, ajenos no) |
+| RF-11 | `assistant-core.test.ts` (citas), `assistant-run.test.ts`, `assistant-chat.test.tsx` (enlace al detalle) |
+| RF-12 | `assistant-tools.test.ts` (vacío y `truncated`), `assistant-run.test.ts` (primera ronda obligada a consultar), eval 7, 8, 22 |
+| RF-13 | `assistant-core.test.ts` y `assistant-run.test.ts` (referencias inventadas descartadas, consulta obligada), eval: 0 eventos inventados |
+| RF-14 | `assistant-slots.test.ts` (`freeSlots`), `assistant-tools.test.ts` (Marta y Luis), eval 23–25 |
+| RF-15 | `assistant.test.ts` (`assistant_people`), `assistant-tools.test.ts` |
+| RF-16 | `assistant-core.test.ts` (`matchPerson`), `assistant-tools.test.ts`, eval 28–29 |
+| RF-17 | `assistant-slots.test.ts` (franjas por defecto), `assistant-tools.test.ts` |
+| RF-17b | `assistant-slots.test.ts` (horas pedidas), eval 25 |
+| RF-18 | `assistant-slots.test.ts` (día completo y medianoche), `assistant-tools.test.ts` |
+| RF-19 | `assistant-slots.test.ts` (cálculo en TypeScript), `assistant.test.ts` (`assistant_busy`) |
+| RF-20 | `assistant.test.ts` (solo con consentimiento y calendario compartido), `assistant-tools.test.ts`, `availability-setting.test.tsx`, `settings-actions.test.ts` |
+| RF-21 | `assistant.test.ts` (desactivado por defecto), `availability-setting.test.tsx` |
+| RF-22 | `assistant-tools.test.ts` (Ana en `withoutConsent` con `notice`), `assistant-run.test.ts` (el servidor añade el aviso), eval 27 |
+| RF-23 | `assistant.test.ts` (sin títulos), `assistant-tools.test.ts` (ni "Médico" ni "Clínica"), eval 26 y 35 |
+| RF-24 | `assistant-slots.test.ts` (`too_long`), `assistant.test.ts` (`22023`), `assistant-tools.test.ts`, eval 30 |
+| RF-25 | `assistant-run.test.ts` (solo las tres herramientas de lectura), eval 31–32 |
+| RF-26 | `assistant-core.test.ts` (regla del prompt), eval 33 |
+| RF-27 | `assistant.test.ts` (RLS de `assistant_questions`, purga), `assistant-route.test.ts` (429 a la 31.ª, día del perfil), `assistant-chat.test.tsx` (campo deshabilitado) |
+| RF-28 | `assistant-provider.test.ts` (8 s, red, respuesta rota, 429 en los dos modelos, sin clave), `assistant-route.test.ts` (503), `assistant-chat.test.tsx` ("Reintentar") |
+| RF-29 | `assistant-run.test.ts` y `assistant-route.test.ts` (las herramientas quedan atadas a la sesión), `assistant-tools.test.ts`, eval 35 |
+| RF-30 | `assistant-core.test.ts` (`toModelEvent` sin ids ni emails; referencias `eN`), `no-secrets.test.ts` |
+| RF-31 | `assistant-provider.test.ts` (`PROVIDER_TRAINS_ON_DATA` es `false`), `assistant-tools.test.ts` (`excludeSynced`) |
+| RF-32 | `privacy-page.test.tsx` (sección "Asistente de chat") |
+| RF-33 | `assistant-chat.test.tsx` (frase con enlace a `/privacy`), `privacy-page.test.tsx` |
 
 ## Trazabilidad RF → tareas
 

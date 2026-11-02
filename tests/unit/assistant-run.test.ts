@@ -103,6 +103,16 @@ describe("runAssistant", () => {
     });
   });
 
+  it("makes the model look at the data before the first answer (T12, RF-12, RF-13)", async () => {
+    const { deps: d, chat } = deps([
+      toolCall("list_events", { from: "2026-12-14", to: "2026-12-14" }),
+      text("Cumpleaños [e1]."),
+    ]);
+    await runAssistant([{ role: "user", content: "¿Qué hay el 14?" }], d);
+    expect(chat.mock.calls[0]![3]).toBe(true);
+    expect(chat.mock.calls[1]![3]).toBe(false);
+  });
+
   it("drops invented references (RF-13)", async () => {
     const { deps: d } = deps([text("Tienes cine [e4].")]);
     const result = await runAssistant([{ role: "user", content: "¿Y?" }], d);
@@ -174,6 +184,25 @@ describe("runAssistant", () => {
       '{"people":["Luis"],"from":"2026-11-09","to":"2026-11-09"}',
     ]);
     expect(runTool.mock.calls[0]).toHaveLength(3);
+  });
+
+  it("puts the tool's notice before the answer when the model leaves it out (RF-22)", async () => {
+    const notice =
+      "Ana no ha dado permiso para consultar su disponibilidad: solo se han tenido en cuenta sus eventos que ves.";
+    const run = (answer: string) => {
+      const { deps: d } = deps([
+        toolCall("find_free_time", { people: ["Ana"] }),
+        text(answer),
+      ]);
+      d.runTool = vi.fn(async () => ({ status: "ok", notice, days: [] }));
+      return runAssistant([{ role: "user", content: "¿Ana?" }], d);
+    };
+    expect((await run("Ana está libre por la tarde.")).answer).toBe(
+      `${notice}\n\nAna está libre por la tarde.`,
+    );
+    expect((await run(`${notice} Está libre por la tarde.`)).answer).toBe(
+      `${notice} Está libre por la tarde.`,
+    );
   });
 
   it("stops when the user cancels (RF-4)", async () => {

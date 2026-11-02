@@ -30,6 +30,17 @@ export default defineConfig({
           fileParallelism: false,
         },
       },
+      {
+        extends: true,
+        test: {
+          // Spec 015, T12: `npm run eval:assistant`, against Groq and Supabase dev.
+          name: "eval",
+          environment: "node",
+          include: ["scripts/assistant-eval.ts"],
+          env: loadEnv("test", process.cwd(), ""),
+          hookTimeout: 120_000,
+        },
+      },
     ],
   },
 });

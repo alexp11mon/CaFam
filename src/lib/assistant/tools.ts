@@ -5,7 +5,7 @@ import { todayKey } from "@/lib/calendar/format";
 import { occurrenceId } from "@/lib/recurrence/occurrence-id";
 import { expandRows } from "@/lib/recurrence/read-series";
 import type { Refs } from "./citations";
-import { dayBounds, parsePeriod } from "./dates";
+import { dayBounds, parsePeriod, weekdayName } from "./dates";
 import { busyFromEvent, freeSlots, type BusyInterval } from "./free-slots";
 import {
   DEFAULT_RANGES,
@@ -312,17 +312,30 @@ async function findFreeTime(args: unknown, ctx: ToolContext) {
   // already sees, which are already in the asker's own busy times above; their
   // private calendars are never read.
 
+  const unconsented = withoutConsent.map((person) => person.name);
   return {
     status: "ok",
     people: chosen.map((person) => person.name),
-    withoutConsent: withoutConsent.map((person) => person.name),
+    withoutConsent: unconsented,
+    // The model sometimes left this out when it had to word it (T12).
+    ...(unconsented.length
+      ? {
+          notice: `${listNames(unconsented)} no ${unconsented.length > 1 ? "han" : "ha"} dado permiso para consultar su disponibilidad: solo se han tenido en cuenta sus eventos que ves.`,
+        }
+      : {}),
     days: freeSlots(
       busy,
       period.days,
       parsed.data.ranges ?? DEFAULT_RANGES,
       ctx.timeZone,
-    ),
+    ).map(({ date, free }) => ({ date, weekday: weekdayName(date), free })),
   };
+}
+
+function listNames(names: string[]): string {
+  return names.length > 1
+    ? `${names.slice(0, -1).join(", ")} y ${names.at(-1)}`
+    : (names[0] ?? "");
 }
 
 const TOOLS: Record<

@@ -4,6 +4,7 @@ import {
   zonedDateKey,
   formatTime,
 } from "@/lib/calendar/time-zone";
+import { weekdayName } from "./dates";
 
 // What the model receives about an event (spec 015 RF-8, RF-30, plan D5):
 // a short reference, the local date and hours, title, calendar and place.
@@ -22,6 +23,8 @@ export interface SourceEvent {
 export interface ModelEvent {
   ref: string;
   date: string;
+  /** The model got weekdays wrong when it had to work them out (T12). */
+  weekday: string;
   endDate?: string;
   start?: string;
   end?: string;
@@ -45,6 +48,7 @@ export function toModelEvent(
     return {
       ref,
       date,
+      weekday: weekdayName(date),
       ...(last > date ? { endDate: last } : {}),
       allDay: true,
       title: event.title,
@@ -57,6 +61,7 @@ export function toModelEvent(
   return {
     ref,
     date,
+    weekday: weekdayName(date),
     ...(endDate > date ? { endDate } : {}),
     start: formatTime(event.startsAt, timeZone),
     end: formatTime(event.endsAt, timeZone),

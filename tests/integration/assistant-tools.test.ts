@@ -228,6 +228,7 @@ describe("list_events (RF-8, RF-10, RF-12)", () => {
     expect(result.events).toContainEqual({
       ref: expect.stringMatching(/^e\d+$/),
       date: "2026-11-07",
+      weekday: "sábado",
       start: "10:00",
       end: "11:30",
       title: "Fútbol de Pablo",
@@ -417,7 +418,13 @@ describe("find_free_time (RF-14 to RF-16, RF-18, RF-20, RF-22 to RF-24)", () => 
       status: "ok",
       people: ["Luis Pérez"],
       withoutConsent: [],
-      days: [{ date: "2026-11-09", free: [{ start: "18:00", end: "19:00" }] }],
+      days: [
+        {
+          date: "2026-11-09",
+          weekday: "lunes",
+          free: [{ start: "18:00", end: "19:00" }],
+        },
+      ],
     });
     expect(JSON.stringify(result)).not.toMatch(/Médico|Clínica/);
   });
@@ -438,6 +445,9 @@ describe("find_free_time (RF-14 to RF-16, RF-18, RF-20, RF-22 to RF-24)", () => 
       status: "ok",
       people: ["Ana"],
       withoutConsent: ["Ana"],
+      // T12: the model sometimes left this out when it had to word it itself.
+      notice:
+        "Ana no ha dado permiso para consultar su disponibilidad: solo se han tenido en cuenta sus eventos que ves.",
       days: [
         {
           date: "2026-11-10",
@@ -456,7 +466,9 @@ describe("find_free_time (RF-14 to RF-16, RF-18, RF-20, RF-22 to RF-24)", () => 
       { people: [], from: "2026-12-14", to: "2026-12-14" },
       context(asker),
     );
-    expect(result.days).toEqual([{ date: "2026-12-14", free: [] }]);
+    expect(result.days).toEqual([
+      { date: "2026-12-14", weekday: "lunes", free: [] },
+    ]);
     const free = await call(
       "find_free_time",
       { people: [], from: "2026-12-13", to: "2026-12-13" },

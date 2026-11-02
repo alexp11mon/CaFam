@@ -39,7 +39,7 @@ describe("chat", () => {
   it("sends the model, temperature 0, messages, tools, key and signal", async () => {
     const fetcher = vi.fn().mockResolvedValue(textReply("Nada hoy."));
     const signal = new AbortController().signal;
-    const result = await chat(MESSAGES, TOOLS, signal, fetcher);
+    const result = await chat(MESSAGES, TOOLS, signal, false, fetcher);
 
     expect(result).toEqual({
       content: "Nada hoy.",
@@ -60,9 +60,23 @@ describe("chat", () => {
     });
   });
 
+  it("makes the model call a tool when asked, and only then (T12, RF-13)", async () => {
+    const fetcher = vi.fn<
+      (url: string, init: RequestInit) => Promise<Response>
+    >(async () => textReply("Listo."));
+    await chat(MESSAGES, TOOLS, undefined, true, fetcher);
+    await chat(MESSAGES, TOOLS, undefined, false, fetcher);
+    expect(JSON.parse(String(fetcher.mock.calls[0]![1].body)).tool_choice).toBe(
+      "required",
+    );
+    expect(
+      JSON.parse(String(fetcher.mock.calls[1]![1].body)),
+    ).not.toHaveProperty("tool_choice");
+  });
+
   it("leaves out the tools when there are none (last round, T7)", async () => {
     const fetcher = vi.fn().mockResolvedValue(textReply("Listo."));
-    await chat(MESSAGES, [], undefined, fetcher);
+    await chat(MESSAGES, [], undefined, false, fetcher);
     expect(JSON.parse(fetcher.mock.calls[0]![1].body)).not.toHaveProperty(
       "tools",
     );
@@ -87,7 +101,7 @@ describe("chat", () => {
         ],
       }),
     );
-    const result = await chat(MESSAGES, TOOLS, undefined, fetcher);
+    const result = await chat(MESSAGES, TOOLS, undefined, false, fetcher);
     expect(result.toolCalls).toEqual([
       { id: "call_1", name: "list_events", arguments: '{"from":"2026-11-07"}' },
     ]);
@@ -103,7 +117,7 @@ describe("chat", () => {
       .fn()
       .mockResolvedValueOnce(reply({ error: { message: "rate" } }, 429))
       .mockResolvedValueOnce(textReply("Hola"));
-    const result = await chat(MESSAGES, TOOLS, undefined, fetcher);
+    const result = await chat(MESSAGES, TOOLS, undefined, false, fetcher);
     expect(result.content).toBe("Hola");
     expect(JSON.parse(fetcher.mock.calls[1]![1].body).model).toBe(
       ASSISTANT_MODELS[1],
@@ -115,7 +129,7 @@ describe("chat", () => {
       .fn()
       .mockImplementation(async () => reply({ error: {} }, 429));
     await expect(
-      chat(MESSAGES, TOOLS, undefined, fetcher),
+      chat(MESSAGES, TOOLS, undefined, false, fetcher),
     ).rejects.toBeInstanceOf(AssistantUnavailable);
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
@@ -123,7 +137,7 @@ describe("chat", () => {
   it.each([401, 403, 500, 503])("is unavailable on %i", async (status) => {
     const fetcher = vi.fn().mockResolvedValue(reply({ error: {} }, status));
     await expect(
-      chat(MESSAGES, TOOLS, undefined, fetcher),
+      chat(MESSAGES, TOOLS, undefined, false, fetcher),
     ).rejects.toBeInstanceOf(AssistantUnavailable);
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
@@ -134,6 +148,7 @@ describe("chat", () => {
         MESSAGES,
         TOOLS,
         undefined,
+        false,
         vi.fn().mockRejectedValue(new TypeError("fetch failed")),
       ),
     ).rejects.toBeInstanceOf(AssistantUnavailable);
@@ -142,6 +157,7 @@ describe("chat", () => {
         MESSAGES,
         TOOLS,
         undefined,
+        false,
         vi.fn().mockResolvedValue(reply({ nope: 1 })),
       ),
     ).rejects.toBeInstanceOf(AssistantUnavailable);
@@ -157,7 +173,7 @@ describe("chat", () => {
           );
         }),
     );
-    const pending = chat(MESSAGES, TOOLS, undefined, fetcher);
+    const pending = chat(MESSAGES, TOOLS, undefined, false, fetcher);
     const check = expect(pending).rejects.toBeInstanceOf(AssistantUnavailable);
     await vi.advanceTimersByTimeAsync(8_000);
     await check;
@@ -173,7 +189,7 @@ describe("chat", () => {
           );
         }),
     );
-    const pending = chat(MESSAGES, TOOLS, controller.signal, fetcher);
+    const pending = chat(MESSAGES, TOOLS, controller.signal, false, fetcher);
     controller.abort();
     await expect(pending).rejects.toMatchObject({ name: "AbortError" });
   });
@@ -182,7 +198,7 @@ describe("chat", () => {
     vi.stubEnv("GROQ_API_KEY", "");
     const fetcher = vi.fn();
     await expect(
-      chat(MESSAGES, TOOLS, undefined, fetcher),
+      chat(MESSAGES, TOOLS, undefined, false, fetcher),
     ).rejects.toBeInstanceOf(AssistantUnavailable);
     expect(fetcher).not.toHaveBeenCalled();
   });
