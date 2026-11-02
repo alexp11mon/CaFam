@@ -83,7 +83,7 @@
   Hecho cuando: `npm test -- assistant-provider no-secrets` en verde. Cubre: RF-4, RF-28, RF-31 | Módulo: assistant-provider
   Evidencia (2026-11-02): rojo sin `provider.ts`. `npm test -- assistant-provider no-secrets` 24 tests en verde (el plazo usa `setTimeout` con `AbortController` porque `AbortSignal.timeout` no sigue los temporizadores falsos). typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 220 archivos y 2110 tests.
 
-- [ ] T6 Ejecutar las herramientas con la sesión del usuario
+- [x] T6 Ejecutar las herramientas con la sesión del usuario
   Pasos:
   - Primero, `tests/integration/assistant-tools.test.ts` en rojo, con tres usuarios (quien pregunta, Luis con permiso y Ana sin él) y calendarios compartidos, ocultos, traídos y ajenos:
     - `list_events`: eventos del periodo con calendario y lugar, también de calendarios ocultos (RF-10), nunca de un calendario ajeno; cada repetición cuenta; más de 50 → `truncated` y `total`; periodo vacío → lista vacía;
@@ -94,6 +94,7 @@
   - Después, `src/lib/assistant/tools.ts` (con `getEventsInRange`, `expandRows`, `assistant_people` y `assistant_busy`).
 
   Hecho cuando: `npm run test:db -- assistant-tools` en verde. Cubre: RF-8, RF-9, RF-10, RF-12, RF-14, RF-15, RF-16, RF-18, RF-20, RF-22, RF-23, RF-24, RF-25, RF-29, RF-31 | Módulo: assistant-tools
+  Evidencia (2026-11-02): rojo sin `tools.ts`. `test:db -- assistant-tools assistant.test` 27 tests en verde (16 de las herramientas; el total del 7 al 10 de noviembre era 6 y no 5 por la clase del martes 10). La persona sin permiso no añade consultas: sus eventos que ve quien pregunta ya le ocupan a él (RF-22). typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 220 archivos y 2110 tests.
 
 - [ ] T7 Orquestar la conversación con el modelo
   Pasos:
