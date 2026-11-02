@@ -9,6 +9,7 @@ import { MonthView } from "@/components/calendar/month-view";
 import { ToastProvider } from "@/components/ui/toast";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { getVisibleRange } from "@/lib/calendar/ranges";
+import { visibleDays } from "@/lib/calendar/view-options";
 
 const h = vi.hoisted(() => ({ quickChange: vi.fn() }));
 
@@ -92,6 +93,25 @@ describe("MonthView (spec 016 RF-30..RF-37)", () => {
     expect(cells.at(-1)).toHaveAttribute("data-date", "2026-11-01");
     const initials = screen.getByTestId("weekday-initials");
     expect(initials).toHaveTextContent("LMXJVSD");
+  });
+
+  it("draws five columns, Monday to Friday, without weekends (spec 019 RF-26)", () => {
+    render(
+      <MonthView
+        date="2026-10-21"
+        days={visibleDays(DAYS, false)}
+        events={[event("sat", "2026-10-24T10:00:00Z", "2026-10-24T11:00:00Z")]}
+        timeZone={TZ}
+        today={TODAY}
+      />,
+    );
+
+    const cells = screen.getAllByTestId("day-cell");
+    expect(cells).toHaveLength(25);
+    expect(cells[4]).toHaveAttribute("data-date", "2026-10-02");
+    expect(cells[5]).toHaveAttribute("data-date", "2026-10-05");
+    expect(screen.getByTestId("weekday-initials")).toHaveTextContent("LMXJV");
+    expect(screen.queryByRole("link", { name: /sat/ })).toBeNull();
   });
 
   it("marks today's initial in the accent and its number in a circle (RF-31, RF-32)", () => {

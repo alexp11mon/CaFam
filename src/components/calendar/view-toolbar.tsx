@@ -1,5 +1,6 @@
 "use client";
 
+import { WeekendToggle } from "./weekend-toggle";
 import Link from "next/link";
 import { ChevronIcon } from "@/components/shell/icons";
 import { requestAgendaToday } from "@/lib/calendar/agenda-today";
@@ -64,10 +65,13 @@ export function ViewToolbar({
   date,
   today,
   saveLastView,
+  showWeekends = true,
 }: {
   view: CalendarView;
   date: string;
   today: string;
+  /** Hidden weekends offer a way back here (spec 019 RF-28). */
+  showWeekends?: boolean;
   /** Remembers the chosen view in the account (spec 008 RF-25). */
   saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
 }) {
@@ -143,6 +147,9 @@ export function ViewToolbar({
             </kbd>
           </Link>
         ))}
+        {showWeekends ? null : (
+          <WeekendToggle className={`${BUTTON} border-0 bg-transparent`} />
+        )}
       </div>
     </nav>
   );

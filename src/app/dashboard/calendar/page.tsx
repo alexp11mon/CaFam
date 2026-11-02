@@ -17,6 +17,7 @@ import {
   getGroups,
   getPreferences,
   getProfileTimeZone,
+  getViewOptions,
   requireUser,
 } from "@/lib/calendar/queries";
 import {
@@ -25,6 +26,7 @@ import {
   parseViewParams,
 } from "@/lib/calendar/ranges";
 import { toViewEvents } from "@/lib/calendar/to-view-events";
+import { visibleDays } from "@/lib/calendar/view-options";
 import { canWriteEvents } from "@/lib/sync/read-only";
 import { createEvent } from "../events/actions";
 import { loadAgendaEvents } from "./agenda-actions";
@@ -49,13 +51,19 @@ async function CalendarContent({
 }) {
   const query = await searchParams;
   const { supabase, userId } = await requireUser();
-  const [timeZone, lastView] = await Promise.all([
+  const [timeZone, lastView, viewOptions] = await Promise.all([
     getProfileTimeZone(supabase, userId),
     getLastView(supabase, userId),
+    getViewOptions(supabase, userId),
   ]);
   const today = todayKey(timeZone);
   const { view, date } = parseViewParams(query, today, lastView);
   const range = getVisibleRange(view, date, timeZone);
+  // The same 7-day reading; only week and month drop the weekends (plan D11).
+  const shownDays =
+    view === "week" || view === "month"
+      ? visibleDays(range.days, viewOptions.showWeekends)
+      : range.days;
   // The mini month shows the weeks of the month of `date` (spec 005 RF-23).
   const monthRange = getVisibleRange("month", date, timeZone);
   const upcomingWindow = nextEventsWindow();
@@ -148,6 +156,7 @@ async function CalendarContent({
           date={date}
           today={today}
           saveLastView={saveLastView}
+          showWeekends={viewOptions.showWeekends}
         />
         {/* On a phone "+ Evento" lives in the bottom bar (spec 005 RF-22). */}
         {canCreate ? (
@@ -164,7 +173,7 @@ async function CalendarContent({
       <CalendarWorkspace
         view={view}
         date={date}
-        days={range.days}
+        days={shownDays}
         today={today}
         timeZone={timeZone}
         events={events}
@@ -190,6 +199,7 @@ async function CalendarContent({
           .map(({ id, name, color }) => ({ id, name, color }))}
         createAction={createEvent}
         userId={userId}
+        showWeekends={viewOptions.showWeekends}
       />
     </>
   );

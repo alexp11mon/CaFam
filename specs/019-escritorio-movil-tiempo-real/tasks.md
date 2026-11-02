@@ -76,7 +76,7 @@
   Hecho cuando: `npm run test:db -- view-options schema` y `npm test -- view-options` en verde. Cubre: RF-23, RF-24, RF-30, RF-31 | Módulo: view-options-schema, view-options, settings-ui
   Evidencia (2026-11-02): rojo antes de implementar (4 tests de BD y 2 archivos unitarios). Migración `20261102130000_profile_view_options.sql` aplicada en dev y tipos regenerados. `test:db -- view-options profile-theme schema` 56 en verde y `npm test -- view-options settings` 24. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2178 tests. Las capturas de Ajustes se hacen en la T14.
 
-- [ ] T6 Pintar semana y mes de lunes a viernes
+- [x] T6 Pintar semana y mes de lunes a viernes
   Pasos:
   - Primero, tests en rojo:
     - `month-lanes`: un evento de viernes a lunes en 5 columnas sale en el viernes y en el lunes siguiente; uno de sábado no sale;
@@ -88,6 +88,7 @@
   - Después, `visibleDays` en la página, columnas con `days.length`, recorte en `layoutMonthWeek` y `WeekendToggle`.
 
   Hecho cuando: `npm test -- month-lanes week-view month-view day-view weekend-toggle drag` en verde y capturas a 1440 px y 390 px de semana y mes sin fines de semana. Cubre: RF-25 a RF-29 | Módulo: weekdays-views, weekend-toggle
+  Evidencia (2026-11-02): rojo antes de implementar (2 tests y `weekend-toggle` sin resolver). La página filtra con `visibleDays` solo en semana y mes; el mes reparte las columnas con `days`; `layoutMonthWeek` ya recortaba por `weekDays.indexOf`. `WeekendToggle` en la barra de vista y en el cajón. `npm test -- month-lanes month-view week-view weekend-toggle view-toolbar calendar-workspace day-view drag` 122 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2186 tests. Arrastrar no puede caer en sábado ni domingo porque no hay columna (`targetAt` solo ve `data-time-col` visibles); las capturas, en la T14.
 
 - [ ] T7 Proponer la duración elegida al crear un evento
   Pasos:

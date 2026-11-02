@@ -62,8 +62,11 @@ export function MonthView({
 }) {
   const [area, lanes] = useLanes();
   const month = date.slice(0, 7);
-  const weeks = Array.from({ length: days.length / 7 }, (_, index) => {
-    const weekDays = days.slice(index * 7, index * 7 + 7);
+  // Five columns when the weekends are hidden (spec 019 RF-26).
+  const perWeek = days.some((day) => weekdayIndex(day) >= 5) ? 7 : 5;
+  const columns = { gridTemplateColumns: `repeat(${perWeek}, minmax(0, 1fr))` };
+  const weeks = Array.from({ length: days.length / perWeek }, (_, index) => {
+    const weekDays = days.slice(index * perWeek, (index + 1) * perWeek);
     return {
       days: weekDays,
       ...fitWeek(layoutMonthWeek(events, weekDays, timeZone), lanes),
@@ -77,9 +80,10 @@ export function MonthView({
       <div
         aria-hidden="true"
         data-testid="weekday-initials"
-        className="grid grid-cols-7 text-center text-xs font-semibold"
+        className="grid text-center text-xs font-semibold"
+        style={columns}
       >
-        {INITIALS.map((initial, column) => (
+        {INITIALS.slice(0, perWeek).map((initial, column) => (
           <span
             key={initial}
             className={
@@ -94,7 +98,8 @@ export function MonthView({
         {weeks.map((week, index) => (
           <li
             key={week.days[0]}
-            className="relative grid min-h-0 flex-1 grid-cols-7 gap-px"
+            className="relative grid min-h-0 flex-1 gap-px"
+            style={columns}
           >
             {week.days.map((day) => (
               <div
@@ -135,7 +140,8 @@ export function MonthView({
             {/* Events over the cells; the gaps still reach the create buttons (RF-34, RF-35). */}
             <div
               ref={index === 0 ? area : undefined}
-              className="pointer-events-none absolute inset-x-0 top-8 bottom-0.5 grid auto-rows-[18px] grid-cols-7 content-start gap-y-0.5 overflow-hidden"
+              className="pointer-events-none absolute inset-x-0 top-8 bottom-0.5 grid auto-rows-[18px] content-start gap-y-0.5 overflow-hidden"
+              style={columns}
             >
               {week.visible.map(({ event, start, span, lane }) => (
                 <DraggableEvent

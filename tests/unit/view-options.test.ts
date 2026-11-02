@@ -6,6 +6,7 @@ import {
   parseDuration,
   visibleDays,
 } from "@/lib/calendar/view-options";
+import { getVisibleRange } from "@/lib/calendar/ranges";
 
 // Spec 019, T5: the days a view draws and the default duration (RF-25 to RF-27, RF-30).
 const WEEK = [
@@ -21,6 +22,11 @@ const WEEK = [
 describe("visibleDays", () => {
   it("keeps every day with weekends shown", () => {
     expect(visibleDays(WEEK, true)).toEqual(WEEK);
+  });
+
+  it("on a Saturday, keeps Monday to Friday of that week", () => {
+    const { days } = getVisibleRange("week", "2026-11-07", "Europe/Madrid");
+    expect(visibleDays(days, false)).toEqual(WEEK.slice(0, 5));
   });
 
   it("drops Saturday and Sunday otherwise", () => {

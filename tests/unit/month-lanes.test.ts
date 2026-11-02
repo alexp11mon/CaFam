@@ -144,3 +144,30 @@ describe("fitWeek (spec 016 RF-36)", () => {
     expect(fit.hidden[1]).toBe(4);
   });
 });
+
+describe("layoutMonthWeek without weekends (spec 019 RF-26, RF-29)", () => {
+  const WEEKDAYS = WEEK.slice(0, 5);
+  const NEXT = [
+    "2026-11-09",
+    "2026-11-10",
+    "2026-11-11",
+    "2026-11-12",
+    "2026-11-13",
+  ];
+
+  it("shows the weekday part of an event from Friday to Monday", () => {
+    const trip = allDay("trip", "2026-11-06", "2026-11-10");
+    expect(layoutMonthWeek([trip], WEEKDAYS, MADRID)).toEqual([
+      { event: trip, start: 4, span: 1, lane: 0 },
+    ]);
+    expect(layoutMonthWeek([trip], NEXT, MADRID)).toEqual([
+      { event: trip, start: 0, span: 1, lane: 0 },
+    ]);
+  });
+
+  it("leaves out an event of a Saturday", () => {
+    expect(
+      layoutMonthWeek([timed("sat", "2026-11-07", 12)], WEEKDAYS, MADRID),
+    ).toEqual([]);
+  });
+});

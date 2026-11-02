@@ -32,6 +32,27 @@ function renderWeek(events: CalendarEventItem[] = []) {
 }
 
 describe("WeekView (RF-29, RF-35, RF-40)", () => {
+  it("draws Monday to Friday across the width without weekends (spec 019 RF-25)", () => {
+    render(
+      <WeekView
+        days={DAYS.slice(0, 5)}
+        events={[event("sab", "2026-10-24T10:00:00Z", "2026-10-24T11:00:00Z")]}
+        timeZone={TZ}
+        today={TODAY}
+      />,
+    );
+
+    const headers = screen.getAllByTestId("day-header");
+    expect(headers.map((header) => header.textContent?.[0])).toEqual([
+      "L",
+      "M",
+      "X",
+      "J",
+      "V",
+    ]);
+    expect(screen.queryByRole("link", { name: /sab/ })).toBeNull();
+  });
+
   it("has a header per day linking to the day view, with today marked", () => {
     renderWeek();
 

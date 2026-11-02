@@ -60,6 +60,7 @@ import { Fab } from "./fab";
 import type { CalendarOption, EventFormValues } from "./event-form";
 import { GoToDateDialog } from "./go-to-date-dialog";
 import { MiniMonth } from "./mini-month";
+import { WeekendToggle } from "./weekend-toggle";
 import { ShortcutsHelp } from "./shortcuts-help";
 import { MonthStrip } from "./month-strip";
 import { MonthView } from "./month-view";
@@ -138,27 +139,32 @@ function DrawerViews({
   view,
   date,
   saveLastView,
+  showWeekends,
 }: {
   view: CalendarView;
   date: string;
   saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
+  showWeekends: boolean;
 }) {
   return (
-    <ul aria-label="Vistas" className="flex flex-col gap-1">
-      {DRAWER_VIEWS.map((item) => (
-        <li key={item.view}>
-          <Link
-            href={calendarHref(item.view, date)}
-            transitionTypes={[CAL_VIEW]}
-            aria-current={item.view === view ? "page" : undefined}
-            onClick={() => void saveLastView?.(item.view)}
-            className={DRAWER_ROW}
-          >
-            {item.label}
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul aria-label="Vistas" className="flex flex-col gap-1">
+        {DRAWER_VIEWS.map((item) => (
+          <li key={item.view}>
+            <Link
+              href={calendarHref(item.view, date)}
+              transitionTypes={[CAL_VIEW]}
+              aria-current={item.view === view ? "page" : undefined}
+              onClick={() => void saveLastView?.(item.view)}
+              className={DRAWER_ROW}
+            >
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {showWeekends ? null : <WeekendToggle className={DRAWER_ROW} />}
+    </>
   );
 }
 
@@ -198,6 +204,7 @@ export function CalendarWorkspace({
   editableCalendars = [],
   createAction,
   userId,
+  showWeekends = true,
 }: {
   view: CalendarView;
   date: string;
@@ -234,6 +241,8 @@ export function CalendarWorkspace({
   createAction?: FormAction<FormState<keyof EventFormValues>>;
   /** The signed-in user, whose private topic tells of others' changes (spec 019 RF-40). */
   userId?: string;
+  /** Week and month come without Saturday and Sunday when false (spec 019 RF-25, RF-26). */
+  showWeekends?: boolean;
 }) {
   const [keyDialog, setKeyDialog] = useState<"goto" | "help" | null>(null);
   useCalendarShortcuts({
@@ -543,6 +552,7 @@ export function CalendarWorkspace({
                   view={view}
                   date={date}
                   saveLastView={saveLastView}
+                  showWeekends={showWeekends}
                 />
                 {filters}
               </div>,
