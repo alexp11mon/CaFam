@@ -33,6 +33,10 @@ export interface RunDeps {
   timeZone: string;
 }
 
+/** Sent before the forced answer: without it gpt-oss still tried a tool (400). */
+export const FINAL_ROUND =
+  "Ya no puedes usar herramientas. Responde ahora al usuario solo con los datos que ya tienes.";
+
 export interface AssistantAnswer {
   answer: string;
   events: CitedEvent[];
@@ -62,6 +66,8 @@ export async function runAssistant(
     signal?.throwIfAborted();
     // After the last round of tools, no more tools: the model must answer.
     const tools = round < MAX_TOOL_ROUNDS ? TOOL_DEFINITIONS : [];
+    if (tools.length === 0)
+      messages.push({ role: "system", content: FINAL_ROUND });
     // The first round must look at the data: without it the fallback model
     // answered "no events" without asking (T12, RF-12, RF-13).
     const reply = await deps.chat(messages, tools, signal, round === 0);

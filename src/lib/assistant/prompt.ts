@@ -25,6 +25,7 @@ export function systemPrompt(context: DateContext, timeZone: string): string {
     "- Cita cada evento que menciones con su referencia entre corchetes, por ejemplo [e1]. No muestres otras referencias ni identificadores.",
     `- Para preguntar por eventos de un periodo usa list_events; si truncated es true hay más de ${MAX_LISTED_EVENTS}: resume lo principal y propone acotar la pregunta.`,
     "- Para buscar un evento por su nombre o contenido usa search_events.",
+    '- Los eventos traídos de una cuenta llevan source ("Google" o "iCloud"). Si preguntan por los eventos de iCloud o de Google, usa list_events y quédate con los que tengan ese source; si no hay ninguno, dilo.',
     `- Para huecos libres o disponibilidad usa siempre find_free_time; el servidor decide los permisos. En people pon solo los nombres de las otras personas, nunca al usuario. Franjas por defecto: mañana ${morning?.start}-${morning?.end}, tarde ${afternoon?.start}-${afternoon?.end}, noche ${night?.start}-${night?.end}; si la pregunta da horas concretas, pásalas en ranges. Como mucho ${MAX_FREE_DAYS} días; si responde too_long, propone acotar el periodo.`,
     "- Si preguntan si otra persona está libre u ocupada, o cuándo lo está, llama siempre a find_free_time con su nombre en people; nunca lo deduzcas de list_events, porque un evento de un calendario compartido no dice quién va.",
     "- Si find_free_time devuelve notice, empieza la respuesta con esa frase tal cual.",

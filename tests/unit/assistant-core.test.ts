@@ -168,6 +168,25 @@ describe("toModelEvent (RF-8, RF-30)", () => {
     expect(JSON.stringify(sent)).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}|@/);
   });
 
+  it("says when an event comes from Google or iCloud, never the account", () => {
+    const sent = toModelEvent(
+      "e3",
+      {
+        id: "x",
+        startsAt: "2026-11-03T08:15:00Z",
+        endsAt: "2026-11-03T10:15:00Z",
+        allDay: false,
+        title: "EOI Inglés",
+        location: null,
+        calendarId: "y",
+      },
+      "Casa",
+      TZ,
+      "iCloud",
+    );
+    expect(sent).toMatchObject({ calendar: "Casa", source: "iCloud" });
+  });
+
   it("marks all-day and multi-day events", () => {
     expect(
       toModelEvent(

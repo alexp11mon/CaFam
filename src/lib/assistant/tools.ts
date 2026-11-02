@@ -21,7 +21,7 @@ import {
   listEventsArgsSchema,
   searchArgsSchema,
 } from "./schemas";
-import { toModelEvent } from "./serialize";
+import { toModelEvent, type EventSource } from "./serialize";
 
 export { TOOL_DEFINITIONS } from "./tool-definitions";
 
@@ -52,10 +52,16 @@ export interface ToolContext {
   excludeSynced: boolean;
 }
 
+const SOURCES: Partial<Record<string, EventSource>> = {
+  google: "Google",
+  icloud: "iCloud",
+};
+
 interface CalendarInfo {
   name: string;
   color: string;
   google: boolean;
+  source?: EventSource;
 }
 
 async function calendarsOf(
@@ -69,6 +75,7 @@ async function calendarsOf(
         name: calendar.name,
         color: calendar.color,
         google: calendar.synced?.provider === "google",
+        source: SOURCES[calendar.synced?.provider ?? ""],
       },
     ]),
   );
@@ -111,7 +118,13 @@ function serialize(
       calendarName: calendar.name,
       color: calendar.color,
     });
-    return toModelEvent(ref, event, calendar.name, ctx.timeZone);
+    return toModelEvent(
+      ref,
+      event,
+      calendar.name,
+      ctx.timeZone,
+      calendar.source,
+    );
   });
 }
 

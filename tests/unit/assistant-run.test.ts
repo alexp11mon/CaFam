@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ProviderMessage, ProviderReply } from "@/lib/assistant/provider";
 import { AssistantUnavailable } from "@/lib/assistant/provider";
-import { runAssistant, type RunDeps } from "@/lib/assistant/run";
+import { FINAL_ROUND, runAssistant, type RunDeps } from "@/lib/assistant/run";
 import type { CitedEvent } from "@/lib/assistant/tools";
 
 // Spec 015, T7: the conversation loop (plan assistant-run, D2, D5; RF-5,
@@ -134,6 +134,11 @@ describe("runAssistant", () => {
     expect(runTool).toHaveBeenCalledTimes(3);
     expect(chat).toHaveBeenCalledTimes(4);
     expect(chat.mock.calls[3]![1]).toEqual([]);
+    // Without it gpt-oss still tried a tool and Groq answered 400 tool_use_failed.
+    expect(sent(chat, 3).at(-1)).toEqual({
+      role: "system",
+      content: FINAL_ROUND,
+    });
     expect(result.answer).toBe("Listo.");
   });
 

@@ -31,16 +31,22 @@ export interface ModelEvent {
   allDay?: true;
   title: string;
   calendar: string;
+  /** Calendars brought from an account, so "what's in my iCloud" can be answered. */
+  source?: EventSource;
   location?: string;
 }
+
+export type EventSource = "Google" | "iCloud";
 
 export function toModelEvent(
   ref: string,
   event: SourceEvent,
   calendar: string,
   timeZone: string,
+  source?: EventSource,
 ): ModelEvent {
   const location = event.location?.trim() || undefined;
+  const from = source ? { source } : {};
   if (event.allDay) {
     // All-day events are read by UTC date (spec 002 D6); the end is exclusive.
     const date = utcDateKey(event.startsAt);
@@ -53,6 +59,7 @@ export function toModelEvent(
       allDay: true,
       title: event.title,
       calendar,
+      ...from,
       ...(location ? { location } : {}),
     };
   }
@@ -67,6 +74,7 @@ export function toModelEvent(
     end: formatTime(event.endsAt, timeZone),
     title: event.title,
     calendar,
+    ...from,
     ...(location ? { location } : {}),
   };
 }
