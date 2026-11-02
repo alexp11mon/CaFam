@@ -30,7 +30,7 @@
   - Elegido: `openai/gpt-oss-120b` principal y `qwen/qwen3.8-27b` de reserva ante un 429 (D1 y R1 cambiados con aprobación del usuario).
   - `GROQ_API_KEY` en `.env.local` y `.env.test.local` (responde 200) y documentada en `.env.example`. `no-secrets.test.ts` con dos casos nuevos (fallan con un archivo de prueba que expone la clave). Verificación: typecheck y format correctos, lint con los 2 avisos previos, `npm test` 217 archivos y 2070 tests, build correcto.
 
-- [ ] T2 Crear el esquema del asistente con sus permisos
+- [x] T2 Crear el esquema del asistente con sus permisos
   Pasos:
   - Primero, `tests/integration/assistant.test.ts` en rojo. Comprueba:
     - `profiles.share_availability` es `false` al registrarse y solo la cambia su dueño;
@@ -42,6 +42,7 @@
   - Después, la migración `assistant` según "Modelo de datos" del plan, `db:push` a dev y `db:types`.
 
   Hecho cuando: `npm run test:db -- assistant schema` en verde y `src/types/database.ts` regenerado. Cubre: RF-6, RF-15, RF-19, RF-20, RF-21, RF-23, RF-24, RF-27, RF-29 | Módulo: assistant-schema
+  Evidencia (2026-11-02): rojo sin la migración ("Could not find the 'share_availability' column"). Migración `20261102100000_assistant.sql` aplicada en dev y tipos regenerados. `test:db -- assistant.test schema` 56 tests en verde (11 de `assistant`). typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 217 archivos y 2070 tests.
 
 - [ ] T3 Calcular fechas y huecos libres
   Pasos:

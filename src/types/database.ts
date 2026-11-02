@@ -77,6 +77,32 @@ export type Database = {
           },
         ]
       }
+      assistant_questions: {
+        Row: {
+          asked_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          asked_at?: string
+          id?: never
+          user_id?: string
+        }
+        Update: {
+          asked_at?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_questions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auth_email_requests: {
         Row: {
           created_at: string
@@ -866,6 +892,7 @@ export type Database = {
           display_name: string
           id: string
           last_view: string | null
+          share_availability: boolean
           theme: string
           time_zone: string
           updated_at: string
@@ -876,6 +903,7 @@ export type Database = {
           display_name: string
           id: string
           last_view?: string | null
+          share_availability?: boolean
           theme?: string
           time_zone?: string
           updated_at?: string
@@ -886,6 +914,7 @@ export type Database = {
           display_name?: string
           id?: string
           last_view?: string | null
+          share_availability?: boolean
           theme?: string
           time_zone?: string
           updated_at?: string
@@ -970,6 +999,37 @@ export type Database = {
         }[]
       }
       apply_orphan_decisions: { Args: never; Returns: undefined }
+      assistant_busy: {
+        Args: { p_from: string; p_person_ids: string[]; p_to: string }
+        Returns: {
+          all_day: boolean
+          ends_at: string
+          exdates: string[]
+          id: string
+          original_start: string
+          person_id: string
+          recurrence: string
+          recurrence_tz: string
+          series_id: string
+          starts_at: string
+        }[]
+      }
+      assistant_people: {
+        Args: never
+        Returns: {
+          display_name: string
+          shares_availability: boolean
+          user_id: string
+        }[]
+      }
+      assistant_purge_questions: { Args: never; Returns: undefined }
+      assistant_scheduled_jobs: {
+        Args: never
+        Returns: {
+          jobname: string
+          schedule: string
+        }[]
+      }
       calendar_members_with_names: {
         Args: { p_calendar_ids: string[] }
         Returns: {
