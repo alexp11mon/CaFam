@@ -45,7 +45,7 @@
   Hecho cuando: `npm run test:db -- live-changes schema rls` en verde y `src/types/database.ts` regenerado. Cubre: RF-40, RF-42, RF-45, RF-47 | Módulo: live-schema
   Evidencia (2026-11-02): rojo antes de la migración (6 de 7). Migración `20261102120000_live_changes.sql` aplicada en dev y tipos regenerados. `test:db -- live-changes` 7 en verde (el mensaje llega en menos de 5 s; Realtime añade su propio id a la carga) y `schema rls calendars-events merge-calendars` 105 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2153 tests. Sin test del fallo de `realtime.send` (no se puede forzar en dev): lo cubre el `exception when others` de `live_notify`.
 
-- [ ] T3 Refrescar el calendario al recibir un cambio ajeno
+- [x] T3 Refrescar el calendario al recibir un cambio ajeno
   Pasos:
   - Primero, tests en rojo:
     - `tests/unit/live.test.ts` para `liveDecision`: propio → `ignore`, ajeno o nulo → `refresh`, retenido → `hold`;
@@ -53,6 +53,7 @@
   - Después, `live.ts`, `use-live-calendar.ts` y su uso en `CalendarWorkspace`.
 
   Hecho cuando: `npm test -- live use-live-calendar calendar-workspace` en verde. Cubre: RF-40, RF-41, RF-46, RF-48 | Módulo: live-client
+  Evidencia (2026-11-02): rojo antes de implementar (imports sin resolver). `live.ts`, `live-hold.ts` y `use-live-calendar.ts`, con `userId` en el workspace y la región `aria-live` "Calendario actualizado a las HH:MM:SS". `npm test -- live use-live-calendar calendar-workspace` 30 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2165 tests.
 
 - [ ] T4 Esperar mientras se edita y cerrar lo que otro ha borrado
   Pasos:

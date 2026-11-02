@@ -27,6 +27,7 @@ import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { useCalendarShortcuts } from "@/lib/hooks/use-calendar-shortcuts";
 import { useIsPhone } from "@/lib/hooks/use-is-phone";
 import { useSwipe } from "@/lib/hooks/use-swipe";
+import { useLiveCalendar } from "@/lib/hooks/use-live-calendar";
 import { useRefreshOnFocus } from "@/lib/hooks/use-refresh-on-focus";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import {
@@ -196,6 +197,7 @@ export function CalendarWorkspace({
   loadAgendaEvents,
   editableCalendars = [],
   createAction,
+  userId,
 }: {
   view: CalendarView;
   date: string;
@@ -230,6 +232,8 @@ export function CalendarWorkspace({
   /** Calendars the user can write to, for the quick window (spec 008 RF-37). */
   editableCalendars?: CalendarOption[];
   createAction?: FormAction<FormState<keyof EventFormValues>>;
+  /** The signed-in user, whose private topic tells of others' changes (spec 019 RF-40). */
+  userId?: string;
 }) {
   const [keyDialog, setKeyDialog] = useState<"goto" | "help" | null>(null);
   useCalendarShortcuts({
@@ -242,6 +246,14 @@ export function CalendarWorkspace({
     onHelp: () => setKeyDialog("help"),
   });
   useRefreshOnFocus(loadedAt);
+  // Someone else's change only changes the view: no toast, a quiet note for
+  // screen readers (spec 019 RF-48).
+  const [liveNotice, setLiveNotice] = useState("");
+  useLiveCalendar(userId, () =>
+    setLiveNotice(
+      `Calendario actualizado a las ${new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone }).format(new Date())}`,
+    ),
+  );
   const [groups, setGroups] = useState(initialGroups);
   const [hiddenCategories, setHiddenCategories] = useState<ReadonlySet<string>>(
     new Set(),
@@ -687,6 +699,9 @@ export function CalendarWorkspace({
           />
         ) : null}
         {interactive.dialog}
+        <p role="status" aria-live="polite" className="sr-only">
+          {liveNotice}
+        </p>
         {keyDialog === "goto" ? (
           <GoToDateDialog
             date={date}

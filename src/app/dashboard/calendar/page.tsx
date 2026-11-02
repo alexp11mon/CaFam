@@ -189,6 +189,7 @@ async function CalendarContent({
           .filter(canWriteEvents)
           .map(({ id, name, color }) => ({ id, name, color }))}
         createAction={createEvent}
+        userId={userId}
       />
     </>
   );
