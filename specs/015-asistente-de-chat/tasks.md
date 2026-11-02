@@ -44,7 +44,7 @@
   Hecho cuando: `npm run test:db -- assistant schema` en verde y `src/types/database.ts` regenerado. Cubre: RF-6, RF-15, RF-19, RF-20, RF-21, RF-23, RF-24, RF-27, RF-29 | Módulo: assistant-schema
   Evidencia (2026-11-02): rojo sin la migración ("Could not find the 'share_availability' column"). Migración `20261102100000_assistant.sql` aplicada en dev y tipos regenerados. `test:db -- assistant.test schema` 56 tests en verde (11 de `assistant`). typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 217 archivos y 2070 tests.
 
-- [ ] T3 Calcular fechas y huecos libres
+- [x] T3 Calcular fechas y huecos libres
   Pasos:
   - Primero, `tests/unit/assistant-slots.test.ts` en rojo:
     - `dates.ts`: inicio y fin de un día local en la zona del perfil (también en los cambios de hora), inicio del día para la cuota, fecha imposible y `from > to` rechazados, tabla de los próximos 14 días con su día de la semana;
@@ -53,6 +53,7 @@
   - Después, `src/lib/assistant/limits.ts`, `dates.ts` y `free-slots.ts`.
 
   Hecho cuando: `npm test -- assistant-slots` en verde. Cubre: RF-7, RF-14, RF-17, RF-17b, RF-18, RF-19, RF-24 | Módulo: assistant-core
+  Evidencia (2026-11-02): rojo sin los módulos. `npm test -- assistant-slots` 14 tests en verde (dos expectativas del test estaban mal calculadas y se corrigieron: las 23:30 de Madrid siguen siendo el día 2, y del 1-11 al 1-12 son 31 días, ahora caso límite permitido). typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 218 archivos y 2084 tests.
 
 - [ ] T4 Escribir la validación, las personas, las citas y el prompt
   Pasos:
