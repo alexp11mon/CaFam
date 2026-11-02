@@ -42,6 +42,7 @@ describe("NavDrawer", () => {
     expect(links).toEqual([
       "Calendario",
       "Mis calendarios",
+      "Asistente",
       "Cuentas conectadas",
       "Unirme con código",
       "Importar calendario",

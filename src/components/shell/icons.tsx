@@ -200,9 +200,20 @@ export function ExpandIcon({ expanded }: { expanded: boolean }) {
   );
 }
 
+/** A speech bubble: the chat of the assistant (spec 015 RF-1). */
+export function AssistantIcon() {
+  return (
+    <Icon>
+      <path d="M5 5h14a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-8l-4 3v-3H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+      <path d="M8 10h8M8 13h5" />
+    </Icon>
+  );
+}
+
 export const SECTION_ICONS = {
   calendar: CalendarIcon,
   calendars: CalendarsIcon,
+  assistant: AssistantIcon,
   join: JoinIcon,
   connections: ConnectionsIcon,
   import: ImportIcon,

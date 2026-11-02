@@ -8,6 +8,7 @@ import { MoreIcon, SECTION_ICONS, SignOutIcon } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
 
 const SHEET_SECTIONS: readonly Section[] = [
+  "assistant",
   "connections",
   "join",
   "import",

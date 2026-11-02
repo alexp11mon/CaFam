@@ -125,7 +125,7 @@
 
 ## Iteración 2 — Interfaz y validación
 
-- [ ] T9 Crear la pantalla del asistente
+- [x] T9 Crear la pantalla del asistente
   Pasos:
   - Primero, `tests/unit/assistant-chat.test.tsx` y `nav.test.ts` en rojo, con `fetch` simulado:
     - "Asistente" en `NAV_ITEMS` (barra lateral, barra inferior, hoja "Más" y cajón) y sección activa en `/dashboard/assistant` (RF-1);
@@ -141,6 +141,7 @@
   - Capturas a 390, 768 y 1440 px (claro con rojo, oscuro con amarillo).
 
   Hecho cuando: `npm test -- assistant-chat nav design-tokens` en verde y capturas revisadas. Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RF-6, RF-11, RF-27, RF-28, RF-33 | Módulo: assistant-ui
+  Evidencia (2026-11-02): `assistant-chat.test.tsx` (9 tests: aviso y ejemplos, enviar con Intro y Mayús+Intro, validación, Cancelar devuelve la pregunta, hilo completo y Nueva conversación, Reintentar en 503, sin conexión, cuota, abortar al desmontar) y `nav.test.ts`/`nav-drawer.test.tsx` con el destino Asistente. typecheck, lint (2 avisos previos), format:check, `npm test` (223 archivos, 2136 tests) y build en verde. En el navegador (next start -p 3100, usuario @cafam.test borrado al terminar) a 390, 768 y 1440 px: aviso de privacidad, ejemplos, respuesta real de Groq y sin errores en consola.
 
 - [ ] T10 Añadir el permiso de disponibilidad en Ajustes
   Pasos:

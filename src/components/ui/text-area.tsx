@@ -1,9 +1,10 @@
-import { useId, type TextareaHTMLAttributes } from "react";
+import { useId, type Ref, type TextareaHTMLAttributes } from "react";
 
 interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string;
   name: string;
   error?: string;
+  ref?: Ref<HTMLTextAreaElement>;
 }
 
 /** Labelled textarea; same error linking as TextField (RNF-7). */

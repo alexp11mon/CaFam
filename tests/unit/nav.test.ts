@@ -8,6 +8,7 @@ describe("NAV_ITEMS", () => {
     expect(NAV_ITEMS.map(({ label, href }) => [label, href])).toEqual([
       ["Calendario", "/dashboard/calendar"],
       ["Mis calendarios", "/dashboard/calendars"],
+      ["Asistente", "/dashboard/assistant"],
       ["Cuentas conectadas", "/dashboard/connections"],
       ["Unirme con código", "/dashboard/join"],
       ["Importar calendario", "/dashboard/import"],
@@ -29,6 +30,8 @@ describe("activeSection (RF-20)", () => {
     ["/dashboard/join", "join"],
     ["/dashboard/import", "import"],
     ["/dashboard/settings", "settings"],
+    // Spec 015, T9 (RF-1).
+    ["/dashboard/assistant", "assistant"],
     ["/dashboard", null],
     ["/dashboard/calendarx", null],
     ["/login", null],

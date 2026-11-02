@@ -2,7 +2,13 @@
 // (spec 005 RF-16, RF-18, RF-20; plan nav).
 
 export type Section =
-  "calendar" | "calendars" | "connections" | "join" | "import" | "settings";
+  | "calendar"
+  | "calendars"
+  | "assistant"
+  | "connections"
+  | "join"
+  | "import"
+  | "settings";
 
 export interface NavItem {
   section: Section;
@@ -17,6 +23,8 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: "/dashboard/calendars",
     label: "Mis calendarios",
   },
+  // Spec 015 (RF-1).
+  { section: "assistant", href: "/dashboard/assistant", label: "Asistente" },
   {
     section: "connections",
     href: "/dashboard/connections",
@@ -36,6 +44,7 @@ const PREFIXES: readonly [string, Section][] = [
   ["/dashboard/calendar", "calendar"],
   ["/dashboard/events", "calendar"],
   ["/dashboard/calendars", "calendars"],
+  ["/dashboard/assistant", "assistant"],
   ["/dashboard/connections", "connections"],
   ["/dashboard/join", "join"],
   ["/dashboard/import", "import"],
