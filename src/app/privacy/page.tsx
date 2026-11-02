@@ -4,7 +4,7 @@ import { Logo } from "@/components/brand/logo";
 
 export const metadata: Metadata = { title: "Política de privacidad" };
 
-const UPDATED = "1 de noviembre de 2026";
+const UPDATED = "2 de noviembre de 2026";
 
 function Section({
   title,
@@ -182,6 +182,37 @@ export default function PrivacyPage() {
             </a>
             , en «Contraseñas específicas de app». Cambiar la contraseña de tu
             Apple ID también las revoca todas.
+          </p>
+        </Section>
+
+        <Section title="Asistente de chat">
+          <p>
+            Lo que preguntas al asistente de CaFam lo responde Groq (Groq, Inc.,
+            en Estados Unidos), un servicio de modelos de lenguaje.
+          </p>
+          <p>
+            Para cada pregunta, Groq recibe tu pregunta, la conversación y los
+            datos de los eventos necesarios para responderla (título, fechas,
+            lugar y nombre del calendario) de los calendarios que puedes ver.
+            Nunca recibe tu email, tus contraseñas ni identificadores de CaFam,
+            de Google o de iCloud.
+          </p>
+          <p>
+            Los usa solo para escribir la respuesta: no los usa para entrenar
+            sus modelos y CaFam tiene activada la retención cero, así que Groq
+            no los guarda después de responder. Los datos salen de la Unión
+            Europea con las cláusulas contractuales tipo que ofrece Groq.
+          </p>
+          <p>
+            CaFam no guarda la conversación: se pierde al salir de la pantalla o
+            empezar una nueva. Solo anota la hora de cada pregunta para el
+            límite diario, y la borra a los dos días.
+          </p>
+          <p>
+            El asistente puede decirte cuándo está libre otra persona que
+            comparte calendarios contigo solo si esa persona lo ha permitido en
+            Ajustes, y aun así solo sabe si está libre u ocupada, nunca qué
+            eventos tiene.
           </p>
         </Section>
 

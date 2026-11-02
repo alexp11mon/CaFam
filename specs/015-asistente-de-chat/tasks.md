@@ -152,12 +152,13 @@
   Hecho cuando: `npm test -- availability-setting settings-actions` en verde. Cubre: RF-20, RF-21 | Módulo: availability-setting
   Evidencia (2026-11-02): `availability-setting.test.tsx` (3 tests: desmarcada con la explicación, guarda al momento, deshace y muestra el error) y 3 casos de `setShareAvailability` en `settings-actions.test.ts`; sección "Asistente" en Ajustes. typecheck, lint (2 avisos previos), format:check, `npm test` (224 archivos, 2142 tests) y build en verde. Las capturas de Ajustes se hacen en la prueba del navegador de T13.
 
-- [ ] T11 Explicar el asistente en la política de privacidad
+- [x] T11 Explicar el asistente en la política de privacidad
   Pasos:
   - Primero, caso nuevo en el test de `/privacy` en rojo: sección "Asistente de chat" que nombra a Groq, qué recibe (pregunta, hilo y eventos necesarios; nunca emails, contraseñas ni identificadores), para qué, que no entrena con ellos, la retención y la disponibilidad consentida.
   - Después, la sección en `src/app/privacy/page.tsx`.
 
   Hecho cuando: `npm test -- privacy` en verde. Cubre: RF-32, RF-33 | Módulo: privacy
+  Evidencia (2026-11-02): caso nuevo en `privacy-page.test.tsx` (Groq, qué recibe y qué no, sin entrenamiento, retención cero, CaFam no guarda la conversación, disponibilidad consentida); fecha de actualización al 2 de noviembre de 2026. typecheck, lint (2 avisos previos), format:check, `npm test` (224 archivos, 2143 tests) y build en verde.
 
 - [ ] T12 Medir la calidad con el conjunto de preguntas de prueba
   Pasos:

@@ -68,6 +68,28 @@ describe("/privacy with iCloud (RF-69)", () => {
   });
 });
 
+// Spec 015, T11: the assistant in the policy (RF-32, RF-33).
+describe("/privacy with the assistant (RF-32)", () => {
+  it("names Groq, what it gets and why, that it does not train, the retention and the consented availability", () => {
+    render(<PrivacyPage />);
+
+    expect(
+      screen.getByRole("heading", { name: "Asistente de chat" }),
+    ).toBeInTheDocument();
+    for (const text of [
+      /lo responde Groq/,
+      /tu pregunta, la conversación y los datos de los eventos necesarios/,
+      /Nunca recibe tu email, tus contraseñas ni identificadores/,
+      /no los usa para entrenar/,
+      /retención cero/,
+      /CaFam no guarda la conversación/,
+      /solo si esa persona lo ha permitido en Ajustes/,
+    ]) {
+      expect(screen.getByText(text)).toBeInTheDocument();
+    }
+  });
+});
+
 describe("home page (RF-40)", () => {
   it("links the privacy policy", () => {
     render(<HomePage />);
