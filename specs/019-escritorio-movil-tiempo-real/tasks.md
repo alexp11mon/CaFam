@@ -28,7 +28,7 @@
 
   Hecho cuando: `docs/constitution.md` contiene la enmienda 7 y Realtime en la lista del BaaS, y `npm run format:check` sigue en verde. Cubre: NFR coste | Módulo: constitution
 
-- [ ] T2 Avisar por Realtime a los miembros de un calendario cuando cambia algo
+- [x] T2 Avisar por Realtime a los miembros de un calendario cuando cambia algo
   Pasos:
   - Primero, `tests/integration/live-changes.test.ts` en rojo. Usa clientes de `supabase-js` en Node con la sesión de cada usuario y canales privados. Comprueba:
     - A (miembro) recibe `changed` en `user:A` en 5 s o menos cuando B crea, cambia o borra un evento del calendario que comparten, y `actor` es B;
@@ -43,6 +43,7 @@
   - Después, la migración `live_changes` según "Modelo de datos" del plan.
 
   Hecho cuando: `npm run test:db -- live-changes schema rls` en verde y `src/types/database.ts` regenerado. Cubre: RF-40, RF-42, RF-45, RF-47 | Módulo: live-schema
+  Evidencia (2026-11-02): rojo antes de la migración (6 de 7). Migración `20261102120000_live_changes.sql` aplicada en dev y tipos regenerados. `test:db -- live-changes` 7 en verde (el mensaje llega en menos de 5 s; Realtime añade su propio id a la carga) y `schema rls calendars-events merge-calendars` 105 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2153 tests. Sin test del fallo de `realtime.send` (no se puede forzar en dev): lo cubre el `exception when others` de `live_notify`.
 
 - [ ] T3 Refrescar el calendario al recibir un cambio ajeno
   Pasos:

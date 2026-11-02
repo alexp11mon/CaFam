@@ -1154,6 +1154,10 @@ export type Database = {
         }[]
       }
       list_tables_without_rls: { Args: never; Returns: string[] }
+      live_notify: {
+        Args: { p_calendar_id: string; p_extra_user?: string }
+        Returns: undefined
+      }
       materialize_occurrence: {
         Args: {
           p_original_start: string
