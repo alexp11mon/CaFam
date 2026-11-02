@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { QUESTION_MESSAGES } from "./error-messages";
-import { ANSWER_MAX, MAX_MESSAGES, QUESTION_MAX } from "./limits";
+import {
+  ANSWER_MAX,
+  MAX_COMMENT_EVENTS,
+  MAX_MESSAGES,
+  QUESTION_MAX,
+} from "./limits";
 
 // Validation of the chat request and of the tool arguments (spec 015 plan
 // "Contratos e interfaces").
@@ -41,6 +46,14 @@ export const listEventsArgsSchema = z.object({ from: dateKey, to: dateKey });
 
 export const searchArgsSchema = z.object({
   query: z.string().trim().min(2).max(100),
+});
+
+/** D15: only references handed out in this question, never ids (RF-35). */
+export const commentsArgsSchema = z.object({
+  refs: z
+    .array(z.string().regex(/^e\d+$/))
+    .min(1)
+    .max(MAX_COMMENT_EVENTS),
 });
 
 export const freeTimeArgsSchema = z.object({

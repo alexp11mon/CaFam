@@ -27,7 +27,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     function: {
       name: "search_events",
       description:
-        "Busca eventos del usuario por una palabra de su título, lugar o descripción, desde un año atrás hasta un año adelante.",
+        "Busca eventos del usuario por una palabra de su título, lugar, descripción o comentarios, desde un año atrás hasta un año adelante. Si coincide un comentario, el evento trae matchedComment.",
       parameters: {
         type: "object",
         properties: { query: { type: "string" } },
@@ -65,6 +65,25 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
           },
         },
         required: ["people", "from", "to"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_comments",
+      description:
+        "Comentarios más recientes (como mucho 5) de eventos que ya te han dado las otras herramientas en esta pregunta. Úsala con los eventos que traen comments.",
+      parameters: {
+        type: "object",
+        properties: {
+          refs: {
+            type: "array",
+            items: { type: "string" },
+            description: "Referencias de los eventos, como e1 (como mucho 10)",
+          },
+        },
+        required: ["refs"],
       },
     },
   },

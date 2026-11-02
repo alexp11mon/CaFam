@@ -10,11 +10,12 @@ import { systemPrompt } from "@/lib/assistant/prompt";
 import { createRefs, extractCitations } from "@/lib/assistant/citations";
 import {
   assistantRequestSchema,
+  commentsArgsSchema,
   freeTimeArgsSchema,
   listEventsArgsSchema,
   searchArgsSchema,
 } from "@/lib/assistant/schemas";
-import { toModelEvent } from "@/lib/assistant/serialize";
+import { toModelComment, toModelEvent } from "@/lib/assistant/serialize";
 
 // Spec 015, T4: validation, people, serialization, citations and prompt
 // (RF-3, RF-7, RF-11, RF-12, RF-13, RF-16, RF-22, RF-26, RF-27, RF-28, RF-30).
@@ -212,6 +213,72 @@ describe("toModelEvent (RF-8, RF-30)", () => {
       title: "Viaje",
       calendar: "Cumpleaños",
     });
+  });
+});
+
+describe("comments for the model (T14, RF-30, RF-34, RF-35)", () => {
+  const base = {
+    id: "x",
+    startsAt: "2026-11-03T17:00:00Z",
+    endsAt: "2026-11-03T18:00:00Z",
+    allDay: false,
+    title: "EOI Inglés",
+    location: null,
+    calendarId: "y",
+  };
+
+  it("says how many comments an event has, only when it has some", () => {
+    expect(
+      toModelEvent("e1", { ...base, commentCount: 2 }, "Casa", TZ),
+    ).toMatchObject({ comments: 2 });
+    expect(
+      toModelEvent("e1", { ...base, commentCount: 0 }, "Casa", TZ),
+    ).not.toHaveProperty("comments");
+  });
+
+  it("gives author, local date and time and the text cut at 300 characters", () => {
+    expect(
+      toModelComment(
+        {
+          author: "Luis Pérez",
+          createdAt: "2026-11-02T22:30:00.123456+00:00",
+          body: "Voy yo",
+        },
+        TZ,
+      ),
+    ).toEqual({
+      author: "Luis Pérez",
+      date: "2026-11-02",
+      time: "23:30",
+      text: "Voy yo",
+    });
+    const long = toModelComment(
+      {
+        author: "Ana",
+        createdAt: "2026-11-02T10:00:00Z",
+        body: "á".repeat(400),
+      },
+      TZ,
+    );
+    expect([...long.text]).toHaveLength(301);
+    expect(long.text.endsWith("…")).toBe(true);
+  });
+
+  it("asks for 1 to 10 references of this question", () => {
+    expect(commentsArgsSchema.safeParse({ refs: ["e1", "e12"] }).success).toBe(
+      true,
+    );
+    expect(commentsArgsSchema.safeParse({ refs: [] }).success).toBe(false);
+    expect(
+      commentsArgsSchema.safeParse({
+        refs: ["11111111-1111-1111-1111-111111111111"],
+      }).success,
+    ).toBe(false);
+    expect(
+      commentsArgsSchema.safeParse({
+        refs: Array.from({ length: 11 }, (_, i) => `e${i + 1}`),
+      }).success,
+    ).toBe(false);
   });
 });
 

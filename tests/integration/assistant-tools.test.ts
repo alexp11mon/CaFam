@@ -196,6 +196,68 @@ beforeAll(async () => {
       ends_at: `2026-11-25T${String(8 + Math.floor(i / 6)).padStart(2, "0")}:${String((i % 6) * 10 + 5).padStart(2, "0")}:00+01:00`,
     })),
   );
+
+  // T14: comments on two occurrences of the English class (their own rows,
+  // as materialize_occurrence leaves them), on Ana's birthday and on a
+  // calendar Marta does not see.
+  const { data: rows, error: rowsError } = await admin
+    .from("events")
+    .select("id, title")
+    .in("title", ["Clase de inglés", "Cumpleaños de Ana", "De Sam"])
+    .in("calendar_id", [askerCal, strangerCal]);
+  if (rowsError) throw rowsError;
+  const idOf = (title: string) => rows!.find((row) => row.title === title)!.id;
+  const series = idOf("Clase de inglés");
+  const occurrence = (day: string) => ({
+    calendar_id: askerCal,
+    series_id: series,
+    title: "Clase de inglés",
+    original_start: `${day}T17:00:00Z`,
+    starts_at: `${day}T17:00:00Z`,
+    ends_at: `${day}T18:00:00Z`,
+  });
+  const { data: exceptions, error: exError } = await admin
+    .from("events")
+    .insert([occurrence("2026-11-03"), occurrence("2026-11-10")])
+    .select("id, original_start");
+  if (exError) throw exError;
+  const day3 = exceptions!.find((row) =>
+    row.original_start?.startsWith("2026-11-03"),
+  )!.id;
+  const day10 = exceptions!.find((row) =>
+    row.original_start?.startsWith("2026-11-10"),
+  )!.id;
+  const comment = (
+    eventId: string,
+    authorId: string,
+    body: string,
+    minute: number,
+  ) => ({
+    event_id: eventId,
+    author_id: authorId,
+    body,
+    client_id: randomUUID(),
+    created_at: `2026-11-01T10:${String(minute).padStart(2, "0")}:00Z`,
+  });
+  const birthday = idOf("Cumpleaños de Ana");
+  const { error: commentsError } = await admin
+    .from("event_comments")
+    .insert([
+      comment(day3, asker.id, "No voy a poder ir, tengo médico", 0),
+      comment(day10, luis.id, "Marta no puede ir esta semana", 1),
+      comment(birthday, stranger.id, "Primer comentario", 2),
+      ...[3, 4, 5, 6].map((minute) =>
+        comment(birthday, luis.id, `Mensaje ${minute}`, minute),
+      ),
+      comment(
+        birthday,
+        luis.id,
+        `Llevo la tarta de chocolate. ${"x".repeat(400)}`,
+        7,
+      ),
+      comment(idOf("De Sam"), stranger.id, "Llevo la tarta secreta", 8),
+    ]);
+  if (commentsError) throw commentsError;
 });
 
 afterAll(async () => {
@@ -211,6 +273,7 @@ describe("tool definitions (RF-25)", () => {
       "list_events",
       "search_events",
       "find_free_time",
+      "get_comments",
     ]);
   });
 });
@@ -502,5 +565,124 @@ describe("find_free_time (RF-14 to RF-16, RF-18, RF-20, RF-22 to RF-24)", () => 
         context(asker),
       ),
     ).toEqual({ status: "too_long" });
+  });
+});
+
+describe("comments (T14, RF-34 to RF-37)", () => {
+  it("lists how many comments each occurrence has (RF-37)", async () => {
+    const result = await call(
+      "list_events",
+      { from: "2026-11-02", to: "2026-11-17" },
+      context(asker),
+    );
+    const classes = result.events.filter(
+      (e: { title: string }) => e.title === "Clase de inglés",
+    );
+    expect(
+      classes.map((e: { date: string; comments?: number }) => [
+        e.date,
+        e.comments,
+      ]),
+    ).toEqual([
+      ["2026-11-03", 1],
+      ["2026-11-10", 1],
+      ["2026-11-17", undefined],
+    ]);
+  });
+
+  it("reads the 5 latest comments of the events of this question, with their author (RF-34, RF-35)", async () => {
+    const ctx = context(asker);
+    const listed = await call(
+      "list_events",
+      { from: "2026-12-14", to: "2026-12-14" },
+      ctx,
+    );
+    const ref = listed.events[0].ref;
+    const result = await call("get_comments", { refs: [ref, "e99"] }, ctx);
+    expect(result.unknown).toEqual(["e99"]);
+    const [birthday] = result.events;
+    expect(birthday.ref).toBe(ref);
+    expect(birthday.total).toBe(6);
+    expect(
+      birthday.comments.map((c: { text: string }) => c.text.slice(0, 9)),
+    ).toEqual([
+      "Mensaje 3",
+      "Mensaje 4",
+      "Mensaje 5",
+      "Mensaje 6",
+      "Llevo la ",
+    ]);
+    expect(birthday.comments[4]).toMatchObject({
+      author: "Luis Pérez",
+      date: "2026-11-01",
+      time: "11:07",
+    });
+    expect([...birthday.comments[4].text]).toHaveLength(301);
+    // Five of six: the oldest, from someone who left, is not sent.
+    expect(JSON.stringify(result)).not.toMatch(
+      /Primer comentario|@|[0-9a-f]{8}-/,
+    );
+  });
+
+  it("names a former member as CaFam does", async () => {
+    const ctx = context(asker);
+    const listed = await call(
+      "list_events",
+      { from: "2026-12-14", to: "2026-12-14" },
+      ctx,
+    );
+    await admin
+      .from("event_comments")
+      .update({ created_at: "2026-11-01T11:00:00Z" })
+      .eq("body", "Primer comentario");
+    try {
+      const result = await call(
+        "get_comments",
+        { refs: [listed.events[0].ref] },
+        ctx,
+      );
+      expect(result.events[0].comments.at(-1)).toMatchObject({
+        author: "un antiguo miembro",
+        text: "Primer comentario",
+      });
+    } finally {
+      await admin
+        .from("event_comments")
+        .update({ created_at: "2026-11-01T10:02:00Z" })
+        .eq("body", "Primer comentario");
+    }
+  });
+
+  it("finds by the text of a comment, with the date of that occurrence (RF-36, RF-37)", async () => {
+    const result = await call(
+      "search_events",
+      { query: "poder ir" },
+      context(asker),
+    );
+    expect(result.events).toEqual([
+      expect.objectContaining({
+        title: "Clase de inglés",
+        date: "2026-11-03",
+        comments: 1,
+        matchedComment: {
+          author: "Marta",
+          date: "2026-11-01",
+          time: "11:00",
+          text: "No voy a poder ir, tengo médico",
+        },
+      }),
+    ]);
+  });
+
+  it("never reads comments of a calendar the user does not see (RF-35)", async () => {
+    const result = await call(
+      "search_events",
+      { query: "tarta" },
+      context(asker),
+    );
+    expect(result.events.map((e: { title: string }) => e.title)).toEqual([
+      "Cumpleaños de Ana",
+    ]);
+    expect(JSON.stringify(result)).not.toContain("secreta");
   });
 });

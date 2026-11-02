@@ -17,6 +17,10 @@ export const MAX_LIST_DAYS = 62;
  * month question to the 8K tokens per minute of Groq's free tier.
  */
 export const MAX_LISTED_EVENTS = 30;
+/** D15: get_comments reads at most these events, comments each and characters each (RNF de cuota). */
+export const MAX_COMMENT_EVENTS = 10;
+export const MAX_COMMENTS_PER_EVENT = 5;
+export const COMMENT_CHARS = 300;
 /** RF-9: matches returned by search_events. */
 export const MAX_SEARCH_RESULTS = 20;
 /** search_events looks this many days back and ahead (plan D11). */

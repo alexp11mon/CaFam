@@ -1,5 +1,8 @@
 import type { createClient } from "@/lib/supabase/server";
+import { authorLabel } from "@/lib/account/author-label";
 import { getEventsInRange, getMyCalendars } from "@/lib/calendar/queries";
+import { listComments } from "@/lib/comments/queries";
+import { getMembers } from "@/lib/sharing/queries";
 import { addDays } from "@/lib/calendar/time-zone";
 import { todayKey } from "@/lib/calendar/format";
 import { occurrenceId } from "@/lib/recurrence/occurrence-id";
@@ -11,17 +14,19 @@ import {
   DEFAULT_RANGES,
   MAX_FREE_DAYS,
   MAX_LIST_DAYS,
+  MAX_COMMENTS_PER_EVENT,
   MAX_LISTED_EVENTS,
   MAX_SEARCH_RESULTS,
   SEARCH_WINDOW_DAYS,
 } from "./limits";
 import { matchPerson } from "./people-match";
 import {
+  commentsArgsSchema,
   freeTimeArgsSchema,
   listEventsArgsSchema,
   searchArgsSchema,
 } from "./schemas";
-import { toModelEvent, type EventSource } from "./serialize";
+import { toModelComment, toModelEvent, type EventSource } from "./serialize";
 
 export { TOOL_DEFINITIONS } from "./tool-definitions";
 
@@ -100,6 +105,7 @@ interface EventLike {
   endsAt: string;
   allDay: boolean;
   location: string | null;
+  commentCount?: number;
 }
 
 function serialize(
@@ -155,7 +161,7 @@ async function listEvents(args: unknown, ctx: ToolContext) {
 }
 
 const SEARCH_COLUMNS =
-  "id, calendar_id, title, location, starts_at, ends_at, all_day, recurrence, recurrence_tz, exdates";
+  "id, calendar_id, title, location, starts_at, ends_at, all_day, recurrence, recurrence_tz, exdates, event_comments(count)";
 
 /** ilike pattern with the user's % and _ taken literally (D11). */
 const likePattern = (query: string) =>
@@ -173,8 +179,15 @@ async function searchEvents(args: unknown, ctx: ToolContext) {
   const pattern = likePattern(parsed.data.query);
 
   // One query per column: no PostgREST `or` string to escape.
-  const results = await Promise.all(
-    (["title", "location", "description"] as const).map((column) =>
+  const [comments, ...results] = await Promise.all([
+    // RF-36, D16: RLS only returns comments of events the user sees.
+    ctx.supabase
+      .from("event_comments")
+      .select("event_id, author_id, body, created_at")
+      .ilike("body", pattern)
+      .order("created_at", { ascending: false })
+      .limit(200),
+    ...(["title", "location", "description"] as const).map((column) =>
       ctx.supabase
         .from("events")
         .select(SEARCH_COLUMNS)
@@ -182,7 +195,23 @@ async function searchEvents(args: unknown, ctx: ToolContext) {
         .lt("starts_at", to.toISOString())
         .limit(200),
     ),
-  );
+  ]);
+  if (comments.error) throw comments.error;
+  // The most recent matching comment of each event (newest first above).
+  const matched = new Map<string, NonNullable<typeof comments.data>[0]>();
+  for (const comment of comments.data ?? []) {
+    if (!matched.has(comment.event_id)) matched.set(comment.event_id, comment);
+  }
+  if (matched.size > 0) {
+    // Comments live on single events or occurrence rows, never on a series.
+    results.push(
+      await ctx.supabase
+        .from("events")
+        .select(SEARCH_COLUMNS)
+        .in("id", [...matched.keys()])
+        .lt("starts_at", to.toISOString()),
+    );
+  }
   const rows = new Map<string, NonNullable<(typeof results)[0]["data"]>[0]>();
   for (const { data, error } of results) {
     if (error) throw error;
@@ -217,6 +246,7 @@ async function searchEvents(args: unknown, ctx: ToolContext) {
         endsAt: row.ends_at,
         allDay: row.all_day,
         location: row.location,
+        commentCount: row.event_comments[0]?.count ?? 0,
       })),
     ...expandRows(series, keys ?? [], from, to).map(({ row, occurrence }) => ({
       id: occurrenceId(row.id, occurrence.originalStart),
@@ -239,10 +269,64 @@ async function searchEvents(args: unknown, ctx: ToolContext) {
     )
     .slice(0, MAX_SEARCH_RESULTS)
     .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
+  const members = await getMembers(ctx.supabase, [
+    ...new Set(
+      nearest
+        .filter((event) => matched.has(event.id))
+        .map((event) => event.calendarId),
+    ),
+  ]);
+  const events = serialize(nearest, calendars, ctx);
   return {
     total: matches.length,
-    events: serialize(nearest, calendars, ctx),
+    events: events.map((event, i) => {
+      const comment = matched.get(nearest[i]!.id);
+      return comment
+        ? {
+            ...event,
+            matchedComment: toModelComment(
+              {
+                author: authorLabel(comment.author_id, members),
+                createdAt: comment.created_at,
+                body: comment.body,
+              },
+              ctx.timeZone,
+            ),
+          }
+        : event;
+    }),
   };
+}
+
+/** D15: the latest comments of events this question already handed out (RF-34, RF-35). */
+async function getComments(args: unknown, ctx: ToolContext) {
+  const parsed = commentsArgsSchema.safeParse(args);
+  if (!parsed.success) return { status: "invalid_arguments" };
+  const refs = [...new Set(parsed.data.refs)];
+  const unknown = refs.filter((ref) => !ctx.refs.get(ref));
+  const events = await Promise.all(
+    refs
+      .filter((ref) => ctx.refs.get(ref))
+      .map(async (ref) => {
+        // listComments resolves an occurrence to its own row (RF-37) and RLS
+        // decides what is visible.
+        const page = await listComments(
+          ctx.supabase,
+          ctx.refs.get(ref)!.id,
+          ctx.userId,
+        );
+        // shortcut: total counts the 50 loaded, enough for a family calendar.
+        const all = page?.comments ?? [];
+        return {
+          ref,
+          total: all.length,
+          comments: all
+            .slice(-MAX_COMMENTS_PER_EVENT)
+            .map((comment) => toModelComment(comment, ctx.timeZone)),
+        };
+      }),
+  );
+  return { events, ...(unknown.length ? { unknown } : {}) };
 }
 
 async function findFreeTime(args: unknown, ctx: ToolContext) {
@@ -358,6 +442,7 @@ const TOOLS: Record<
   list_events: listEvents,
   search_events: searchEvents,
   find_free_time: findFreeTime,
+  get_comments: getComments,
 };
 
 /** Runs a tool the model asked for; bad names or arguments go back to the model. */

@@ -160,6 +160,7 @@ describe("runAssistant", () => {
       "list_events",
       "search_events",
       "find_free_time",
+      "get_comments",
     ]);
   });
 

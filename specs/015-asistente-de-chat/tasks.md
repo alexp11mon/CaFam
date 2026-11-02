@@ -197,7 +197,7 @@
 
 Rama `015-comentarios-y-boton` desde `main`. Sin migraciones: no hace falta `db push` a producción, solo el merge.
 
-- [ ] T14 Leer y buscar los comentarios desde las herramientas
+- [x] T14 Leer y buscar los comentarios desde las herramientas
   Pasos:
   - Primero, en rojo:
     - `tests/unit/assistant-core.test.ts`: `toModelEvent` lleva `comments: N` solo si hay; `toModelComment` da autor, fecha local y texto recortado a 300 caracteres con "…", sin email ni ids; esquema de `get_comments` (1–10 referencias `eN`).
@@ -209,6 +209,7 @@ Rama `015-comentarios-y-boton` desde `main`. Sin migraciones: no hace falta `db 
   - Después, `limits.ts`, `serialize.ts`, `schemas.ts`, `tool-definitions.ts` y `tools.ts` según "Ampliación" del plan (D15, D16).
 
   Hecho cuando: `npm test -- assistant` y `npm run test:db -- assistant` en verde. Cubre: RF-30, RF-34, RF-35, RF-36, RF-37 | Módulo: assistant-core, assistant-tools
+  Evidencia (2026-11-02): rojo sin `toModelComment`, `commentsArgsSchema` ni `get_comments`. `npm test -- assistant` 78 tests y `npm run test:db -- assistant` 32 tests en verde (6 nuevos de comentarios: número por repetición, los 5 más recientes con autor y recorte, "un antiguo miembro", búsqueda en comentarios con la fecha de la repetición y nada de un calendario ajeno). `get_comments` usa `listComments` de la 014, así que resuelve la fila de la repetición y los nombres con RLS; el escape de `%` y `_` lo sigue cubriendo la prueba existente. typecheck, lint (2 avisos previos), formato de `src`, `tests` y `scripts`, `npm test` (234 archivos, 2239 tests) y build en verde. `format:check` completo solo falla en `README.md`, cambiado por el usuario y sin commit.
 
 - [ ] T15 Enseñar al asistente a usar los comentarios y contarlo en `/privacy`
   Pasos:
