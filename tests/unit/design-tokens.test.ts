@@ -25,6 +25,7 @@ const SOURCES = files(ROOT).map((path) => ({
 // the rail tooltips, the time list, the toast and an event lifted while dragging (spec 017).
 const FLOATING = new Set([
   "src/components/calendar/confirm-dialog.tsx",
+  "src/components/calendar/calendar-workspace.tsx",
   "src/components/calendar/draggable-event.tsx",
   "src/components/calendar/event-card.tsx",
   "src/components/calendar/event-menu.tsx",

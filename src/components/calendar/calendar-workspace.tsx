@@ -29,6 +29,10 @@ import { useIsPhone } from "@/lib/hooks/use-is-phone";
 import { useSwipe } from "@/lib/hooks/use-swipe";
 import { useLiveCalendar } from "@/lib/hooks/use-live-calendar";
 import { useRefreshOnFocus } from "@/lib/hooks/use-refresh-on-focus";
+import {
+  setSidebarPicker,
+  useSidebar,
+} from "@/lib/hooks/use-sidebar-collapsed";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import {
   ORPHAN_GROUP_ID,
@@ -258,6 +262,8 @@ export function CalendarWorkspace({
     onHelp: () => setKeyDialog("help"),
   });
   useRefreshOnFocus(loadedAt);
+  // The side panel folded on this device (spec 019 RF-17 to RF-21).
+  const sidebar = useSidebar();
   // Someone else's change only changes the view: no toast, a quiet note for
   // screen readers (spec 019 RF-48).
   const [liveNotice, setLiveNotice] = useState("");
@@ -547,7 +553,37 @@ export function CalendarWorkspace({
 
   return (
     <EventInteractionsProvider value={interactive.api}>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
+      <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
+        {sidebar.collapsed &&
+        sidebar.pickerOpen &&
+        monthMarks &&
+        loadMonthMarks ? (
+          // The folded panel's mini month, under the title; a day closes it (spec 019 RF-19, RF-20).
+          <div
+            id="calendar-date-picker"
+            role="dialog"
+            aria-label="Elegir fecha"
+            className="absolute top-0 left-0 z-30 hidden w-84 rounded-3xl glass-float p-3 shadow-float lg:block"
+            onClick={(event) => {
+              if ((event.target as Element).closest("a"))
+                setSidebarPicker(false);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setSidebarPicker(false);
+            }}
+          >
+            <MiniMonth
+              key={date.slice(0, 7)}
+              month={date.slice(0, 7)}
+              today={today}
+              view={view}
+              initialMarks={monthMarks}
+              colors={colors}
+              visibleCalendarIds={visibleCalendars}
+              loadMonthMarks={loadMonthMarks}
+            />
+          </div>
+        ) : null}
         {filtersInDrawer
           ? createPortal(
               <div className="flex flex-col gap-3">
@@ -590,7 +626,10 @@ export function CalendarWorkspace({
           </div>
         ) : null}
         {/* On a phone the drawer and the header take the panel's place (RF-19). */}
-        <div className="flex flex-col gap-3 max-tab:hidden lg:sticky lg:top-40 lg:w-84 lg:shrink-0">
+        <div
+          id="calendar-side-panel"
+          className={`flex flex-col gap-3 max-tab:hidden lg:sticky lg:top-40 lg:w-84 lg:shrink-0 ${sidebar.collapsed ? "lg:hidden" : ""}`}
+        >
           {nextEvents && loadedAt !== undefined ? (
             <NextEventCard
               events={nextEvents}

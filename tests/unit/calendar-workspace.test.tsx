@@ -12,6 +12,10 @@ import { ToastProvider } from "@/components/ui/toast";
 import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
 import type { PersonGroup } from "@/lib/calendar/grouping";
 import { getVisibleRange } from "@/lib/calendar/ranges";
+import {
+  setSidebarCollapsed,
+  setSidebarPicker,
+} from "@/lib/hooks/use-sidebar-collapsed";
 
 // Spec 008, T15: the quick window opens from an empty day of the month (RF-19, RF-37, RF-40).
 const push = vi.hoisted(() => vi.fn());
@@ -307,6 +311,28 @@ describe("CalendarWorkspace on a phone", () => {
     );
     fireEvent.click(day);
     expect(screen.getAllByLabelText("Mini calendario")).toHaveLength(1);
+  });
+
+  it("hides the side panel while folded and opens the mini month by the title (spec 019 RF-18 to RF-20)", async () => {
+    setup(true, undefined, {
+      view: "week",
+      monthMarks: {},
+      loadMonthMarks: vi.fn(async () => ({ marks: {} })),
+    });
+    const panel = document.getElementById("calendar-side-panel")!;
+    expect(panel).not.toHaveClass("lg:hidden");
+
+    act(() => setSidebarCollapsed(true));
+    expect(panel).toHaveClass("lg:hidden");
+    expect(screen.queryByRole("dialog", { name: "Elegir fecha" })).toBeNull();
+
+    act(() => setSidebarPicker(true));
+    const picker = screen.getByRole("dialog", { name: "Elegir fecha" });
+    const day = within(picker).getByRole("link", { name: /25 de noviembre/ });
+    fireEvent.click(day);
+    expect(screen.queryByRole("dialog", { name: "Elegir fecha" })).toBeNull();
+
+    act(() => setSidebarCollapsed(false));
   });
 
   it("shows the floating + only to who can create", () => {

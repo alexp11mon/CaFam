@@ -2,7 +2,12 @@
 
 import { WeekendToggle } from "./weekend-toggle";
 import Link from "next/link";
-import { ChevronIcon } from "@/components/shell/icons";
+import { CaretIcon, ChevronIcon, MenuIcon } from "@/components/shell/icons";
+import {
+  setSidebarCollapsed,
+  setSidebarPicker,
+  useSidebar,
+} from "@/lib/hooks/use-sidebar-collapsed";
 import { requestAgendaToday } from "@/lib/calendar/agenda-today";
 import { formatPeriodTitle } from "@/lib/calendar/format";
 import {
@@ -76,10 +81,24 @@ export function ViewToolbar({
   saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
 }) {
   const current = VIEWS.find((item) => item.view === view)!;
+  const sidebar = useSidebar();
 
   return (
     <nav aria-label="Navegación del calendario" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
+        {/* Folds the side panel, from 1024 px where it is a column (spec 019 RF-17, RF-22). */}
+        <button
+          type="button"
+          aria-expanded={!sidebar.collapsed}
+          aria-controls="calendar-side-panel"
+          aria-label={
+            sidebar.collapsed ? "Desplegar el panel" : "Plegar el panel"
+          }
+          onClick={() => setSidebarCollapsed(!sidebar.collapsed)}
+          className={`${BUTTON} hidden px-0 lg:inline-flex`}
+        >
+          <MenuIcon />
+        </button>
         {view === "agenda" ? (
           // The agenda is one continuous list: "Hoy" scrolls it, no previous or next (spec 016 RF-47, RF-58).
           <button
@@ -118,9 +137,23 @@ export function ViewToolbar({
             >
               <ChevronIcon direction="right" />
             </Link>
-            <h2 className="min-w-0 flex-1 text-lg font-bold text-ink tabular-nums first-letter:uppercase">
+            <h2 className="min-w-0 text-lg font-bold text-ink tabular-nums first-letter:uppercase">
               {formatPeriodTitle(view, date)}
             </h2>
+            {/* Folded, the mini month opens from the title (RF-19). */}
+            {sidebar.collapsed ? (
+              <button
+                type="button"
+                aria-label="Elegir fecha"
+                aria-expanded={sidebar.pickerOpen}
+                aria-controls="calendar-date-picker"
+                onClick={() => setSidebarPicker(!sidebar.pickerOpen)}
+                className="hidden size-11 items-center justify-center rounded-full text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink lg:inline-flex"
+              >
+                <CaretIcon open={sidebar.pickerOpen} />
+              </button>
+            ) : null}
+            <span className="flex-1" />
           </>
         )}
       </div>
