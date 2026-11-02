@@ -163,7 +163,7 @@ async function CalendarContent({
           <div className="hidden lg:block">
             <LinkButton
               href={`/dashboard/events/new?date=${date}`}
-              aria-keyshortcuts="N"
+              aria-keyshortcuts="N C"
             >
               Nuevo evento
             </LinkButton>

@@ -101,7 +101,7 @@
   Hecho cuando: `npm test -- slots new-event-query calendar-workspace` en verde. Cubre: RF-32, RF-33, RF-34 | Módulo: default-duration
   Evidencia (2026-11-02): rojo antes de implementar (5 tests). `clickRange(minute, duration)`, `parseNewEventQuery(…, duration)` (sin `start`, 09:00 más la duración), la duración llega de la página a `SlotLayer` por semana y día, y `loadNewEvent` la lee para "+", N, C y el alta completa. `npm test -- slots new-event-query slot-layer calendar-workspace time-grid` 72 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2194 tests.
 
-- [ ] T8 Crear un evento con la tecla C
+- [x] T8 Crear un evento con la tecla C
   Pasos:
   - Primero, tests en rojo en `tests/unit/shortcuts.test.ts`:
     - C sin modificadores da `new`;
@@ -110,6 +110,7 @@
   - Después, el cambio en `SHORTCUTS`.
 
   Hecho cuando: `npm test -- shortcuts shortcuts-help` en verde. Cubre: RF-49, RF-50 | Módulo: shortcut-c
+  Evidencia (2026-11-02): rojo antes de implementar (2 tests). La fila de N pasa a "N o C" con `press: ["n", "c"]`, y "Nuevo evento" y "+" anuncian `aria-keyshortcuts="N C"`. `npm test -- shortcuts` 35 en verde. typecheck, format y build correctos, lint con los 2 avisos previos, `npm test` 2197 tests.
 
 ### Iteración 2
 

@@ -24,7 +24,13 @@ export const SHORTCUTS: readonly {
   press?: readonly string[];
   shortcut?: Shortcut;
 }[] = [
-  { keys: "N", description: "Nuevo evento", press: ["n"], shortcut: "new" },
+  // C as in Google Calendar (spec 019 RF-49, RF-50).
+  {
+    keys: "N o C",
+    description: "Nuevo evento",
+    press: ["n", "c"],
+    shortcut: "new",
+  },
   { keys: "T", description: "Ir a hoy", press: ["t"], shortcut: "today" },
   {
     keys: "←",

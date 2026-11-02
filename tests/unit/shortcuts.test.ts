@@ -105,3 +105,27 @@ describe("SHORTCUTS", () => {
     expect(shortcutFor(press("Delete"), true)).toBeNull();
   });
 });
+
+// Spec 019, T8: C creates as in Google (RF-49, RF-50).
+describe("C", () => {
+  it("does what N does", () => {
+    expect(shortcutFor(press("c"), true)).toBe("new");
+    expect(shortcutFor(press("C"), true)).toBe("new");
+  });
+
+  it("not with Ctrl, while typing, with a window open or without permission", () => {
+    expect(shortcutFor(press("c", { ctrlKey: true }), true)).toBeNull();
+    expect(shortcutFor(press("c", { metaKey: true }), true)).toBeNull();
+    expect(
+      shortcutFor(press("c", { target: element("<input />") }), true),
+    ).toBeNull();
+    expect(shortcutFor(press("c", { dialogOpen: true }), true)).toBeNull();
+    expect(shortcutFor(press("c"), false)).toBeNull();
+  });
+
+  it("shares its row of the help with N", () => {
+    const rows = SHORTCUTS.filter((shortcut) => shortcut.shortcut === "new");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.keys).toBe("N o C");
+  });
+});
