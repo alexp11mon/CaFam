@@ -91,15 +91,19 @@ export interface ModelComment {
   date: string;
   time: string;
   text: string;
+  /** The asker wrote it; the prompt has no name of the user (RF-34). */
+  byUser?: true;
 }
 
 /** RF-35: the author as CaFam shows it, never an email; the text cut for the quota (D15). */
 export function toModelComment(
   comment: { author: string; createdAt: string; body: string },
   timeZone: string,
+  byUser = false,
 ): ModelComment {
   const chars = [...comment.body];
   return {
+    ...(byUser ? { byUser: true as const } : {}),
     author: comment.author,
     date: zonedDateKey(comment.createdAt, timeZone),
     time: formatTime(comment.createdAt, timeZone),

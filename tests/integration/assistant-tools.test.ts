@@ -669,6 +669,8 @@ describe("comments (T14, RF-34 to RF-37)", () => {
           date: "2026-11-01",
           time: "11:00",
           text: "No voy a poder ir, tengo médico",
+          // The asker wrote it (RF-34).
+          byUser: true,
         },
       }),
     ]);

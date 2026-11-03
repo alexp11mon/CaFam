@@ -80,6 +80,8 @@ describe("/privacy with the assistant (RF-32)", () => {
       /lo responde Groq/,
       /tu pregunta, la conversación y los datos de los eventos necesarios/,
       /Nunca recibe tu email, tus contraseñas ni identificadores/,
+      // T15, RF-32: the comments of those events and who wrote them.
+      /los comentarios de esos eventos, con el nombre de quien los escribió/,
       /no los usa para entrenar/,
       /retención cero/,
       /CaFam no guarda la conversación/,

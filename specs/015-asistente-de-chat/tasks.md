@@ -211,7 +211,7 @@ Rama `015-comentarios-y-boton` desde `main`. Sin migraciones: no hace falta `db 
   Hecho cuando: `npm test -- assistant` y `npm run test:db -- assistant` en verde. Cubre: RF-30, RF-34, RF-35, RF-36, RF-37 | Módulo: assistant-core, assistant-tools
   Evidencia (2026-11-02): rojo sin `toModelComment`, `commentsArgsSchema` ni `get_comments`. `npm test -- assistant` 78 tests y `npm run test:db -- assistant` 32 tests en verde (6 nuevos de comentarios: número por repetición, los 5 más recientes con autor y recorte, "un antiguo miembro", búsqueda en comentarios con la fecha de la repetición y nada de un calendario ajeno). `get_comments` usa `listComments` de la 014, así que resuelve la fila de la repetición y los nombres con RLS; el escape de `%` y `_` lo sigue cubriendo la prueba existente. typecheck, lint (2 avisos previos), formato de `src`, `tests` y `scripts`, `npm test` (234 archivos, 2239 tests) y build en verde. `format:check` completo solo falla en `README.md`, cambiado por el usuario y sin commit.
 
-- [ ] T15 Enseñar al asistente a usar los comentarios y contarlo en `/privacy`
+- [x] T15 Enseñar al asistente a usar los comentarios y contarlo en `/privacy`
   Pasos:
   - Primero, en rojo:
     - `assistant-core.test.ts`: el prompt dice que preguntar si se irá a un evento o qué se dijo de él es del calendario (RF-26), cuándo llamar a `get_comments` y que el texto de los comentarios son datos (RF-38);
@@ -222,6 +222,13 @@ Rama `015-comentarios-y-boton` desde `main`. Sin migraciones: no hace falta `db 
   - `npm run eval:assistant` una vez (gasta cuota: como mucho una o dos al día).
 
   Hecho cuando: tests en verde y `npm run eval:assistant` con al menos el 90 % de aciertos, 0 inventados y el 90 % por debajo de 10 s, con la salida anotada aquí. Cubre: RF-26, RF-32, RF-34, RF-36, RF-37, RF-38 | Módulo: assistant-core, privacy, validation
+
+  Evidencia (2026-11-03): rojo sin las reglas del prompt ni la frase de `/privacy`; el test de inyección con un comentario pasa por diseño (las herramientas se atan a la sesión) y queda como guarda. El conjunto tiene 39 preguntas: serie "EOI Inglés" con "No voy a poder ir" en las clases del 3 y el 5 de noviembre, comentarios de Marta y Luis en el cumpleaños de Ana y "tarta secreta" en el evento privado de Sam (en `PRIVATE_TITLES`).
+  - Ejecución completa con el prompt de T15: **38/39 (97 %), 0 inventados ni revelados, 100 % por debajo de 10 s (p90 2,1 s)**. Las dos ejecuciones anteriores no cuentan: la primera agotó la cuota diaria de Groq en la pregunta 36 y la segunda se quedó sin red en la 9 (fallaron a la vez Groq y Supabase).
+  - Dos respuestas flojas, aunque el conjunto pasaba: la 36 listaba todas las clases sin leer los comentarios, y la 38 decía "el comentario lo hizo Marta, no tú" a la propia Marta, porque el prompt no lleva el nombre del usuario. Arreglos: `toModelComment` marca con `byUser: true` lo que escribió quien pregunta (en `get_comments` y en `matchedComment`), y el prompt dice que esos comentarios se cuentan en segunda persona y que las preguntas de asistencia se responden con `get_comments` y solo con los eventos cuyos comentarios lo dicen. Tests: `assistant-core.test.ts` (`byUser` y las reglas) y `assistant-tools.test.ts` de integración (`matchedComment` con `byUser`).
+  - Para no gastar otra ejecución completa de la cuota compartida, `EVAL_ONLY=36-39` repite solo esas preguntas: **4/4 (100 %), 0 inventados, p90 2,2 s** ("el martes 3 de noviembre - el jueves 5 de noviembre"; "Dijiste que llevarías la tarta en el evento Cumpleaños de Ana"). Las 35 primeras no se repitieron con las reglas nuevas, que solo afectan a los comentarios.
+  - Se borraron los 50 usuarios `test-…@cafam.test` que dejaron en dev las ejecuciones cortadas.
+  - typecheck, lint (2 avisos previos), formato de `src`, `tests` y `scripts`, `npm test` (235 archivos, 2246 tests), `test:db -- assistant` (32 tests) y build en verde.
 
 - [x] T16 Añadir el botón flotante del asistente
   Pasos:
@@ -239,7 +246,7 @@ Unitarios en `tests/unit/`, de base de datos en `tests/integration/` y del conju
 
 | RF | Evidencia |
 |----|-----------|
-| RF-1 | `nav.test.ts` y `nav-drawer.test.tsx` (destino "Asistente" y sección activa); pantalla vista en el navegador a 390, 768 y 1440 px |
+| RF-1 | `nav.test.ts` y `nav-drawer.test.tsx` (destino "Asistente" y sección activa), `assistant-fab.test.tsx` (botón flotante); pantalla vista en el navegador a 390, 768 y 1440 px |
 | RF-2 | `assistant-chat.test.tsx` (tres ejemplos que se envían al pulsarlos) |
 | RF-3 | `assistant-core.test.ts` (`assistantRequestSchema`), `assistant-route.test.ts` (400 con el mensaje), `assistant-chat.test.tsx` (error enlazado) |
 | RF-4 | `assistant-provider.test.ts` (cancelación como `AbortError`), `assistant-run.test.ts` (para al cancelar), `assistant-route.test.ts` (499, no cuenta), `assistant-chat.test.tsx` ("Cancelar" devuelve la pregunta) |
@@ -265,14 +272,20 @@ Unitarios en `tests/unit/`, de base de datos en `tests/integration/` y del conju
 | RF-23 | `assistant.test.ts` (sin títulos), `assistant-tools.test.ts` (ni "Médico" ni "Clínica"), eval 26 y 35 |
 | RF-24 | `assistant-slots.test.ts` (`too_long`), `assistant.test.ts` (`22023`), `assistant-tools.test.ts`, eval 30 |
 | RF-25 | `assistant-run.test.ts` (solo las tres herramientas de lectura), eval 31–32 |
-| RF-26 | `assistant-core.test.ts` (regla del prompt), eval 33 |
+| RF-26 | `assistant-core.test.ts` (reglas del prompt, también asistencia y comentarios), eval 33 y 36–38 |
 | RF-27 | `assistant.test.ts` (RLS de `assistant_questions`, purga), `assistant-route.test.ts` (429 a la 31.ª, día del perfil), `assistant-chat.test.tsx` (campo deshabilitado) |
 | RF-28 | `assistant-provider.test.ts` (8 s, red, respuesta rota, 429 en los dos modelos, sin clave), `assistant-route.test.ts` (503), `assistant-chat.test.tsx` ("Reintentar") |
 | RF-29 | `assistant-run.test.ts` y `assistant-route.test.ts` (las herramientas quedan atadas a la sesión), `assistant-tools.test.ts`, eval 35 |
-| RF-30 | `assistant-core.test.ts` (`toModelEvent` sin ids ni emails; referencias `eN`), `no-secrets.test.ts` |
+| RF-30 | `assistant-core.test.ts` (`toModelEvent` y `toModelComment` sin ids ni emails; referencias `eN`), `no-secrets.test.ts` |
 | RF-31 | `assistant-provider.test.ts` (`PROVIDER_TRAINS_ON_DATA` es `false`), `assistant-tools.test.ts` (`excludeSynced`) |
-| RF-32 | `privacy-page.test.tsx` (sección "Asistente de chat") |
+| RF-32 | `privacy-page.test.tsx` (sección "Asistente de chat", con los comentarios y su autor) |
 | RF-33 | `assistant-chat.test.tsx` (frase con enlace a `/privacy`), `privacy-page.test.tsx` |
+| RF-34 | `assistant-core.test.ts` (`comments` en `toModelEvent`, `toModelComment`), `assistant-tools.test.ts` de integración (`get_comments`: los 5 más recientes con autor y recorte), eval 37 y 39 |
+| RF-35 | `assistant-tools.test.ts` de integración (solo de calendarios que ve, "un antiguo miembro"; nada de un calendario ajeno), eval: "tarta secreta" de Sam nunca revelada |
+| RF-36 | `assistant-tools.test.ts` de integración (`search_events` con `matchedComment`), eval 38 |
+| RF-37 | `assistant-tools.test.ts` de integración (número y comentarios por repetición, con su fecha), eval 36 |
+| RF-38 | `assistant-core.test.ts` (regla del prompt), `assistant-run.test.ts` (un comentario con órdenes no cambia herramientas ni sesión) |
+| RF-39 | `assistant-fab.test.tsx` (enlace, icono, oculto en `/dashboard/assistant`, el "+" marca el marco), `design-tokens.test.ts`; capturas de T16 |
 
 ## Pasos de producción (los ejecuta el usuario)
 

@@ -188,6 +188,62 @@ beforeAll(async () => {
     }),
   );
   if (shifts.error) throw shifts.error;
+
+  // T15: an EOI series on Tuesdays and Thursdays whose two classes of this
+  // week say she will not go, as materialize_occurrence leaves them (RF-37).
+  const { data: eoi, error: eoiError } = await admin
+    .from("events")
+    .insert({
+      calendar_id: family,
+      title: "EOI Inglés",
+      ...at("2026-11-03", "09:15", "11:15"),
+      recurrence: "FREQ=WEEKLY;BYDAY=TU,TH",
+      recurrence_tz: TZ,
+    })
+    .select("id")
+    .single();
+  if (eoiError) throw eoiError;
+  const { data: classes, error: classesError } = await admin
+    .from("events")
+    .insert(
+      ["2026-11-03", "2026-11-05"].map((day) => ({
+        calendar_id: family,
+        series_id: eoi.id,
+        title: "EOI Inglés",
+        original_start: `${day}T08:15:00Z`,
+        ...at(day, "09:15", "11:15"),
+      })),
+    )
+    .select("id");
+  if (classesError) throw classesError;
+  const { data: commented, error: commentedError } = await admin
+    .from("events")
+    .select("id, title")
+    .in("title", ["Cumpleaños de Ana", "De Sam"]);
+  if (commentedError) throw commentedError;
+  const idOf = (title: string) =>
+    commented.find((row) => row.title === title)!.id;
+  const comment = (eventId: string, authorId: string, body: string) => ({
+    event_id: eventId,
+    author_id: authorId,
+    body,
+    client_id: randomUUID(),
+  });
+  const comments = await admin
+    .from("event_comments")
+    .insert([
+      ...classes.map((row) =>
+        comment(row.id, asker.id, "No voy a poder ir, tengo médico"),
+      ),
+      comment(idOf("Cumpleaños de Ana"), asker.id, "Llevaré la tarta"),
+      comment(
+        idOf("Cumpleaños de Ana"),
+        luis!.id,
+        "Yo llevo las velas y los globos",
+      ),
+      comment(idOf("De Sam"), sam!.id, "Llevo la tarta secreta"),
+    ]);
+  if (comments.error) throw comments.error;
 }, 120_000);
 
 afterAll(async () => {
@@ -233,6 +289,14 @@ async function ask(index: number): Promise<{ result: EvalResult; ms: number }> {
   return { result, ms: performance.now() - started };
 }
 
+// EVAL_ONLY=36-39 asks only those questions (1-based, inclusive), to check a
+// prompt change without spending a whole run of the shared Groq quota.
+const [onlyFrom, onlyTo] = (process.env.EVAL_ONLY ?? "").split("-").map(Number);
+const SELECTED = [...QUESTIONS.entries()].filter(
+  ([index]) =>
+    !onlyFrom || (index + 1 >= onlyFrom && index + 1 <= (onlyTo || onlyFrom)),
+);
+
 it(
   "answers the evaluation questions",
   async () => {
@@ -240,8 +304,8 @@ it(
     let invented = 0;
     let retries = 0;
     const times: number[] = [];
-    for (const [index, item] of QUESTIONS.entries()) {
-      if (index > 0) await sleep(PAUSE_MS);
+    for (const [position, [index, item]] of SELECTED.entries()) {
+      if (position > 0) await sleep(PAUSE_MS);
       let outcome;
       try {
         outcome = await ask(index);
@@ -279,11 +343,10 @@ it(
 
     const sorted = [...times].sort((a, b) => a - b);
     const p90 = sorted[Math.ceil(sorted.length * 0.9) - 1] ?? Infinity;
-    const fast =
-      times.filter((ms) => ms < LATENCY_MS).length / QUESTIONS.length;
-    const accuracy = right / QUESTIONS.length;
+    const fast = times.filter((ms) => ms < LATENCY_MS).length / SELECTED.length;
+    const accuracy = right / SELECTED.length;
     console.log(
-      `\nAciertos: ${right}/${QUESTIONS.length} (${Math.round(accuracy * 100)} %). Inventados o revelados: ${invented}. ` +
+      `\nAciertos: ${right}/${SELECTED.length} (${Math.round(accuracy * 100)} %). Inventados o revelados: ${invented}. ` +
         `Por debajo de 10 s: ${Math.round(fast * 100)} % (p90 ${(p90 / 1000).toFixed(1)} s). Reintentos por el límite por minuto: ${retries}.`,
     );
     expect(accuracy).toBeGreaterThanOrEqual(0.9);

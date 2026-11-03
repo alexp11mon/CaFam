@@ -291,6 +291,7 @@ async function searchEvents(args: unknown, ctx: ToolContext) {
                 body: comment.body,
               },
               ctx.timeZone,
+              comment.author_id === ctx.userId,
             ),
           }
         : event;
@@ -322,7 +323,13 @@ async function getComments(args: unknown, ctx: ToolContext) {
           total: all.length,
           comments: all
             .slice(-MAX_COMMENTS_PER_EVENT)
-            .map((comment) => toModelComment(comment, ctx.timeZone)),
+            .map((comment) =>
+              toModelComment(
+                comment,
+                ctx.timeZone,
+                comment.authorId === ctx.userId,
+              ),
+            ),
         };
       }),
   );

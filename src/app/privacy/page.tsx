@@ -193,9 +193,10 @@ export default function PrivacyPage() {
           <p>
             Para cada pregunta, Groq recibe tu pregunta, la conversación y los
             datos de los eventos necesarios para responderla (título, fechas,
-            lugar y nombre del calendario) de los calendarios que puedes ver.
-            Nunca recibe tu email, tus contraseñas ni identificadores de CaFam,
-            de Google o de iCloud.
+            lugar y nombre del calendario) de los calendarios que puedes ver y,
+            cuando la pregunta lo necesita, los comentarios de esos eventos, con
+            el nombre de quien los escribió. Nunca recibe tu email, tus
+            contraseñas ni identificadores de CaFam, de Google o de iCloud.
           </p>
           <p>
             Los usa solo para escribir la respuesta: no los usa para entrenar
