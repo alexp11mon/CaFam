@@ -192,6 +192,14 @@
   - Se borraron los usuarios de prueba y `.playwright-cli/`.
   - No se pudo repetir en el navegador abrir un evento citado desde una respuesta real, por la cuota diaria de Groq agotada. Lo cubre `assistant-chat.test.tsx`.
   - `AGENTS.md` y la constitución (proveedor Groq) están actualizados, y los pasos de producción, abajo.
+  - Ampliación (T14–T16, 2026-11-03):
+    - La tabla de evidencias llega a RF-39 (RF-34 a RF-39 nuevos; RF-1, RF-26, RF-30 y RF-32 ampliados).
+    - Verificación: typecheck, lint (2 avisos previos), formato de `src`, `tests` y `scripts`, `npm test` (235 archivos, 2246 tests) y build en verde.
+    - `npm run test:db -- --no-file-parallelism`: 38 de 45 archivos a la primera; 5 chocaron con el límite de Auth de Supabase (por los usuarios del eval de ese día) y 2 fallaron una vez (`event-images`, cola de purga, y `live-changes`, plazo de Realtime), sin relación con el asistente. Repetidos esos 7, 60 tests en verde: los 45 archivos pasan.
+    - Eval: 38/39 completo y 4/4 en las preguntas de comentarios tras los últimos arreglos (detalle en T15).
+    - Capturas del botón a 390, 768 y 1440 px en claro con rojo y oscuro con amarillo (T16).
+    - Sin migraciones: no hay pasos nuevos de producción.
+    - No se probó en el navegador una conversación con comentarios (lo cubren el eval con Groq de verdad y los tests de integración), ni el botón entre 769 y 1023 px con la barra inferior.
 
 ## Iteración 3 — Comentarios y botón (ampliación del 2026-11-02)
 
