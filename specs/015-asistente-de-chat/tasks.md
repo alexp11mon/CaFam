@@ -1,6 +1,6 @@
 # Tasks 015 - Asistente de chat
 
-> Estado: **Aprobadas** por el usuario (2026-11-02).
+> Estado: **Aprobadas** por el usuario (2026-11-02). **Spec cerrada** con su aprobación (2026-11-04).
 > Spec: `specs/015-asistente-de-chat/spec.md` (aprobada el 2026-10-29). Plan: `specs/015-asistente-de-chat/plan.md` (aprobado el 2026-11-02).
 > 13 tareas en dos iteraciones: proveedor y servidor (T1–T8) e interfaz y validación (T9–T13).
 > **Ampliación del 2026-11-02** (comentarios y botón, RF-34 a RF-39; **aprobada por el usuario el 2026-11-02**): T14–T16 en la iteración 3. T13 se cierra después de ellas, con RF-1 a RF-39.
@@ -170,7 +170,7 @@
   Hecho cuando: `npm run eval:assistant` con al menos el 90 % de aciertos, ningún evento inventado y el 90 % de respuestas en menos de 10 s, con la salida anotada aquí. Cubre: RF-7, RF-8, RF-9, RF-12, RF-13, RF-14, RF-16, RF-17b, RF-24, RF-26, RF-29 | Módulo: validation
   Evidencia (2026-11-02): `tests/assistant-eval/questions.ts` (35 preguntas) y `npm run eval:assistant` (proyecto `eval` de Vitest con `--silent=false`; siembra 6 usuarios @cafam.test en dev, pregunta a Groq de verdad con 20 s entre preguntas y borra los usuarios). Primera ejecución: 26/35 (74 %). Fallos y arreglos: el modelo escribía `[ e1 ]` con espacios (la cita no se reconocía y la referencia se veía en el texto: `extractCitations` los acepta), se equivocaba de día de la semana (`weekday` en cada evento y en cada día libre), usaba Markdown y fechas AAAA-MM-DD, tomaba "¿Dónde es el fútbol?" por fuera de tema, contestaba "Solo puedo ayudarte…" a "Crea una cena" (RF-25) y a veces no decía que Ana no ha dado permiso (RF-22: el servidor añade el `notice` de `find_free_time` si el modelo lo omite; regla de usar siempre `find_free_time` para otras personas). Resultado con `openai/gpt-oss-120b`: 35/35 (100 %), 0 inventados ni revelados, 100 % por debajo de 10 s (p90 1,4 s); tras endurecer RF-25, 34/35 (97 %), 0 inventados, p90 1,5–2,0 s. Forzando el modelo de reserva (`EVAL_MODEL=qwen/qwen3.8-27b`) se vio que contestaba "no tienes eventos" en 0,3 s sin consultar nada: ahora la primera ronda exige llamar a una herramienta (`tool_choice: "required"`, RF-12, RF-13). **Pendiente**: repetir `npm run eval:assistant` con ese cambio, porque las 10 ejecuciones de hoy agotaron los 200K tokens diarios de los dos modelos (Groq los repone a unos 140 por minuto).
 
-- [ ] T13 Validar la spec RF por RF (se cierra después de T14–T16)
+- [x] T13 Validar la spec RF por RF (se cierra después de T14–T16)
   Pasos:
   - Tabla de evidencias RF-1 a RF-33 en este archivo, con el test que cubre cada uno; tras la ampliación, también RF-34 a RF-39.
   - Verificación completa y `npm run test:db` entero.
