@@ -26,6 +26,7 @@ export function CommentItem({
   onEdit,
   onDelete,
   onEditingChange,
+  arrived = false,
 }: {
   comment: CommentView;
   tint: string;
@@ -35,6 +36,8 @@ export function CommentItem({
   onDelete: (id: string) => Promise<Outcome>;
   /** The section closes an edit whose comment disappears (RF-21). */
   onEditingChange?: (editing: boolean) => void;
+  /** Brought by the polling or "Ver anteriores": it lands on its own (spec 021 RF-18). */
+  arrived?: boolean;
 }) {
   const [editing, setEditingState] = useState(false);
   const setEditing = (value: boolean) => {
@@ -72,7 +75,7 @@ export function CommentItem({
 
   const full = fullDateTime(comment.createdAt, timeZone);
   return (
-    <li className="flex gap-3">
+    <li className={`flex gap-3 ${arrived ? "row-in" : ""}`}>
       <Avatar name={comment.author} tint={tint} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="flex flex-wrap items-baseline gap-x-2 text-sm">

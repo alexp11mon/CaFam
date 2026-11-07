@@ -66,7 +66,11 @@ export function NavDrawer({
           CaFam
         </h2>
         <div ref={setDrawerSlot} className="empty:hidden" />
-        <ul className="flex flex-col gap-1 border-t border-line pt-3">
+        {/* The destinations land one after another each time it opens (spec 021 RF-16). */}
+        <ul
+          data-entering=""
+          className="stagger flex flex-col gap-1 border-t border-line pt-3"
+        >
           {/* The calendar's own views are in the slot; elsewhere it is a way back. */}
           {NAV_ITEMS.filter(
             (item) => item.section !== "calendar" || current !== "calendar",

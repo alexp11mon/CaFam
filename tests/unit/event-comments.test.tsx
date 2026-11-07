@@ -116,6 +116,20 @@ describe("EventComments", () => {
     expect(screen.queryByRole("button", { name: "Ver anteriores" })).toBeNull();
   });
 
+  it("lands the older ones on their own, not the shown ones (spec 021 RF-18)", async () => {
+    const user = userEvent.setup();
+    h.loadComments
+      .mockResolvedValueOnce(page([comment(3)], true))
+      .mockResolvedValueOnce(page([comment(1)], false));
+    render(<EventComments eventId={EVENT} timeZone="Europe/Madrid" />);
+    const list = await screen.findByRole("list", { name: "Comentarios" });
+    expect(list).toHaveClass("stagger");
+    await user.click(screen.getByRole("button", { name: "Ver anteriores" }));
+    const rows = within(list).getAllByRole("listitem");
+    expect(rows[0]).toHaveClass("row-in");
+    expect(rows[1]).not.toHaveClass("row-in");
+  });
+
   it("adds a new comment at the end and empties the field", async () => {
     const user = userEvent.setup();
     h.loadComments.mockResolvedValue(page([comment(1)]));
@@ -258,6 +272,13 @@ describe("EventComments polling", () => {
     expect(screen.getByText("Comentario 1 cambiado")).toBeInTheDocument();
     expect(screen.queryByText("Comentario 2")).toBeNull();
     expect(screen.getByText("Comentario 3")).toBeInTheDocument();
+    // The new one lands on its own; the one already shown does not (spec 021 RF-18).
+    expect(screen.getByText("Comentario 3").closest("li")).toHaveClass(
+      "row-in",
+    );
+    expect(
+      screen.getByText("Comentario 1 cambiado").closest("li"),
+    ).not.toHaveClass("row-in");
   });
 
   it("announces new comments of others without moving the focus", async () => {

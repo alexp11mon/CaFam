@@ -21,6 +21,7 @@ import { PERSON_TINTS, assignTints } from "@/lib/people/avatar";
 import { CommentForm } from "./comment-form";
 import { CommentItem } from "./comment-item";
 import { CommentsSkeleton } from "./comments-skeleton";
+import { StaggerList } from "@/components/ui/stagger-list";
 
 const cursorOf = (comment: CommentView): CommentCursor => ({
   createdAt: comment.createdAt,
@@ -56,6 +57,8 @@ export function EventComments({
   const writes = useRef(0);
   const [announcement, setAnnouncement] = useState("");
   const [notice, setNotice] = useState<string>();
+  // Comments that arrived after the list was shown (spec 021 RF-18).
+  const [arrived, setArrived] = useState<ReadonlySet<string>>(new Set());
 
   useEffect(() => {
     current.current = comments;
@@ -130,6 +133,13 @@ export function EventComments({
         return;
       }
       const known = new Set(current.current.map((comment) => comment.id));
+      setArrived(
+        new Set(
+          result.page.comments
+            .filter((comment) => !known.has(comment.id))
+            .map((comment) => comment.id),
+        ),
+      );
       const fresh = result.page.comments.filter(
         (comment) => !known.has(comment.id) && !comment.canEdit,
       );
@@ -175,6 +185,7 @@ export function EventComments({
     });
     setLoadingOlder(false);
     if (result.ok) {
+      setArrived(new Set(result.page.comments.map((comment) => comment.id)));
       setComments((current) => [...result.page.comments, ...current]);
       setHasOlder(result.page.hasOlder);
       setError(undefined);
@@ -231,11 +242,15 @@ export function EventComments({
           {comments.length === 0 ? (
             <p className="text-muted">Aún no hay comentarios.</p>
           ) : (
-            <ul aria-labelledby={headingId} className="flex flex-col gap-4">
+            <StaggerList
+              aria-labelledby={headingId}
+              className="flex flex-col gap-4"
+            >
               {comments.map((comment) => (
                 <CommentItem
                   key={comment.id}
                   comment={comment}
+                  arrived={arrived.has(comment.id)}
                   tint={
                     (comment.authorId && tints.get(comment.authorId)) ||
                     PERSON_TINTS[0]
@@ -253,7 +268,7 @@ export function EventComments({
                   }}
                 />
               ))}
-            </ul>
+            </StaggerList>
           )}
           {error && status === "ready" ? <FormAlert message={error} /> : null}
           <FormAlert message={notice} />

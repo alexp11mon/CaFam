@@ -84,7 +84,7 @@
 
   Hecho cuando: `npm test -- event-menu time-field calendar-workspace quick-create side-rail` en verde y una prueba en `playwright-cli` en la que cada desplegable crece desde su disparador y vuelve a él. Cubre: RF-6, RF-7, RF-8, RF-9, RF-10, RF-65 | Módulo: popovers
 
-- [ ] T6 Escalonar las listas y retrasar los detalles secundarios
+- [x] T6 Escalonar las listas y retrasar los detalles secundarios
   Pasos:
   - Primero, en rojo:
     - `calendar-list`, `member-list`, `connection-list`, `calendar-picker`, `event-comments` y `cited-events` llevan `stagger` y `data-entering` al montarse.

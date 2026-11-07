@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CitedEvent } from "@/lib/assistant/tools";
 import { formatEventWhen } from "@/lib/calendar/format";
+import { StaggerList } from "@/components/ui/stagger-list";
 
 /** Events an answer is based on, each one a link to its detail (spec 015 RF-11). */
 export function CitedEvents({
@@ -12,7 +13,11 @@ export function CitedEvents({
 }) {
   if (events.length === 0) return null;
   return (
-    <ul className="mt-3 flex flex-col gap-2" aria-label="Eventos citados">
+    // They land just after the answer, one after another (spec 021 RF-16, RF-19).
+    <StaggerList
+      className="settle mt-3 flex flex-col gap-2"
+      aria-label="Eventos citados"
+    >
       {events.map((event) => (
         <li key={event.id}>
           <Link
@@ -34,6 +39,6 @@ export function CitedEvents({
           </Link>
         </li>
       ))}
-    </ul>
+    </StaggerList>
   );
 }

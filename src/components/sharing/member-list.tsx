@@ -7,6 +7,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { Select } from "@/components/ui/select";
 import type { ConfirmState, FormAction } from "@/lib/forms/form-state";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
+import { StaggerList } from "@/components/ui/stagger-list";
 
 export interface MemberItem {
   userId: string;
@@ -79,7 +80,7 @@ export function MemberList({
 
   return (
     <div className="flex flex-col gap-6">
-      <ul className="flex flex-col gap-3">
+      <StaggerList className="flex flex-col gap-3">
         {members.map((member) => (
           <li
             key={member.userId}
@@ -110,7 +111,7 @@ export function MemberList({
             ) : null}
           </li>
         ))}
-      </ul>
+      </StaggerList>
       {isOwner ? null : (
         <div>
           <ConfirmDialog

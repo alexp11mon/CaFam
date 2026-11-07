@@ -309,7 +309,8 @@ export function QuickCreate({
             </Select>
           </div>
         </div>
-        <div className="flex flex-wrap justify-end gap-3">
+        {/* The actions land just after the form (spec 021 RF-19). */}
+        <div className="settle flex flex-wrap justify-end gap-3">
           <Button variant="secondary" onClick={moreOptions}>
             Más opciones
           </Button>

@@ -247,7 +247,8 @@ export function EventCard({
           {readOnlyEventText(data.readOnly, data.provider ?? "google")}
         </p>
       ) : null}
-      <div className="flex flex-wrap gap-2">
+      {/* The actions land just after the card (spec 021 RF-19). */}
+      <div className="settle flex flex-wrap gap-2">
         {editable ? (
           <>
             <Link

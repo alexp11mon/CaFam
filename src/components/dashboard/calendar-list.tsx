@@ -7,6 +7,7 @@ import type { ConfirmState } from "@/lib/forms/form-state";
 import { providerName } from "@/lib/sync/provider-labels";
 import type { SyncedInfo } from "@/lib/sync/read-only";
 import type { Database } from "@/types/database";
+import { StaggerList } from "@/components/ui/stagger-list";
 
 type CalendarRole = Database["public"]["Enums"]["calendar_role"];
 
@@ -63,7 +64,7 @@ export function CalendarList({
   }
 
   return (
-    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <StaggerList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {calendars.map((calendar) => (
         <li
           key={calendar.id}
@@ -168,6 +169,6 @@ export function CalendarList({
           </div>
         </li>
       ))}
-    </ul>
+    </StaggerList>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEnterOnce } from "@/lib/hooks/use-enter-once";
 import { useActionState, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
@@ -55,10 +56,16 @@ export function CalendarPicker({
       return next;
     });
 
+  // The calendars land one after another (spec 021 RF-16).
+  const entering = useEnterOnce();
+
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="connectionId" value={connectionId} />
-      <fieldset className="flex flex-col gap-1">
+      <fieldset
+        data-entering={entering || undefined}
+        className="stagger flex flex-col gap-1"
+      >
         <legend className="mb-2 font-semibold text-ink">
           Calendarios que quieres traer
         </legend>

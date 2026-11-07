@@ -70,7 +70,8 @@ export function MoreSheet({
             Cerrar
           </button>
         </div>
-        <ul className="flex flex-col gap-1">
+        {/* The destinations land one after another each time it opens (spec 021 RF-16). */}
+        <ul data-entering="" className="stagger flex flex-col gap-1">
           {NAV_ITEMS.filter((item) =>
             SHEET_SECTIONS.includes(item.section),
           ).map((item) => {

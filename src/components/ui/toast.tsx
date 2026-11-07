@@ -93,7 +93,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 type="button"
                 disabled={undoing}
                 onClick={() => runUndo(toast.undo!)}
-                className="press pointer-events-auto min-h-11 rounded-full px-4 font-semibold text-accent-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
+                className="press settle pointer-events-auto min-h-11 rounded-full px-4 font-semibold text-accent-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
               >
                 Deshacer
               </button>

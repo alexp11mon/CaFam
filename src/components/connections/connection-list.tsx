@@ -4,6 +4,7 @@ import { LinkButton } from "@/components/ui/link-button";
 import { CONNECT_ERRORS, isConnectError } from "@/lib/sync/error-messages";
 import { providerName } from "@/lib/sync/provider-labels";
 import type { Connection } from "@/lib/sync/queries";
+import { StaggerList } from "@/components/ui/stagger-list";
 
 const LINK =
   "inline-flex min-h-11 items-center text-sm font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink";
@@ -39,7 +40,7 @@ export function ConnectionList({
           Aún no has conectado ninguna cuenta.
         </p>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <StaggerList className="grid gap-3 sm:grid-cols-2">
           {connections.map((connection) => (
             <li
               key={connection.id}
@@ -69,7 +70,7 @@ export function ConnectionList({
               </Link>
             </li>
           ))}
-        </ul>
+        </StaggerList>
       )}
 
       <p className="text-muted">
