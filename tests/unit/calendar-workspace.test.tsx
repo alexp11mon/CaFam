@@ -364,24 +364,58 @@ describe("CalendarWorkspace on a phone", () => {
     expect(screen.queryByRole("link", { name: "Nuevo evento" })).toBeNull();
   });
 
-  it("goes to the next month when a finger slides left", () => {
-    setup();
-    const area = document.querySelector<HTMLElement>(".touch-pan-y")!;
+  // Spec 021, T16: the view follows the finger and the release decides
+  // (RF-26..RF-29); jsdom has no animations, so it navigates at once.
+  function slide(area: Element, from: number, to: number) {
     act(() => {
       fireEvent.pointerDown(area, {
         pointerType: "touch",
-        clientX: 300,
+        pointerId: 1,
+        clientX: from,
         clientY: 100,
       });
       fireEvent.pointerUp(area, {
         pointerType: "touch",
-        clientX: 100,
-        clientY: 110,
+        pointerId: 1,
+        clientX: to,
+        clientY: 104,
       });
     });
+  }
+
+  it("goes to the next month when a finger slides left", () => {
+    push.mockClear();
+    setup();
+    const area = document.querySelector<HTMLElement>(".touch-pan-y")!;
+    slide(area, 300, 100);
     expect(push).toHaveBeenCalledWith(
       "/dashboard/calendar?view=month&date=2026-12-01",
       expect.anything(),
     );
+  });
+
+  it("goes to the previous month when it slides right", () => {
+    push.mockClear();
+    setup();
+    slide(document.querySelector(".touch-pan-y")!, 100, 300);
+    expect(push).toHaveBeenCalledWith(
+      "/dashboard/calendar?view=month&date=2026-10-01",
+      expect.anything(),
+    );
+  });
+
+  it("stays, back in place, under the 50 px threshold (RF-29)", () => {
+    push.mockClear();
+    setup();
+    const area = document.querySelector<HTMLElement>(".touch-pan-y")!;
+    slide(area, 300, 270);
+    expect(push).not.toHaveBeenCalled();
+    expect(area.style.translate).toBe("");
+  });
+
+  it("the agenda does not slide sideways", () => {
+    push.mockClear();
+    setup(true, undefined, { view: "agenda" });
+    expect(document.querySelector(".touch-pan-y")).toBeNull();
   });
 });

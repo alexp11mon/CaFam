@@ -231,7 +231,7 @@
   - `morphIn` ya no deja el último fotograma en línea (`fill: "none"`); `morphOut` sí, hasta desmontar, y la limpieza del efecto de `EventModal` lo quita para la siguiente apertura.
   - Prueba en el navegador del panel en lugar de `playwright-cli`: a 1440 px, tarjeta → "Editar" → ventana que crece desde la caja de la tarjeta (`176.8px 420.77px`, `inset(0px 330px 589px 0px)`) y, con Escape, encoge hasta el bloque (113,6 × 48) y vuelve al calendario; a 390 px, bloque → hoja a media altura desde el bloque → "Cerrar" encoge hasta él; al volver a abrir el mismo evento la instancia reutilizada no conserva estilos en línea.
 
-- [ ] T16 Hacer que la vista del calendario siga al dedo
+- [x] T16 Hacer que la vista del calendario siga al dedo
   Pasos:
   - Primero, en rojo:
     - `use-follow-drag.test.tsx` con punteros táctiles simulados:
@@ -251,6 +251,12 @@
   - Antes de cerrar, prueba en el iPhone de que el pellizco y el desplazamiento siguen bien (plan R2).
 
   Hecho cuando: `npm test -- use-follow-drag calendar-workspace swipe` en verde y una prueba táctil en `playwright-cli` a 390 px en la que la vista se mueve bajo el dedo y cambia de periodo o vuelve según el umbral. Cubre: RF-23, RF-24, RF-25, RF-26, RF-27, RF-28, RF-29 | Módulo: follow-gesture
+
+  Notas al cerrarla (2026-11-07):
+  - `useFollowDrag(ref, {...})` recibe la referencia en vez de devolverla (la regla `react-hooks/refs` no deja leer un objeto con una referencia durante el render). La velocidad sale solo de los movimientos: pulsar y soltar sin moverse no es un gesto rápido. Un `dialog[open]` ajeno lo desactiva; el suyo propio (el cajón) no.
+  - `use-swipe.ts` y su test se borran: el workspace era su único uso. `lib/calendar/swipe.ts` sigue (lo usa el cajón hasta T17).
+  - Prueba en el navegador del panel a 390 px con punteros táctiles sintéticos (en lugar de `playwright-cli`): 25 px a la izquierda escribe `translate: -25px` bajo el dedo y al soltar anima `-25px → 0px` sin cambiar de semana; 150 px anima `-150px → -358px` (el ancho de la vista) y lleva a la semana siguiente. Con el panel oculto el navegador pausa `requestAnimationFrame` y las animaciones, así que la navegación llega al volver a mostrarse.
+  - Pendiente para el usuario: la prueba en el iPhone del pellizco y el desplazamiento (plan R2); queda anotada en T19.
 
 - [ ] T17 Hacer que el cajón y el visor de imágenes sigan al dedo con goma
   Pasos:

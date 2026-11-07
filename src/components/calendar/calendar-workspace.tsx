@@ -27,7 +27,8 @@ import type { Box } from "@/lib/calendar/popover";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { useCalendarShortcuts } from "@/lib/hooks/use-calendar-shortcuts";
 import { useIsPhone } from "@/lib/hooks/use-is-phone";
-import { useSwipe } from "@/lib/hooks/use-swipe";
+import { useFollowDrag } from "@/lib/hooks/use-follow-drag";
+import { releaseDecision } from "@/lib/motion/release";
 import { useLiveCalendar } from "@/lib/hooks/use-live-calendar";
 import { useRefreshOnFocus } from "@/lib/hooks/use-refresh-on-focus";
 import {
@@ -68,7 +69,14 @@ import { MiniMonth } from "./mini-month";
 import { boxOf } from "@/lib/calendar/popover";
 import { usePresence } from "@/lib/hooks/use-presence";
 import { originFrom } from "@/lib/motion/origin";
-import { POP_OUT_MS } from "@/lib/motion/play";
+import {
+  EASE_IN_OUT,
+  EASE_OUT,
+  motionMs,
+  motionToken,
+  play,
+  POP_OUT_MS,
+} from "@/lib/motion/play";
 
 /** --motion-base-out: the header picker rolls back up this long. */
 const HEADER_OUT_MS = 176;
@@ -359,15 +367,50 @@ export function CalendarWorkspace({
   });
   const { dragging } = interactive.api;
 
-  // Sliding a finger changes the period of the month, the week and the day
-  // (RF-25..RF-29), never during a drag (spec 017 RF-21).
-  const swipe = useSwipe({
+  // The month, the week and the day follow a sideways finger; released past
+  // 50 px or with speed they leave by that side for the next or previous
+  // period, else they go back (spec 021 RF-23..RF-29; spec 016 RF-25..RF-29).
+  // Never during a drag (spec 017 RF-21).
+  const swipeArea = useRef<HTMLDivElement>(null);
+  const swipe = useFollowDrag(swipeArea, {
     enabled: view !== "agenda" && draft === null && !dragging,
-    onSwipe: (direction) => {
-      const delta = direction === "next" ? 1 : -1;
-      router.push(calendarHref(view, navigate(view, date, delta)), {
-        transitionTypes: typesOf(periodType(delta)),
+    onRelease: (offset, velocity, area) => {
+      const decision = releaseDecision({
+        delta: offset,
+        velocity,
+        threshold: 50,
       });
+      if (decision === "stay") {
+        play(
+          area,
+          [{ translate: `${offset}px 0px` }, { translate: "0px 0px" }],
+          {
+            duration: motionMs("--motion-base-out", 176),
+            easing: motionToken("--ease-in-out", EASE_IN_OUT),
+          },
+        );
+        return;
+      }
+      const delta = decision === "forward" ? 1 : -1;
+      const go = () =>
+        router.push(calendarHref(view, navigate(view, date, delta)), {
+          transitionTypes: typesOf(periodType(delta)),
+        });
+      // Out by its side; the period transition brings the new one in.
+      const out = play(
+        area,
+        [
+          { translate: `${offset}px 0px` },
+          { translate: `${-delta * area.offsetWidth}px 0px` },
+        ],
+        {
+          duration: motionMs("--motion-fast-out", 120),
+          easing: motionToken("--ease-out", EASE_OUT),
+          fill: "forwards",
+        },
+      );
+      if (out) void out.finished.then(go, go);
+      else go();
     },
   });
   const filtersInDrawer = isPhone && onCalendarPage ? drawerSlot : null;
@@ -716,6 +759,7 @@ export function CalendarWorkspace({
           default="none"
         >
           <div
+            ref={swipeArea}
             className={`min-w-0 flex-1 ${view === "agenda" ? "" : "touch-pan-y"}`}
             {...swipe}
           >
