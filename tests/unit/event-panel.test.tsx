@@ -12,6 +12,18 @@ import { isLiveHeld } from "@/lib/calendar/live-hold";
 
 // Spec 008, T6: the event detail with Editar, Duplicar and Borrar (RF-2, RF-3, RF-35, RF-36).
 const router = vi.hoisted(() => ({ back: vi.fn(), refresh: vi.fn() }));
+// Spec 021: detail ↔ form goes through a transition, to cross-fade (RF-52).
+const transitions = vi.hoisted(() => ({ count: 0 }));
+vi.mock("react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react")>();
+  return {
+    ...actual,
+    startTransition: (run: () => void) => {
+      transitions.count += 1;
+      actual.startTransition(run);
+    },
+  };
+});
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 // Spec 014: the comments section loads through its actions.
 const comments = vi.hoisted(() => ({
@@ -133,6 +145,16 @@ describe("EventPanel", () => {
       screen.getByRole("button", { name: "Volver al detalle" }),
     );
     expect(screen.queryByLabelText("Título")).toBeNull();
+  });
+
+  it("switches to the form inside a transition (spec 021 RF-52)", async () => {
+    setup();
+    const before = transitions.count;
+    await userEvent.click(screen.getByRole("button", { name: "Editar" }));
+    expect(transitions.count).toBe(before + 1);
+    expect(
+      await screen.findByRole("button", { name: "Volver al detalle" }),
+    ).toBeVisible();
   });
 
   it("opens in the form from the card's Editar (spec 019 RF-9)", () => {

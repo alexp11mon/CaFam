@@ -289,7 +289,8 @@ export function CaretIcon({ open }: { open: boolean }) {
       fill="currentColor"
       aria-hidden="true"
       focusable="false"
-      className={open ? "rotate-180" : undefined}
+      // It turns over instead of jumping (spec 021 RF-2).
+      className={`transition-[rotate] duration-(--motion-base-in) ease-(--ease-in-out) ${open ? "rotate-180" : ""}`}
     >
       <path d="M7 10l5 5 5-5z" />
     </svg>

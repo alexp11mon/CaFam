@@ -118,7 +118,7 @@
 
   Hecho cuando: `npm test` completo en verde y el `grep` anterior sin resultados en botones. Cubre: RF-52, RF-53, RF-68 | Módulo: swap-label, state-overlap
 
-- [ ] T9 Solapar iconos, el título de la cabecera, los avisos y el paso a edición
+- [x] T9 Solapar iconos, el título de la cabecera, los avisos y el paso a edición
   Pasos:
   - Primero, en rojo:
     - `icon-swap.test.tsx`: los dos iconos apilados y solo el visible para lectores de pantalla.

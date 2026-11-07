@@ -27,6 +27,19 @@ type Show = (text: string, options?: ToastOptions) => void;
 const ToastContext = createContext<{ show: Show }>({ show: () => {} });
 
 /** Shows a short notice from anywhere inside the app frame (spec 008 RF-32, plan D8). */
+type Toast = {
+  id: number;
+  text: string;
+  undo?: ToastOptions["undo"];
+  leaving?: boolean;
+};
+
+let lastId = 0;
+
+// Both notices share one cell, so the new one enters over the old one.
+const NOTICE =
+  "flex items-center gap-3 rounded-full text-sm font-semibold text-ink [grid-area:1/1]";
+
 export function useToast() {
   return useContext(ToastContext);
 }
@@ -34,20 +47,37 @@ export function useToast() {
 export function ToastProvider({ children }: { children: ReactNode }) {
   // A new id restarts the countdown even when the text repeats. A new notice
   // replaces the last one and its "Deshacer": only the last action (RF-30).
-  const [toast, setToast] = useState<{
-    id: number;
-    text: string;
-    undo?: ToastOptions["undo"];
-    leaving?: boolean;
-  } | null>(null);
-  const [undoing, setUndoing] = useState(false);
-  const show = useCallback<Show>(
-    (text, options) => setToast({ id: Date.now(), text, undo: options?.undo }),
+  // `previous` is the notice a new one replaced, fading out under it while
+  // the new one enters (spec 021 RF-52).
+  const [{ toast, previous }, setNotices] = useState<{
+    toast: Toast | null;
+    previous: Toast | null;
+  }>({ toast: null, previous: null });
+  const setToast = useCallback(
+    (update: (current: Toast | null) => Toast | null) =>
+      setNotices((notices) => ({ ...notices, toast: update(notices.toast) })),
     [],
   );
+  const [undoing, setUndoing] = useState(false);
+  const show = useCallback<Show>((text, options) => {
+    const id = ++lastId;
+    setNotices(({ toast: current }) => ({
+      previous: current && { ...current, leaving: true },
+      toast: { id, text, undo: options?.undo },
+    }));
+  }, []);
   const id = toast?.id;
   const duration = toast?.undo ? UNDO_MS : DURATION_MS;
   const value = useMemo(() => ({ show }), [show]);
+
+  useEffect(() => {
+    if (!previous) return;
+    const timer = setTimeout(
+      () => setNotices((notices) => ({ ...notices, previous: null })),
+      LEAVING_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [previous]);
 
   useEffect(() => {
     if (id === undefined) return;
@@ -55,12 +85,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       () => setToast((current) => current && { ...current, leaving: true }),
       duration - LEAVING_MS,
     );
-    const remove = setTimeout(() => setToast(null), duration);
+    const remove = setTimeout(() => setToast(() => null), duration);
     return () => {
       clearTimeout(leave);
       clearTimeout(remove);
     };
-  }, [id, duration]);
+  }, [id, duration, setToast]);
 
   async function runUndo(undo: NonNullable<ToastOptions["undo"]>) {
     setUndoing(true);
@@ -78,14 +108,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-4 bottom-28 z-50 flex justify-center max-tab:group-data-[has-fab]/frame:bottom-40 tab:bottom-40 lg:bottom-6"
+        className="pointer-events-none fixed inset-x-4 bottom-28 z-50 grid justify-items-center max-tab:group-data-[has-fab]/frame:bottom-40 tab:bottom-40 lg:bottom-6"
       >
+        {previous ? (
+          <p
+            key={previous.id}
+            data-toast=""
+            data-leaving=""
+            aria-hidden="true"
+            inert
+            className={`${NOTICE} glass-float ${previous.undo ? "py-1 pr-1 pl-5" : "px-5 py-3"}`}
+          >
+            {previous.text}
+          </p>
+        ) : null}
         {toast ? (
           <p
             key={toast.id}
             data-toast=""
             data-leaving={toast.leaving ? "" : undefined}
-            className={`flex items-center gap-3 rounded-full glass-float text-sm font-semibold text-ink ${toast.undo ? "py-1 pr-1 pl-5" : "px-5 py-3"}`}
+            className={`${NOTICE} glass-float ${toast.undo ? "py-1 pr-1 pl-5" : "px-5 py-3"}`}
           >
             {toast.text}
             {toast.undo ? (

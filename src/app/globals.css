@@ -382,6 +382,21 @@ body {
     scale: var(--swap-scale);
     filter: blur(var(--swap-blur));
   }
+  /* A text that changed: the new one fades in, the old one out (RF-52). */
+  & > [data-fresh] {
+    @starting-style {
+      opacity: 0;
+    }
+  }
+  & > [data-leaving] {
+    animation: fade-out var(--motion-base-out) var(--ease-out) both;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
 }
 
 /* A panel that unrolls from its top edge (spec 021 RF-38). */

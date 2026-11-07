@@ -65,6 +65,8 @@ describe("TopBar", () => {
 
     const title = await screen.findByRole("button", { name: "octubre" });
     expect(title).toHaveAttribute("aria-expanded", "false");
+    // The month cross-fades when it changes (spec 021 RF-52).
+    expect(screen.getByText("octubre").parentElement).toHaveClass("swap");
     await userEvent.click(title);
     expect(title).toHaveAttribute("aria-expanded", "true");
 

@@ -68,6 +68,39 @@ describe("toast", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Evento borrado");
   });
 
+  it("fades the old notice out while the new one comes in (spec 021 RF-52)", () => {
+    function Two() {
+      const { show } = useToast();
+      return (
+        <>
+          <button type="button" onClick={() => show("Evento creado")}>
+            Uno
+          </button>
+          <button type="button" onClick={() => show("Evento borrado")}>
+            Dos
+          </button>
+        </>
+      );
+    }
+    render(
+      <ToastProvider>
+        <Two />
+      </ToastProvider>,
+    );
+
+    act(() => screen.getByRole("button", { name: "Uno" }).click());
+    act(() => screen.getByRole("button", { name: "Dos" }).click());
+    const old = screen.getByText("Evento creado");
+    expect(old).toHaveAttribute("data-leaving");
+    expect(old).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByText("Evento borrado")).not.toHaveAttribute(
+      "data-leaving",
+    );
+
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.queryByText("Evento creado")).toBeNull();
+  });
+
   it("does nothing outside a provider", () => {
     render(<Trigger text="Evento creado" />);
 

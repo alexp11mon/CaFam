@@ -58,6 +58,16 @@ describe("ThemeToggle (RF-6)", () => {
     ).toBeInTheDocument();
   });
 
+  it("cross-fades the moon and the sun (spec 021 RF-54)", () => {
+    renderToggle();
+    const button = screen.getByRole("button", {
+      name: "Cambiar a tema oscuro",
+    });
+    const swap = button.querySelector(".swap[data-icons]")!;
+    expect(swap.children).toHaveLength(2);
+    expect(swap.children[1]).toHaveAttribute("data-off");
+  });
+
   it("reads the system theme when nothing was picked", () => {
     systemDark = true;
     renderToggle();

@@ -1,7 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useEffect,
+  useRef,
+  useState,
+  ViewTransition,
+} from "react";
 import { EventComments } from "@/components/comments/event-comments";
 import { EventImages } from "@/components/images/event-images";
 import { ImageUploader } from "@/components/images/image-uploader";
@@ -65,7 +71,10 @@ export function EventPanel({
   series?: { limitReached: boolean } | null;
 }) {
   const modal = useEventModal();
-  const [editing, setEditing] = useState(startEditing);
+  const [editing, setEditingNow] = useState(startEditing);
+  // The detail and the form cross-fade instead of swapping (spec 021 RF-52, D14).
+  const setEditing = (next: boolean) =>
+    startTransition(() => setEditingNow(next));
   useHoldLive(editing);
   const router = useRouter();
   const showUndo = useUndoToast();
@@ -107,77 +116,81 @@ export function EventPanel({
 
   if (editing) {
     return (
-      <div className="flex flex-col gap-4">
-        <Button
-          variant="secondary"
-          onClick={() => setEditing(false)}
-          className="self-start"
-        >
-          Volver al detalle
-        </Button>
-        <EventForm
-          action={updateAction}
-          initial={editInitial}
-          calendars={calendars}
-          categories={categories}
-          submitLabel="Guardar cambios"
-          pendingLabel="Guardando…"
-          cancelHref="/dashboard/calendar"
-          series={series ?? undefined}
-        />
-      </div>
+      <ViewTransition key="edit">
+        <div className="flex flex-col gap-4">
+          <Button
+            variant="secondary"
+            onClick={() => setEditing(false)}
+            className="self-start"
+          >
+            Volver al detalle
+          </Button>
+          <EventForm
+            action={updateAction}
+            initial={editInitial}
+            calendars={calendars}
+            categories={categories}
+            submitLabel="Guardar cambios"
+            pendingLabel="Guardando…"
+            cancelHref="/dashboard/calendar"
+            series={series ?? undefined}
+          />
+        </div>
+      </ViewTransition>
     );
   }
 
   return (
-    <div ref={root} className="contents">
-      <EventDetail
-        event={detail}
-        timeZone={timeZone}
-        canEdit={canEdit}
-        deleteAction={deleteAction}
-        onDeleted={
-          modal?.finish ??
-          // A full page goes back to the calendar with the notice (spec 017 RF-25).
-          ((done, undo) => {
-            showUndo(DONE_MESSAGES[done], undo);
-            router.replace("/dashboard/calendar");
-          })
-        }
-        comments={<EventComments eventId={detail.id} timeZone={timeZone} />}
-        media={
-          <>
-            <EventImages
-              images={images}
-              title={detail.title}
-              timeZone={timeZone}
-            />
-            {canAttach ? <ImageUploader eventId={detail.id} /> : null}
-          </>
-        }
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                // Editing on a phone fills the screen (spec 017 RF-47).
-                setEditing(true);
-                modal?.expand();
-              }}
-            >
-              Editar
-            </Button>
-            <LinkButton
-              href={`/dashboard/events/new?from=${detail.id}`}
-              // Replace: saving the copy goes back to the calendar, not to this event.
-              replace
-              variant="secondary"
-            >
-              Duplicar
-            </LinkButton>
-          </>
-        }
-      />
-    </div>
+    <ViewTransition key="detail">
+      <div ref={root} className="contents">
+        <EventDetail
+          event={detail}
+          timeZone={timeZone}
+          canEdit={canEdit}
+          deleteAction={deleteAction}
+          onDeleted={
+            modal?.finish ??
+            // A full page goes back to the calendar with the notice (spec 017 RF-25).
+            ((done, undo) => {
+              showUndo(DONE_MESSAGES[done], undo);
+              router.replace("/dashboard/calendar");
+            })
+          }
+          comments={<EventComments eventId={detail.id} timeZone={timeZone} />}
+          media={
+            <>
+              <EventImages
+                images={images}
+                title={detail.title}
+                timeZone={timeZone}
+              />
+              {canAttach ? <ImageUploader eventId={detail.id} /> : null}
+            </>
+          }
+          actions={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  // Editing on a phone fills the screen (spec 017 RF-47).
+                  setEditing(true);
+                  modal?.expand();
+                }}
+              >
+                Editar
+              </Button>
+              <LinkButton
+                href={`/dashboard/events/new?from=${detail.id}`}
+                // Replace: saving the copy goes back to the calendar, not to this event.
+                replace
+                variant="secondary"
+              >
+                Duplicar
+              </LinkButton>
+            </>
+          }
+        />
+      </div>
+    </ViewTransition>
   );
 }

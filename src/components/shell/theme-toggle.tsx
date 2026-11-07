@@ -12,6 +12,7 @@ import {
   type EffectiveTheme,
 } from "@/lib/theme/theme";
 import { MoonIcon, SunIcon } from "./icons";
+import { IconSwap } from "@/components/ui/icon-swap";
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
@@ -80,7 +81,12 @@ export function ThemeToggle({
 
   return (
     <button type="button" onClick={() => void toggle()} className={className}>
-      {next === "dark" ? <MoonIcon /> : <SunIcon />}
+      {/* The sun and the moon trade places (spec 021 RF-54). */}
+      <IconSwap
+        show={next === "dark" ? "a" : "b"}
+        a={<MoonIcon />}
+        b={<SunIcon />}
+      />
       <span className={labelClassName}>{LABEL[next]}</span>
     </button>
   );

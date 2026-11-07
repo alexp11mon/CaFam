@@ -9,6 +9,7 @@ import { formatDateKeyFull } from "@/lib/calendar/format";
 import { useCalendarHeader } from "./calendar-header";
 import { CaretIcon, MenuIcon, TodayIcon } from "./icons";
 import { NavDrawer } from "./nav-drawer";
+import { CrossfadeText } from "@/components/ui/crossfade-text";
 
 const ICON_BUTTON =
   "flex size-11 shrink-0 items-center justify-center rounded-full text-ink press hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
@@ -50,7 +51,8 @@ export function TopBar({
           onClick={() => setPickerOpen(!pickerOpen)}
           className="flex min-h-11 min-w-0 items-center gap-1 rounded-full px-2 text-xl text-ink press first-letter:uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
-          <span className="truncate">{state.title}</span>
+          {/* The month cross-fades as the agenda scrolls (spec 021 RF-52). */}
+          <CrossfadeText text={state.title} />
           <CaretIcon open={pickerOpen} />
         </button>
       ) : (
