@@ -3,6 +3,8 @@
 import { useEffect, useLayoutEffect, useRef, type KeyboardEvent } from "react";
 import { CheckIcon } from "@/components/shell/icons";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
+import { boxOf } from "@/lib/calendar/popover";
+import { originFrom } from "@/lib/motion/origin";
 import { CALENDAR_COLORS } from "@/lib/calendar/palette";
 
 export type MenuChoice =
@@ -25,6 +27,7 @@ export function EventMenu({
   calendarColor,
   onChoose,
   onClose,
+  leaving = false,
 }: {
   event: CalendarEventItem;
   /** The pointer, or the event's corner when opened with the keyboard. */
@@ -33,6 +36,8 @@ export function EventMenu({
   onChoose: (choice: MenuChoice) => void;
   /** `restoreFocus` is false when a click outside closed it. */
   onClose: (restoreFocus: boolean) => void;
+  /** Closed and shrinking back to where it opened (spec 021 RF-9). */
+  leaving?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const ownColor =
@@ -40,10 +45,12 @@ export function EventMenu({
       ? null
       : event.color.toUpperCase();
 
-  // Inside the screen, and the first item focused (ARIA menu pattern).
+  // Inside the screen, and the first item focused (ARIA menu pattern). It
+  // grows from the pointer, or from the event's corner with the keyboard
+  // (spec 021 RF-8, RF-10).
   useLayoutEffect(() => {
     const menu = ref.current;
-    if (!menu) return;
+    if (!menu || leaving) return;
     const left = Math.min(
       at.left,
       window.innerWidth - MARGIN - menu.offsetWidth,
@@ -54,17 +61,22 @@ export function EventMenu({
     );
     menu.style.left = `${Math.max(MARGIN, left)}px`;
     menu.style.top = `${Math.max(MARGIN, top)}px`;
+    menu.style.setProperty(
+      "--pop-origin",
+      originFrom({ x: at.left, y: at.top }, boxOf(menu)),
+    );
     items(menu)[0]?.focus();
-  }, [at]);
+  }, [at, leaving]);
 
   useEffect(() => {
+    if (leaving) return;
     const outside = (pointer: PointerEvent) => {
       if (!ref.current?.contains(pointer.target as Node)) onClose(false);
     };
     window.addEventListener("pointerdown", outside, { capture: true });
     return () =>
       window.removeEventListener("pointerdown", outside, { capture: true });
-  }, [onClose]);
+  }, [onClose, leaving]);
 
   function onKeyDown(key: KeyboardEvent) {
     const list = items(ref.current!);
@@ -95,9 +107,14 @@ export function EventMenu({
       aria-label={event.title}
       tabIndex={-1}
       onKeyDown={onKeyDown}
+      data-leaving={leaving || undefined}
+      aria-hidden={leaving || undefined}
+      inert={leaving}
+      // Rows land one after another each time it opens (spec 021 RF-16).
+      data-entering=""
       // Placed at the pointer; the layout effect keeps it on screen.
       style={{ left: at.left, top: at.top }}
-      className="fixed z-50 flex w-max flex-col gap-1 rounded-3xl glass-float p-2 text-ink"
+      className="pop stagger fixed z-50 flex w-max flex-col gap-1 rounded-3xl glass-float p-2 text-ink"
     >
       <div className="grid grid-cols-7 gap-1 p-1">
         {CALENDAR_COLORS.map((color) => {

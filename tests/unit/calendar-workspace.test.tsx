@@ -328,9 +328,13 @@ describe("CalendarWorkspace on a phone", () => {
 
     act(() => setSidebarPicker(true));
     const picker = screen.getByRole("dialog", { name: "Elegir fecha" });
+    // It grows from "Elegir fecha" and shrinks back to it (spec 021 RF-8, RF-9).
+    // Without the toolbar here, it falls back to its top left, under the title.
+    expect(picker).toHaveClass("pop", "[--pop-origin:1.5rem_0]");
     const day = within(picker).getByRole("link", { name: /25 de noviembre/ });
     fireEvent.click(day);
     expect(screen.queryByRole("dialog", { name: "Elegir fecha" })).toBeNull();
+    expect(picker).toHaveAttribute("data-leaving");
 
     act(() => setSidebarCollapsed(false));
   });

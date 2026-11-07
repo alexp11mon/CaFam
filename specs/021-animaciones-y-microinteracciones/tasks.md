@@ -72,7 +72,7 @@
 
   Hecho cuando: `npm test -- motion-utilities press-coverage` en verde y capturas de abrir y cerrar una ventana centrada, la hoja "Más" y el cajón revisadas en los dos temas. Cubre: RF-6, RF-7, RF-11, RF-12, RF-13, RF-14, RF-15, RF-68 | Módulo: motion-utilities, dialogs, press-coverage
 
-- [ ] T5 Hacer que los desplegables nazcan del disparador y vuelvan a él
+- [x] T5 Hacer que los desplegables nazcan del disparador y vuelvan a él
   Pasos:
   - Primero, en rojo, tests de componentes:
     - `event-menu`: con ratón, `--pop-origin` en el puntero; con teclado, en el evento enfocado. Al cerrar queda `data-leaving` y se desmonta tras la salida. Abrir y cerrar tres veces seguidas deja un solo menú.

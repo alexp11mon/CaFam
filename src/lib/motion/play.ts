@@ -2,6 +2,9 @@
 export const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
 export const EASE_IN_OUT = "cubic-bezier(0.65, 0, 0.35, 1)";
 
+/** --motion-pop-out: how long a closed popover stays while it leaves. */
+export const POP_OUT_MS = 160;
+
 const REDUCED = "(prefers-reduced-motion: reduce)";
 
 export function prefersReducedMotion(): boolean {

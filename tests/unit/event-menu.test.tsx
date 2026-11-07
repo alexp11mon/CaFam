@@ -128,6 +128,45 @@ describe("EventMenu", () => {
     expect(menu).toHaveStyle({ left: "300px", top: "200px" });
   });
 
+  it("grows from the pointer and shrinks back to it (spec 021 RF-8, RF-9)", () => {
+    vi.useFakeTimers();
+    const rect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        const box =
+          this.getAttribute("role") === "menu"
+            ? { left: 250, top: 150, width: 200, height: 300 }
+            : { left: 0, top: 0, width: 0, height: 0 };
+        return { ...box, right: 0, bottom: 0, x: 0, y: 0 } as DOMRect;
+      });
+    try {
+      setup();
+      rightClick(block("Cena"));
+      const menu = screen.getByRole("menu", { name: "Cena" });
+      expect(menu).toHaveClass("pop");
+      expect(menu.style.getPropertyValue("--pop-origin")).toBe("50px 50px");
+
+      fireEvent.keyDown(menu, { key: "Escape" });
+      expect(menu).toHaveAttribute("data-leaving");
+      expect(screen.queryByRole("menu")).toBeNull();
+      act(() => vi.advanceTimersByTime(200));
+      expect(menu).not.toBeInTheDocument();
+    } finally {
+      rect.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it("opened and closed three times leaves one menu (spec 021 RF-65)", () => {
+    setup();
+    for (let i = 0; i < 3; i++) {
+      rightClick(block("Cena"));
+      fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+    }
+    rightClick(block("Cena"));
+    expect(document.querySelectorAll('[role="menu"]')).toHaveLength(1);
+  });
+
   it("an event the user cannot edit keeps the browser's menu (RF-41)", () => {
     setup();
     expect(rightClick(block("Ajeno"))).toBe(true);
@@ -150,6 +189,10 @@ describe("EventMenu", () => {
     block("Cena").focus();
     await userEvent.keyboard("{ContextMenu}");
     expect(screen.getByRole("menu", { name: "Cena" })).toBeVisible();
+    // With the keyboard it grows from the event (spec 021 RF-10).
+    expect(
+      screen.getByRole("menu").style.getPropertyValue("--pop-origin"),
+    ).toMatch(/^\d+px \d+px$/);
     await userEvent.keyboard("{Escape}");
     expect(screen.queryByRole("menu")).toBeNull();
     expect(block("Cena")).toHaveFocus();

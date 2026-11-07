@@ -65,6 +65,10 @@ import { Fab } from "./fab";
 import type { CalendarOption, EventFormValues } from "./event-form";
 import { GoToDateDialog } from "./go-to-date-dialog";
 import { MiniMonth } from "./mini-month";
+import { boxOf } from "@/lib/calendar/popover";
+import { usePresence } from "@/lib/hooks/use-presence";
+import { originFrom } from "@/lib/motion/origin";
+import { POP_OUT_MS } from "@/lib/motion/play";
 import { WeekendToggle } from "./weekend-toggle";
 import { ShortcutsHelp } from "./shortcuts-help";
 import { MonthStrip } from "./month-strip";
@@ -298,6 +302,10 @@ export function CalendarWorkspace({
   const isPhone = useIsPhone();
   const onCalendarPage = usePathname() === "/dashboard/calendar";
   const { drawerSlot, pickerOpen, setPickerOpen } = useCalendarHeader();
+  const sidebarPicker = usePresence(
+    sidebar.collapsed && sidebar.pickerOpen,
+    POP_OUT_MS,
+  );
   // In the agenda the title follows the month at the top (RF-59).
   const [agendaMonth, setAgendaMonth] = useState<{
     date: string;
@@ -563,16 +571,28 @@ export function CalendarWorkspace({
   return (
     <EventInteractionsProvider value={interactive.api}>
       <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
-        {sidebar.collapsed &&
-        sidebar.pickerOpen &&
-        monthMarks &&
-        loadMonthMarks ? (
-          // The folded panel's mini month, under the title; a day closes it (spec 019 RF-19, RF-20).
+        {sidebarPicker.mounted && monthMarks && loadMonthMarks ? (
+          // The folded panel's mini month, under the title; a day closes it
+          // (spec 019 RF-19, RF-20). It grows from "Elegir fecha" and
+          // shrinks back to it (spec 021 RF-8, RF-9).
           <div
             id="calendar-date-picker"
             role="dialog"
             aria-label="Elegir fecha"
-            className="absolute top-0 left-0 z-30 hidden w-84 rounded-3xl glass-float p-3 shadow-float lg:block"
+            data-leaving={sidebarPicker.leaving || undefined}
+            aria-hidden={sidebarPicker.leaving || undefined}
+            inert={sidebarPicker.leaving}
+            ref={(picker) => {
+              const trigger = document.querySelector(
+                '[aria-controls="calendar-date-picker"]',
+              );
+              if (picker && trigger)
+                picker.style.setProperty(
+                  "--pop-origin",
+                  originFrom(boxOf(trigger), boxOf(picker)),
+                );
+            }}
+            className="pop absolute top-0 left-0 z-30 hidden w-84 [--pop-origin:1.5rem_0] rounded-3xl glass-float p-3 shadow-float lg:block"
             onClick={(event) => {
               if ((event.target as Element).closest("a"))
                 setSidebarPicker(false);

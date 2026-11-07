@@ -135,7 +135,10 @@ export function TimeField({
         role="listbox"
         aria-label={`${label}: opciones`}
         hidden={!open}
-        className="absolute top-full z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-line bg-paper py-1 shadow-float"
+        // It hangs from the field, so it grows from its top edge (spec 021
+        // RF-8), and its options land one after another each time (RF-16).
+        data-entering=""
+        className="pop stagger absolute top-full z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-line bg-paper py-1 shadow-float [--pop-origin:50%_0]"
       >
         {options.map((option, index) => (
           <li

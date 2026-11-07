@@ -10,9 +10,10 @@ import { ThemeToggle } from "./theme-toggle";
 const ITEM =
   "group relative flex size-12 items-center justify-center rounded-full text-muted press hover:bg-paper hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:bg-paper aria-[current=page]:text-ink";
 
-// The label is the accessible name; it shows as a tooltip on hover and focus (plan D8).
+// The label is the accessible name; it shows as a tooltip on hover and focus
+// (plan D8), growing from 95 % out of its icon on the left (spec 021 RF-7, RF-8).
 const TOOLTIP =
-  "pointer-events-none absolute top-1/2 left-full z-40 ml-3 -translate-y-1/2 rounded-lg bg-ink px-2.5 py-1 text-sm font-medium whitespace-nowrap text-on-ink opacity-0 shadow-float transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
+  "pointer-events-none absolute top-1/2 left-full z-40 ml-3 -translate-y-1/2 origin-left scale-(--pop-scale) rounded-lg bg-ink px-2.5 py-1 text-sm font-medium whitespace-nowrap text-on-ink opacity-0 shadow-float transition-[opacity,scale] duration-(--motion-pop-out) ease-(--ease-out) group-hover:scale-100 group-hover:opacity-100 group-hover:duration-(--motion-pop-in) group-focus-visible:scale-100 group-focus-visible:opacity-100 group-focus-visible:duration-(--motion-pop-in)";
 
 /** Desktop navigation: the brand, the destinations, the theme shortcut and signing out (spec 005 RF-16, RF-20; spec 011 RF-6). */
 export function SideRail({

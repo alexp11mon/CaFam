@@ -39,6 +39,8 @@ import { EventCard } from "./event-card";
 import { boxOf, type Box } from "@/lib/calendar/popover";
 import { takeRemoteRefresh } from "@/lib/calendar/live-hold";
 import { EventMenu, type MenuChoice } from "./event-menu";
+import { usePresence } from "@/lib/hooks/use-presence";
+import { POP_OUT_MS } from "@/lib/motion/play";
 import { useUndoToast } from "./use-undo-toast";
 
 export type ChangeNotice = "moved" | "resized" | "color";
@@ -138,6 +140,9 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
     returnTo: HTMLElement;
   } | null>(null);
   const menuFor = useRef<string | null>(null);
+  // The closed menu stays while it shrinks back (spec 021 RF-9, plan D3).
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuPresence = usePresence(menuOpen, POP_OUT_MS);
   const clipboard = useEventClipboard();
   // Alt + arrows: the event before the first key, and when to save (plan D11).
   const nudging = useRef<{
@@ -291,6 +296,7 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
       openMenu: (event, at, returnTo) => {
         menuFor.current = event.id;
         setMenu({ event, at, returnTo });
+        setMenuOpen(true);
       },
       isMenuOpen: (event) => menuFor.current === event.id,
       change,
@@ -421,7 +427,7 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
     (restoreFocus: boolean) => {
       menuFor.current = null;
       if (restoreFocus) menu?.returnTo.focus();
-      setMenu(null);
+      setMenuOpen(false);
     },
     [menu],
   );
@@ -454,8 +460,11 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
           }}
         />
       ) : null}
-      {menu ? (
+      {menu && menuPresence.mounted ? (
         <EventMenu
+          // A menu opened elsewhere enters again instead of sliding over.
+          key={`${menu.event.id}:${menu.at.left}:${menu.at.top}`}
+          leaving={menuPresence.leaving}
           event={menu.event}
           at={menu.at}
           calendarColor={calendarColors.get(menu.event.calendarId)}

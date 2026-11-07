@@ -46,6 +46,19 @@ describe("SideRail (RF-16)", () => {
     ).toBeInTheDocument();
   });
 
+  it("grows each tooltip from its icon at 95 % (spec 021 RF-7, RF-8)", () => {
+    const { nav } = renderRail();
+    const tooltip = within(nav).getByText("Ajustes");
+
+    expect(tooltip).toHaveClass(
+      "origin-left",
+      "scale-(--pop-scale)",
+      "group-hover:scale-100",
+      "duration-(--motion-pop-out)",
+      "group-hover:duration-(--motion-pop-in)",
+    );
+  });
+
   it("marks the current section (RF-20)", () => {
     navigation.pathname = "/dashboard/calendars/0f6c/share";
     const { nav } = renderRail();

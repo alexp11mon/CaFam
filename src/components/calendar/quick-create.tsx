@@ -31,6 +31,7 @@ import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import type { CalendarOption, EventFormValues } from "./event-form";
 import { useHoldLive } from "@/lib/hooks/use-hold-live";
+import { originFrom } from "@/lib/motion/origin";
 
 type State = FormState<keyof EventFormValues>;
 
@@ -201,15 +202,17 @@ export function QuickCreate({
         if (event.target === event.currentTarget) onClose();
       }}
       style={
-        place
+        place && anchor
           ? ({
               "--quick-left": `${place.left}px`,
               "--quick-top": `${place.top}px`,
+              // It grows out of the chosen slot (spec 021 RF-8).
+              "--pop-origin": originFrom(anchor, { ...place, ...SIZE }),
             } as CSSProperties)
           : undefined
       }
       // Up to 768 px it is a sheet anchored to the bottom (RF-41).
-      className={`max-h-[calc(100dvh-2rem)] w-96 overflow-y-auto rounded-3xl glass-float p-0 text-ink backdrop:bg-scrim/10 ${place ? "m-0 left-(--quick-left) top-(--quick-top)" : "m-auto"} max-[48.0625rem]:fixed max-[48.0625rem]:z-40 max-[48.0625rem]:inset-x-0 max-[48.0625rem]:top-auto max-[48.0625rem]:bottom-0 max-[48.0625rem]:m-0 max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-b-none`}
+      className={`origin-(--pop-origin) max-h-[calc(100dvh-2rem)] w-96 overflow-y-auto rounded-3xl glass-float p-0 text-ink backdrop:bg-scrim/10 ${place ? "m-0 left-(--quick-left) top-(--quick-top)" : "m-auto"} max-[48.0625rem]:fixed max-[48.0625rem]:z-40 max-[48.0625rem]:inset-x-0 max-[48.0625rem]:top-auto max-[48.0625rem]:bottom-0 max-[48.0625rem]:m-0 max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-b-none`}
     >
       <form action={formAction} noValidate className="flex flex-col gap-4 p-5">
         <h2 id={headingId} className="sr-only">

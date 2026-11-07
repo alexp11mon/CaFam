@@ -89,6 +89,16 @@ describe("QuickCreate", () => {
     expect(screen.getByLabelText("Calendario")).toHaveValue("cal-b");
   });
 
+  it("grows out of the slot it was opened from (spec 021 RF-8)", () => {
+    setup();
+    const dialog = screen.getByRole("dialog");
+    // The slot is on its right: it grows from its right edge.
+    expect(dialog.style.getPropertyValue("--pop-origin")).toMatch(
+      /^384px \d+px$/,
+    );
+    expect(dialog).toHaveClass("origin-(--pop-origin)");
+  });
+
   it("holds others' changes while open (spec 019 RF-43)", () => {
     const view = render(<span />);
     expect(isLiveHeld()).toBe(false);

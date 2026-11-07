@@ -47,6 +47,15 @@ describe("TimeField", () => {
     );
   });
 
+  it("grows its list from the field (spec 021 RF-6, RF-8, RF-16)", async () => {
+    render(<Field />);
+    await userEvent.click(field());
+
+    const list = screen.getByRole("listbox");
+    expect(list).toHaveClass("pop", "stagger", "[--pop-origin:50%_0]");
+    expect(list).toHaveAttribute("data-entering");
+  });
+
   it("writes the clicked time and closes (RF-14)", async () => {
     render(<Field />);
     await userEvent.click(field());
