@@ -541,6 +541,30 @@ body {
   animation-duration: var(--motion-base-in);
 }
 
+/* A theme or accent change grows as a circle from where it was chosen
+   (spec 021 RF-36, RF-37, plan D9). */
+html[data-reveal]::view-transition-old(root) {
+  animation: none;
+}
+
+html[data-reveal]::view-transition-new(root) {
+  animation: reveal-circle var(--motion-reveal) var(--ease-in-out) both;
+}
+
+/* The whole page reveals at once, the view switcher too. */
+html[data-reveal] [data-view-switcher] {
+  view-transition-name: none;
+}
+
+@keyframes reveal-circle {
+  from {
+    clip-path: circle(0 at var(--reveal-x) var(--reveal-y));
+  }
+  to {
+    clip-path: circle(var(--reveal-r) at var(--reveal-x) var(--reveal-y));
+  }
+}
+
 /* The view switcher slides its own pill: the cross-fade of the page must not
    show an old copy of it (spec 021 RF-34, plan R1). */
 ::view-transition-group(view-switcher),

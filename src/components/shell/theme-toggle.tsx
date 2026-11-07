@@ -4,7 +4,12 @@ import { useSyncExternalStore } from "react";
 import { setTheme } from "@/app/dashboard/settings/actions";
 import { useToast } from "@/components/ui/toast";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
-import { applyTheme, readThemeCookie } from "@/lib/theme/apply-theme";
+import {
+  applyTheme,
+  centreOf,
+  readThemeCookie,
+  type RevealOrigin,
+} from "@/lib/theme/apply-theme";
 import {
   effectiveTheme,
   nextToggleTheme,
@@ -64,9 +69,10 @@ export function ThemeToggle({
   const next = nextToggleTheme(current);
   const toast = useToast();
 
-  async function toggle() {
+  async function toggle(origin: RevealOrigin) {
     const previous = parseTheme(readThemeCookie());
-    applyTheme(next);
+    // The new theme grows from the button (spec 021 RF-36).
+    applyTheme(next, origin);
     let result: { error?: string };
     try {
       result = await setTheme(next);
@@ -80,7 +86,11 @@ export function ThemeToggle({
   }
 
   return (
-    <button type="button" onClick={() => void toggle()} className={className}>
+    <button
+      type="button"
+      onClick={(event) => void toggle(centreOf(event.currentTarget))}
+      className={className}
+    >
       {/* The sun and the moon trade places (spec 021 RF-54). */}
       <IconSwap
         show={next === "dark" ? "a" : "b"}

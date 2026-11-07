@@ -118,3 +118,36 @@ describe("ThemeToggle (RF-6)", () => {
     expect(actions.setTheme).toHaveBeenCalledWith("dark");
   });
 });
+
+describe("ThemeToggle reveal (spec 021 RF-36)", () => {
+  it("grows the new theme from the centre of the button", async () => {
+    const start = vi.fn(() => ({ finished: new Promise(() => {}) }));
+    Object.defineProperty(document, "startViewTransition", {
+      configurable: true,
+      value: start,
+    });
+    try {
+      renderToggle();
+      const button = screen.getByRole("button", {
+        name: "Cambiar a tema oscuro",
+      });
+      vi.spyOn(button, "getBoundingClientRect").mockReturnValue({
+        left: 10,
+        top: 20,
+        width: 40,
+        height: 40,
+      } as DOMRect);
+      await userEvent.click(button);
+
+      expect(start).toHaveBeenCalledOnce();
+      expect(html.style.getPropertyValue("--reveal-x")).toBe("30px");
+      expect(html.style.getPropertyValue("--reveal-y")).toBe("40px");
+    } finally {
+      Reflect.deleteProperty(document, "startViewTransition");
+      delete html.dataset.reveal;
+      html.style.removeProperty("--reveal-x");
+      html.style.removeProperty("--reveal-y");
+      html.style.removeProperty("--reveal-r");
+    }
+  });
+});

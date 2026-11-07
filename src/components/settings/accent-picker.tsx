@@ -4,6 +4,8 @@ import { useState } from "react";
 import { FormAlert } from "@/components/ui/form-alert";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import { ACCENTS, type AccentId } from "@/lib/theme/accents";
+import { centreOf, revealPaint } from "@/lib/theme/apply-theme";
+import { SelectionRing } from "./selection-ring";
 
 type Result = { error?: string };
 
@@ -26,11 +28,12 @@ export function AccentPicker({
   const [selected, setSelected] = useState(current);
   const [error, setError] = useState<string>();
 
-  async function choose(accent: AccentId) {
+  async function choose(accent: AccentId, from: Element) {
     const previous = selected;
     setSelected(accent);
     setError(undefined);
-    paintFrame(accent);
+    // The new accent grows from the chosen card (spec 021 RF-37).
+    revealPaint(() => paintFrame(accent), centreOf(from));
     let result: Result;
     try {
       result = await setAccent(accent);
@@ -55,19 +58,24 @@ export function AccentPicker({
       <div
         role="radiogroup"
         aria-label="Color de acento"
-        className="grid grid-cols-2 gap-3 sm:grid-cols-3"
+        className="relative grid grid-cols-2 gap-3 sm:grid-cols-3"
       >
         {ACCENTS.map((accent) => (
           <label
             key={accent.id}
-            className="press flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3 text-base font-medium text-ink has-checked:border-ink has-checked:ring-1 has-checked:ring-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink"
+            className="press flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3 text-base font-medium text-ink has-checked:border-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink"
           >
             <input
               type="radio"
               name="accent"
               value={accent.id}
               checked={selected === accent.id}
-              onChange={() => void choose(accent.id)}
+              onChange={(event) =>
+                void choose(
+                  accent.id,
+                  event.currentTarget.closest("label") ?? event.currentTarget,
+                )
+              }
               className="sr-only"
             />
             {/* data-accent scopes the variables, so each swatch shows its own color. */}
@@ -79,6 +87,7 @@ export function AccentPicker({
             {accent.label}
           </label>
         ))}
+        <SelectionRing selected={selected} />
       </div>
       <FormAlert message={error} />
     </fieldset>

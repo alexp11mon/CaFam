@@ -69,6 +69,9 @@ import { boxOf } from "@/lib/calendar/popover";
 import { usePresence } from "@/lib/hooks/use-presence";
 import { originFrom } from "@/lib/motion/origin";
 import { POP_OUT_MS } from "@/lib/motion/play";
+
+/** --motion-base-out: the header picker rolls back up this long. */
+const HEADER_OUT_MS = 176;
 import { WeekendToggle } from "./weekend-toggle";
 import { ShortcutsHelp } from "./shortcuts-help";
 import { MonthStrip } from "./month-strip";
@@ -302,6 +305,9 @@ export function CalendarWorkspace({
   const isPhone = useIsPhone();
   const onCalendarPage = usePathname() === "/dashboard/calendar";
   const { drawerSlot, pickerOpen, setPickerOpen } = useCalendarHeader();
+  // The phone header's month row or mini month unrolls from the header and
+  // rolls back up (spec 021 RF-38).
+  const headerPicker = usePresence(pickerOpen, HEADER_OUT_MS);
   const sidebarPicker = usePresence(
     sidebar.collapsed && sidebar.pickerOpen,
     POP_OUT_MS,
@@ -627,10 +633,13 @@ export function CalendarWorkspace({
               filtersInDrawer,
             )
           : null}
-        {pickerOpen ? (
+        {headerPicker.mounted ? (
           // Under the phone header; a day of the mini month folds it (RF-20, RF-23, RF-24).
           <div
-            className="-mx-4 -mt-2 tab:hidden"
+            data-leaving={headerPicker.leaving || undefined}
+            aria-hidden={headerPicker.leaving || undefined}
+            inert={headerPicker.leaving}
+            className="reveal-down -mx-4 -mt-2 tab:hidden"
             onClick={(event) => {
               if ((event.target as Element).closest("a") && view !== "month")
                 setPickerOpen(false);

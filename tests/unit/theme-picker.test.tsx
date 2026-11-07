@@ -7,9 +7,14 @@ import type { ThemeId } from "@/lib/theme/theme";
 // Spec 011, T7: the three themes in Ajustes, applied at once and undone if
 // they cannot be saved (RF-1, RF-3, RF-4; plan theme-picker).
 const applied = vi.hoisted(() => [] as string[]);
+const origins = vi.hoisted(() => [] as unknown[]);
 
 vi.mock("@/lib/theme/apply-theme", () => ({
-  applyTheme: (theme: string) => applied.push(theme),
+  applyTheme: (theme: string, origin?: unknown) => {
+    applied.push(theme);
+    origins.push(origin);
+  },
+  centreOf: () => ({ x: 120, y: 340 }),
 }));
 
 type Result = { error?: string };
@@ -24,6 +29,7 @@ function renderPicker(
 
 beforeEach(() => {
   applied.length = 0;
+  origins.length = 0;
 });
 
 afterEach(() => {
@@ -93,5 +99,21 @@ describe("choosing a theme (RF-3, RF-4)", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/conectar/);
     expect(applied).toEqual(["system", "light"]);
+  });
+});
+
+describe("motion (spec 021)", () => {
+  it("grows the new theme from the chosen card (RF-36)", async () => {
+    renderPicker();
+    await userEvent.click(screen.getByRole("radio", { name: "Oscuro" }));
+    expect(origins).toEqual([{ x: 120, y: 340 }]);
+  });
+
+  it("slides a ring over the chosen card (RF-62)", () => {
+    renderPicker(undefined, "dark");
+    const ring = document.querySelector("[data-selection-ring]");
+    expect(ring).toHaveAttribute("aria-hidden", "true");
+    expect(ring).toHaveAttribute("data-ready");
+    expect(ring).toHaveClass("transition-[translate]");
   });
 });

@@ -107,3 +107,12 @@ describe("when saving fails (RF-12)", () => {
     expect(frame).toHaveAttribute("data-accent", "red");
   });
 });
+
+describe("motion (spec 021)", () => {
+  it("slides a ring over the chosen accent (RF-62)", () => {
+    renderPicker(undefined, "purple");
+    const ring = document.querySelector("[data-selection-ring]");
+    expect(ring).toHaveAttribute("aria-hidden", "true");
+    expect(ring).toHaveClass("transition-[translate]");
+  });
+});

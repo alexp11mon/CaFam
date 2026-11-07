@@ -78,3 +78,49 @@ describe("applyTheme", () => {
     expect(document.cookie).toContain(`${THEME_COOKIE}=system`);
   });
 });
+
+// Spec 021, T11: the new theme grows as a circle from where it was chosen
+// (RF-36, RF-39, plan D9).
+describe("applyTheme with an origin", () => {
+  it("sets the circle while the transition runs and drops it after", async () => {
+    stubReducedMotion(false);
+    let finish!: () => void;
+    const finished = new Promise<void>((resolve) => (finish = resolve));
+    Object.defineProperty(document, "startViewTransition", {
+      configurable: true,
+      value: vi.fn((update: () => void) => {
+        update();
+        return { finished };
+      }),
+    });
+    vi.stubGlobal("innerWidth", 1000);
+    vi.stubGlobal("innerHeight", 800);
+
+    applyTheme("dark", { x: 100, y: 200 });
+
+    expect(html).toHaveAttribute("data-reveal");
+    expect(html.style.getPropertyValue("--reveal-x")).toBe("100px");
+    expect(html.style.getPropertyValue("--reveal-y")).toBe("200px");
+    // To the farthest corner: (1000, 800).
+    expect(html.style.getPropertyValue("--reveal-r")).toBe(
+      `${Math.ceil(Math.hypot(900, 600))}px`,
+    );
+
+    finish();
+    await finished;
+    await Promise.resolve();
+    expect(html).not.toHaveAttribute("data-reveal");
+    expect(html.style.getPropertyValue("--reveal-x")).toBe("");
+  });
+
+  it("paints at once without the circle with reduced motion (RF-39)", () => {
+    stubReducedMotion(true);
+    const start = stubViewTransition();
+
+    applyTheme("dark", { x: 100, y: 200 });
+
+    expect(start).not.toHaveBeenCalled();
+    expect(html).not.toHaveAttribute("data-reveal");
+    expect(html.dataset.theme).toBe("dark");
+  });
+});

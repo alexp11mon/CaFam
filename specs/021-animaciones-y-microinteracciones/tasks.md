@@ -146,7 +146,7 @@
 
   Hecho cuando: `npm test -- view-toolbar` en verde y una grabación o capturas en `playwright-cli` del paso de Mes a Día en las que el texto cambia de color justo por donde pasa la píldora. Cubre: RF-34, RF-35 | Módulo: view-switcher
 
-- [ ] T11 Revelar el tema, el acento y los desplegables de la cabecera
+- [x] T11 Revelar el tema, el acento y los desplegables de la cabecera
   Pasos:
   - Primero, en rojo:
     - `apply-theme`: con origen, pone `--reveal-x`, `--reveal-y`, `--reveal-r` (la esquina más lejana) y `data-reveal` mientras dura la transición, y los quita al acabar. Sin `startViewTransition` o con movimiento reducido, pinta sin transición.

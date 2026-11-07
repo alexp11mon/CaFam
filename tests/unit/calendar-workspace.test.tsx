@@ -1,4 +1,11 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  within,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps, ReactNode } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
@@ -310,7 +317,12 @@ describe("CalendarWorkspace on a phone", () => {
       "/dashboard/calendar?view=week&date=2026-11-25",
     );
     fireEvent.click(day);
-    expect(screen.getAllByLabelText("Mini calendario")).toHaveLength(1);
+    // It rolls back up under the header, then goes (spec 021 RF-38).
+    const header = picker.closest(".reveal-down")!;
+    expect(header).toHaveAttribute("data-leaving");
+    await waitFor(() =>
+      expect(screen.getAllByLabelText("Mini calendario")).toHaveLength(1),
+    );
   });
 
   it("hides the side panel while folded and opens the mini month by the title (spec 019 RF-18 to RF-20)", async () => {

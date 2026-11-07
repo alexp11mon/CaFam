@@ -213,6 +213,7 @@ function ViewSwitcher({
     // it twice (plan R1).
     <div
       ref={group}
+      data-view-switcher=""
       className="relative flex flex-1 gap-1 [view-transition-name:view-switcher] sm:flex-none"
     >
       {VIEWS.map((item) => (
