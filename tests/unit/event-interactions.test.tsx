@@ -16,12 +16,18 @@ const h = vi.hoisted(() => ({
   deleteForUndo: vi.fn(),
   undoAction: vi.fn(),
   refresh: vi.fn(),
+  markPulse: vi.fn(),
+  captureReturn: vi.fn(),
 }));
 
 vi.mock("@/app/dashboard/events/quick-actions", () => ({
   quickChange: h.quickChange,
   deleteForUndo: h.deleteForUndo,
   undoAction: h.undoAction,
+}));
+vi.mock("@/lib/motion/marks", () => ({
+  markPulse: h.markPulse,
+  captureReturn: h.captureReturn,
 }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: h.refresh }),
@@ -146,6 +152,8 @@ beforeEach(() => {
   h.quickChange.mockReset();
   h.deleteForUndo.mockReset();
   h.refresh.mockReset();
+  h.markPulse.mockReset();
+  h.captureReturn.mockReset();
 });
 
 describe("useEventInteractionsState", () => {
@@ -195,6 +203,20 @@ describe("useEventInteractionsState", () => {
 
     expect(await screen.findByText("Google no responde.")).toBeVisible();
     expect(screen.getByTestId("e1")).toHaveTextContent(SINGLE.startsAt);
+  });
+
+  it("a saved change marks its block to pulse; a failed one does not (spec 021 RF-48, RF-50)", async () => {
+    h.quickChange
+      .mockResolvedValueOnce({ ok: false, error: "Google no responde." })
+      .mockResolvedValueOnce({ ok: true, id: "e1" });
+    setup();
+    await userEvent.click(screen.getByRole("button", { name: "Mover" }));
+    await screen.findByText("Google no responde.");
+    expect(h.markPulse).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Mover" }));
+    await screen.findByText("Evento movido");
+    expect(h.markPulse).toHaveBeenCalledWith("e1");
   });
 
   it("server data replaces a saved change", async () => {

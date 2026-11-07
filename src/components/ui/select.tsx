@@ -1,9 +1,10 @@
-import { useId, type SelectHTMLAttributes } from "react";
+import { useId, type Ref, type SelectHTMLAttributes } from "react";
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label: string;
   name: string;
   error?: string;
+  ref?: Ref<HTMLSelectElement>;
 }
 
 /** Labelled native select; same error linking as TextField (RNF-7). */

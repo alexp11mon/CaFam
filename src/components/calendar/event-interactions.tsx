@@ -42,6 +42,7 @@ import { EventMenu, type MenuChoice } from "./event-menu";
 import { usePresence } from "@/lib/hooks/use-presence";
 import { POP_OUT_MS } from "@/lib/motion/play";
 import { useUndoToast } from "./use-undo-toast";
+import { markPulse } from "@/lib/motion/marks";
 
 export type ChangeNotice = "moved" | "resized" | "color";
 
@@ -230,6 +231,8 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
         if (result && !result.ok && result.gone) router.refresh();
         return;
       }
+      // Saved: its block pulses once on its next paint (spec 021 RF-48).
+      markPulse(event.id);
       setOverrides((current) => {
         const next = new Map(current);
         const override = next.get(event.id);
@@ -399,6 +402,7 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
         show(result.error);
         return;
       }
+      markPulse(result.id);
       showUndo(UNDO_NOTICES.pasted, result.undo);
       router.refresh();
     },

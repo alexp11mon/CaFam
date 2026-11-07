@@ -1,14 +1,21 @@
 "use client";
 
 import { useId, useRef } from "react";
-import { EASE_IN_OUT, motionMs, motionToken, play } from "@/lib/motion/play";
+import {
+  EASE_IN_OUT,
+  motionMs,
+  motionToken,
+  play,
+  pulse,
+} from "@/lib/motion/play";
 
 /**
  * An on/off setting saved at once (spec 021 RF-40..RF-46, plan D10): a button
  * with role="switch", so Space and Enter work and it is announced with its
  * name. The knob is right when on and left when off, whatever the color, and
  * stretches along its path keeping its area (RF-43, RF-44). The parent turns
- * `checked` back if saving fails (RF-45).
+ * `checked` back if saving fails (RF-45); a save that resolves `true` pulses
+ * the switch once (RF-47).
  */
 export function Switch({
   checked,
@@ -19,7 +26,7 @@ export function Switch({
   pending = false,
 }: {
   checked: boolean;
-  onCheckedChange: (next: boolean) => void;
+  onCheckedChange: (next: boolean) => void | Promise<boolean | void>;
   label: string;
   description?: string;
   disabled?: boolean;
@@ -27,6 +34,7 @@ export function Switch({
 }) {
   const descriptionId = useId();
   const knob = useRef<HTMLSpanElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
 
   function stretch() {
     if (!knob.current) return;
@@ -45,15 +53,17 @@ export function Switch({
   return (
     <div className="flex flex-col gap-1">
       <button
+        ref={button}
         type="button"
         role="switch"
         aria-checked={checked}
         aria-describedby={description ? descriptionId : undefined}
         aria-busy={pending || undefined}
         disabled={disabled}
-        onClick={() => {
+        onClick={async () => {
           stretch();
-          onCheckedChange(!checked);
+          const saved = await onCheckedChange(!checked);
+          if (saved === true && button.current) pulse(button.current);
         }}
         className="press-quiet flex min-h-11 w-full cursor-pointer items-center justify-between gap-4 rounded-xl text-left text-base font-medium text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60"
       >

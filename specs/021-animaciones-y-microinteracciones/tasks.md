@@ -157,7 +157,7 @@
 
   Hecho cuando: `npm test -- apply-theme theme-toggle theme-picker accent-picker calendar-workspace` en verde y capturas a media animación del círculo creciendo desde el botón. Cubre: RF-36, RF-37, RF-38, RF-39, RF-62 | Módulo: theme-reveal, selection-slide, header-reveal
 
-- [ ] T12 Confirmar el éxito con un pulso
+- [x] T12 Confirmar el éxito con un pulso
   Pasos:
   - Primero, en rojo:
     - `marks.test.ts`: `markPulse`, `captureReturn` y `takeMark`; se consumen una vez, caducan a los 2 s y la última marca de un id gana.
@@ -169,6 +169,13 @@
   - Después, `src/lib/motion/marks.ts`, las llamadas a `pulse` y el consumo de la marca de pulso en `draggable-event.tsx`.
 
   Hecho cuando: `npm test -- marks profile-form email-form password-form view-options-setting copy-button access-code-panel sync-now-button switch comment-form event-interactions draggable-event` en verde. Cubre: RF-47, RF-48, RF-49, RF-50, RF-51 | Módulo: success-pulse, motion-marks
+
+  Notas al cerrarla (2026-11-07):
+  - Las pruebas de los formularios y botones están juntas en `tests/unit/success-pulse.test.tsx` (con `pulse` simulado), más `marks.test.ts`, `event-interactions` y `draggable-event`. `usePulseOn` (`lib/hooks/use-pulse-on.ts`) atiende cada resultado una sola vez, por Activity.
+  - `access-code-panel` no tiene botón de copiar el ID (el ID se lee en pantalla), así que no hay nada que pulsar ahí: añadirlo sería una función nueva.
+  - Los dos interruptores y la duración no tenían texto de éxito; para cumplir RF-51 ahora dicen "Guardado." (`role="status"`) junto al pulso. `Switch` pulsa cuando `onCheckedChange` devuelve una promesa que se resuelve en `true`.
+  - "Actualizar ahora" solo pulsa tras actualizar (`updated: true` en `SyncState`), no con el aviso de esperar.
+  - También pulsan el evento pegado (`pasteEvent` devuelve su id) y el creado desde la ventana rápida (`eventId` de `createEvent`).
 
 ### Iteración 2
 

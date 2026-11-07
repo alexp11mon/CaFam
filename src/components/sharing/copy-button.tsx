@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { pulse } from "@/lib/motion/play";
 
 type Status = "idle" | "copied" | "failed";
 
@@ -13,6 +14,7 @@ type Status = "idle" | "copied" | "failed";
 export function CopyButton({ text }: { text: string }) {
   const [status, setStatus] = useState<Status>("idle");
   const field = useRef<HTMLInputElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (status === "failed") field.current?.select();
@@ -22,6 +24,7 @@ export function CopyButton({ text }: { text: string }) {
     try {
       await navigator.clipboard.writeText(text);
       setStatus("copied");
+      if (button.current) pulse(button.current);
     } catch {
       setStatus("failed");
     }
@@ -30,7 +33,7 @@ export function CopyButton({ text }: { text: string }) {
   return (
     <div className="flex flex-col gap-2">
       <div>
-        <Button variant="secondary" onClick={copy}>
+        <Button ref={button} variant="secondary" onClick={copy}>
           Copiar enlace
         </Button>
       </div>

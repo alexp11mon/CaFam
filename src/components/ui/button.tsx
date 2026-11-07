@@ -1,7 +1,8 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, Ref } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger";
+  ref?: Ref<HTMLButtonElement>;
 }
 
 // Actions are black pills; the accent never colors a button (spec 005, P9).

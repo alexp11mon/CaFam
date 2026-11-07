@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { pulse } from "@/lib/motion/play";
 import { FormAlert } from "@/components/ui/form-alert";
 import { TextArea } from "@/components/ui/text-area";
 import {
@@ -26,6 +27,7 @@ export function CommentForm({
   // saved twice (plan D8); a different text is a different comment.
   const sent = useRef<{ text: string; clientId: string } | null>(null);
   const busy = useRef(false);
+  const button = useRef<HTMLButtonElement>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,6 +49,7 @@ export function CommentForm({
       setText("");
       setError({});
       sent.current = null;
+      if (button.current) pulse(button.current);
     } else {
       setError(
         result.fieldError
@@ -82,7 +85,7 @@ export function CommentForm({
             {formatCount(length)} / {formatCount(MAX_COMMENT_LENGTH)}
           </span>
         ) : null}
-        <Button type="submit" disabled={pending}>
+        <Button ref={button} type="submit" disabled={pending}>
           Comentar
         </Button>
       </div>

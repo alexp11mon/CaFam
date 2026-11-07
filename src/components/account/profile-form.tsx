@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Select } from "@/components/ui/select";
@@ -8,6 +8,7 @@ import { TextField } from "@/components/ui/text-field";
 import type { ProfileState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { usePulseOn } from "@/lib/hooks/use-pulse-on";
 
 /** Name and time zone of the own profile (spec 006, RF-13 to RF-15). */
 export function ProfileForm({
@@ -22,6 +23,8 @@ export function ProfileForm({
   const [state, formAction, pending] = useActionState(action, {
     values: initial,
   });
+  const button = useRef<HTMLButtonElement>(null);
+  usePulseOn(button, state.saved && state);
   // The saved zone must stay selectable even if this browser does not list it.
   const zones = timeZones.includes(state.values.timeZone)
     ? timeZones
@@ -55,7 +58,7 @@ export function ProfileForm({
           </option>
         ))}
       </Select>
-      <Button type="submit" disabled={pending}>
+      <Button ref={button} type="submit" disabled={pending}>
         <SwapLabel busy={pending} idle="Guardar perfil" busyText="Guardando…" />
       </Button>
     </form>

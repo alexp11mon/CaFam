@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import { DURATIONS, durationLabel } from "@/lib/calendar/view-options";
+import { pulse } from "@/lib/motion/play";
 
 type Result = { error?: string };
 
@@ -35,26 +36,37 @@ export function ViewOptionsSetting({
   const [weekends, setWeekends] = useState(showWeekends);
   const [minutes, setMinutes] = useState(duration);
   const [error, setError] = useState<string>();
+  // The text that goes with the pulse: never the only sign (spec 021 RF-51).
+  const [saved, setSaved] = useState(false);
+  const select = useRef<HTMLSelectElement>(null);
 
-  async function toggle(next: boolean) {
+  async function toggle(next: boolean): Promise<boolean> {
     setWeekends(next);
     setError(undefined);
+    setSaved(false);
     const result = await attempt(() => saveWeekends(next));
     if (result.error) {
       setWeekends(!next);
       setError(result.error);
+      return false;
     }
+    setSaved(true);
+    return true;
   }
 
   async function choose(next: number) {
     const previous = minutes;
     setMinutes(next);
     setError(undefined);
+    setSaved(false);
     const result = await attempt(() => saveDuration(next));
     if (result.error) {
       setMinutes(previous);
       setError(result.error);
+      return;
     }
+    setSaved(true);
+    if (select.current) pulse(select.current);
   }
 
   return (
@@ -62,10 +74,11 @@ export function ViewOptionsSetting({
       <Switch
         label="Mostrar fines de semana"
         checked={weekends}
-        onCheckedChange={(next) => void toggle(next)}
+        onCheckedChange={toggle}
       />
       <div className="sm:max-w-60">
         <Select
+          ref={select}
           label="Duración de un evento nuevo"
           name="defaultDuration"
           value={minutes}
@@ -79,6 +92,11 @@ export function ViewOptionsSetting({
         </Select>
       </div>
       <FormAlert message={error} />
+      {saved ? (
+        <p role="status" className="text-sm text-ink">
+          Guardado.
+        </p>
+      ) : null}
     </div>
   );
 }

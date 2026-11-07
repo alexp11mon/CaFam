@@ -8,10 +8,20 @@ import {
 import { TimeGrid } from "@/components/calendar/time-grid";
 import { ToastProvider } from "@/components/ui/toast";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
+import { markPulse } from "@/lib/motion/marks";
 
 // Spec 017, T7: moving and resizing with the mouse in the week and the day
 // (RF-2, RF-5, RF-7, RF-8, RF-9, RF-10, RF-12, RF-19, RF-20, RF-21, RF-23).
-const h = vi.hoisted(() => ({ quickChange: vi.fn(), refresh: vi.fn() }));
+const h = vi.hoisted(() => ({
+  quickChange: vi.fn(),
+  refresh: vi.fn(),
+  pulse: vi.fn(),
+}));
+
+vi.mock("@/lib/motion/play", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/motion/play")>()),
+  pulse: h.pulse,
+}));
 
 vi.mock("@/app/dashboard/events/quick-actions", () => ({
   quickChange: h.quickChange,
@@ -176,6 +186,20 @@ afterEach(() => {
 });
 
 describe("DraggableEvent", () => {
+  it("pulses once when its save was confirmed (spec 021 RF-48)", () => {
+    h.pulse.mockReset();
+    markPulse("e1");
+    setup();
+    expect(h.pulse).toHaveBeenCalledTimes(1);
+    expect(h.pulse).toHaveBeenCalledWith(block("Cena"));
+  });
+
+  it("does not pulse without a mark", () => {
+    h.pulse.mockReset();
+    setup();
+    expect(h.pulse).not.toHaveBeenCalled();
+  });
+
   it("lifts after 4 px, shows its new hours and saves where it is dropped (RF-5, RF-8, RF-18)", async () => {
     setup();
     down(block("Cena"), 10.25);

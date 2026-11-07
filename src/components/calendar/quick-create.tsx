@@ -31,6 +31,7 @@ import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import type { CalendarOption, EventFormValues } from "./event-form";
 import { useHoldLive } from "@/lib/hooks/use-hold-live";
+import { markPulse } from "@/lib/motion/marks";
 import { originFrom } from "@/lib/motion/origin";
 import { SwapLabel } from "@/components/ui/swap-label";
 
@@ -161,6 +162,8 @@ export function QuickCreate({
   useEffect(() => {
     if (!state.done || handled.current === state) return;
     handled.current = state;
+    // The new block pulses once the refresh draws it (spec 021 RF-48).
+    if (state.eventId) markPulse(state.eventId);
     show("Evento creado");
     router.refresh();
     onClose();

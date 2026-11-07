@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { EmailChangeState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { usePulseOn } from "@/lib/hooks/use-pulse-on";
 
 const INITIAL_STATE: EmailChangeState = { values: { newEmail: "" } };
 
@@ -22,6 +23,8 @@ export function EmailForm({
 }) {
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
   const waiting = state.pendingEmail ?? pendingEmail;
+  const button = useRef<HTMLButtonElement>(null);
+  usePulseOn(button, state.pendingEmail ? state : null);
 
   return (
     <form action={formAction} noValidate className="flex flex-col gap-4">
@@ -51,7 +54,7 @@ export function EmailForm({
         autoComplete="current-password"
         error={state.fieldErrors?.currentPassword}
       />
-      <Button type="submit" disabled={pending}>
+      <Button ref={button} type="submit" disabled={pending}>
         <SwapLabel busy={pending} idle="Cambiar email" busyText="Enviando…" />
       </Button>
     </form>

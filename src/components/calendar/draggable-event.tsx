@@ -1,9 +1,11 @@
 "use client";
 
-import { useRef, type ComponentProps } from "react";
+import { useLayoutEffect, useRef, type ComponentProps } from "react";
 import type { DragMode } from "@/lib/hooks/use-event-drag";
 import { boxOf } from "@/lib/calendar/popover";
 import { formatTime } from "@/lib/calendar/time-zone";
+import { takeMark } from "@/lib/motion/marks";
+import { pulse } from "@/lib/motion/play";
 import { EventBlock } from "./event-block";
 import { useEventInteractions } from "./event-interactions";
 
@@ -25,8 +27,19 @@ export function DraggableEvent({
 }) {
   const api = useEventInteractions();
   const touched = useRef(false);
+  const element = useRef<HTMLAnchorElement>(null);
   const { event, timeZone } = block;
-  if (!api?.canEdit(event)) return <EventBlock {...block} />;
+  const editable = Boolean(api?.canEdit(event));
+
+  // What the last change left for this block: pulse once saved (spec 021
+  // RF-48). Every paint looks, since a refresh remounts blocks elsewhere.
+  useLayoutEffect(() => {
+    if (!editable || !element.current) return;
+    const mark = takeMark(event.id);
+    if (mark?.kind === "pulse") pulse(element.current);
+  });
+
+  if (!api || !editable) return <EventBlock {...block} />;
 
   const dragging = api.draggingId === event.id;
   const lifted = api.liftedId === event.id;
@@ -36,6 +49,7 @@ export function DraggableEvent({
       // No callout or text selection on a long press; held, the page does not pan (plan D4).
       className={`${block.className ?? ""} touch-manipulation select-none [-webkit-touch-callout:none] ${dragging || lifted ? "z-30 shadow-float ring-2 ring-ink" : ""} ${lifted ? "touch-none" : ""}`}
       anchor={{
+        ref: element,
         draggable: false,
         "data-lifted": lifted ? "" : undefined,
         onPointerDown: (pointer) => {

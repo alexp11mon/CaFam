@@ -39,6 +39,8 @@ import { summaryText, SYNC_ERRORS } from "@/lib/sync/summary";
 export interface SyncState {
   message?: string;
   formError?: string;
+  /** A finished update, to pulse "Actualizar ahora" (spec 021 RF-47). */
+  updated?: boolean;
   fieldErrors?: { decision?: string };
 }
 
@@ -89,7 +91,7 @@ function resultText(sync: ConnectionSync): SyncState {
         : `${failed} calendarios no se han podido actualizar.`,
     );
   }
-  return { message: parts.join(" ") };
+  return { message: parts.join(" "), updated: true };
 }
 
 /** Saves which calendars of the account are synced (RF-10, RF-11, RF-14). */
