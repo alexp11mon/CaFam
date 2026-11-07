@@ -12,7 +12,7 @@ export type MenuChoice =
 
 const MARGIN = 16;
 const ITEM =
-  "press flex min-h-11 w-full items-center gap-3 rounded-full px-4 text-left text-sm font-semibold hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink";
+  "press-quiet flex min-h-11 w-full items-center gap-3 rounded-full px-4 text-left text-sm font-semibold hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink";
 
 /**
  * The event's own context menu (spec 017 RF-32 to RF-43, plan D12): the

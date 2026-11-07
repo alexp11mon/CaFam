@@ -41,7 +41,7 @@ export function MonthStrip({ month }: { month: string }) {
               <Link
                 href={calendarHref("month", `${item.key}-01`)}
                 aria-current={item.current ? "date" : undefined}
-                className={`inline-flex min-h-11 min-w-16 items-center justify-center rounded-full px-4 text-base font-semibold press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${item.current ? "border border-accent-edge bg-accent text-on-accent" : "border border-control text-ink"}`}
+                className={`inline-flex min-h-11 min-w-16 items-center justify-center rounded-full px-4 text-base font-semibold press-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${item.current ? "border border-accent-edge bg-accent text-on-accent" : "border border-control text-ink"}`}
               >
                 {item.label}
               </Link>

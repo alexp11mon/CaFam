@@ -285,38 +285,157 @@ body {
   }
 }
 
-/* Dialogs fade and rise in and out (RF-20, plan D10). In the base layer so a
-   dialog's own translate or opacity utilities still win. */
+/* Pressing without lifting, for rows, options and days (spec 021 RF-13). */
+@utility press-quiet {
+  transition-property: scale, color, background-color, border-color;
+  transition-duration: var(--motion-fast-in);
+  transition-timing-function: var(--ease-out);
+  &:active:not(:disabled) {
+    scale: var(--press-scale);
+  }
+}
+
+/* A popover grows from its trigger at 95 % and shrinks back to it (spec 021
+   RF-6..RF-10, plan D3, D4). Closed with [hidden] or [data-leaving]. */
+@utility pop {
+  transform-origin: var(--pop-origin, center);
+  transition-property: opacity, scale, display, overlay;
+  transition-duration: var(--motion-pop-in);
+  transition-timing-function: var(--ease-out);
+  transition-behavior: allow-discrete;
+  &[hidden],
+  &[data-leaving] {
+    opacity: 0;
+    scale: var(--pop-scale);
+    transition-duration: var(--motion-pop-out);
+  }
+  @starting-style {
+    opacity: 0;
+    scale: var(--pop-scale);
+  }
+}
+
+/* Rows enter one after another, 30 ms apart, only while their list enters
+   (spec 021 RF-16..RF-18, plan D7): the ninth and later share the eighth's. */
+@utility stagger {
+  &[data-entering] > * {
+    animation: row-in var(--motion-row) var(--ease-out) both;
+  }
+  &[data-entering] > :nth-child(2) {
+    animation-delay: calc(var(--stagger-step) * 1);
+  }
+  &[data-entering] > :nth-child(3) {
+    animation-delay: calc(var(--stagger-step) * 2);
+  }
+  &[data-entering] > :nth-child(4) {
+    animation-delay: calc(var(--stagger-step) * 3);
+  }
+  &[data-entering] > :nth-child(5) {
+    animation-delay: calc(var(--stagger-step) * 4);
+  }
+  &[data-entering] > :nth-child(6) {
+    animation-delay: calc(var(--stagger-step) * 5);
+  }
+  &[data-entering] > :nth-child(7) {
+    animation-delay: calc(var(--stagger-step) * 6);
+  }
+  &[data-entering] > :nth-child(8) {
+    animation-delay: calc(var(--stagger-step) * 7);
+  }
+  &[data-entering] > :nth-child(n + 9) {
+    animation-delay: calc(var(--stagger-step) * 7);
+  }
+}
+
+/* A row that arrives on its own (spec 021 RF-18). */
+@utility row-in {
+  animation: row-in var(--motion-row) var(--ease-out) both;
+}
+
+/* A secondary detail lands 50 ms after its body (spec 021 RF-19). */
+@utility settle {
+  animation: row-in var(--motion-row) var(--ease-out) var(--settle-delay) both;
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+/* Two states in one cell: the new one enters while the old one leaves, so
+   nothing changes size (spec 021 RF-52..RF-54). */
+@utility swap {
+  display: inline-grid;
+  & > * {
+    grid-area: 1 / 1;
+    transition-property: opacity, scale, filter;
+    transition-duration: var(--motion-fast-in);
+    transition-timing-function: var(--ease-out);
+  }
+  & > [data-off] {
+    opacity: 0;
+    transition-duration: var(--motion-fast-out);
+  }
+  &[data-icons] > [data-off] {
+    scale: var(--swap-scale);
+    filter: blur(var(--swap-blur));
+  }
+}
+
+/* A panel that unrolls from its top edge (spec 021 RF-38). */
+@utility reveal-down {
+  clip-path: inset(0 0 0 0);
+  transition-property: clip-path, opacity, display;
+  transition-duration: var(--motion-base-in);
+  transition-timing-function: var(--ease-out);
+  transition-behavior: allow-discrete;
+  @starting-style {
+    clip-path: inset(0 0 100% 0);
+  }
+  &[data-leaving] {
+    clip-path: inset(0 0 100% 0);
+    transition-duration: var(--motion-base-out);
+  }
+}
+
+/* Dialogs grow from 95 % at the centre and leave in 80 % of the time (spec
+   011 RF-20, spec 021 RF-11, RF-12). In the base layer so a dialog's own
+   utilities still win. */
 @layer base {
   dialog {
     opacity: 0;
-    translate: 0 8px;
-    transition-property: opacity, translate, display, overlay;
-    transition-duration: var(--motion-base-in);
+    scale: var(--pop-scale);
+    transition-property: opacity, scale, translate, display, overlay;
+    transition-duration: var(--motion-dialog-out);
     transition-timing-function: var(--ease-out);
     transition-behavior: allow-discrete;
   }
 
   dialog[open] {
     opacity: 1;
+    scale: 1;
     translate: 0 0;
+    transition-duration: var(--motion-dialog-in);
   }
 
   dialog::backdrop {
     opacity: 0;
     transition-property: opacity, display, overlay;
-    transition-duration: var(--motion-base-in);
+    transition-duration: var(--motion-dialog-out);
     transition-behavior: allow-discrete;
   }
 
   dialog[open]::backdrop {
     opacity: 1;
+    transition-duration: var(--motion-dialog-in);
   }
 
   @starting-style {
     dialog[open] {
       opacity: 0;
-      translate: 0 8px;
+      scale: var(--pop-scale);
     }
 
     dialog[open]::backdrop {
@@ -324,19 +443,53 @@ body {
     }
   }
 
-  /* The phone drawer slides in from the left instead (spec 016 RF-12). */
+  /* Sheets come up from the bottom edge (RF-12). */
+  dialog[data-sheet] {
+    scale: 1;
+    translate: 0 100%;
+  }
+
+  @media (width < 48.0625rem) {
+    dialog[data-phone-sheet] {
+      scale: 1;
+      translate: 0 100%;
+    }
+  }
+
+  /* The phone drawer slides in from the left (spec 016 RF-12). */
   dialog[data-drawer] {
+    scale: 1;
     translate: -100% 0;
   }
 
+  dialog[data-sheet][open],
+  dialog[data-phone-sheet][open],
   dialog[data-drawer][open] {
     translate: 0 0;
   }
 
   @starting-style {
+    dialog[data-sheet][open] {
+      translate: 0 100%;
+    }
+
     dialog[data-drawer][open] {
       translate: -100% 0;
     }
+  }
+
+  @media (width < 48.0625rem) {
+    @starting-style {
+      dialog[data-phone-sheet][open] {
+        translate: 0 100%;
+      }
+    }
+  }
+
+  /* A surface that morphs out of its event is animated by script (spec 021
+     plan D2): no CSS entrance on top of it. */
+  [data-morph] {
+    transition: none;
   }
 }
 
@@ -351,6 +504,7 @@ body {
   [data-toast][data-leaving] {
     opacity: 0;
     translate: 0 8px;
+    transition-duration: var(--motion-base-out);
   }
 
   @starting-style {
@@ -476,6 +630,12 @@ body {
   @layer base {
     dialog,
     dialog[open],
+    dialog[data-sheet],
+    dialog[data-phone-sheet],
+    dialog[data-drawer],
+    dialog[data-sheet][open],
+    dialog[data-phone-sheet][open],
+    dialog[data-drawer][open],
     [data-toast],
     [data-toast][data-leaving] {
       translate: none;

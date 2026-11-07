@@ -77,7 +77,7 @@ function PersonCheckbox({
   const some = visibleCount > 0 && !all;
 
   return (
-    <label className="flex min-h-11 min-w-0 items-center gap-2 font-semibold text-ink">
+    <label className="press-quiet flex min-h-11 min-w-0 items-center gap-2 font-semibold text-ink">
       <input
         type="checkbox"
         checked={all}

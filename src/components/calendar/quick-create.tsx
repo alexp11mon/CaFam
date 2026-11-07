@@ -191,6 +191,7 @@ export function QuickCreate({
     <dialog
       ref={dialog}
       aria-labelledby={headingId}
+      data-phone-sheet=""
       onCancel={(event) => {
         event.preventDefault();
         onClose();

@@ -166,7 +166,7 @@ export function MiniMonth({
                       href={calendarHref(view, day)}
                       aria-label={label}
                       aria-current={isToday ? "date" : undefined}
-                      className={`mx-auto flex size-11 flex-col items-center justify-center rounded-xl text-sm tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+                      className={`press-quiet mx-auto flex size-11 flex-col items-center justify-center rounded-xl text-sm tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
                         isToday
                           ? "border border-accent-edge bg-accent font-extrabold text-on-accent"
                           : `hover:bg-stone ${inMonth ? "font-medium text-ink" : "text-muted"}`

@@ -58,7 +58,7 @@
 
   Hecho cuando: `npm test -- play use-presence use-enter-once` en verde. Cubre: RF-47, RF-49, RF-63, RF-64, RF-65, RF-66, RF-67 | Módulo: motion-play, use-presence, use-enter-once
 
-- [ ] T4 Añadir las utilidades de CSS, la entrada de ventanas y hojas y la respuesta al pulsar
+- [x] T4 Añadir las utilidades de CSS, la entrada de ventanas y hojas y la respuesta al pulsar
   Pasos:
   - Primero, en rojo:
     - `tests/unit/motion-utilities.test.ts` lee `globals.css`:

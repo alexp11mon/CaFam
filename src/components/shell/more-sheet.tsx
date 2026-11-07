@@ -16,7 +16,7 @@ const SHEET_SECTIONS: readonly Section[] = [
 ];
 
 const ROW =
-  "flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-base font-medium text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:bg-stone";
+  "press-quiet flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-base font-medium text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:bg-stone";
 
 /**
  * The rest of the destinations on a phone, in a native <dialog> sheet: focus
@@ -54,6 +54,7 @@ export function MoreSheet({
       <dialog
         ref={sheet}
         aria-labelledby={titleId}
+        data-sheet=""
         onClose={() => trigger.current?.focus()}
         className="mx-0 mt-auto mb-0 w-full max-w-full rounded-t-3xl glass-float p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink backdrop:bg-scrim/50"
       >

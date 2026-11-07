@@ -146,7 +146,7 @@ export function TimeField({
             // Keep the focus in the field while clicking.
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => pick(option)}
-            className={`cursor-pointer px-3 py-2 text-base text-ink tabular-nums ${index === active ? "bg-stone font-semibold" : "hover:bg-stone"}`}
+            className={`press-quiet cursor-pointer px-3 py-2 text-base text-ink tabular-nums ${index === active ? "bg-stone font-semibold" : "hover:bg-stone"}`}
           >
             {option.label}
           </li>
