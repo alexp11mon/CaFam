@@ -9,6 +9,7 @@ import { TextField } from "@/components/ui/text-field";
 import type { CalendarField } from "@/lib/calendar/schemas";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { ColorPicker } from "./color-picker";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 type CalendarFormState = FormState<CalendarField>;
 
@@ -54,7 +55,11 @@ export function CalendarForm({
       />
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={pending}>
-          {pending ? pendingLabel : submitLabel}
+          <SwapLabel
+            busy={pending}
+            idle={submitLabel}
+            busyText={pendingLabel}
+          />
         </Button>
         <LinkButton href="/dashboard/calendars" variant="secondary">
           Cancelar

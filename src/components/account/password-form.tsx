@@ -6,6 +6,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { PasswordChangeState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 const INITIAL_STATE: PasswordChangeState = {};
 
@@ -40,7 +41,11 @@ export function PasswordForm({
         error={state.fieldErrors?.newPassword}
       />
       <Button type="submit" disabled={pending}>
-        {pending ? "Guardando…" : "Cambiar contraseña"}
+        <SwapLabel
+          busy={pending}
+          idle="Cambiar contraseña"
+          busyText="Guardando…"
+        />
       </Button>
     </form>
   );

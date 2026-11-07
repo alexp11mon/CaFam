@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 type IcloudState = FormState<"appleId" | "password">;
 
@@ -53,7 +54,11 @@ export function IcloudConnectForm({
       />
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Conectando…" : "Conectar iCloud"}
+          <SwapLabel
+            busy={pending}
+            idle="Conectar iCloud"
+            busyText="Conectando…"
+          />
         </Button>
       </div>
     </form>

@@ -32,6 +32,7 @@ import type { FormAction, FormState } from "@/lib/forms/form-state";
 import type { CalendarOption, EventFormValues } from "./event-form";
 import { useHoldLive } from "@/lib/hooks/use-hold-live";
 import { originFrom } from "@/lib/motion/origin";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 type State = FormState<keyof EventFormValues>;
 
@@ -315,7 +316,7 @@ export function QuickCreate({
             Más opciones
           </Button>
           <Button type="submit" disabled={pending}>
-            {pending ? "Guardando…" : "Guardar"}
+            <SwapLabel busy={pending} idle="Guardar" busyText="Guardando…" />
           </Button>
         </div>
       </form>

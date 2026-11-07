@@ -12,6 +12,7 @@ import { getImportErrorMessage } from "@/lib/ics/error-messages";
 import { EMPTY_IMPORT_VALUES, type ImportState } from "@/lib/ics/import-state";
 import { MAX_BYTES } from "@/lib/ics/limits";
 import { ImportSummary } from "./import-summary";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 const TOO_LARGE = getImportErrorMessage({ kind: "too-large" });
 
@@ -81,7 +82,11 @@ export function ImportForm({ action }: { action: FormAction<ImportState> }) {
       />
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={pending || Boolean(fileError)}>
-          {pending ? "Importando…" : "Importar calendario"}
+          <SwapLabel
+            busy={pending}
+            idle="Importar calendario"
+            busyText="Importando…"
+          />
         </Button>
         <LinkButton href="/dashboard/calendars" variant="secondary">
           Cancelar

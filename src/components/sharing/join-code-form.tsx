@@ -6,6 +6,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import type { JoinCodeField } from "@/lib/sharing/schemas";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 export type JoinCodeState = FormState<JoinCodeField>;
 
@@ -47,7 +48,7 @@ export function JoinCodeForm({
       />
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Uniéndote…" : "Unirme"}
+          <SwapLabel busy={pending} idle="Unirme" busyText="Uniéndote…" />
         </Button>
       </div>
     </form>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { FormAction, SignInState } from "@/lib/auth/form-state";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 const INITIAL_STATE: SignInState = { values: { email: "" } };
 
@@ -32,7 +33,7 @@ export function LoginForm({ action }: { action: FormAction<SignInState> }) {
       />
       <NextField />
       <Button type="submit" disabled={pending}>
-        {pending ? "Entrando…" : "Entrar"}
+        <SwapLabel busy={pending} idle="Entrar" busyText="Entrando…" />
       </Button>
     </form>
   );

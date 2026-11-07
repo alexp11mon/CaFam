@@ -14,6 +14,7 @@ import type {
 import type { AccessCodeRecord } from "@/lib/sharing/queries";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
 import type { AccessCodeField } from "@/lib/sharing/schemas";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 export type AccessCodeState = FormState<AccessCodeField>;
 
@@ -58,7 +59,11 @@ function CodeForm({
       />
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? pendingLabel : submitLabel}
+          <SwapLabel
+            busy={pending}
+            idle={submitLabel}
+            busyText={pendingLabel}
+          />
         </Button>
       </div>
     </form>

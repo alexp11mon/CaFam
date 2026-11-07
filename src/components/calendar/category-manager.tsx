@@ -10,6 +10,7 @@ import type {
   FormState,
 } from "@/lib/forms/form-state";
 import { ConfirmDialog } from "./confirm-dialog";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 type CategoryState = FormState<"name">;
 
@@ -48,7 +49,11 @@ function CreateForm({ action }: { action: FormAction<CategoryState> }) {
       />
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Añadiendo…" : "Añadir categoría"}
+          <SwapLabel
+            busy={pending}
+            idle="Añadir categoría"
+            busyText="Añadiendo…"
+          />
         </Button>
       </div>
     </form>
@@ -85,7 +90,11 @@ function CategoryRow({
         />
         <div className="flex flex-wrap gap-3">
           <Button type="submit" disabled={pending}>
-            {pending ? "Guardando…" : "Guardar nombre"}
+            <SwapLabel
+              busy={pending}
+              idle="Guardar nombre"
+              busyText="Guardando…"
+            />
           </Button>
           <Button variant="secondary" onClick={() => setEditing(false)}>
             Cancelar

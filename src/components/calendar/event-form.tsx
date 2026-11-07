@@ -24,6 +24,7 @@ import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
 import type { SeriesScope } from "@/lib/recurrence/series-write";
 import { ColorPicker } from "./color-picker";
 import { useEventModal } from "./event-modal";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 export type { EventFormValues };
 
@@ -357,7 +358,11 @@ export function EventForm({
             pending || uploads.items.some((item) => item.status === "preparing")
           }
         >
-          {pending ? pendingLabel : submitLabel}
+          <SwapLabel
+            busy={pending}
+            idle={submitLabel}
+            busyText={pendingLabel}
+          />
         </Button>
         {series ? (
           <SeriesScopeDialog

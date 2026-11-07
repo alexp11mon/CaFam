@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/select";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { providerName } from "@/lib/sync/provider-labels";
 import type { ProviderName } from "@/lib/sync/providers/types";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 type UploadState = FormState<"connectionId">;
 
@@ -86,7 +87,11 @@ export function UploadForm({
       </div>
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Subiendo…" : `Subir a ${provider}`}
+          <SwapLabel
+            busy={pending}
+            idle={`Subir a ${provider}`}
+            busyText="Subiendo…"
+          />
         </Button>
       </div>
     </form>

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import type { FormAction } from "@/lib/forms/form-state";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 interface SyncNowState {
   message?: string;
@@ -26,7 +27,11 @@ export function SyncNowButton({
         disabled={pending}
         className="self-start"
       >
-        {pending ? "Actualizando…" : "Actualizar ahora"}
+        <SwapLabel
+          busy={pending}
+          idle="Actualizar ahora"
+          busyText="Actualizando…"
+        />
       </Button>
       <FormAlert message={state.formError} />
       <p role="status" className="text-sm text-ink empty:hidden">

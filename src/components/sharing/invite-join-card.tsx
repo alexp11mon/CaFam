@@ -9,6 +9,7 @@ import type { ConfirmState, FormAction } from "@/lib/forms/form-state";
 import { SHARING_MESSAGES } from "@/lib/sharing/error-messages";
 import type { InvitePreview } from "@/lib/sharing/queries";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 /** Preview of an invite and the "Unirme" button (RF-5, RF-6, RF-8, RF-9). */
 export function InviteJoinCard({
@@ -70,7 +71,7 @@ export function InviteJoinCard({
           <FormAlert message={state.formError} />
           <div>
             <Button type="submit" disabled={pending}>
-              {pending ? "Uniéndote…" : "Unirme"}
+              <SwapLabel busy={pending} idle="Unirme" busyText="Uniéndote…" />
             </Button>
           </div>
         </form>

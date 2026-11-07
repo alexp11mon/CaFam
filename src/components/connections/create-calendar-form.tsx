@@ -7,6 +7,7 @@ import { TextField } from "@/components/ui/text-field";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { providerName } from "@/lib/sync/provider-labels";
 import type { ProviderName } from "@/lib/sync/providers/types";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 type CreateState = FormState<"name">;
 
@@ -40,7 +41,11 @@ export function CreateCalendarForm({
       </div>
       <div>
         <Button type="submit" variant="secondary" disabled={pending}>
-          {pending ? "Creando…" : `Crear en ${providerName(provider)}`}
+          <SwapLabel
+            busy={pending}
+            idle={`Crear en ${providerName(provider)}`}
+            busyText="Creando…"
+          />
         </Button>
       </div>
     </form>

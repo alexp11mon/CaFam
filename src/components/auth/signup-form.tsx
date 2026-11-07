@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { FormAction, SignUpState } from "@/lib/auth/form-state";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 const INITIAL_STATE: SignUpState = { values: { displayName: "", email: "" } };
 
@@ -56,7 +57,11 @@ export function SignupForm({ action }: { action: FormAction<SignUpState> }) {
       <input type="hidden" name="timeZone" value={timeZone} />
       <NextField />
       <Button type="submit" disabled={pending}>
-        {pending ? "Creando cuenta…" : "Crear cuenta"}
+        <SwapLabel
+          busy={pending}
+          idle="Crear cuenta"
+          busyText="Creando cuenta…"
+        />
       </Button>
     </form>
   );

@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import type { ProfileState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 /** Name and time zone of the own profile (spec 006, RF-13 to RF-15). */
 export function ProfileForm({
@@ -55,7 +56,7 @@ export function ProfileForm({
         ))}
       </Select>
       <Button type="submit" disabled={pending}>
-        {pending ? "Guardando…" : "Guardar perfil"}
+        <SwapLabel busy={pending} idle="Guardar perfil" busyText="Guardando…" />
       </Button>
     </form>
   );

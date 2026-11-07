@@ -107,7 +107,7 @@
 
   Hecho cuando: `npm test -- switch view-options-setting availability-setting` en verde y una prueba en `playwright-cli` en la que pulsar a mitad de viaje invierte la bolita desde donde está. Cubre: RF-40, RF-41, RF-42, RF-43, RF-44, RF-45, RF-46 | Módulo: switch, settings-switches
 
-- [ ] T8 Cambiar los textos pendientes de los botones sin que cambien de tamaño
+- [x] T8 Cambiar los textos pendientes de los botones sin que cambien de tamaño
   Pasos:
   - Primero, en rojo:
     - `tests/unit/swap-label.test.tsx`: los dos textos en la misma celda; el oculto con `aria-hidden`; el nombre accesible del botón es el visible.

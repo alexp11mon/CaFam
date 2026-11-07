@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 type GroupState = FormState<"name">;
 
@@ -32,7 +33,7 @@ export function GroupForm({ action }: { action: FormAction<GroupState> }) {
       </div>
       <div>
         <Button type="submit" variant="secondary" disabled={pending}>
-          {pending ? "Creando…" : "Crear grupo"}
+          <SwapLabel busy={pending} idle="Crear grupo" busyText="Creando…" />
         </Button>
       </div>
     </form>

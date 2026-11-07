@@ -6,6 +6,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { ForgotPasswordState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 const INITIAL_STATE: ForgotPasswordState = { values: { email: "" } };
 const SENT_MESSAGE =
@@ -45,7 +46,7 @@ export function ForgotPasswordForm({
         error={state.fieldErrors?.email}
       />
       <Button type="submit" disabled={pending}>
-        {pending ? "Enviando…" : "Enviar enlace"}
+        <SwapLabel busy={pending} idle="Enviar enlace" busyText="Enviando…" />
       </Button>
     </form>
   );

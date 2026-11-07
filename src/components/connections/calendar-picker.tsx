@@ -8,6 +8,7 @@ import type { FormAction } from "@/lib/forms/form-state";
 import { MAX_CALENDARS_PER_ACCOUNT } from "@/lib/sync/limits";
 import { providerName } from "@/lib/sync/provider-labels";
 import type { ProviderAccess, ProviderName } from "@/lib/sync/providers/types";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 export interface PickerCalendar {
   id: string;
@@ -144,7 +145,7 @@ export function CalendarPicker({
         {state.message}
       </p>
       <Button type="submit" disabled={pending} className="self-start">
-        {pending ? "Guardando…" : "Guardar"}
+        <SwapLabel busy={pending} idle="Guardar" busyText="Guardando…" />
       </Button>
     </form>
   );

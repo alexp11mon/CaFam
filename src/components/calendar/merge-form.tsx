@@ -10,6 +10,7 @@ import type { MergeField } from "@/lib/calendar/schemas";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { getMergeAccess, type MergeMember } from "@/lib/sharing/merge-access";
 import { ColorPicker } from "./color-picker";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 type MergeFormState = FormState<MergeField>;
 export type MergeFormValues = MergeFormState["values"];
@@ -193,7 +194,11 @@ export function MergeForm({
 
       <div className="flex flex-wrap gap-3">
         <Button disabled={!canContinue || pending} onClick={openConfirmation}>
-          {pending ? "Juntando…" : "Juntar calendarios"}
+          <SwapLabel
+            busy={pending}
+            idle="Juntar calendarios"
+            busyText="Juntando…"
+          />
         </Button>
         <LinkButton href="/dashboard/calendars" variant="secondary">
           Cancelar

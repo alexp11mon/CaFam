@@ -9,6 +9,7 @@ import type { FormAction, FormState } from "@/lib/forms/form-state";
 import type { InviteField } from "@/lib/sharing/schemas";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
 import { CopyButton } from "./copy-button";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 export type InviteState = FormState<InviteField> & {
   /** Only lives in the state of the submit that created it: the token is never stored (RF-1). */
@@ -44,7 +45,11 @@ export function InviteForm({ action }: { action: FormAction<InviteState> }) {
       />
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Creando…" : "Crear invitación"}
+          <SwapLabel
+            busy={pending}
+            idle="Crear invitación"
+            busyText="Creando…"
+          />
         </Button>
       </div>
       {state.inviteUrl ? (

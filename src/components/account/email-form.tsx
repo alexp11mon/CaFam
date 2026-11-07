@@ -6,6 +6,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { EmailChangeState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 const INITIAL_STATE: EmailChangeState = { values: { newEmail: "" } };
 
@@ -51,7 +52,7 @@ export function EmailForm({
         error={state.fieldErrors?.currentPassword}
       />
       <Button type="submit" disabled={pending}>
-        {pending ? "Enviando…" : "Cambiar email"}
+        <SwapLabel busy={pending} idle="Cambiar email" busyText="Enviando…" />
       </Button>
     </form>
   );

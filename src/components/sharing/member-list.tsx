@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/select";
 import type { ConfirmState, FormAction } from "@/lib/forms/form-state";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
 import { StaggerList } from "@/components/ui/stagger-list";
+import { SwapLabel } from "@/components/ui/swap-label";
 
 export interface MemberItem {
   userId: string;
@@ -56,7 +57,7 @@ function RoleForm({
         disabled={pending}
         aria-label={`Guardar rol de ${member.name}`}
       >
-        {pending ? "Guardando…" : "Guardar rol"}
+        <SwapLabel busy={pending} idle="Guardar rol" busyText="Guardando…" />
       </Button>
     </form>
   );
