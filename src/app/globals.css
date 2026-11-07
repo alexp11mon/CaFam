@@ -541,6 +541,17 @@ body {
   animation-duration: var(--motion-base-in);
 }
 
+/* The view switcher slides its own pill: the cross-fade of the page must not
+   show an old copy of it (spec 021 RF-34, plan R1). */
+::view-transition-group(view-switcher),
+::view-transition-new(view-switcher) {
+  animation: none;
+}
+
+::view-transition-old(view-switcher) {
+  display: none;
+}
+
 ::view-transition-old(.cal-view),
 ::view-transition-old(.cal-filter) {
   animation: cal-fade-out var(--motion-fast-out) var(--ease-out) both;

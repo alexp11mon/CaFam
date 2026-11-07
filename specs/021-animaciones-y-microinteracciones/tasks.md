@@ -134,7 +134,7 @@
 
   Hecho cuando: `npm test -- icon-swap crossfade-text toast theme-toggle top-bar event-panel` en verde. Cubre: RF-52, RF-54 | Módulo: icon-swap, crossfade-text, state-overlap, icon-swaps
 
-- [ ] T10 Deslizar la píldora del selector de vista con el color del texto recortado
+- [x] T10 Deslizar la píldora del selector de vista con el color del texto recortado
   Pasos:
   - Primero, en rojo, `view-toolbar`:
     - hay una capa `aria-hidden` y sin eventos de puntero con `bg-accent` y `text-on-accent`;

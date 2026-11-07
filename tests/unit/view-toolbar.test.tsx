@@ -43,6 +43,48 @@ describe("ViewToolbar (RF-29, RF-37)", () => {
     );
   });
 
+  it("clips an accent layer to the chosen view (spec 021 RF-34, RF-35)", () => {
+    const rect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        const [left, right] =
+          this.getAttribute("aria-current") === "page"
+            ? [104, 200]
+            : this.querySelector('[aria-current="page"]')
+              ? [4, 404]
+              : [0, 0];
+        return {
+          left,
+          right,
+          top: 0,
+          bottom: 44,
+          width: right - left,
+          height: 44,
+        } as DOMRect;
+      });
+    try {
+      render(<ViewToolbar view="week" date="2026-10-14" today={TODAY} />);
+      const week = screen.getByRole("link", { name: "Semana" });
+      const group = week.parentElement!;
+      expect(group).toHaveClass("[view-transition-name:view-switcher]");
+
+      const layer = group.querySelector<HTMLElement>(
+        '[aria-hidden="true"].pointer-events-none',
+      )!;
+      expect(layer.style.getPropertyValue("--l")).toBe("100px");
+      expect(layer.style.getPropertyValue("--r")).toBe("204px");
+      expect(layer).toHaveClass(
+        "[clip-path:inset(0_var(--r)_0_var(--l)_round_9999px)]",
+      );
+      expect(layer.querySelector(".bg-accent.text-on-accent")).not.toBeNull();
+      // The links, their state and their keys stay as they were.
+      expect(week).toHaveAttribute("aria-current", "page");
+      expect(week).toHaveAttribute("aria-keyshortcuts", "S");
+    } finally {
+      rect.mockRestore();
+    }
+  });
+
   it("moves to the previous and next month", () => {
     render(<ViewToolbar view="month" date="2026-10-14" today={TODAY} />);
 

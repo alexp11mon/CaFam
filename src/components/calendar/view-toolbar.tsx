@@ -2,6 +2,7 @@
 
 import { WeekendToggle } from "./weekend-toggle";
 import Link from "next/link";
+import { useLayoutEffect, useRef } from "react";
 import { CaretIcon, ChevronIcon, MenuIcon } from "@/components/shell/icons";
 import {
   setSidebarCollapsed,
@@ -158,32 +159,102 @@ export function ViewToolbar({
         )}
       </div>
       <div className="flex gap-1 self-start rounded-full bg-paper p-1 max-sm:self-stretch">
-        {VIEWS.map((item) => (
-          <Link
-            key={item.view}
-            href={calendarHref(item.view, date)}
-            transitionTypes={[CAL_VIEW]}
-            aria-current={item.view === view ? "page" : undefined}
-            aria-keyshortcuts={item.key}
-            // Fire and forget: failing to remember the view must not block it.
-            onClick={() => void saveLastView?.(item.view)}
-            // The chosen view is a selection, so it takes the accent (constitution, RF-3).
-            className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-base font-semibold press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:flex-none ${item.view === view ? "border border-accent-edge bg-accent text-on-accent" : "text-muted hover:text-ink"}`}
-          >
-            {item.label}
-            {/* The key, as Google shows it in its view menu; only with a keyboard-sized screen. */}
-            <kbd
-              aria-hidden="true"
-              className={`ml-2 hidden font-sans text-xs font-semibold lg:inline ${item.view === view ? "text-on-accent/70" : "text-muted"}`}
-            >
-              {item.key}
-            </kbd>
-          </Link>
-        ))}
+        <ViewSwitcher view={view} date={date} saveLastView={saveLastView} />
         {showWeekends ? null : (
           <WeekendToggle className={`${BUTTON} border-0 bg-transparent`} />
         )}
       </div>
     </nav>
+  );
+}
+
+const VIEW_ITEM =
+  "inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-base font-semibold sm:flex-none";
+
+/**
+ * The views, drawn twice in the same box: muted text below and, above it, an
+ * accent layer clipped to the chosen view. Moving the clip slides the pill and
+ * turns the text white exactly where it passes (spec 021 RF-34, RF-35, D8).
+ */
+function ViewSwitcher({
+  view,
+  date,
+  saveLastView,
+}: {
+  view: CalendarView;
+  date: string;
+  saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
+}) {
+  const group = useRef<HTMLDivElement>(null);
+  const layer = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const box = group.current;
+    const clip = layer.current;
+    if (!box || !clip) return;
+    const measure = () => {
+      const chosen = box.querySelector('[aria-current="page"]');
+      if (!chosen) return;
+      const outer = box.getBoundingClientRect();
+      const inner = chosen.getBoundingClientRect();
+      clip.style.setProperty("--l", `${inner.left - outer.left}px`);
+      clip.style.setProperty("--r", `${outer.right - inner.right}px`);
+      clip.dataset.ready = "";
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [view]);
+
+  return (
+    // Its own view-transition name, so the view's cross-fade does not show
+    // it twice (plan R1).
+    <div
+      ref={group}
+      className="relative flex flex-1 gap-1 [view-transition-name:view-switcher] sm:flex-none"
+    >
+      {VIEWS.map((item) => (
+        <Link
+          key={item.view}
+          href={calendarHref(item.view, date)}
+          transitionTypes={[CAL_VIEW]}
+          aria-current={item.view === view ? "page" : undefined}
+          aria-keyshortcuts={item.key}
+          // Fire and forget: failing to remember the view must not block it.
+          onClick={() => void saveLastView?.(item.view)}
+          // The chosen view is a selection: the accent layer above paints it
+          // (constitution, RF-3).
+          className={`${VIEW_ITEM} press-quiet text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink`}
+        >
+          {item.label}
+          {/* The key, as Google shows it in its view menu; only with a keyboard-sized screen. */}
+          <kbd
+            aria-hidden="true"
+            className="ml-2 hidden font-sans text-xs font-semibold text-muted lg:inline"
+          >
+            {item.key}
+          </kbd>
+        </Link>
+      ))}
+      {/* The edge, then the accent 1 px inside it: the pill of a selection. */}
+      <div
+        ref={layer}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 rounded-full bg-accent-edge opacity-0 transition-[clip-path] duration-(--motion-move) ease-(--ease-in-out) [clip-path:inset(0_var(--r)_0_var(--l)_round_9999px)] data-ready:opacity-100"
+      >
+        <div className="absolute inset-0 flex gap-1 bg-accent text-on-accent transition-[clip-path] duration-(--motion-move) ease-(--ease-in-out) [clip-path:inset(1px_calc(var(--r)+1px)_1px_calc(var(--l)+1px)_round_9999px)]">
+          {VIEWS.map((item) => (
+            <span key={item.view} className={VIEW_ITEM}>
+              {item.label}
+              <kbd className="ml-2 hidden font-sans text-xs font-semibold text-on-accent/70 lg:inline">
+                {item.key}
+              </kbd>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
