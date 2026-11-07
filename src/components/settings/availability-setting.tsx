@@ -1,7 +1,8 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useState } from "react";
 import { FormAlert } from "@/components/ui/form-alert";
+import { Switch } from "@/components/ui/switch";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 
 type Result = { error?: string };
@@ -20,7 +21,6 @@ export function AvailabilitySetting({
 }) {
   const [checked, setChecked] = useState(current);
   const [error, setError] = useState<string>();
-  const hintId = useId();
 
   async function toggle(next: boolean) {
     setChecked(next);
@@ -39,21 +39,12 @@ export function AvailabilitySetting({
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="flex min-h-11 cursor-pointer items-start gap-3 text-base font-medium text-ink">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(event) => void toggle(event.target.checked)}
-          aria-describedby={hintId}
-          className="mt-0.5 size-5 shrink-0 accent-ink"
-        />
-        Permitir que el asistente de otros consulte mi disponibilidad
-      </label>
-      <p id={hintId} className="text-sm text-muted">
-        Quienes comparten calendarios contigo podrán preguntar a su asistente
-        cuándo estáis libres. Verá solo si estás libre u ocupado, nunca el
-        título ni los detalles de tus eventos.
-      </p>
+      <Switch
+        label="Permitir que el asistente de otros consulte mi disponibilidad"
+        description="Quienes comparten calendarios contigo podrán preguntar a su asistente cuándo estáis libres. Verá solo si estás libre u ocupado, nunca el título ni los detalles de tus eventos."
+        checked={checked}
+        onCheckedChange={(next) => void toggle(next)}
+      />
       <FormAlert message={error} />
     </div>
   );

@@ -21,7 +21,7 @@ function setup(result: { error?: string } = {}) {
 describe("ViewOptionsSetting", () => {
   it("saves the weekends switch at once", async () => {
     const { saveWeekends } = setup();
-    const box = screen.getByRole("checkbox", {
+    const box = screen.getByRole("switch", {
       name: "Mostrar fines de semana",
     });
     expect(box).toBeChecked();
@@ -47,7 +47,7 @@ describe("ViewOptionsSetting", () => {
 
   it("goes back and says why if saving fails", async () => {
     setup({ error: "No se ha podido guardar. Inténtalo de nuevo." });
-    const box = screen.getByRole("checkbox", {
+    const box = screen.getByRole("switch", {
       name: "Mostrar fines de semana",
     });
 

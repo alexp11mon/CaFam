@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Select } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import { DURATIONS, durationLabel } from "@/lib/calendar/view-options";
 
@@ -58,15 +59,11 @@ export function ViewOptionsSetting({
 
   return (
     <div className="flex flex-col gap-4">
-      <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base font-medium text-ink">
-        <input
-          type="checkbox"
-          checked={weekends}
-          onChange={(event) => void toggle(event.target.checked)}
-          className="size-5 shrink-0 accent-ink"
-        />
-        Mostrar fines de semana
-      </label>
+      <Switch
+        label="Mostrar fines de semana"
+        checked={weekends}
+        onCheckedChange={(next) => void toggle(next)}
+      />
       <div className="sm:max-w-60">
         <Select
           label="Duración de un evento nuevo"

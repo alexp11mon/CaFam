@@ -96,7 +96,7 @@
 
   Hecho cuando: `npm test -- calendar-list member-list connection-list calendar-picker event-comments cited-events toast event-card quick-create` en verde. Cubre: RF-16, RF-17, RF-18, RF-19 | Módulo: lists, settle-details
 
-- [ ] T7 Crear el interruptor y usarlo en Ajustes
+- [x] T7 Crear el interruptor y usarlo en Ajustes
   Pasos:
   - Primero, en rojo:
     - `tests/unit/switch.test.tsx`: `role="switch"` con su nombre y `aria-checked`; Espacio e Intro lo cambian; deshabilitado no cambia; objetivo de 44 px (`min-h-11` en la fila).
