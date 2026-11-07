@@ -179,7 +179,7 @@
 
 ### Iteración 2
 
-- [ ] T13 Devolver los eventos a su sitio en arco
+- [x] T13 Devolver los eventos a su sitio en arco
   Pasos:
   - Primero, en rojo, `event-interactions` y `draggable-event`:
     - deja `captureReturn(id)` antes de deshacer un cambio que falla, al pulsar "Deshacer" tras mover o redimensionar, cuando Google o iCloud lo rechazan y al cancelar la pregunta del alcance;
@@ -188,6 +188,10 @@
   - Después, el cableado en los dos componentes.
 
   Hecho cuando: `npm test -- event-interactions draggable-event` en verde y una prueba en `playwright-cli` (mover un evento a otro día y pulsar "Deshacer") en la que vuelve en arco. Cubre: RF-20, RF-21, RF-22 | Módulo: return-flight, motion-marks
+
+  Notas al cerrarla (2026-11-07):
+  - `captureReturn` va en `settle` (fallo, rechazo de Google o iCloud y alcance cancelado son el mismo camino) y en `useUndoToast`, solo si "Deshacer" sale bien y el cambio era de horas (un color no se mueve).
+  - Prueba en el navegador del panel (1440 px, `next start -p 3100`): un evento movido del lunes al miércoles y "Deshacer" anima `translate` de `228.8px 0px` a `0px 0px` pasando por `114.4px -32px` en 300 ms con `--ease-in-out`; al guardar el movimiento, el pulso `scale 1 → 1.04 → 1`.
 
 - [ ] T14 Transformar el bloque en la tarjeta de detalle y devolverla al cerrar
   Pasos:

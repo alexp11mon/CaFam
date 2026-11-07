@@ -4,8 +4,15 @@ import { useLayoutEffect, useRef, type ComponentProps } from "react";
 import type { DragMode } from "@/lib/hooks/use-event-drag";
 import { boxOf } from "@/lib/calendar/popover";
 import { formatTime } from "@/lib/calendar/time-zone";
+import { flightKeyframes } from "@/lib/motion/flight";
 import { takeMark } from "@/lib/motion/marks";
-import { pulse } from "@/lib/motion/play";
+import {
+  EASE_IN_OUT,
+  motionMs,
+  motionToken,
+  play,
+  pulse,
+} from "@/lib/motion/play";
 import { EventBlock } from "./event-block";
 import { useEventInteractions } from "./event-interactions";
 
@@ -31,12 +38,19 @@ export function DraggableEvent({
   const { event, timeZone } = block;
   const editable = Boolean(api?.canEdit(event));
 
-  // What the last change left for this block: pulse once saved (spec 021
-  // RF-48). Every paint looks, since a refresh remounts blocks elsewhere.
+  // What the last change left for this block: fly back from where it was
+  // (spec 021 RF-20..RF-22) or pulse once saved (RF-48). Every paint looks,
+  // since a refresh remounts blocks elsewhere.
   useLayoutEffect(() => {
-    if (!editable || !element.current) return;
+    const el = element.current;
+    if (!editable || !el) return;
     const mark = takeMark(event.id);
-    if (mark?.kind === "pulse") pulse(element.current);
+    if (mark?.kind === "pulse") pulse(el);
+    if (mark?.kind === "return")
+      play(el, flightKeyframes(mark.from, boxOf(el)), {
+        duration: motionMs("--motion-move", 300),
+        easing: motionToken("--ease-in-out", EASE_IN_OUT),
+      });
   });
 
   if (!api || !editable) return <EventBlock {...block} />;

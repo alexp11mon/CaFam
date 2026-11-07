@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { undoAction } from "@/app/dashboard/events/quick-actions";
 import { useToast } from "@/components/ui/toast";
 import type { UndoToken } from "@/lib/calendar/undo";
+import { captureReturn } from "@/lib/motion/marks";
 
 /**
  * Shows a notice with "Deshacer" when the action left an undo token
@@ -21,6 +22,13 @@ export function useUndoToast() {
           ? {
               undo: async () => {
                 const result = await undoAction(undo);
+                // A moved or stretched event flies back to its place (spec 021 RF-20).
+                if (
+                  result.ok &&
+                  undo.kind === "change" &&
+                  undo.before.kind === "times"
+                )
+                  captureReturn(undo.id);
                 router.refresh();
                 return result.ok ? null : result.error;
               },

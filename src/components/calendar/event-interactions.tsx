@@ -42,7 +42,7 @@ import { EventMenu, type MenuChoice } from "./event-menu";
 import { usePresence } from "@/lib/hooks/use-presence";
 import { POP_OUT_MS } from "@/lib/motion/play";
 import { useUndoToast } from "./use-undo-toast";
-import { markPulse } from "@/lib/motion/marks";
+import { captureReturn, markPulse } from "@/lib/motion/marks";
 
 export type ChangeNotice = "moved" | "resized" | "color";
 
@@ -226,6 +226,8 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
     (event: CalendarEventItem, result: QuickResult | null, notice: string) => {
       if (!result || !result.ok) {
         // Back to its place, with the reason (RF-4); cancelled says nothing.
+        // It flies there from where it is now (spec 021 RF-20).
+        captureReturn(event.id);
         setOverride(event.id, null);
         if (result) show(result.error);
         if (result && !result.ok && result.gone) router.refresh();

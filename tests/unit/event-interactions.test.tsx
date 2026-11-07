@@ -219,6 +219,54 @@ describe("useEventInteractionsState", () => {
     expect(h.markPulse).toHaveBeenCalledWith("e1");
   });
 
+  it("measures the block before it goes back by itself (spec 021 RF-20)", async () => {
+    h.quickChange.mockResolvedValueOnce({
+      ok: false,
+      error: "iCloud no lo deja.",
+    });
+    setup();
+    await userEvent.click(screen.getByRole("button", { name: "Mover" }));
+    await screen.findByText("iCloud no lo deja.");
+    expect(h.captureReturn).toHaveBeenCalledWith("e1");
+
+    h.captureReturn.mockReset();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Mover repetición" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(h.captureReturn).toHaveBeenCalledWith(OCCURRENCE.id);
+  });
+
+  it("does not fly back after a saved change", async () => {
+    h.quickChange.mockResolvedValueOnce({ ok: true, id: "e1" });
+    setup();
+    await userEvent.click(screen.getByRole("button", { name: "Mover" }));
+    await screen.findByText("Evento movido");
+    expect(h.captureReturn).not.toHaveBeenCalled();
+  });
+
+  it("Deshacer after moving measures the block first (spec 021 RF-20)", async () => {
+    h.quickChange.mockResolvedValueOnce({
+      ok: true,
+      id: "e1",
+      undo: {
+        kind: "change",
+        id: "e1",
+        before: { ...LATER, startsAt: SINGLE.startsAt, endsAt: SINGLE.endsAt },
+        updatedAt: "x",
+        series: false,
+      },
+    });
+    h.undoAction.mockResolvedValueOnce({ ok: true });
+    setup();
+    await userEvent.click(screen.getByRole("button", { name: "Mover" }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Deshacer" }),
+    );
+    await waitFor(() => expect(h.captureReturn).toHaveBeenCalledWith("e1"));
+    expect(h.refresh).toHaveBeenCalled();
+  });
+
   it("server data replaces a saved change", async () => {
     h.quickChange.mockResolvedValue({ ok: true, id: "e1" });
     const { rerenderWith } = setup();

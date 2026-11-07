@@ -8,7 +8,9 @@ import {
 import { TimeGrid } from "@/components/calendar/time-grid";
 import { ToastProvider } from "@/components/ui/toast";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
-import { markPulse } from "@/lib/motion/marks";
+import { captureReturn, markPulse } from "@/lib/motion/marks";
+import { flightKeyframes } from "@/lib/motion/flight";
+import { EASE_IN_OUT } from "@/lib/motion/play";
 
 // Spec 017, T7: moving and resizing with the mouse in the week and the day
 // (RF-2, RF-5, RF-7, RF-8, RF-9, RF-10, RF-12, RF-19, RF-20, RF-21, RF-23).
@@ -16,11 +18,13 @@ const h = vi.hoisted(() => ({
   quickChange: vi.fn(),
   refresh: vi.fn(),
   pulse: vi.fn(),
+  play: vi.fn(),
 }));
 
 vi.mock("@/lib/motion/play", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/motion/play")>()),
   pulse: h.pulse,
+  play: h.play,
 }));
 
 vi.mock("@/app/dashboard/events/quick-actions", () => ({
@@ -192,6 +196,35 @@ describe("DraggableEvent", () => {
     setup();
     expect(h.pulse).toHaveBeenCalledTimes(1);
     expect(h.pulse).toHaveBeenCalledWith(block("Cena"));
+  });
+
+  it("flies back in an arc from where it was (spec 021 RF-20, RF-21)", () => {
+    h.play.mockReset();
+    // Measured before going back: 200 px to the right of where it is drawn.
+    const ghost = document.createElement("a");
+    ghost.dataset.eventId = "e1";
+    ghost.getBoundingClientRect = () => rect(300, 480, 90, 48) as DOMRect;
+    document.body.append(ghost);
+    captureReturn("e1");
+    ghost.remove();
+
+    setup();
+    const el = block("Cena");
+    expect(h.play).toHaveBeenCalledTimes(1);
+    const [target, frames, options] = h.play.mock.calls[0]!;
+    expect(target).toBe(el);
+    expect(frames).toEqual(
+      flightKeyframes(
+        { left: 300, top: 480, width: 90, height: 48 },
+        {
+          left: el.getBoundingClientRect().left,
+          top: el.getBoundingClientRect().top,
+          width: el.getBoundingClientRect().width,
+          height: el.getBoundingClientRect().height,
+        },
+      ),
+    );
+    expect(options).toMatchObject({ easing: EASE_IN_OUT });
   });
 
   it("does not pulse without a mark", () => {
