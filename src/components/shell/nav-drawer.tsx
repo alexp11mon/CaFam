@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useRef, type PointerEvent, type RefObject } from "react";
-import { swipeDirection } from "@/lib/calendar/swipe";
+import { useId, type RefObject } from "react";
+import { useFollowDrag } from "@/lib/hooks/use-follow-drag";
+import { releaseDecision } from "@/lib/motion/release";
+import { banded } from "@/lib/motion/rubber-band";
 import { NAV_ITEMS, type Section } from "@/lib/shell/nav";
 import { useCalendarHeader } from "./calendar-header";
 import { SECTION_ICONS, SignOutIcon } from "./icons";
@@ -30,19 +32,21 @@ export function NavDrawer({
 }) {
   const titleId = useId();
   const { setDrawerSlot } = useCalendarHeader();
-  const start = useRef<{ x: number; y: number } | null>(null);
   const close = () => dialog.current?.close();
-
-  function onPointerUp(event: PointerEvent) {
-    const from = start.current;
-    start.current = null;
-    if (!from || event.pointerType !== "touch") return;
-    // Sliding it back to the left closes it (RF-15).
-    if (
-      swipeDirection(event.clientX - from.x, event.clientY - from.y) === "next"
-    )
-      close();
-  }
+  // It follows a finger to the left and bands to the right (spec 021 RF-30,
+  // RF-32). Released past half its width, or flicked, it closes (spec 016
+  // RF-15); otherwise CSS slides it back from where the finger left it.
+  const follow = useFollowDrag(dialog, {
+    offset: (delta) => banded(delta, -Infinity, 0),
+    onRelease: (delta, velocity, el) => {
+      const width = el.getBoundingClientRect().width;
+      el.style.translate = "";
+      if (
+        releaseDecision({ delta, velocity, threshold: width / 2 }) === "forward"
+      )
+        close();
+    },
+  });
 
   return (
     <dialog
@@ -55,11 +59,8 @@ export function NavDrawer({
         if (event.target === event.currentTarget) close();
         else if ((event.target as Element).closest("a")) close();
       }}
-      onPointerDown={(event) => {
-        start.current = { x: event.clientX, y: event.clientY };
-      }}
-      onPointerUp={onPointerUp}
-      className="m-0 h-full max-h-none w-[min(20rem,85vw)] max-w-none overflow-y-auto rounded-r-3xl glass-float p-0 text-ink backdrop:bg-scrim/50"
+      {...follow}
+      className="m-0 h-full touch-pan-y max-h-none w-[min(20rem,85vw)] max-w-none overflow-y-auto rounded-r-3xl glass-float p-0 text-ink backdrop:bg-scrim/50"
     >
       <div className="flex min-h-full flex-col gap-3 p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
         <h2 id={titleId} className="px-3 text-lg font-bold">

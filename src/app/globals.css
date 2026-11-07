@@ -516,6 +516,21 @@ body {
   backdrop-filter: none;
 }
 
+/* Outside any layer, so it beats every transition while a finger drags
+   (spec 021 RF-30). */
+[data-following] {
+  transition: none;
+}
+
+/* The next image comes in from the side it was pulled from (RF-31). */
+[data-enter-from="right"] {
+  animation: cal-in-end var(--motion-base-in) var(--ease-out) both;
+}
+
+[data-enter-from="left"] {
+  animation: cal-in-start var(--motion-base-in) var(--ease-out) both;
+}
+
 /* The notice rises in and fades out before it goes (RF-20). */
 @layer base {
   [data-toast] {

@@ -10,10 +10,11 @@ import { imageAlt } from "@/lib/images/alt";
 import { objectPath } from "@/lib/images/paths";
 import type { EventImage } from "@/lib/images/queries";
 import type { ConfirmState } from "@/lib/forms/form-state";
+import { useFollowDrag } from "@/lib/hooks/use-follow-drag";
+import { EASE_IN_OUT, motionMs, motionToken, play } from "@/lib/motion/play";
+import { releaseDecision } from "@/lib/motion/release";
+import { banded } from "@/lib/motion/rubber-band";
 import { useImageBlob } from "./use-image-blob";
-
-// A horizontal drag longer than this changes the image (RF-10).
-const SWIPE = 50;
 
 const LINK_BUTTON =
   "inline-flex min-h-11 items-center justify-center rounded-full border border-control bg-paper px-5 py-2 text-base font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
@@ -76,8 +77,46 @@ export function ImageViewer({
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [index, setIndex] = useState(start);
-  const swipeFrom = useRef<number | null>(null);
+  // The side the shown image came in from (spec 021 RF-31).
+  const [enterFrom, setEnterFrom] = useState<"left" | "right" | null>(null);
+  const stage = useRef<HTMLDivElement>(null);
   const image = images[Math.min(index, images.length - 1)];
+  const position = image ? images.indexOf(image) : 0;
+  const go = (delta: number) => {
+    const next = Math.max(0, Math.min(images.length - 1, position + delta));
+    if (next === position) return;
+    setEnterFrom(delta > 0 ? "right" : "left");
+    setIndex(next);
+  };
+  // The image follows the finger, banded past the first and the last (spec
+  // 021 RF-30, RF-32); a quarter of the width, or a flick, changes it (RF-31).
+  const follow = useFollowDrag(stage, {
+    offset: (delta) =>
+      banded(
+        delta,
+        position === images.length - 1 ? 0 : -Infinity,
+        position === 0 ? 0 : Infinity,
+      ),
+    onRelease: (delta, velocity, el) => {
+      const from = el.style.translate;
+      el.style.translate = "";
+      const decision = releaseDecision({
+        delta,
+        velocity,
+        threshold: el.getBoundingClientRect().width / 4,
+      });
+      const step = decision === "forward" ? 1 : decision === "back" ? -1 : 0;
+      const next = position + step;
+      if (step && next >= 0 && next < images.length) {
+        go(step);
+        return;
+      }
+      play(el, [{ translate: from }, { translate: "0px 0px" }], {
+        duration: motionMs("--motion-base-out", 176),
+        easing: motionToken("--ease-in-out", EASE_IN_OUT),
+      });
+    },
+  });
 
   useEffect(() => {
     const element = dialog.current;
@@ -86,12 +125,7 @@ export function ImageViewer({
   }, []);
 
   if (!image) return null;
-  const position = images.indexOf(image);
   const alt = imageAlt(title, position, images.length);
-  const go = (delta: number) =>
-    setIndex((current) =>
-      Math.max(0, Math.min(images.length - 1, current + delta)),
-    );
   const when = new Intl.DateTimeFormat("es-ES", {
     day: "numeric",
     month: "short",
@@ -140,20 +174,18 @@ export function ImageViewer({
         </Button>
       </header>
       <div
+        ref={stage}
         data-testid="viewer-stage"
         className="flex min-h-0 flex-1 touch-pan-y items-center justify-center"
-        onPointerDown={(event) => {
-          swipeFrom.current = event.clientX;
-        }}
-        onPointerUp={(event) => {
-          if (swipeFrom.current === null) return;
-          const delta = event.clientX - swipeFrom.current;
-          swipeFrom.current = null;
-          if (delta <= -SWIPE) go(1);
-          if (delta >= SWIPE) go(-1);
-        }}
+        {...follow}
       >
-        <FullImage key={image.id} image={image} alt={alt} />
+        <div
+          key={image.id}
+          data-enter-from={enterFrom ?? undefined}
+          className="flex max-h-full min-h-0 items-center justify-center"
+        >
+          <FullImage image={image} alt={alt} />
+        </div>
       </div>
       <footer className="flex flex-wrap items-center justify-center gap-3">
         <Button

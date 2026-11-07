@@ -107,6 +107,30 @@ describe("useFollowDrag", () => {
     expect(onRelease).toHaveBeenCalledWith(-200, expect.any(Number), area);
   });
 
+  it("works in a window over another one, as the image viewer does", () => {
+    const onRelease = vi.fn();
+    const under = document.createElement("dialog");
+    under.setAttribute("open", "");
+    const over = document.createElement("dialog");
+    over.setAttribute("open", "");
+    document.body.append(under, over);
+    render(<Area onRelease={onRelease} />, { container: over });
+    const area = screen.getByTestId("area");
+    touch("pointerDown", area, 300);
+    touch("pointerUp", area, 100);
+    expect(onRelease).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops CSS transitions only while it follows", () => {
+    render(<Area onRelease={vi.fn()} />);
+    const area = screen.getByTestId("area");
+    touch("pointerDown", area, 300);
+    touch("pointerMove", area, 200);
+    expect(area).toHaveAttribute("data-following");
+    touch("pointerUp", area, 200);
+    expect(area).not.toHaveAttribute("data-following");
+  });
+
   it("maps the finger with `offset`, for the rubber band (RF-32)", async () => {
     render(<Area onRelease={vi.fn()} offset={(delta) => delta / 2} />);
     const area = screen.getByTestId("area");

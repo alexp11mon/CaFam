@@ -44,8 +44,18 @@ export function useFollowDrag<T extends HTMLElement>(
     });
   }
 
+  /** While it follows, CSS transitions would lag behind the finger. */
+  function following(on: boolean) {
+    if (!ref.current) return;
+    if (on) ref.current.dataset.following = "";
+    else delete ref.current.dataset.following;
+  }
+
   function cancel() {
-    if (gesture.current?.axis === "x") write("");
+    if (gesture.current?.axis === "x") {
+      following(false);
+      write("");
+    }
     gesture.current = null;
   }
 
@@ -58,7 +68,10 @@ export function useFollowDrag<T extends HTMLElement>(
       return false;
     }
     const dx = event.clientX - current.x;
-    current.axis ??= lockAxis(dx, event.clientY - current.y);
+    if (!current.axis) {
+      current.axis = lockAxis(dx, event.clientY - current.y);
+      if (current.axis === "x") following(true);
+    }
     if (current.axis !== "x") {
       if (current.axis === "y") gesture.current = null;
       return false;
@@ -76,11 +89,9 @@ export function useFollowDrag<T extends HTMLElement>(
         return;
       }
       if (event.pointerType !== "touch" || !enabled) return;
-      const own = ref.current?.closest("dialog");
-      const other = [...document.querySelectorAll("dialog[open]")].some(
-        (dialog) => dialog !== own,
-      );
-      if (other) return;
+      // Inside a window the finger is on it; outside, any open window wins.
+      const inWindow = ref.current?.closest("dialog[open]");
+      if (!inWindow && document.querySelector("dialog[open]")) return;
       // Speed comes from the moves only: a lone press and release is no flick.
       const velocity = trackVelocity();
       gesture.current = {
@@ -104,6 +115,7 @@ export function useFollowDrag<T extends HTMLElement>(
       const { delta, velocity } = gesture.current!;
       gesture.current = null;
       cancelAnimationFrame(frame.current);
+      following(false);
       const el = ref.current;
       if (!el) return;
       // The last frame, so the release animates from exactly here.

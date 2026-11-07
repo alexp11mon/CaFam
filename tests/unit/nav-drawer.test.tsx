@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { CalendarHeaderProvider } from "@/components/shell/calendar-header";
@@ -87,22 +87,64 @@ describe("NavDrawer", () => {
     expect(menu).toHaveFocus();
   });
 
-  it("closes on the backdrop and when slid to the left", async () => {
+  it("closes on the backdrop", async () => {
     const { drawer } = await openDrawer();
     fireEvent.click(drawer);
     expect(drawer).not.toHaveAttribute("open");
+  });
+});
 
-    await userEvent.click(screen.getByRole("button", { name: "Menú" }));
-    fireEvent.pointerDown(drawer, {
+// Spec 021, T17: the drawer follows the finger (RF-30, RF-32, RF-33).
+describe("NavDrawer under a finger", () => {
+  const frame = () =>
+    act(
+      () =>
+        new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+    );
+  const touch = (
+    type: "pointerDown" | "pointerMove" | "pointerUp",
+    el: Element,
+    x: number,
+  ) =>
+    fireEvent[type](el, {
       pointerType: "touch",
-      clientX: 250,
+      pointerId: 1,
+      clientX: x,
       clientY: 300,
     });
-    fireEvent.pointerUp(drawer, {
-      pointerType: "touch",
-      clientX: 120,
-      clientY: 310,
-    });
+
+  async function slide(from: number, to: number) {
+    const { drawer } = await openDrawer();
+    drawer.getBoundingClientRect = () => ({ width: 300 }) as DOMRect;
+    touch("pointerDown", drawer, from);
+    touch("pointerMove", drawer, to);
+    await frame();
+    return drawer;
+  }
+
+  it("follows a slide to the left and opens again under half its width", async () => {
+    const drawer = await slide(250, 150);
+    expect(drawer.style.translate).toBe("-100px 0px");
+    expect(drawer).toHaveAttribute("data-following");
+    touch("pointerUp", drawer, 150);
+    expect(drawer).toHaveAttribute("open");
+    expect(drawer.style.translate).toBe("");
+    expect(drawer).not.toHaveAttribute("data-following");
+  });
+
+  it("closes past half its width", async () => {
+    const drawer = await slide(250, 80);
+    touch("pointerUp", drawer, 80);
     expect(drawer).not.toHaveAttribute("open");
+    expect(drawer.style.translate).toBe("");
+  });
+
+  it("goes no more than 64 px to the right, with a rubber band", async () => {
+    const drawer = await slide(100, 400);
+    const offset = parseFloat(drawer.style.translate);
+    expect(offset).toBeGreaterThan(0);
+    expect(offset).toBeLessThan(64);
+    touch("pointerUp", drawer, 400);
+    expect(drawer).toHaveAttribute("open");
   });
 });

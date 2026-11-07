@@ -258,7 +258,7 @@
   - Prueba en el navegador del panel a 390 px con punteros táctiles sintéticos (en lugar de `playwright-cli`): 25 px a la izquierda escribe `translate: -25px` bajo el dedo y al soltar anima `-25px → 0px` sin cambiar de semana; 150 px anima `-150px → -358px` (el ancho de la vista) y lleva a la semana siguiente. Con el panel oculto el navegador pausa `requestAnimationFrame` y las animaciones, así que la navegación llega al volver a mostrarse.
   - Pendiente para el usuario: la prueba en el iPhone del pellizco y el desplazamiento (plan R2); queda anotada en T19.
 
-- [ ] T17 Hacer que el cajón y el visor de imágenes sigan al dedo con goma
+- [x] T17 Hacer que el cajón y el visor de imágenes sigan al dedo con goma
   Pasos:
   - Primero, en rojo:
     - `nav-drawer`:
@@ -272,6 +272,14 @@
   - Después, `useFollowDrag` en los dos componentes.
 
   Hecho cuando: `npm test -- nav-drawer image-viewer` en verde y una prueba táctil en `playwright-cli` a 390 px del cajón y del visor. Cubre: RF-30, RF-31, RF-32, RF-33 | Módulo: follow-gesture, band-limits
+
+  Notas al cerrarla (2026-11-07):
+  - `useFollowDrag` marca `data-following` mientras sigue al dedo; una regla fuera de capas (`[data-following] { transition: none }`) quita las transiciones para que el cajón no vaya por detrás. Al soltar, el cajón quita su `translate` en línea y su transición de CSS lo cierra o lo devuelve desde donde lo dejó el dedo.
+  - La comprobación de ventanas abiertas cambia: dentro de una ventana abierta el dedo está en ella (el visor se abre sobre el detalle, que también es un `<dialog>`); fuera, cualquier ventana abierta lo para.
+  - El visor envuelve la imagen en un `div` con `key` y `data-enter-from` (`right` al avanzar, `left` al retroceder, también con botones y flechas), que entra con las animaciones `cal-in-end` y `cal-in-start` de la 011. Si no cambia, vuelve a 0 con `play`.
+  - El cajón lleva `touch-pan-y` para que el navegador no se quede el gesto horizontal.
+  - `lib/calendar/swipe.ts` y su test se borran: el cajón era su último uso.
+  - Prueba en el navegador del panel a 390 px con punteros táctiles sintéticos sobre el cajón: 50 px a la izquierda vuelve abierto, 190 px lo cierra y hacia la derecha no se cierra. El visor no se probó en el navegador (el usuario de prueba no tiene imágenes); lo cubren `image-viewer.test.tsx` y comparte el gesto con el cajón.
 
 - [ ] T18 Poner la goma en la hoja de detalle, el pellizco de las horas y el borde de un evento
   Pasos:
