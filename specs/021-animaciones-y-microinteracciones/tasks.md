@@ -37,7 +37,7 @@
 
   Hecho cuando: `npm test -- motion-tokens design-tokens` en verde y `grep -rn "motion-ease" src` sin resultados. Cubre: RF-1, RF-2, RF-3, RF-4, RF-5, RF-66 | Módulo: motion-tokens, design-guard
 
-- [ ] T2 Calcular el origen, la goma, la decisión al soltar y el arco
+- [x] T2 Calcular el origen, la goma, la decisión al soltar y el arco
   Pasos:
   - Primero, en rojo, `tests/unit/motion-origin.test.ts`, `rubber-band.test.ts`, `release.test.ts` y `flight.test.ts`:
     - `originFrom`: un disparador encima, debajo, a un lado y dentro del panel, y un punto (el puntero); el resultado siempre cae dentro del panel.
