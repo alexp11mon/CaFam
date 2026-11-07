@@ -48,7 +48,7 @@
 
   Hecho cuando: `npm test -- motion-origin rubber-band release flight` en verde. Cubre: RF-8, RF-10, RF-20, RF-21, RF-22, RF-25, RF-27, RF-28, RF-29, RF-32, RF-33 | Módulo: motion-origin, motion-band, motion-release, motion-flight
 
-- [ ] T3 Crear `play`, `pulse`, `usePresence` y `useEnterOnce`
+- [x] T3 Crear `play`, `pulse`, `usePresence` y `useEnterOnce`
   Pasos:
   - Primero, en rojo:
     - `tests/unit/play.test.ts`: con `animate` simulado, `play` fija y cancela la animación anterior antes de empezar otra; sin `animate`, o con movimiento reducido, aplica el último fotograma y devuelve `null`; `pulse` no hace nada con movimiento reducido.
