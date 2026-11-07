@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { EventBlock } from "@/components/calendar/event-block";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
+import { takeMorphOrigin } from "@/lib/motion/morph";
 
 // Spec 016 RF-1..RF-5, RF-41, RF-54..RF-56: every event is a filled block.
 const TZ = "Europe/Madrid";
@@ -24,6 +25,29 @@ function link() {
 }
 
 describe("EventBlock", () => {
+  it("keeps where it was pressed, so its detail grows from it (spec 021 RF-55)", () => {
+    render(
+      <EventBlock
+        event={EVENT}
+        timeZone={TZ}
+        shape="line"
+        segment="2026-11-02"
+      />,
+    );
+    link().getBoundingClientRect = () =>
+      ({ left: 5, top: 6, width: 70, height: 18 }) as DOMRect;
+    link().addEventListener("click", (event) => event.preventDefault());
+    fireEvent.click(link());
+
+    expect(link()).toHaveAttribute("data-segment", "2026-11-02");
+    expect(takeMorphOrigin("e1")).toEqual({
+      eventId: "e1",
+      segment: "2026-11-02",
+      box: { left: 5, top: 6, width: 70, height: 18 },
+      color: "#FFADAD",
+    });
+  });
+
   it.each(["line", "grid", "card"] as const)(
     "fills the %s block with the event color and links to its detail",
     (shape) => {

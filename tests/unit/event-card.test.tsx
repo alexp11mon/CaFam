@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EventClipboardProvider } from "@/components/calendar/event-clipboard";
@@ -17,6 +23,15 @@ const h = vi.hoisted(() => ({
   refresh: vi.fn(),
   loadEventCard: vi.fn(),
   deleteForUndo: vi.fn(),
+  morphIn: vi.fn(),
+  morphOut: vi.fn(),
+  findVisibleBlock: vi.fn(),
+}));
+vi.mock("@/lib/motion/morph", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/motion/morph")>()),
+  morphIn: h.morphIn,
+  morphOut: h.morphOut,
+  findVisibleBlock: h.findVisibleBlock,
 }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: h.push, refresh: h.refresh }),
@@ -112,6 +127,9 @@ function setPhone(phone: boolean) {
 }
 
 beforeEach(() => {
+  h.morphIn.mockReset().mockResolvedValue(undefined);
+  h.morphOut.mockReset().mockResolvedValue(undefined);
+  h.findVisibleBlock.mockReset().mockReturnValue(null);
   shown = BOTH;
   setPhone(false);
   h.push.mockClear();
@@ -203,12 +221,73 @@ describe("EventCard", () => {
     expect(screen.getByRole("button", { name: "Cerrar" })).toHaveFocus();
 
     await userEvent.keyboard("{Escape}");
-    expect(card()).toBeNull();
+    await waitFor(() => expect(card()).toBeNull());
     expect(block("Cena")).toHaveFocus();
 
     await userEvent.click(block("Cena"));
     await userEvent.click(screen.getByRole("button", { name: "Cerrar" }));
+    await waitFor(() => expect(card()).toBeNull());
+  });
+
+  it("grows out of the pressed block (spec 021 RF-55)", async () => {
+    setup();
+    vi.spyOn(block("Cena"), "getBoundingClientRect").mockReturnValue({
+      left: 40,
+      top: 300,
+      width: 120,
+      height: 20,
+    } as DOMRect);
+    await userEvent.click(block("Cena"));
+    const dialog = screen.getByRole("dialog", { name: "Cena" });
+    expect(h.morphIn).toHaveBeenCalledWith(
+      dialog,
+      { left: 40, top: 300, width: 120, height: 20 },
+      "#FFADAD",
+    );
+  });
+
+  it("shrinks into the block if it is still on screen (spec 021 RF-57)", async () => {
+    let shrunk: () => void = () => undefined;
+    h.morphOut.mockReturnValue(
+      new Promise<void>((resolve) => {
+        shrunk = resolve;
+      }),
+    );
+    setup();
+    await userEvent.click(block("Cena"));
+    const dialog = screen.getByRole("dialog", { name: "Cena" });
+    const target = block("Cena");
+    vi.spyOn(target, "getBoundingClientRect").mockReturnValue({
+      left: 10,
+      top: 20,
+      width: 30,
+      height: 40,
+    } as DOMRect);
+    h.findVisibleBlock.mockReturnValue(target);
+
+    await userEvent.keyboard("{Escape}");
+    expect(h.findVisibleBlock).toHaveBeenCalledWith("e1", undefined);
+    expect(h.morphOut).toHaveBeenCalledWith(
+      dialog,
+      { left: 10, top: 20, width: 30, height: 40 },
+      "#FFADAD",
+    );
+    // Still there until it has shrunk.
+    expect(card()).not.toBeNull();
+    await act(async () => shrunk());
     expect(card()).toBeNull();
+    expect(block("Cena")).toHaveFocus();
+  });
+
+  it("leaves with the pop exit when the block is gone (spec 021 RF-58)", async () => {
+    setup();
+    await userEvent.click(block("Cena"));
+    await userEvent.click(screen.getByRole("button", { name: "Cerrar" }));
+    const dialog = screen.getByRole("dialog", { name: "Cena", hidden: true });
+    expect(dialog).toHaveAttribute("data-leaving");
+    expect(dialog).toHaveClass("pop");
+    expect(h.morphOut).not.toHaveBeenCalled();
+    await waitFor(() => expect(card()).toBeNull());
   });
 
   it("closes on a click outside and moves on a click on another event (RF-11, RF-12)", async () => {
@@ -219,7 +298,7 @@ describe("EventCard", () => {
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
 
     await userEvent.click(screen.getByRole("button", { name: "Fuera" }));
-    expect(card()).toBeNull();
+    await waitFor(() => expect(card()).toBeNull());
   });
 
   it("keeps the link with Ctrl and on a phone, where the sheet is the detail (RF-15, RF-16)", () => {

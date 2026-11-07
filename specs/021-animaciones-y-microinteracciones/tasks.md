@@ -193,7 +193,7 @@
   - `captureReturn` va en `settle` (fallo, rechazo de Google o iCloud y alcance cancelado son el mismo camino) y en `useUndoToast`, solo si "Deshacer" sale bien y el cambio era de horas (un color no se mueve).
   - Prueba en el navegador del panel (1440 px, `next start -p 3100`): un evento movido del lunes al miércoles y "Deshacer" anima `translate` de `228.8px 0px` a `0px 0px` pasando por `114.4px -32px` en 300 ms con `--ease-in-out`; al guardar el movimiento, el pulso `scale 1 → 1.04 → 1`.
 
-- [ ] T14 Transformar el bloque en la tarjeta de detalle y devolverla al cerrar
+- [x] T14 Transformar el bloque en la tarjeta de detalle y devolverla al cerrar
   Pasos:
   - Primero, en rojo:
     - `morph.test.ts`:
@@ -209,6 +209,11 @@
   - Después, `src/lib/motion/morph.ts`, `data-morph` (fondo opaco durante la animación, plan R3) y el cableado en `event-block.tsx`, `event-card.tsx` y la vista mes.
 
   Hecho cuando: `npm test -- morph event-card event-block month-view` en verde y capturas a media animación de la tarjeta saliendo del bloque en semana y mes. Cubre: RF-55, RF-56, RF-57, RF-58, RF-61 | Módulo: motion-morph, event-morph
+
+  Notas al cerrarla (2026-11-07):
+  - La tarjeta lleva `pop` (con `--pop-origin` hacia el evento): es su entrada normal sin origen y su salida cuando el bloque ya no está (`data-leaving`, se desmonta a los `POP_OUT_MS`). Escape, "Cerrar" y el clic fuera pasan por `close`; los enlaces, el borrado y el estrechar la ventana cierran en el acto como antes.
+  - `[data-morph]` va fuera de las capas en `globals.css`: dentro de `@layer base` perdía contra la utilidad `glass-float`.
+  - Prueba en el navegador del panel (1440 px): en semana y en mes, la tarjeta pausada a mitad de camino sale del bloque con el color del evento encima y el contenido apareciendo; en mes el bloque lleva `data-segment="2026-11-09"`. Al cerrar, `translate` y `clip-path` van hacia la caja actual del bloque.
 
 - [ ] T15 Transformar el bloque en la hoja del móvil y en la ventana, y la tarjeta en la ventana
   Pasos:

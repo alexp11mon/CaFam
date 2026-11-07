@@ -186,6 +186,18 @@ describe("MonthView (spec 016 RF-30..RF-37)", () => {
     expect(block).toHaveStyle({ gridColumn: "3 / span 1" });
   });
 
+  it("marks each weekly segment of a long event (spec 021 plan R4)", () => {
+    renderMonth([
+      event("Viaje", "2026-10-17T00:00:00Z", "2026-10-21T00:00:00Z", {
+        allDay: true,
+      }),
+    ]);
+    const segments = screen
+      .getAllByRole("link", { name: /Viaje/ })
+      .map((link) => link.dataset.segment);
+    expect(segments).toEqual(["2026-10-12", "2026-10-19"]);
+  });
+
   it("draws a three-day event as one block across its days (RF-35)", () => {
     renderMonth([
       event("Viaje", "2026-10-20T00:00:00Z", "2026-10-23T00:00:00Z", {

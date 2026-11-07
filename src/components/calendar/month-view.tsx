@@ -148,6 +148,7 @@ export function MonthView({
                   key={event.id}
                   mode="month"
                   event={event}
+                  segment={week.days[0]}
                   timeZone={timeZone}
                   shape="line"
                   icons={false}

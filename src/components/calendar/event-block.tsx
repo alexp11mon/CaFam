@@ -3,7 +3,9 @@
 import Link from "next/link";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
+import { boxOf } from "@/lib/calendar/popover";
 import { formatTime } from "@/lib/calendar/time-zone";
+import { setMorphOrigin } from "@/lib/motion/morph";
 import { CommentIcon, ImageIcon, RepeatIcon } from "@/components/shell/icons";
 import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
 import { useEventInteractions } from "./event-interactions";
@@ -93,6 +95,7 @@ export function EventBlock({
   style,
   className = "",
   anchor,
+  segment,
   children,
 }: {
   event: CalendarEventItem;
@@ -108,6 +111,8 @@ export function EventBlock({
   anchor?: Omit<ComponentProps<"a">, "href" | "style" | "className"> & {
     "data-lifted"?: string;
   };
+  /** The month week this segment of a long event is drawn in (spec 021 plan R4). */
+  segment?: string;
   /** Drawn after the text: the resize handle and the hours while dragging. */
   children?: ReactNode;
 }) {
@@ -119,6 +124,14 @@ export function EventBlock({
       {...anchor}
       href={`/dashboard/events/${event.id}`}
       onClick={(click) => {
+        // Its detail grows out of this block (spec 021 RF-55).
+        if (click.button === 0)
+          setMorphOrigin({
+            eventId: event.id,
+            segment,
+            box: boxOf(click.currentTarget),
+            color: event.color,
+          });
         anchor?.onClick?.(click);
         // From 769 px a plain click opens the card beside the block instead of
         // the window; Ctrl, ⌘, Shift or the middle button keep the link (spec 019 RF-1, RF-16).
@@ -138,6 +151,7 @@ export function EventBlock({
       }}
       // The keys of a focused event find it by this (spec 017 RF-64).
       data-event-id={event.id}
+      data-segment={segment}
       style={{ ...style, backgroundColor: event.color }}
       className={`${SHAPES[shape]} text-pastel-ink ring-1 ring-pastel-ink/15 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink ${className}`}
     >

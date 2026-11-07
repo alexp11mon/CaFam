@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   loadEventCard,
   type EventCardData,
@@ -11,10 +18,18 @@ import { CloseIcon } from "@/components/shell/icons";
 import { useToast } from "@/components/ui/toast";
 import { formatEventWhen } from "@/lib/calendar/format";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
-import { placeCard, type Box } from "@/lib/calendar/popover";
+import { boxOf, placeCard, type Box } from "@/lib/calendar/popover";
 import { isTyping } from "@/lib/calendar/shortcuts";
 import { UNDO_NOTICES } from "@/lib/calendar/undo";
 import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
+import {
+  findVisibleBlock,
+  morphIn,
+  morphOut,
+  takeMorphOrigin,
+} from "@/lib/motion/morph";
+import { originFrom } from "@/lib/motion/origin";
+import { POP_OUT_MS } from "@/lib/motion/play";
 import { readOnlyEventText } from "@/lib/sync/read-only";
 import { useEventClipboard } from "./event-clipboard";
 
@@ -57,9 +72,13 @@ export function EventCard({
   const clipboard = useEventClipboard();
   const card = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-  const [place, setPlace] = useState<{ left: number; top: number } | null>(
-    null,
-  );
+  const [place, setPlace] = useState<Box | null>(null);
+  const [leaving, setLeaving] = useState(false);
+  // The month segment it grew from, to shrink back into (plan R4).
+  const segment = useRef<string | undefined>(undefined);
+  const morphed = useRef(false);
+  const closing = useRef(false);
+  const alive = useRef(true);
   const [data, setData] = useState<EventCardData | null>(null);
   const editable = data ? data.canEdit : canEdit;
 
@@ -67,13 +86,55 @@ export function EventCard({
   useLayoutEffect(() => {
     const element = card.current;
     if (!element) return;
-    const { left, top } = placeCard(
-      anchor,
-      { width: element.offsetWidth, height: element.offsetHeight },
-      { width: window.innerWidth, height: window.innerHeight },
-    );
-    setPlace({ left, top });
+    const size = { width: element.offsetWidth, height: element.offsetHeight };
+    const { left, top } = placeCard(anchor, size, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+    setPlace({ left, top, ...size });
   }, [anchor, data]);
+
+  // Once placed, it grows out of the block that was pressed; without one it
+  // pops in as before (spec 021 RF-55, RF-59).
+  useLayoutEffect(() => {
+    const element = card.current;
+    if (!place || !element || morphed.current) return;
+    morphed.current = true;
+    const origin = takeMorphOrigin(event.id);
+    if (!origin) return;
+    segment.current = origin.segment;
+    void morphIn(element, origin.box, origin.color);
+  }, [place, event.id]);
+
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+
+  /**
+   * Closes into the block where it is now, or with the pop exit if it is no
+   * longer on screen (spec 021 RF-57, RF-58); unmounts once it has left.
+   */
+  const close = useCallback(
+    (restoreFocus: boolean) => {
+      const element = card.current;
+      if (closing.current || !element) return;
+      closing.current = true;
+      const done = () => {
+        if (alive.current) onClose(restoreFocus);
+      };
+      const block = findVisibleBlock(event.id, segment.current);
+      if (block) {
+        void morphOut(element, boxOf(block), event.color).then(done);
+        return;
+      }
+      setLeaving(true);
+      setTimeout(done, POP_OUT_MS);
+    },
+    [event.id, event.color, onClose],
+  );
 
   // Focus goes into the card when it opens (RF-13).
   useEffect(() => {
@@ -106,7 +167,7 @@ export function EventCard({
       if (target.closest("[data-event-id]")) return;
       // Another window (the scope question, a menu) is not outside.
       if (target.closest("dialog[open], [role=menu]")) return;
-      onClose(false);
+      close(false);
     };
     // Below 769 px the phone's sheet is the detail (cases: narrower window).
     const media = window.matchMedia?.(PHONE_QUERY);
@@ -119,7 +180,7 @@ export function EventCard({
       document.removeEventListener("pointerdown", onPointerDown, true);
       media?.removeEventListener("change", onMedia);
     };
-  }, [onClose]);
+  }, [onClose, close]);
 
   const editHref = `/dashboard/events/${event.id}?edit=1`;
 
@@ -127,7 +188,7 @@ export function EventCard({
   function onKeyDown(key: React.KeyboardEvent) {
     if (key.key === "Escape") {
       key.preventDefault();
-      onClose(true);
+      close(true);
       return;
     }
     if (isTyping(key.target) || key.altKey) return;
@@ -163,13 +224,18 @@ export function EventCard({
       aria-labelledby={titleId}
       tabIndex={-1}
       data-event-card=""
+      data-leaving={leaving ? "" : undefined}
       onKeyDown={onKeyDown}
-      style={{
-        left: place?.left ?? 0,
-        top: place?.top ?? 0,
-        visibility: place ? undefined : "hidden",
-      }}
-      className="fixed z-40 m-0 flex max-h-[calc(100dvh-2rem)] w-90 flex-col gap-3 overflow-y-auto rounded-3xl glass-float p-4 text-ink shadow-float outline-none"
+      style={
+        {
+          left: place?.left ?? 0,
+          top: place?.top ?? 0,
+          visibility: place ? undefined : "hidden",
+          // The pop exit heads for the event (spec 021 RF-58).
+          "--pop-origin": place ? originFrom(anchor, place) : undefined,
+        } as React.CSSProperties
+      }
+      className="pop fixed z-40 m-0 flex max-h-[calc(100dvh-2rem)] w-90 flex-col gap-3 overflow-y-auto rounded-3xl glass-float p-4 text-ink shadow-float outline-none"
     >
       <div className="flex items-start gap-3">
         <span
@@ -186,7 +252,7 @@ export function EventCard({
         <button
           type="button"
           aria-label="Cerrar"
-          onClick={() => onClose(true)}
+          onClick={() => close(true)}
           className="-mt-1 -mr-1 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted press hover:bg-stone hover:text-ink focus-visible:outline-2 focus-visible:outline-ink"
         >
           <CloseIcon />

@@ -508,6 +508,14 @@ body {
   }
 }
 
+/* Opaque while it morphs, since glass over a moving clip is costly (spec 021
+   plan R3). Outside any layer, so it beats the glass-float utility. */
+[data-morph] {
+  background-color: var(--paper);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 /* The notice rises in and fades out before it goes (RF-20). */
 @layer base {
   [data-toast] {
