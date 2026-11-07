@@ -23,7 +23,7 @@
 
 ### Iteración 1
 
-- [ ] T1 Definir los tokens de movimiento y ampliar la guardia de diseño
+- [x] T1 Definir los tokens de movimiento y ampliar la guardia de diseño
   Pasos:
   - Primero, en rojo:
     - `tests/unit/motion-tokens.test.ts` lee `globals.css` y comprueba:

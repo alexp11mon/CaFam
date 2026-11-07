@@ -149,7 +149,7 @@ export function EventModal({
 
   const windowClasses = `max-[48.0625rem]:m-0 max-[48.0625rem]:h-full max-[48.0625rem]:max-h-none max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-none ${fullscreen ? "m-0 h-full max-h-none w-full max-w-none rounded-none" : "m-auto max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-2xl rounded-3xl"}`;
   // Anchored at the bottom, the calendar still visible above at half (RF-44).
-  const sheetClasses = `mx-0 mt-auto mb-0 w-full max-w-none max-h-none rounded-t-3xl backdrop:bg-scrim/20 transition-[height] duration-(--motion-base) ${sheet === "full" ? "h-dvh rounded-t-none" : "h-[55dvh]"}`;
+  const sheetClasses = `mx-0 mt-auto mb-0 w-full max-w-none max-h-none rounded-t-3xl backdrop:bg-scrim/20 transition-[height] duration-(--motion-base-in) ${sheet === "full" ? "h-dvh rounded-t-none" : "h-[55dvh]"}`;
 
   return (
     <dialog

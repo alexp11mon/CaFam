@@ -36,6 +36,9 @@
   --shadow-soft: var(--elevation-soft);
   --shadow-float: var(--elevation-float);
   --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  /* transition-colors and friends use the motion tokens too (spec 021 RF-1). */
+  --default-transition-duration: var(--motion-fast-in);
+  --default-transition-timing-function: var(--ease-out);
 }
 
 /* Light theme, also the default before the boot script runs (RF-5). */
@@ -57,14 +60,34 @@
   --backdrop: radial-gradient(120% 80% at 50% 0%, #e8e5dd 0%, #e4e0d7 100%);
   --elevation-soft: 0 1px 2px rgb(20 20 20 / 0.06);
   --elevation-float: 0 12px 32px rgb(20 20 20 / 0.16);
-  /* Motion (RF-22): never more than 400 ms. */
-  --motion-fast: 150ms;
-  --motion-base: 220ms;
-  --motion-slow: 400ms;
-  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* Motion (spec 011 RF-22, spec 021 plan "Modelo de datos"): never more
+     than 400 ms, exits in 80 % of their entrance, no curve overshoots.
+     motion-tokens.test.ts checks these rules. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --motion-pop-in: 200ms;
+  --motion-pop-out: 160ms;
+  --motion-dialog-in: 240ms;
+  --motion-dialog-out: 192ms;
+  --motion-base-in: 220ms;
+  --motion-base-out: 176ms;
+  --motion-fast-in: 150ms;
+  --motion-fast-out: 120ms;
+  --motion-row: 180ms;
+  --motion-pulse: 300ms;
+  --motion-reveal: 400ms;
+  --motion-move: 300ms;
   --motion-distance: 12px;
+  --pop-scale: 0.95;
   --press-scale: 0.97;
   --press-lift: -1px;
+  --stagger-step: 30ms;
+  --settle-delay: 50ms;
+  --arc-max: 32px;
+  --pulse-scale: 1.04;
+  --swap-scale: 0.5;
+  --swap-blur: 4px;
+  --knob-stretch: 1.12;
 }
 
 /* Dark theme picked by the user (RF-1). */
@@ -250,8 +273,8 @@ body {
 @utility press {
   transition-property:
     scale, translate, color, background-color, border-color, box-shadow;
-  transition-duration: var(--motion-fast);
-  transition-timing-function: var(--motion-ease);
+  transition-duration: var(--motion-fast-in);
+  transition-timing-function: var(--ease-out);
   &:active:not(:disabled) {
     scale: var(--press-scale);
   }
@@ -269,8 +292,8 @@ body {
     opacity: 0;
     translate: 0 8px;
     transition-property: opacity, translate, display, overlay;
-    transition-duration: var(--motion-base);
-    transition-timing-function: var(--motion-ease);
+    transition-duration: var(--motion-base-in);
+    transition-timing-function: var(--ease-out);
     transition-behavior: allow-discrete;
   }
 
@@ -282,7 +305,7 @@ body {
   dialog::backdrop {
     opacity: 0;
     transition-property: opacity, display, overlay;
-    transition-duration: var(--motion-base);
+    transition-duration: var(--motion-base-in);
     transition-behavior: allow-discrete;
   }
 
@@ -321,8 +344,8 @@ body {
 @layer base {
   [data-toast] {
     transition-property: opacity, translate;
-    transition-duration: var(--motion-base);
-    transition-timing-function: var(--motion-ease);
+    transition-duration: var(--motion-base-in);
+    transition-timing-function: var(--ease-out);
   }
 
   [data-toast][data-leaving] {
@@ -346,36 +369,36 @@ body {
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: var(--motion-base);
+  animation-duration: var(--motion-base-in);
 }
 
 ::view-transition-old(.cal-view),
 ::view-transition-old(.cal-filter) {
-  animation: cal-fade-out var(--motion-fast) var(--motion-ease) both;
+  animation: cal-fade-out var(--motion-fast-out) var(--ease-out) both;
 }
 
 ::view-transition-new(.cal-view) {
-  animation: cal-rise-in var(--motion-base) var(--motion-ease) both;
+  animation: cal-rise-in var(--motion-base-in) var(--ease-out) both;
 }
 
 ::view-transition-new(.cal-filter) {
-  animation: cal-fade-in var(--motion-base) var(--motion-ease) both;
+  animation: cal-fade-in var(--motion-base-in) var(--ease-out) both;
 }
 
 ::view-transition-old(.cal-next) {
-  animation: cal-out-start var(--motion-base) var(--motion-ease) both;
+  animation: cal-out-start var(--motion-base-out) var(--ease-out) both;
 }
 
 ::view-transition-new(.cal-next) {
-  animation: cal-in-end var(--motion-base) var(--motion-ease) both;
+  animation: cal-in-end var(--motion-base-in) var(--ease-out) both;
 }
 
 ::view-transition-old(.cal-prev) {
-  animation: cal-out-end var(--motion-base) var(--motion-ease) both;
+  animation: cal-out-end var(--motion-base-out) var(--ease-out) both;
 }
 
 ::view-transition-new(.cal-prev) {
-  animation: cal-in-start var(--motion-base) var(--motion-ease) both;
+  animation: cal-in-start var(--motion-base-in) var(--ease-out) both;
 }
 
 @keyframes cal-fade-in {
@@ -429,9 +452,25 @@ body {
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-distance: 0;
-    --motion-base: 150ms;
+    --motion-pop-in: 150ms;
+    --motion-pop-out: 120ms;
+    --motion-dialog-in: 150ms;
+    --motion-dialog-out: 120ms;
+    --motion-base-in: 150ms;
+    --motion-base-out: 120ms;
+    --motion-row: 150ms;
+    --motion-reveal: 150ms;
+    --motion-move: 150ms;
+    --pop-scale: 1;
     --press-scale: 1;
     --press-lift: 0;
+    --stagger-step: 0ms;
+    --settle-delay: 0ms;
+    --arc-max: 0px;
+    --pulse-scale: 1;
+    --swap-scale: 1;
+    --swap-blur: 0px;
+    --knob-stretch: 1;
   }
 
   @layer base {

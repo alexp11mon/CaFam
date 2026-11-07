@@ -96,6 +96,9 @@ const RULES: { name: string; pattern: RegExp; allow?: Set<string> }[] = [
     name: "tracked uppercase labels",
     pattern: /\buppercase\b[^"]*\btracking-(?:wide|wider|widest)\b/,
   },
+  // Motion comes from the tokens of globals.css (spec 021 RF-1, RF-3, plan D5, D6).
+  { name: "a loose easing curve", pattern: /(?<![\w-])ease-\[/ },
+  { name: "a numeric duration class", pattern: /(?<![\w-])duration-\d/ },
   { name: "an emoji", pattern: /\p{Extended_Pictographic}/u },
   // The old blue of spec 001 is gone everywhere (spec 005 RF-55..RF-58).
   { name: "the old blue #2563EB", pattern: /#2563eb/i },
@@ -113,6 +116,19 @@ describe("design guard (P9)", () => {
         !allow?.has(file) &&
         pattern.test(code),
     ).map(({ file }) => file);
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("no curve overshoots its end value (spec 021 RF-4)", () => {
+    const offenders = SOURCES.flatMap(({ file, code }) =>
+      [...code.matchAll(/cubic-bezier\(([^)]*)\)/g)]
+        .filter((m) => {
+          const [, y1, , y2] = m[1].split(",").map(Number);
+          return y1 < 0 || y1 > 1 || y2 < 0 || y2 > 1;
+        })
+        .map((m) => `${file}: ${m[0]}`),
+    );
 
     expect(offenders).toEqual([]);
   });

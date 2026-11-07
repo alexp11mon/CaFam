@@ -78,7 +78,7 @@ export function UploadList({
                   className="h-1.5 overflow-hidden rounded-full bg-line"
                 >
                   <div
-                    className="h-full rounded-full bg-ink transition-[width] duration-150"
+                    className="h-full rounded-full bg-ink transition-[width] duration-(--motion-fast-in)"
                     style={{ width: `${item.progress}%` }}
                   />
                 </div>
