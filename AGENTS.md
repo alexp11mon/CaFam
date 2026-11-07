@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-04, al cerrar la spec 015 (asistente de chat, con la ampliación de comentarios y botón flotante).
+> Última actualización: 2026-11-07, al terminar las tareas de la spec 021 (animaciones y microinteracciones), pendiente de aprobar su cierre.
 
 ## 1. Qué es
 
@@ -47,6 +47,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Cerrada** (2026-10-30), T1–T13 hechas; sin migraciones. La prueba en el iPhone se hace en producción |
 | 017-mover-eventos-y-menu | Mover y redimensionar arrastrando, menú contextual en el ordenador, "Deshacer" en los avisos, detalle en hoja inferior en el móvil, pellizcar para ampliar y atajos nuevos (enmienda 5) | **Cerrada** (2026-11-01), T1–T16 hechas; 2 migraciones aplicadas en prod |
 | 018-sincronizacion-icloud | Calendarios de iCloud (iPhone) por CalDAV con contraseña específica de app, con el mismo alcance que Google en la 007 y la 009 (leer, escribir, renombrar, crear y subir). Dependencia `tsdav` aprobada; se instala en la primera tarea | **Cerrada** (2026-11-01), T1–T15 hechas; 2 migraciones aplicadas en prod; enmienda 6 aplicada |
+| 021-animaciones-y-microinteracciones | Movimiento con intención en toda la app: curvas y duraciones como tokens, desplegables que nacen del disparador, listas escalonadas, interruptor, pulso de guardado, regreso en arco, evento → detalle, seguir al dedo con goma, selector de vista y revelado del tema | T1–T18 hechas; T19 (validación) con la evidencia escrita y **pendiente de aprobar el cierre**. Sin migraciones ni dependencias nuevas |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -209,6 +210,15 @@ Añadido por la spec 019 (migraciones aplicadas en prod el 2026-11-02):
 - **Bloque provisional en el móvil**: con la hoja de `QuickCreate` abierta en semana o día, el bloque se mueve con el dedo y se estira desde su tirador en cuartos de hora (`draft-drag.ts`, `DraftBlock` en `time-grid.tsx`), y las horas de la hoja y el bloque van a la par. En el móvil la hoja se abre **sin modal** (`show()`) para que la rejilla siga usable, y la rejilla se desplaza para dejar el bloque por encima.
 - **Tiempo real**: cuando cambia un evento, un calendario o sus miembros, Postgres manda un mensaje privado `changed` con `{actor}` (sin datos del evento) al tema `user:<id>` de cada miembro (`live_notify`, un mensaje por usuario y transacción). `useLiveCalendar` (en el workspace) escucha solo con la pestaña visible, ignora los cambios propios, junta los mensajes 400 ms y hace `router.refresh()`; refresca también al reconectar. Mientras el usuario arrastra, crea o edita, el refresco espera (`holdLive`/`useHoldLive`, `live-hold.ts`). Si el evento abierto desaparece por un cambio ajeno, se avisa "Otra persona ha borrado este evento". Una región `aria-live` dice "Calendario actualizado a las HH:MM:SS". Medido en dev: percentil 95 de 985 ms.
 
+Añadido por la spec 021 (sin migraciones ni dependencias; rama `021-animaciones-y-microinteracciones`):
+
+- **Tokens de movimiento** en `globals.css`: `--ease-out` (entrar y salir) y `--ease-in-out` (moverse), duraciones `--motion-*-in`/`-out` (la salida es el 80 % de la entrada), `--motion-move` 300 ms, `--motion-pulse`, `--motion-reveal`, `--pulse-scale` 1,04, `--pop-scale` 0,95 y `--motion-distance`. Con `prefers-reduced-motion` se quedan en fundidos cortos y sin escala, arco ni goma. En JavaScript se leen con `motionMs()` y `motionToken()` (`EASE_OUT` y `EASE_IN_OUT` son los respaldos).
+- **Utilidades** (`@utility`): `press` y `press-quiet` (pulsar al 97 %), `pop` (desplegable desde `--pop-origin`, al cerrar `data-leaving`), `stagger` (filas 2 a 8 con 30 ms, solo bajo `data-entering`), `row-in`, `settle` (detalle 50 ms después), `swap` y `reveal-down`. Los `<dialog>` entran desde el 95 %; `[data-sheet]` desde abajo y `[data-drawer]` desde la izquierda.
+- **Componentes**: `Switch` (`ui/switch.tsx`, `role="switch"` con bolita que se estira), `SwapLabel` (el texto pendiente de un botón no cambia su tamaño), `IconSwap`, `CrossfadeText` y `StaggerList`; el selector de vista desliza una píldora que recorta el color del texto, y el tema se revela con un círculo desde el botón (View Transitions).
+- **`lib/motion/`**: `play.ts` (`play` con WAAPI, que fija y cancela lo que corre antes y devuelve `null` sin `animate` o con movimiento reducido; `pulse`), `origin.ts` (`originFrom`), `marks.ts` (`markPulse`, `captureReturn`, `takeMark`: lo que deja un cambio para el bloque que se pinte después), `flight.ts` (arco de regreso), `morph.ts` (bloque → tarjeta, hoja o ventana con `translate` y `clip-path`), `release.ts` (`releaseDecision`, `lockAxis`, `trackVelocity`) y `rubber-band.ts` (`rubberBand`, `banded`, 64 px como mucho).
+- **Hooks**: `use-presence.ts` (desmontar tras la salida), `use-enter-once.ts`, `use-pulse-on.ts` (un pulso por resultado) y `use-follow-drag.ts` (seguir al dedo en horizontal: la vista del calendario, el cajón y el visor de imágenes). `use-swipe.ts` y `lib/calendar/swipe.ts` se borraron.
+- **Goma** en la hoja de detalle, el pellizco de las horas (24–144 px, vuelve con `scale`) y el borde de un evento por debajo de 15 min.
+
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 
 - **Flujo SDD (P7):** no se escribe código sin `spec.md` → `plan.md` → `tasks.md` aprobados explícitamente por el usuario, en ese orden. Cada spec vive en `specs/NNN-nombre/`. Se implementa **una tarea `Tn` cada vez y con el test primero** (rojo → verde). Cada commit cita su tarea.
@@ -304,11 +314,12 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
 │   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts, next-path.ts (destino tras login: solo /invite/<token>)
-│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, agenda-feed, agenda-today, month-lanes, month-strip, swipe, to-view-events, month-marks, next-event, grouping, format, schemas, error-messages, time-options, slots, popover, shortcuts, new-event-query, draft, drag, undo, sheet, zoom (spec 017); queries.ts (lecturas con RLS)
+│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, agenda-feed, agenda-today, month-lanes, month-strip, to-view-events, month-marks, next-event, grouping, format, schemas, error-messages, time-options, slots, popover, shortcuts, new-event-query, draft, drag, undo, sheet, zoom (spec 017); queries.ts (lecturas con RLS)
+│   │   ├── motion/            # spec 021: play, origin, marks, flight, morph, release, rubber-band
 │   │   ├── theme/             # accents.ts: los seis acentos y los neutros (fuente de los valores de globals.css)
 │   │   ├── shell/             # nav.ts: destinos y sección activa
 │   │   ├── people/            # avatar.ts: iniciales y tintes
-│   │   ├── hooks/             # use-now.ts (reloj compartido), use-calendar-shortcuts.ts, use-refresh-on-focus.ts, use-swipe.ts, use-is-phone.ts, use-event-drag.ts, use-event-keys.ts, use-grid-zoom.ts (spec 017)
+│   │   ├── hooks/             # use-now.ts (reloj compartido), use-calendar-shortcuts.ts, use-refresh-on-focus.ts, use-is-phone.ts, use-event-drag.ts, use-event-keys.ts, use-grid-zoom.ts (spec 017), use-presence, use-enter-once, use-pulse-on y use-follow-drag (spec 021)
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
@@ -616,6 +627,7 @@ npm run eval:assistant # spec 015: 39 preguntas a Groq contra dev (~10 min, gast
 - **Atajos y ayuda:** un atajo nuevo va en `SHORTCUTS` (`shortcuts.ts`), que alimenta `KEYS` y la ayuda (?). Cada diálogo de atajo solo se cierra a sí mismo.
 - **Tiempo real (spec 019):** una interacción que no debe verse interrumpida por un refresco ajeno llama a `useHoldLive(activo)` (o `holdLive()` y su función de soltar); al soltar el último, se hace el refresco pendiente. Tras un refresco remoto, `takeRemoteRefresh()` dice durante 3 s que el cambio vino de otro (lo usa `GoneEvent`). Una tabla nueva que deba avisar en vivo necesita su trigger con `live_notify`.
 - **Tarjeta de detalle (spec 019):** `EventBlock` es `"use client"` y abre la tarjeta con `openCard` si hay contexto de interacciones y no es móvil; fuera de las vistas sigue siendo un enlace. Lo que pinta la tarjeta y no tiene la vista sale de `loadEventCard`.
+- **Movimiento (spec 021):** las duraciones y curvas salen siempre de los tokens (`motionMs`, `motionToken`), nunca de números sueltos. Una animación de script va con `play()`, que parte de donde esté la anterior; algo que deba animarse tras un cambio y un nuevo pintado (pulso, regreso) se marca con `marks.ts` y lo recoge el bloque. Una superficie que crece desde un evento usa `setMorphOrigin` al pulsar y `morphIn`/`morphOut` al abrir y cerrar. Lo que sigue al dedo usa `useFollowDrag` con `offset: banded(...)` en los límites.
 - **Commits:** Conventional Commits en español con la tarea: `feat: registro de usuario (T7)`.
 
 ## 10. Trampas conocidas
@@ -693,6 +705,11 @@ npm run eval:assistant # spec 015: 39 preguntas a Groq contra dev (~10 min, gast
 - **Vitest 5 oculta los `console.log` de los tests que pasan**: `eval:assistant` lleva `--silent=false` para ver el informe (en la configuración del proyecto no surte efecto).
 - **Realtime añade su propio `id` a la carga del mensaje** (spec 019): en los tests compara con `toMatchObject`, no con `toEqual`.
 - **Playwright sin navegadores descargados**: el `playwright-core` global no trae Chromium; usa `chromium.launch({ channel: "msedge" })` con el Edge del sistema.
+- **`animation.finished` se resuelve antes del evento `onfinish`** (spec 021): `play` limpia o fija el último fotograma en `onfinish`, así que lo que se haga en `.then()` puede quedar pisado. Para que no quede nada en línea, usa `fill: "none"` en lugar de borrarlo a mano.
+- **Una regla de CSS en una capa pierde ante una utilidad**: lo que deba ganar a `glass-float` o a una transición (`[data-morph]`, `[data-following]`) va fuera de `@layer`.
+- **El panel del navegador oculto** pausa `requestAnimationFrame` y las animaciones, y `getBoundingClientRect` da 0: una captura lo obliga a pintar. Además, el JavaScript de la herramienta corre en un mundo aislado: parchear `Element.prototype.animate` no ve las llamadas de la app; usa `getAnimations()` o un `MutationObserver`.
+- **La regla `react-hooks/refs`** prohíbe devolver un `ref` dentro del objeto que devuelve un hook: pásale el `ref` al hook (como `useFollowDrag(ref, …)`).
+- **La velocidad de un gesto en los tests**: `trackVelocity` solo usa los movimientos; dos `pointermove` seguidos en jsdom dan una velocidad enorme. Para un gesto lento, suelta en el mismo punto del último movimiento.
 - **Parar `next start` en segundo plano:** detener la tarea no mata el proceso de Node y el puerto 3100 queda ocupado; mata el PID que escucha en él (`netstat -ano | grep :3100`).
 
 ## 11. Fuera de alcance hasta su spec
@@ -714,5 +731,6 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **017 (mover eventos, menú y "Deshacer")** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod. Al soltar, cambiar el color o borrar una repetición se pregunta el alcance; "Deshacer" solo con "Solo este evento".
 - La **018 (iCloud)** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod. La comprobación con una cuenta real confirmó `MOVE` y renombrar.
 - La **015 (asistente de chat)** está cerrada (2026-11-04), con la ampliación de comentarios y botón flotante (sin migraciones). La migración `assistant` y `GROQ_API_KEY` están en prod.
+- La **021 (animaciones y microinteracciones)** tiene T1–T18 hechas y la evidencia de T19 escrita en su `tasks.md`; falta que el usuario la pruebe en el iPhone (plan R2), mida el rendimiento con la CPU ralentizada y apruebe el cierre.
 - La **019 (escritorio, móvil y tiempo real)** está cerrada (2026-11-02). Sus migraciones `live_changes` y `profile_view_options` están aplicadas en prod (2026-11-02). La 020 (disponibilidad en la rejilla y sincronización rápida) está redactada y sin aprobar.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.

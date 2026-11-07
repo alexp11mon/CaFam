@@ -319,6 +319,59 @@
 
   Hecho cuando: la tabla de RF está completa con evidencia, la verificación obligatoria está reportada y el usuario aprueba el cierre. Cubre: RF-1 a RF-68 | Módulo: validación
 
+## Evidencia (T19, 2026-11-07)
+
+Verificación obligatoria al cerrar T18, en la rama `021-animaciones-y-microinteracciones`: `typecheck ok`, `lint ok`, `format ok`, `Test Files 253 passed (253)`, `Tests 2417 passed (2417)`, `build ok`. Sin migraciones, así que sin `test:db`. `package.json` y `package-lock.json` no cambian respecto a `main`.
+
+| RF | Test o comprobación |
+|----|---------------------|
+| RF-1, RF-2 | `motion-tokens.test.ts` (`--ease-out` y `--ease-in-out`), `motion-utilities.test.ts` (entradas con `--ease-out`), `play.test.ts` |
+| RF-3 | `motion-tokens.test.ts`: cada `-out` es el 80 % de su `-in` (±10 ms) |
+| RF-4 | Revisión de `globals.css`: `--ease-out` `cubic-bezier(0.23, 1, 0.32, 1)` y `--ease-in-out` `cubic-bezier(0.65, 0, 0.35, 1)` tienen la `y` de sus puntos de control entre 0 y 1, así que no rebotan; `flight.test.ts` (el arco acaba en el destino) |
+| RF-5 | `motion-tokens.test.ts` y `design-tokens.test.ts` (≤ 400 ms, escalonado incluido) |
+| RF-6, RF-7 | `motion-utilities.test.ts` (`pop` desde `--pop-scale` 0,95 y opacidad 0); `event-menu`, `time-field`, `side-rail`, `quick-create`, `calendar-workspace` |
+| RF-8, RF-10 | `motion-origin.test.ts`; `event-menu.test.tsx` (puntero y evento enfocado) |
+| RF-9, RF-65 | `event-menu.test.tsx` (`data-leaving`, tres aperturas dejan un menú), `use-presence.test.tsx` |
+| RF-11, RF-12 | `motion-utilities.test.ts` (`dialog`, `[data-sheet]`, `[data-drawer]`) |
+| RF-13, RF-14, RF-15 | `motion-utilities.test.ts` (`press`, `press-quiet`, sin escala en deshabilitado), `press-coverage.test.ts` (`EventBlock` sin `press`) |
+| RF-16, RF-17 | `motion-utilities.test.ts` (`stagger` del 2 al 8), `lists-motion.test.tsx`, `calendar-list`, `member-list`, `connection-list` |
+| RF-18 | `event-comments.test.tsx` (`row-in` solo en las filas nuevas), `use-enter-once.test.tsx` |
+| RF-19 | `lists-motion.test.tsx` y `toast.test.tsx` (`settle`) |
+| RF-20, RF-21, RF-22 | `flight.test.ts` (arco de 32 px desde 48 px, recto por debajo), `marks.test.ts`, `event-interactions.test.tsx`, `draggable-event.test.tsx`; navegador a 1440 px (T13) |
+| RF-23, RF-26, RF-27 | `use-follow-drag.test.tsx`, `calendar-workspace.test.tsx`; navegador a 390 px (T16) |
+| RF-24 | `calendar-workspace.test.tsx`, `image-viewer.test.tsx`, `event-modal.test.tsx` (vuelta con `play`) |
+| RF-25, RF-28, RF-29 | `release.test.ts`, `calendar-workspace.test.tsx`; navegador a 390 px (T16) |
+| RF-30 | `nav-drawer.test.tsx`; navegador a 390 px (T17) |
+| RF-31 | `image-viewer.test.tsx` |
+| RF-32, RF-33 | `rubber-band.test.ts`, `nav-drawer`, `image-viewer`, `event-modal`, `use-grid-zoom`, `draggable-event` |
+| RF-34, RF-35 | `view-toolbar.test.tsx` (capa recortada con `--l` y `--r`) |
+| RF-36, RF-37, RF-39 | `apply-theme.test.ts`, `theme-toggle.test.tsx`, `theme-picker.test.tsx`, `accent-picker.test.tsx` (sin View Transitions, cambio inmediato) |
+| RF-38 | `calendar-workspace.test.tsx` (`reveal-down` al plegar) |
+| RF-40 a RF-46 | `switch.test.tsx` (rol, Espacio, 44 px, contraste 3:1 con `contrast.ts`, error que la devuelve, inversión a mitad de viaje), `view-options-setting`, `availability-setting` |
+| RF-47, RF-49, RF-50, RF-51 | `success-pulse.test.tsx`, `play.test.ts` (`pulse` ≤ 4 % y ≤ 300 ms), `view-options-setting` ("Guardado.") |
+| RF-48 | `marks.test.ts`, `event-interactions.test.tsx`, `draggable-event.test.tsx`, `quick-create.test.tsx` |
+| RF-52 | `crossfade-text.test.tsx`, `toast.test.tsx`, `event-panel.test.tsx`, `swap-label.test.tsx` |
+| RF-53 | `swap-label.test.tsx` y el `grep` de T8 sin resultados |
+| RF-54 | `icon-swap.test.tsx`, `theme-toggle.test.tsx` |
+| RF-55, RF-56, RF-57, RF-58, RF-61 | `morph.test.ts`, `event-card.test.tsx`, `event-block.test.tsx`, `month-view.test.tsx`; navegador a 1440 px (T14) |
+| RF-59, RF-60 | `event-modal.test.tsx`, `event-card.test.tsx`; navegador a 390 y 1440 px (T15) |
+| RF-62 | `theme-picker.test.tsx`, `accent-picker.test.tsx` |
+| RF-63, RF-64 | `play.test.ts` (fija y cancela lo que corre), `switch.test.tsx` (inversión) |
+| RF-66 | `motion-tokens.test.ts` (bloque `prefers-reduced-motion`), `play.test.ts` |
+| RF-67 | `use-follow-drag.test.tsx`, `use-grid-zoom.test.tsx` y `draggable-event.test.tsx` (en seco con movimiento reducido) |
+| RF-68 | `motion-utilities.test.ts` y `press-coverage.test.ts` sobre los componentes compartidos |
+
+Fuera de alcance comprobado: ninguna vista del calendario lleva `stagger` (`lists-motion.test.tsx`), los `select` nativos no tienen transición en `globals.css` y no hay librerías nuevas.
+
+Revisión en el navegador del panel (`next start -p 3100`, tema oscuro y acento rojo): semana a 390 px, Ajustes a 768 px y mes en escritorio sin nada roto.
+
+Queda para el usuario, porque necesita su dispositivo o producción:
+
+- Prueba en el iPhone en producción: pellizco y desplazamiento de la semana con `touch-pan-y` (plan R2), cajón, hoja, visor y deslizar.
+- Safari de iOS: la píldora del selector de vista no se duplica en el fundido (plan R1).
+- Rendimiento: Chrome DevTools con la CPU ralentizada 4 veces, como mucho un 5 % de fotogramas perdidos en la transformación, el deslizar y el revelado.
+- Capturas completas a 390, 768 y 1440 px en los dos temas con el acento rojo y el amarillo, y un repaso con movimiento reducido activado en el sistema.
+
 ## Trazabilidad RF -> Tareas
 
 | RF | Tareas |
