@@ -26,6 +26,7 @@ import {
   findVisibleBlock,
   morphIn,
   morphOut,
+  setMorphOrigin,
   takeMorphOrigin,
 } from "@/lib/motion/morph";
 import { originFrom } from "@/lib/motion/origin";
@@ -184,6 +185,17 @@ export function EventCard({
 
   const editHref = `/dashboard/events/${event.id}?edit=1`;
 
+  /** The window it opens grows out of this card (spec 021 RF-60). */
+  function toWindow() {
+    if (card.current)
+      setMorphOrigin({
+        eventId: event.id,
+        box: boxOf(card.current),
+        color: event.color,
+      });
+    onClose(false);
+  }
+
   // Escape, and E, Supr and Ctrl/⌘+C of the detail (RF-11, RF-14).
   function onKeyDown(key: React.KeyboardEvent) {
     if (key.key === "Escape") {
@@ -202,7 +214,7 @@ export function EventCard({
       return;
     } else if (key.key.toLowerCase() === "e") {
       key.preventDefault();
-      onClose(false);
+      toWindow();
       router.push(editHref);
     } else if (key.key === "Delete" || key.key === "Backspace") {
       key.preventDefault();
@@ -317,11 +329,7 @@ export function EventCard({
       <div className="settle flex flex-wrap gap-2">
         {editable ? (
           <>
-            <Link
-              href={editHref}
-              onClick={() => onClose(false)}
-              className={ACTION}
-            >
+            <Link href={editHref} onClick={toWindow} className={ACTION}>
               Editar
             </Link>
             <Link
@@ -339,7 +347,7 @@ export function EventCard({
         {/* The whole detail, with images and comments, for every member (RF-8). */}
         <Link
           href={`/dashboard/events/${event.id}`}
-          onClick={() => onClose(false)}
+          onClick={toWindow}
           className={ACTION}
         >
           Abrir

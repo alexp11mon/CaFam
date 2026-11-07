@@ -15,10 +15,18 @@ import {
 } from "react";
 import { CloseIcon, ExpandIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
+import { boxOf } from "@/lib/calendar/popover";
 import { sheetAfterDrag, type SheetState } from "@/lib/calendar/sheet";
 import type { UndoToken } from "@/lib/calendar/undo";
 import { useIsPhone } from "@/lib/hooks/use-is-phone";
 import type { Done } from "@/lib/forms/form-state";
+import {
+  findVisibleBlock,
+  morphIn,
+  morphOut,
+  takeMorphOrigin,
+  type MorphOrigin,
+} from "@/lib/motion/morph";
 import { goneText } from "@/lib/sync/write-errors";
 import { useUndoToast } from "./use-undo-toast";
 
@@ -59,9 +67,12 @@ export function useEventModal() {
 export function EventModal({
   title,
   variant = "window",
+  morphId,
   children,
 }: {
   title: string;
+  /** The event shown: the window grows from its block or card and shrinks back (spec 021 RF-55, RF-57, RF-60). */
+  morphId?: string;
   /** The detail: on a phone, a sheet from the bottom (spec 017 RF-44 to RF-48). */
   variant?: "window" | "sheet";
   children: ReactNode;
@@ -83,6 +94,9 @@ export function EventModal({
   // A drag of the handle is not a press: the click after it is ignored.
   const dragged = useRef(false);
   const [offset, setOffset] = useState(0);
+  // Where it grew from, to shrink back into the block (spec 021 RF-57).
+  const origin = useRef<MorphOrigin | null>(null);
+  const leaving = useRef(false);
 
   useEffect(() => {
     // Whatever had the focus opened the window: it gets it back on close (RF-6).
@@ -94,6 +108,12 @@ export function EventModal({
     element?.showModal();
     // showModal focuses the first button; a form can ask for its title instead (RF-28).
     element?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    // Grows out of the block or the card that opened it; without one it
+    // enters as usual (spec 021 RF-55, RF-59, RF-60).
+    origin.current = morphId ? takeMorphOrigin(morphId) : null;
+    leaving.current = false;
+    if (element && origin.current)
+      void morphIn(element, origin.current.box, origin.current.color);
     return () => {
       // Next keeps a left route hidden in the DOM (Activity): a modal <dialog> left
       // open there would keep the page behind it inert.
@@ -105,13 +125,32 @@ export function EventModal({
       setConfirming(false);
       setSheetState("half");
       setOpening((count) => count + 1);
+      // The kept instance opens afresh, not shrunk into the old block.
+      element?.style.removeProperty("translate");
+      element?.style.removeProperty("clip-path");
     };
+    // Once per opening: Next shows this same instance again for the same URL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /** Back into the block if it is still on screen, else as usual (RF-57, RF-58). */
+  const leave = useCallback(() => {
+    if (leaving.current) return;
+    const element = dialog.current;
+    const from = origin.current;
+    const block = from && findVisibleBlock(from.eventId, from.segment);
+    if (!element || !from || !block) {
+      router.back();
+      return;
+    }
+    leaving.current = true;
+    void morphOut(element, boxOf(block), from.color).then(() => router.back());
+  }, [router]);
 
   const requestClose = useCallback(() => {
     if (dirty.current) setConfirming(true);
-    else router.back();
-  }, [router]);
+    else leave();
+  }, [leave]);
 
   const api = useMemo<EventModalApi>(
     () => ({
@@ -237,7 +276,7 @@ export function EventModal({
           <Button variant="secondary" onClick={() => setConfirming(false)}>
             Seguir editando
           </Button>
-          <Button variant="danger" onClick={() => router.back()}>
+          <Button variant="danger" onClick={leave}>
             Descartar cambios
           </Button>
         </div>

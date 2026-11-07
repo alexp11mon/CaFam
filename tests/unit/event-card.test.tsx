@@ -16,6 +16,7 @@ import {
 import { ToastProvider } from "@/components/ui/toast";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { markRemoteRefresh } from "@/lib/calendar/live-hold";
+import { takeMorphOrigin } from "@/lib/motion/morph";
 
 // Spec 019, T10 and T11: the detail card beside the event (RF-1 to RF-16, RF-44).
 const h = vi.hoisted(() => ({
@@ -376,6 +377,29 @@ describe("EventCard actions", () => {
       "/dashboard/events/e1",
     );
   });
+
+  it.each(["Editar", "Abrir"])(
+    "%s keeps the card as where the window grows from (spec 021 RF-60)",
+    async (name) => {
+      setup();
+      await userEvent.click(block("Cena"));
+      const dialog = screen.getByRole("dialog", { name: "Cena" });
+      vi.spyOn(dialog, "getBoundingClientRect").mockReturnValue({
+        left: 600,
+        top: 200,
+        width: 360,
+        height: 300,
+      } as DOMRect);
+      const link = screen.getByRole("link", { name });
+      link.addEventListener("click", (event) => event.preventDefault());
+      await userEvent.click(link);
+      expect(takeMorphOrigin("e1")).toEqual({
+        eventId: "e1",
+        box: { left: 600, top: 200, width: 360, height: 300 },
+        color: "#FFADAD",
+      });
+    },
+  );
 
   it("Borrar deletes with Deshacer and closes the card (RF-10)", async () => {
     setup();

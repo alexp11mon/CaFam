@@ -215,7 +215,7 @@
   - `[data-morph]` va fuera de las capas en `globals.css`: dentro de `@layer base` perdía contra la utilidad `glass-float`.
   - Prueba en el navegador del panel (1440 px): en semana y en mes, la tarjeta pausada a mitad de camino sale del bloque con el color del evento encima y el contenido apareciendo; en mes el bloque lleva `data-segment="2026-11-09"`. Al cerrar, `translate` y `clip-path` van hacia la caja actual del bloque.
 
-- [ ] T15 Transformar el bloque en la hoja del móvil y en la ventana, y la tarjeta en la ventana
+- [x] T15 Transformar el bloque en la hoja del móvil y en la ventana, y la tarjeta en la ventana
   Pasos:
   - Primero, en rojo, `event-modal`:
     - con `morphId` y un origen del mismo evento hace `morphIn`, tanto en la variante hoja como en la ventana;
@@ -225,6 +225,11 @@
   - Después, `morphId` en las rutas interceptadas de `@modal/(.)events/[id]` y el cableado en `event-modal.tsx` y `event-card.tsx`.
 
   Hecho cuando: `npm test -- event-modal event-card` en verde y una prueba en `playwright-cli` a 390 px (bloque → hoja → cerrar) y a 1440 px (tarjeta → "Editar" → ventana). Cubre: RF-55, RF-57, RF-58, RF-59, RF-60 | Módulo: event-morph
+
+  Notas al cerrarla (2026-11-07):
+  - `EventModal` toma el origen al abrirse (también cuando Next vuelve a mostrar la instancia guardada) y, al cerrar con "Cerrar", Escape, el asa, el fondo o "Descartar cambios", encoge hacia el bloque antes de `router.back()`; guardar o borrar cierran como antes. La tecla E de la tarjeta también guarda la caja de la tarjeta.
+  - `morphIn` ya no deja el último fotograma en línea (`fill: "none"`); `morphOut` sí, hasta desmontar, y la limpieza del efecto de `EventModal` lo quita para la siguiente apertura.
+  - Prueba en el navegador del panel en lugar de `playwright-cli`: a 1440 px, tarjeta → "Editar" → ventana que crece desde la caja de la tarjeta (`176.8px 420.77px`, `inset(0px 330px 589px 0px)`) y, con Escape, encoge hasta el bloque (113,6 × 48) y vuelve al calendario; a 390 px, bloque → hoja a media altura desde el bloque → "Cerrar" encoge hasta él; al volver a abrir el mismo evento la instancia reutilizada no conserva estilos en línea.
 
 - [ ] T16 Hacer que la vista del calendario siga al dedo
   Pasos:

@@ -87,6 +87,8 @@ function run(
   frames: Keyframe[],
   color: string,
   layerFrames: Keyframe[],
+  /** Shrinking keeps its last frame until the surface unmounts. */
+  fill: "forwards" | "none",
 ): Promise<void> {
   const release = holdLive();
   // Opaque while it moves: glass over a moving clip is costly (plan R3).
@@ -99,7 +101,7 @@ function run(
     duration: motionMs("--motion-move", 300),
     easing: motionToken("--ease-in-out", EASE_IN_OUT),
   };
-  const animation = play(el, frames, { ...options, fill: "forwards" });
+  const animation = play(el, frames, { ...options, fill });
   play(layer, layerFrames, options);
   const end = () => {
     layer.remove();
@@ -115,22 +117,24 @@ function run(
 
 /** The surface grows out of `from`, the block (RF-55, RF-56). */
 export function morphIn(el: HTMLElement, from: Box, color: string) {
-  return run(el, [asBlock(boxOf(el), from), WHOLE], color, [
-    { opacity: 1 },
-    { opacity: 1, offset: 0.4 },
-    { opacity: 0 },
-  ]).then(() => {
-    // The last frame stayed inline: the surface is whole again.
-    el.style.removeProperty("translate");
-    el.style.removeProperty("clip-path");
-  });
+  // Cancel the CSS entrance first, so the surface is measured where it ends.
+  el.dataset.morph = "";
+  return run(
+    el,
+    [asBlock(boxOf(el), from), WHOLE],
+    color,
+    [{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }],
+    "none",
+  );
 }
 
 /** The surface shrinks into `to`, where the block is now (RF-57). */
 export function morphOut(el: HTMLElement, to: Box, color: string) {
-  return run(el, [WHOLE, asBlock(boxOf(el), to)], color, [
-    { opacity: 0 },
-    { opacity: 1, offset: 0.6 },
-    { opacity: 1 },
-  ]);
+  return run(
+    el,
+    [WHOLE, asBlock(boxOf(el), to)],
+    color,
+    [{ opacity: 0 }, { opacity: 1, offset: 0.6 }, { opacity: 1 }],
+    "forwards",
+  );
 }

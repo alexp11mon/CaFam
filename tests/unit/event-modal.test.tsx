@@ -11,10 +11,20 @@ import {
   vi,
 } from "vitest";
 import { EventModal, useEventModal } from "@/components/calendar/event-modal";
+import { setMorphOrigin } from "@/lib/motion/morph";
 
 // Spec 008, T1: the event window over the calendar (RF-4, RF-5, RF-6, RF-12, RF-29).
 const router = vi.hoisted(() => ({ back: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
+const morph = vi.hoisted(() => ({
+  morphIn: vi.fn(),
+  morphOut: vi.fn(),
+  findVisibleBlock: vi.fn(),
+}));
+vi.mock("@/lib/motion/morph", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/motion/morph")>()),
+  ...morph,
+}));
 
 // jsdom does not implement the modal methods of <dialog>.
 beforeAll(() => {
@@ -28,6 +38,67 @@ beforeAll(() => {
 
 beforeEach(() => {
   router.back.mockClear();
+  morph.morphIn.mockReset().mockResolvedValue(undefined);
+  morph.morphOut.mockReset().mockResolvedValue(undefined);
+  morph.findVisibleBlock.mockReset().mockReturnValue(null);
+});
+
+// Spec 021, T15: the window and the sheet grow from the block or the card
+// and shrink back into the block (RF-55, RF-57..RF-60).
+describe("EventModal morph", () => {
+  const BLOCK = { left: 40, top: 300, width: 120, height: 20 };
+
+  function open(variant: "window" | "sheet" = "window") {
+    render(
+      <EventModal title="Cena familiar" variant={variant} morphId="e1">
+        <p>Contenido</p>
+      </EventModal>,
+    );
+    return screen.getByRole("dialog", { name: "Cena familiar" });
+  }
+
+  it.each(["window", "sheet"] as const)(
+    "the %s grows from the block that opened it",
+    (variant) => {
+      setMorphOrigin({ eventId: "e1", box: BLOCK, color: "#FFADAD" });
+      const dialog = open(variant);
+      expect(morph.morphIn).toHaveBeenCalledWith(dialog, BLOCK, "#FFADAD");
+    },
+  );
+
+  it("enters as usual without an origin, or one of another event (RF-59)", () => {
+    setMorphOrigin({ eventId: "e2", box: BLOCK, color: "#FFADAD" });
+    open();
+    expect(morph.morphIn).not.toHaveBeenCalled();
+  });
+
+  it("shrinks into the block before going back (RF-57)", async () => {
+    let shrunk: () => void = () => undefined;
+    morph.morphOut.mockReturnValue(
+      new Promise<void>((resolve) => {
+        shrunk = resolve;
+      }),
+    );
+    setMorphOrigin({ eventId: "e1", box: BLOCK, color: "#FFADAD" });
+    const dialog = open();
+    const target = document.createElement("a");
+    target.getBoundingClientRect = () => BLOCK as DOMRect;
+    morph.findVisibleBlock.mockReturnValue(target);
+
+    fireEvent(dialog, new Event("cancel", { cancelable: true }));
+    expect(morph.morphOut).toHaveBeenCalledWith(dialog, BLOCK, "#FFADAD");
+    expect(router.back).not.toHaveBeenCalled();
+    await act(async () => shrunk());
+    expect(router.back).toHaveBeenCalledTimes(1);
+  });
+
+  it("goes back at once when the block is not on screen (RF-58)", async () => {
+    setMorphOrigin({ eventId: "e1", box: BLOCK, color: "#FFADAD" });
+    open();
+    await userEvent.click(screen.getByRole("button", { name: "Cerrar" }));
+    expect(morph.morphOut).not.toHaveBeenCalled();
+    expect(router.back).toHaveBeenCalledTimes(1);
+  });
 });
 
 function renderModal() {

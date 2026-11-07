@@ -105,8 +105,10 @@ describe("morphIn and morphOut", () => {
     const card = surface();
     const done = morphIn(card, BOX, "#FFADAD");
 
-    const [target, frames] = h.play.mock.calls[0]!;
+    const [target, frames, options] = h.play.mock.calls[0]!;
     expect(target).toBe(card);
+    // Nothing of it stays inline once whole (a kept route opens again).
+    expect(options.fill).toBe("none");
     expect(frames[0].translate).toBe("-160px 200px");
     expect(frames[0].clipPath).toBe("inset(0px 240px 260px 0px round 8px)");
     expect(frames.at(-1)).toEqual({
@@ -128,7 +130,9 @@ describe("morphIn and morphOut", () => {
   it("shrinks back into the block's current box (RF-57)", async () => {
     const card = surface();
     const done = morphOut(card, BOX, "#FFADAD");
-    const frames = h.play.mock.calls[0]![1];
+    const [, frames, options] = h.play.mock.calls[0]!;
+    // Kept until the surface unmounts.
+    expect(options.fill).toBe("forwards");
     expect(frames[0]).toEqual({
       translate: "0px 0px",
       clipPath: "inset(0px 0px 0px 0px round 24px)",
