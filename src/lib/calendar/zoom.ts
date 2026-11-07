@@ -3,8 +3,8 @@
 
 export const DEFAULT_HOUR_PX = 48;
 // Half and three times the default (RF-51).
-const MIN_HOUR_PX = DEFAULT_HOUR_PX / 2;
-const MAX_HOUR_PX = DEFAULT_HOUR_PX * 3;
+export const MIN_HOUR_PX = DEFAULT_HOUR_PX / 2;
+export const MAX_HOUR_PX = DEFAULT_HOUR_PX * 3;
 
 export function clampHourPx(px: number): number {
   return Math.round(Math.min(Math.max(px, MIN_HOUR_PX), MAX_HOUR_PX));

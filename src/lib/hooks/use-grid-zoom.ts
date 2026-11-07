@@ -9,10 +9,20 @@ import {
 } from "react";
 import {
   DEFAULT_HOUR_PX,
+  MAX_HOUR_PX,
+  MIN_HOUR_PX,
   clampHourPx,
   scrollForZoom,
   wheelZoom,
 } from "@/lib/calendar/zoom";
+import {
+  EASE_IN_OUT,
+  motionMs,
+  motionToken,
+  play,
+  prefersReducedMotion,
+} from "@/lib/motion/play";
+import { banded } from "@/lib/motion/rubber-band";
 
 // On this device only, as the spec asks (RF-53, plan D15).
 const KEY = "cafam-hour-px";
@@ -74,19 +84,24 @@ export function useGridZoom(container: RefObject<HTMLElement | null>): number {
     const scroller = () =>
       element.querySelector<HTMLElement>("[data-grid-scroll]");
 
+    /** Returns where the anchor lands in the grid, for the scaleY origin. */
     const zoomTo = (to: number, clientY: number, save: boolean) => {
       const from = read();
-      if (to === from) return;
+      if (to === from) return null;
       const box = scroller();
+      let origin = null;
       if (box) {
+        const anchor = clientY - box.getBoundingClientRect().top;
         pending.current = scrollForZoom({
           scrollTop: box.scrollTop,
-          anchor: clientY - box.getBoundingClientRect().top,
+          anchor,
           from,
           to,
         });
+        origin = pending.current + anchor;
       }
       write(to, save);
+      return origin;
     };
 
     const onWheel = (wheel: WheelEvent) => {
@@ -116,18 +131,45 @@ export function useGridZoom(container: RefObject<HTMLElement | null>): number {
       if (!fingers.has(pointer.pointerId)) return;
       fingers.set(pointer.pointerId, pointer.clientY);
       if (!pinch || fingers.size !== 2 || pinch.distance < 10) return;
+      const raw = (pinch.px * spread()) / pinch.distance;
+      // Past 24–144 px a rubber band; with reduced motion it stops dead
+      // (spec 021 RF-32, RF-67).
       zoomTo(
-        clampHourPx((pinch.px * spread()) / pinch.distance),
+        prefersReducedMotion()
+          ? clampHourPx(raw)
+          : Math.round(banded(raw, MIN_HOUR_PX, MAX_HOUR_PX)),
         middle(),
         false,
       );
     };
     const onUp = (pointer: PointerEvent) => {
+      const y = fingers.get(pointer.pointerId) ?? pointer.clientY;
+      const anchor = fingers.size === 2 ? middle() : y;
       if (!fingers.delete(pointer.pointerId)) return;
-      if (pinch && fingers.size < 2) {
-        pinch = null;
-        write(read(), true);
+      if (!pinch || fingers.size >= 2) return;
+      pinch = null;
+      const over = read();
+      const fixed = clampHourPx(over);
+      const origin = zoomTo(fixed, anchor, true);
+      if (fixed === over) {
+        write(fixed, true);
+        return;
       }
+      // Fixed at the limit, the excess shrinks back with scaleY (plan D12, RF-33).
+      const grid = scroller()?.firstElementChild;
+      if (!grid) return;
+      const transformOrigin = `0 ${origin ?? 0}px`;
+      play(
+        grid,
+        [
+          { scale: `1 ${over / fixed}`, transformOrigin },
+          { scale: "1 1", transformOrigin },
+        ],
+        {
+          duration: motionMs("--motion-base-out", 176),
+          easing: motionToken("--ease-in-out", EASE_IN_OUT),
+        },
+      );
     };
 
     element.addEventListener("wheel", onWheel, { passive: false });

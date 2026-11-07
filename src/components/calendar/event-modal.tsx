@@ -27,6 +27,8 @@ import {
   takeMorphOrigin,
   type MorphOrigin,
 } from "@/lib/motion/morph";
+import { EASE_IN_OUT, motionMs, motionToken, play } from "@/lib/motion/play";
+import { banded } from "@/lib/motion/rubber-band";
 import { goneText } from "@/lib/sync/write-errors";
 import { useUndoToast } from "./use-undo-toast";
 
@@ -172,6 +174,7 @@ export function EventModal({
 
   const endDrag = (clientY: number) => {
     const start = grab.current;
+    const from = offset;
     grab.current = null;
     setOffset(0);
     if (!start || !sheet) return;
@@ -182,8 +185,21 @@ export function EventModal({
       dy,
       dy / Math.max(1, performance.now() - start.time),
     );
-    if (next === "close") requestClose();
-    else setSheetState(next);
+    if (next === "close") {
+      requestClose();
+      return;
+    }
+    setSheetState(next);
+    // What the finger left comes back instead of jumping (spec 021 RF-24).
+    if (from && dialog.current)
+      play(
+        dialog.current,
+        [{ translate: `0px ${from}px` }, { translate: "0px 0px" }],
+        {
+          duration: motionMs("--motion-base-out", 176),
+          easing: motionToken("--ease-in-out", EASE_IN_OUT),
+        },
+      );
   };
 
   const windowClasses = `max-[48.0625rem]:m-0 max-[48.0625rem]:h-full max-[48.0625rem]:max-h-none max-[48.0625rem]:w-full max-[48.0625rem]:max-w-none max-[48.0625rem]:rounded-none ${fullscreen ? "m-0 h-full max-h-none w-full max-w-none rounded-none" : "m-auto max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-2xl rounded-3xl"}`;
@@ -196,7 +212,7 @@ export function EventModal({
       aria-labelledby={titleId}
       data-fullscreen={fullscreen}
       data-sheet={sheet ?? undefined}
-      style={offset ? { translate: `0 ${Math.max(offset, -40)}px` } : undefined}
+      style={offset ? { translate: `0px ${offset}px` } : undefined}
       // A press on the backdrop reaches the dialog itself: it closes the sheet (RF-46).
       onClick={(event) => {
         if (sheet && event.target === event.currentTarget) requestClose();
@@ -224,7 +240,15 @@ export function EventModal({
             grab.current = { y: event.clientY, time: performance.now() };
           }}
           onPointerMove={(event) => {
-            if (grab.current) setOffset(event.clientY - grab.current.y);
+            if (!grab.current) return;
+            // Up to the top of the screen it follows; past it, a rubber band
+            // (spec 021 RF-32, RF-33). Down is free: that closes it.
+            const el = dialog.current;
+            const room =
+              sheet === "full" || !el
+                ? 0
+                : -(window.innerHeight - el.getBoundingClientRect().height);
+            setOffset(banded(event.clientY - grab.current.y, room, Infinity));
           }}
           onPointerUp={(event) => endDrag(event.clientY)}
           onPointerCancel={() => {

@@ -26,6 +26,12 @@ vi.mock("@/lib/motion/morph", async (importOriginal) => ({
   ...morph,
 }));
 
+const motion = vi.hoisted(() => ({ play: vi.fn() }));
+vi.mock("@/lib/motion/play", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/motion/play")>()),
+  play: motion.play,
+}));
+
 // jsdom does not implement the modal methods of <dialog>.
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function showModal() {
@@ -41,6 +47,7 @@ beforeEach(() => {
   morph.morphIn.mockReset().mockResolvedValue(undefined);
   morph.morphOut.mockReset().mockResolvedValue(undefined);
   morph.findVisibleBlock.mockReset().mockReturnValue(null);
+  motion.play.mockReset().mockReturnValue(null);
 });
 
 // Spec 021, T15: the window and the sheet grow from the block or the card
@@ -301,6 +308,44 @@ describe("EventModal as a sheet", () => {
     const dialog = renderSheet();
     await userEvent.click(screen.getByRole("button", { name: "Editar" }));
     expect(dialog).toHaveAttribute("data-sheet", "full");
+  });
+
+  // Spec 021, T18: past its limits the sheet follows less and less (RF-32,
+  // RF-33) and comes back with an animation (RF-24).
+  function hold(handle: Element, dy: number) {
+    fireEvent.pointerDown(handle, { clientY: 400, pointerId: 1, button: 0 });
+    fireEvent.pointerMove(handle, { clientY: 400 + dy, pointerId: 1 });
+  }
+  const lift = (dialog: HTMLElement) =>
+    parseFloat(dialog.style.translate.split(" ")[1] ?? "0");
+
+  it("bands upwards from 0 once full, and comes back with play", async () => {
+    phone(true);
+    const dialog = renderSheet();
+    await userEvent.click(screen.getByRole("button", { name: "Editar" }));
+    const handle = screen.getByRole("button", { name: "Reducir" });
+    hold(handle, -300);
+    expect(lift(dialog)).toBeLessThan(0);
+    expect(lift(dialog)).toBeGreaterThan(-64);
+    fireEvent.pointerUp(handle, { clientY: 100, pointerId: 1 });
+    expect(dialog).toHaveAttribute("data-sheet", "full");
+    expect(dialog.style.translate).toBe("");
+    const [target, frames] = motion.play.mock.calls.at(-1)!;
+    expect(target).toBe(dialog);
+    expect(frames.at(-1)).toEqual({ translate: "0px 0px" });
+  });
+
+  it("at half follows up to the full height, then bands", () => {
+    phone(true);
+    const dialog = renderSheet();
+    dialog.getBoundingClientRect = () => ({ height: 400 }) as DOMRect;
+    const handle = screen.getByRole("button", { name: "Ampliar" });
+    hold(handle, -100);
+    expect(lift(dialog)).toBe(-100);
+    const room = -(window.innerHeight - 400);
+    hold(handle, room - 300);
+    expect(lift(dialog)).toBeLessThan(room);
+    expect(lift(dialog)).toBeGreaterThan(room - 64);
   });
 
   it("is the usual window from 769 px", () => {

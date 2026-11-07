@@ -281,7 +281,7 @@
   - `lib/calendar/swipe.ts` y su test se borran: el cajón era su último uso.
   - Prueba en el navegador del panel a 390 px con punteros táctiles sintéticos sobre el cajón: 50 px a la izquierda vuelve abierto, 190 px lo cierra y hacia la derecha no se cierra. El visor no se probó en el navegador (el usuario de prueba no tiene imágenes); lo cubren `image-viewer.test.tsx` y comparte el gesto con el cajón.
 
-- [ ] T18 Poner la goma en la hoja de detalle, el pellizco de las horas y el borde de un evento
+- [x] T18 Poner la goma en la hoja de detalle, el pellizco de las horas y el borde de un evento
   Pasos:
   - Primero, en rojo:
     - `event-modal` en variante hoja: subir más allá del límite usa `banded()` (ampliada desde 0; a media altura desde la distancia hasta la altura completa) y al soltar vuelve con `play`.
@@ -293,6 +293,12 @@
   - Después, `banded()` y `play` en esos tres sitios.
 
   Hecho cuando: `npm test -- event-modal use-grid-zoom use-event-drag zoom drag` en verde. Cubre: RF-24, RF-32, RF-33, RF-67 | Módulo: band-limits
+
+  Notas al cerrarla (2026-11-07):
+  - Hoja: el asa sigue al dedo hacia arriba hasta el borde superior de la pantalla (a media altura, `innerHeight` menos su altura; ampliada, 0) y desde ahí con `banded()`; hacia abajo va libre, porque es cerrar. Al soltar sin cerrar, `play` devuelve el `translate` a 0 en `--motion-base-out` en lugar de saltar. Sustituye al tope fijo de 40 px.
+  - Pellizco: fuera de 24–144 px la altura sale de `banded()` (redondeada); con movimiento reducido, `clampHourPx`. Al soltar se guarda el límite y la rejilla (`[data-grid-scroll] > *`) vuelve con `scale: 1 <exceso>` → `1 1` desde el punto del pellizco. `MIN_HOUR_PX` y `MAX_HOUR_PX` se exportan de `zoom.ts`.
+  - Borde de un evento: por debajo de 15 min el bloque se encoge con `scale` desde arriba (la goma, como mucho a la mitad de un bloque de 15 min, porque 64 px no caben en él) y al soltar vuelve con `play`. Con movimiento reducido se para en seco.
+  - Sin prueba en el navegador: la tarea solo pide los tests; queda en la revisión de T19.
 
 - [ ] T19 Validar la spec RF por RF y cerrarla
   Pasos:

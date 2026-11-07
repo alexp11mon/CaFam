@@ -3,6 +3,12 @@ import { useRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useGridZoom } from "@/lib/hooks/use-grid-zoom";
 
+const motion = vi.hoisted(() => ({ play: vi.fn() }));
+vi.mock("@/lib/motion/play", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/motion/play")>()),
+  play: motion.play,
+}));
+
 // Spec 017, T15: pinching and Ctrl + wheel on the hour grid (RF-49 to RF-53).
 function Grid() {
   const ref = useRef<HTMLDivElement>(null);
@@ -52,9 +58,12 @@ function finger(
 
 beforeEach(() => {
   localStorage.clear();
+  motion.play.mockReset().mockReturnValue(null);
 });
 afterEach(() => {
   vi.restoreAllMocks();
+  // @ts-expect-error jsdom has none; a test sets its own.
+  delete window.matchMedia;
 });
 
 describe("useGridZoom", () => {
@@ -109,5 +118,48 @@ describe("useGridZoom", () => {
     grid.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(false);
     expect(px()).toBe(48);
+  });
+
+  // Spec 021, T18: past 24–144 px the hours follow with a rubber band and
+  // come back to the limit with scaleY (RF-32, RF-33, RF-67, plan D12).
+  function overPinch(grid: Element) {
+    finger("pointerDown", grid, 1, 300);
+    finger("pointerDown", grid, 2, 400);
+    act(() => finger("pointerMove", grid, 2, 800));
+  }
+
+  it("bands past 144 px and settles at 144 with scaleY", () => {
+    const { grid, scroller } = setup();
+    overPinch(grid);
+    expect(px()).toBeGreaterThan(144);
+    expect(px()).toBeLessThan(144 + 64);
+    const over = px();
+    act(() => {
+      finger("pointerUp", grid, 1, 300);
+      finger("pointerUp", grid, 2, 800);
+    });
+    expect(px()).toBe(144);
+    expect(localStorage.getItem("cafam-hour-px")).toBe("144");
+    const [target, frames] = motion.play.mock.calls.at(-1)!;
+    expect(target).toBe(scroller.firstElementChild);
+    expect(frames[0].scale).toBe(`1 ${over / 144}`);
+    expect(frames.at(-1).scale).toBe("1 1");
+  });
+
+  it("stops dead at the limit with reduced motion (RF-67)", () => {
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes("reduce"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    const { grid } = setup();
+    overPinch(grid);
+    expect(px()).toBe(144);
+    act(() => {
+      finger("pointerUp", grid, 1, 300);
+      finger("pointerUp", grid, 2, 800);
+    });
+    expect(motion.play).not.toHaveBeenCalled();
   });
 });

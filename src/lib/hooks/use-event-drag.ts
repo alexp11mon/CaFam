@@ -15,6 +15,14 @@ import {
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { daysBetween } from "@/lib/calendar/ranges";
 import { utcToZonedParts } from "@/lib/calendar/time-zone";
+import {
+  EASE_IN_OUT,
+  motionMs,
+  motionToken,
+  play,
+  prefersReducedMotion,
+} from "@/lib/motion/play";
+import { BAND_LIMIT, rubberBand } from "@/lib/motion/rubber-band";
 
 // The gesture of moving and resizing events (spec 017 RF-5 to RF-23, plan
 // drag-hook, D1 to D4). It lives with the calendar, not in the block: the
@@ -62,6 +70,26 @@ export function targetAt(x: number, y: number): DragTarget | null {
   return null;
 }
 
+// The shortest event a resize leaves (spec 017 RF-12).
+const MIN_MINUTES = 15;
+
+/** Minutes of the day where the pointer puts the end, before any limit. */
+function pointerEnd(
+  event: Times,
+  grab: DragTarget | null,
+  target: Extract<DragTarget, { kind: "grid" }>,
+  timeZone: string,
+) {
+  const { hour, minute } = utcToZonedParts(event.startsAt, timeZone);
+  const start = hour * 60 + minute;
+  const end =
+    start + (Date.parse(event.endsAt) - Date.parse(event.startsAt)) / 60_000;
+  // The end moves as far as the pointer, wherever the handle was grabbed.
+  const moved =
+    grab?.kind === "grid" ? target.minute - grab.minute : target.minute - end;
+  return { start, end: end + moved };
+}
+
 /** Where the event lands for a target, or null when nothing changes or it cannot go there. */
 export function resultFor(
   event: Times,
@@ -80,15 +108,11 @@ export function resultFor(
   if (target.kind === "month") return null;
   if (resize) {
     if (target.kind !== "grid") return null;
-    // The end moves as far as the pointer, wherever the handle was grabbed.
-    const { hour, minute } = utcToZonedParts(event.startsAt, timeZone);
-    const end =
-      hour * 60 +
-      minute +
-      (Date.parse(event.endsAt) - Date.parse(event.startsAt)) / 60_000;
-    const moved =
-      grab?.kind === "grid" ? target.minute - grab.minute : target.minute - end;
-    return resizeEnd(event, end + moved, timeZone);
+    return resizeEnd(
+      event,
+      pointerEnd(event, grab, target, timeZone).end,
+      timeZone,
+    );
   }
   if (target.kind === "allday") {
     // A timed event dropped on the strip turns all day (RF-13, RF-15).
@@ -123,6 +147,8 @@ interface Session {
   active: boolean;
   result: Times | null;
   scroller: HTMLElement | null;
+  /** The block itself, squeezed under its shortest length (spec 021 RF-32). */
+  block: HTMLElement | null;
   timer: ReturnType<typeof setTimeout> | null;
   frame: number | null;
 }
@@ -159,15 +185,64 @@ function createController(callbacks: DragCallbacks) {
   let session: Session | null = null;
   const latest = { current: callbacks };
 
+  /**
+   * Under 15 minutes the edge goes on with a rubber band: the block shrinks
+   * with scaleY from its top (spec 021 RF-32, plan D12). Not with reduced
+   * motion, where it stops dead at 15 minutes (RF-67).
+   */
+  function squeeze(current: Session, target: DragTarget | null) {
+    const block = current.block;
+    if (!block || !current.resize) return;
+    const column = block.closest<HTMLElement>("[data-time-col]");
+    let scale = "";
+    if (column && target?.kind === "grid" && !prefersReducedMotion()) {
+      const { start, end } = pointerEnd(
+        current.event,
+        current.grab,
+        target,
+        latest.current.timeZone,
+      );
+      const perMinute = column.getBoundingClientRect().height / DAY_MINUTES;
+      const short = (start + MIN_MINUTES - end) * perMinute;
+      const height = MIN_MINUTES * perMinute;
+      if (short > 0 && height > 0)
+        scale = `1 ${(height - rubberBand(short, Math.min(BAND_LIMIT, height / 2))) / height}`;
+    }
+    block.style.scale = scale;
+    block.style.transformOrigin = scale ? "top" : "";
+  }
+
+  /** What the rubber band left springs back to the 15 minutes (RF-33). */
+  function release(current: Session) {
+    const block = current.block;
+    const from = block?.style.scale;
+    if (!block || !from) return;
+    block.style.scale = "";
+    block.style.transformOrigin = "";
+    play(
+      block,
+      [
+        { scale: from, transformOrigin: "top" },
+        { scale: "1 1", transformOrigin: "top" },
+      ],
+      {
+        duration: motionMs("--motion-base-out", 176),
+        easing: motionToken("--ease-in-out", EASE_IN_OUT),
+      },
+    );
+  }
+
   function update() {
     const current = session;
     if (!current?.active) return;
+    const target = targetAt(current.x, current.y);
+    squeeze(current, target);
     const result = resultFor(
       current.event,
       current.mode,
       current.resize,
       current.grab,
-      targetAt(current.x, current.y),
+      target,
       latest.current.timeZone,
     );
     const same =
@@ -193,6 +268,7 @@ function createController(callbacks: DragCallbacks) {
     window.removeEventListener("touchmove", preventScroll);
     window.removeEventListener("pointerdown", onOtherPointer);
     if (!current.active) return;
+    release(current);
     swallowNextClick();
     latest.current.setDragging(null);
     if (current.touch) latest.current.lift?.(current.event);
@@ -307,6 +383,9 @@ function createController(callbacks: DragCallbacks) {
       result: null,
       scroller: (pointer.currentTarget as HTMLElement).closest<HTMLElement>(
         "[data-grid-scroll]",
+      ),
+      block: (pointer.currentTarget as HTMLElement).closest<HTMLElement>(
+        "[data-event-id]",
       ),
       timer: touch && !now ? setTimeout(activate, LONG_PRESS_MS) : null,
       frame: null,

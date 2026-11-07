@@ -323,6 +323,45 @@ describe("DraggableEvent", () => {
     expect(await screen.findByText("Duración cambiada")).toBeVisible();
   });
 
+  // Spec 021, T18: under 15 minutes the edge follows with a rubber band and
+  // comes back with scaleY (RF-32, RF-33, RF-67, plan D12).
+  it("bands the edge under 15 minutes and springs back with scaleY", async () => {
+    setup();
+    const cena = block("Cena");
+    down(cena.querySelector("[data-resize]")!, 11);
+    move(9);
+    const squeezed = Number(cena.style.scale.split(" ")[1]);
+    expect(squeezed).toBeLessThan(1);
+    expect(squeezed).toBeGreaterThanOrEqual(0.5);
+    await act(async () => up(9));
+    expect(h.quickChange).toHaveBeenCalledWith(
+      "e1",
+      expect.objectContaining({ endsAt: "2026-11-03T09:15:00.000Z" }),
+      {},
+    );
+    const back = h.play.mock.calls.find(([, frames]) =>
+      String(frames[0].scale).startsWith("1 0."),
+    );
+    expect(back?.[0]).toBe(cena);
+    expect(back?.[1].at(-1)).toMatchObject({ scale: "1 1" });
+  });
+
+  it("stops the edge dead at 15 minutes with reduced motion (RF-67)", () => {
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes("reduce"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    setup();
+    const cena = block("Cena");
+    down(cena.querySelector("[data-resize]")!, 11);
+    move(9);
+    expect(cena.style.scale).toBe("");
+    // @ts-expect-error jsdom has none.
+    delete window.matchMedia;
+  });
+
   it("the click after a drag does not open the event (RF-23)", async () => {
     setup();
     down(block("Cena"), 10.25);
