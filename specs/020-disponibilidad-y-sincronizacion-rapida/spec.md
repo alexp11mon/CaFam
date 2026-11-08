@@ -1,6 +1,6 @@
 # Spec 020 — Disponibilidad en el calendario y sincronización rápida
 
-> Estado: **Aprobada** por el usuario el 2026-11-08.
+> Estado: **Cerrada** (2026-11-09). Aprobada por el usuario el 2026-11-08; cierre aprobado el 2026-11-09. Migraciones `busy_grid` y `sync_fast` aplicadas en prod.
 
 ## Contexto y objetivo
 

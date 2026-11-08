@@ -1,6 +1,6 @@
 # Tasks 020 - Disponibilidad en el calendario y sincronización rápida
 
-> Estado: **Borrador**, pendiente de aprobación.
+> Estado: **hechas** (T1–T13). Spec cerrada el 2026-11-09 con la aprobación del usuario.
 > Spec: `specs/020-disponibilidad-y-sincronizacion-rapida/spec.md`, aprobada el 2026-11-08. Plan: `specs/020-disponibilidad-y-sincronizacion-rapida/plan.md`, aprobado el 2026-11-08.
 > 13 tareas en dos iteraciones:
 >
@@ -68,7 +68,7 @@
   Pasos: con la app en el puerto 3000 y una cuenta de Google e iCloud conectadas, simular un aviso con `curl` usando un canal sembrado; dejar correr las comprobaciones de 15 minutos.
   Hecho cuando: en la sección "Evidencia" consta: un aviso simulado lleva el cambio a CaFam en 2 minutos o menos; tres avisos en 30 s producen una sola lectura completa; una comprobación sin cambios no descarga eventos y actualiza "última actualización" en "Mis calendarios" y en la ficha; un cambio hecho en iCloud llega en 15 minutos o menos; dejar de traer un calendario de Google cancela su canal. Cubre: RF-19, RF-24, RF-26, RF-27, RF-28, RF-30 | Módulo: validación
 
-- [ ] T13 Validar RF por RF, documentar y preparar producción
+- [x] T13 Validar RF por RF, documentar y preparar producción
   Pasos: tabla RF-1 a RF-30 con su test o comprobación; prueba con dos usuarios (inspeccionar la respuesta: solo persona, inicio y fin; al retirar el consentimiento los bloques desaparecen); verificación P8 completa con `test:db`; `AGENTS.md` al día; comandos exactos para el usuario (migraciones a prod, `SYNC_PUSH_URL` en Vercel, `git push` y merge).
   Hecho cuando: la tabla y la salida de la verificación están en "Evidencia" y el usuario ha hecho en producción la prueba de Google (2 minutos o menos, o 15 si T1 salió rechazado) y la del iPhone (15 minutos o menos), y aprueba cerrar la spec. Cubre: todos | Módulo: validación
 
@@ -207,7 +207,7 @@ stop: 204
 - Limpieza: evento de prueba borrado en Google, todos los canales de dev cancelados (`sync_channels` y la cola vacías) y la app reiniciada sin `SYNC_PUSH_URL`.
 - **Pendiente: iCloud.** En dev no hay ninguna cuenta de iCloud conectada (hace falta la contraseña específica de app del usuario), así que "un cambio hecho en iCloud llega en 15 minutos o menos" se comprueba con la prueba del iPhone en producción de la T13. El camino de iCloud (`getctag`, comprobación cada 15 min) está cubierto por los tests de la T9.
 
-### T13 (2026-11-08, sin cerrar: faltan las pruebas en producción y la aprobación)
+### T13 (2026-11-08; cerrada el 2026-11-09)
 
 **Validación RF por RF**
 
@@ -231,14 +231,14 @@ stop: 204
 | RF-16 | Comprobación en el navegador de la T7 (0 bloques en mes y agenda); la página solo pide `grid_busy` en semana y día |
 | RF-17 | `busy-grid.test.ts`; prueba con usuarios sembrados (al retirar el consentimiento, `busy_people` vacío) |
 | RF-18 | `busy-grid.test.ts` y prueba con usuarios sembrados (34 días → `22023`) |
-| RF-19 | T12: 95 s del cambio en Google a CaFam con un aviso simulado; `google-push-route.test.ts`; `sync-fast.test.ts` (vencimiento a 1 min); `sync-worker.test.ts` (cron cada minuto). **Falta la prueba con un aviso real en producción** |
+| RF-19 | T12: 95 s del cambio en Google a CaFam con un aviso simulado; `google-push-route.test.ts`; `sync-fast.test.ts` (vencimiento a 1 min); `sync-worker.test.ts` (cron cada minuto). Prueba con un aviso real en producción: correcta (usuario, 2026-11-09) |
 | RF-20 | `run-sync.test.ts` (sin canal o a menos de 24 h → `watch`); `provider-google.test.ts`; T12 (4 canales reales creados, 7 días); `sync-fast.test.ts` (reconectar borra los canales) |
 | RF-21 | `sync-fast.test.ts` (canal desconocido, token falso o estado `sync` no marcan nada); `google-push-route.test.ts` (misma respuesta); T12 (aviso con token falso) |
 | RF-22 | `sync-fast.test.ts` (cola al sustituir o reconectar); `run-sync.test.ts` (la cola llama a `stop`); T12 (dejar de traer → canal cancelado en Google, segundo `stop` da `404`) |
 | RF-23 | `sync-fast.test.ts` (sin aviso, vence a los 15 min); T12 (comprobación de los 15 min) |
 | RF-24 | T12 (tres avisos en 30 s → una sola lectura); `sync-fast.test.ts` (aviso con intento hace 30 s no vence) |
 | RF-25 | `sync-worker.test.ts` ("Actualizar ahora" sigue diciendo `too_soon` antes de 5 min); `sync-fast.test.ts` (los avisos no usan esa espera) |
-| RF-26 | `sync-fast.test.ts` (15 min para cualquier proveedor); `provider-icloud-read.test.ts` (`getctag`). **Falta la prueba con iCloud en el iPhone en producción** (en dev no hay cuenta de iCloud) |
+| RF-26 | `sync-fast.test.ts` (15 min para cualquier proveedor); `provider-icloud-read.test.ts` (`getctag`). Prueba con iCloud en el iPhone en producción: correcta (usuario, 2026-11-09) |
 | RF-27 | `run-sync.test.ts` (misma versión → sin `listEvents`); `provider-icloud-read.test.ts`; T12 con Google |
 | RF-28 | `run-sync.test.ts` (versión distinta → lectura completa en la misma pasada) |
 | RF-29 | `run-sync.test.ts` (fallo al pedir la versión → `sync_fail` con su tipo); `sync-fast.test.ts` (un calendario con fallos no se adelanta) |
@@ -269,6 +269,8 @@ stop: 204
    git push origin main
    ```
 4. Pruebas en producción: esperar unos 15 minutos tras el despliegue (cada calendario crea su canal la primera vez que toca); cambiar un evento en Google Calendar y comprobar que llega a CaFam en 2 minutos o menos; cambiar uno en el Calendario del iPhone (iCloud) y comprobar que llega en 15 minutos o menos. Con eso, aprobar el cierre de la spec.
+
+**Producción (2026-11-09)**: código desplegado (`origin/main` en `f8df45f`; `POST /api/sync/google-push` responde `200` en producción). El usuario confirma las migraciones `busy_grid` y `sync_fast` en prod, `SYNC_PUSH_URL` en Vercel (Production), la prueba de Google (2 minutos o menos) y la del iPhone (15 minutos o menos), todas correctas, y aprueba cerrar la spec.
 
 ## Dudas abiertas
 
