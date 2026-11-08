@@ -57,6 +57,16 @@ describe("POST /api/sync/run", () => {
     expect(response.status).toBe(500);
   });
 
+  it("passes SYNC_PUSH_URL on, so the engine can make channels (spec 020 D8)", async () => {
+    vi.stubEnv("SYNC_PUSH_URL", "https://cafam.test/api/sync/google-push");
+    await call(`Bearer ${SECRET}`);
+    expect(runDue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pushUrl: "https://cafam.test/api/sync/google-push",
+      }),
+    );
+  });
+
   it("may run for 60 s", () => {
     expect(maxDuration).toBe(60);
   });

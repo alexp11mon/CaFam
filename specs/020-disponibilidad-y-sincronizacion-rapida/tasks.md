@@ -60,7 +60,7 @@
   Pasos: `lib/sync/channel.ts` (`newChannel`, `shouldRenew`), `watchCalendar` y `stopChannel` en `providers/google.ts`, la renovación en `syncOne` y la cola de cancelaciones en `runDue`.
   Hecho cuando: `npm test -- channel google run-sync` en verde con: sin canal o a menos de 24 h de caducar → `watch` y `sync_store_channel`; con más de 24 h no se toca; iCloud nunca crea canales; sin `SYNC_PUSH_URL` no se crean; la cola llama a `channels.stop` y a `sync_done_stop`, y un fallo de `stop` no tumba la pasada; el token no aparece en ningún registro. Cubre: RF-20, RF-22 | Módulo: `channel.ts`, `providers/google.ts`, `run-sync.ts`
 
-- [ ] T11 Recibir los avisos en `/api/sync/google-push`
+- [x] T11 Recibir los avisos en `/api/sync/google-push`
   Pasos: la ruta, `pushHeaders` en `channel.ts`, `SYNC_PUSH_URL` en `.env.example` y en la tabla de variables de `AGENTS.md`.
   Hecho cuando: `npm test -- google-push channel route-access` en verde (entorno node) con: aviso válido → `sync_push` con canal, token y estado y `200` sin cuerpo; sin cabeceras, token falso o error de la base de datos → también `200` sin cuerpo, y en los dos últimos casos con la misma respuesta que el válido; no lee el cuerpo; la ruta es pública en `getRouteAccess`. Cubre: RF-19, RF-21, RF-24 | Módulo: `google-push/route.ts`, `channel.ts`
 
@@ -187,6 +187,14 @@ stop: 204
 - `syncOne` renueva el canal tras abrir la sesión si hay `pushUrl` (`SYNC_PUSH_URL`, leída en `engineDeps`), el proveedor tiene canales y la reclamación trae `channel_expires_at` (la manual no lo trae y no toca los canales); un fallo no tumba la actualización y se reintenta en la pasada siguiente. `runDue` procesa al final hasta 20 paradas con `sync_claim_stops`, llama a `stopChannel` y siempre a `sync_done_stop` (si `stop` falla, el canal caduca solo, R4).
 - `npm test -- channel google run-sync`: 4 archivos, 93 tests en verde (sin canal o a menos de 24 h → `watch` y `sync_store_channel`; con más de 24 h no se toca; iCloud nunca; sin `SYNC_PUSH_URL` ni en la reclamación manual; la cola llama a `channels.stop` y a `sync_done_stop` aunque un `stop` falle; el token no aparece en ningún `console`).
 - P8: typecheck ok, lint 0 errores (2 avisos previos), format ok, `npm test` 259 archivos y 2480 tests en verde, build ok.
+
+### T11 (2026-11-08)
+
+- Ruta `POST /api/sync/google-push`: lee solo las cabeceras con `pushHeaders` (`channel.ts`: `x-goog-channel-id`, `x-goog-channel-token` y `x-goog-resource-state`), llama a `sync_push` con el secreto y la clave publicable y responde siempre `200` sin cuerpo; un error de la base de datos o de red se traga.
+- `/api/sync/run` ahora pasa `SYNC_PUSH_URL` al motor (`pushUrl`): sin eso los canales de la T10 nunca se crearían en producción.
+- `SYNC_PUSH_URL` documentada en `.env.example` y en la tabla de variables de `AGENTS.md`.
+- `npm test -- google-push channel route-access`: 3 archivos, 39 tests en verde (aviso válido → `sync_push` y `200` vacío sin leer el cuerpo; sin cabeceras, token falso, error y excepción de la base de datos → la misma respuesta; sin `CRON_SECRET` no llama; `/api/sync/google-push` es pública en `getRouteAccess`).
+- P8: typecheck ok, lint 0 errores (2 avisos previos), format ok, `npm test` 260 archivos y 2489 tests en verde, build ok.
 
 ## Dudas abiertas
 

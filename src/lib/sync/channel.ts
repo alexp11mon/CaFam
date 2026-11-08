@@ -21,3 +21,17 @@ export function shouldRenew(expiresAt: string | null, now: Date): boolean {
     Date.parse(expiresAt) - now.getTime() < CHANNEL_RENEW_HOURS * 3_600_000
   );
 }
+
+export interface PushNotice {
+  channelId: string;
+  token: string;
+  state: string | null;
+}
+
+/** What a Google notice says, from its headers only (RF-21); null if it is not one. */
+export function pushHeaders(headers: Headers): PushNotice | null {
+  const channelId = headers.get("x-goog-channel-id");
+  const token = headers.get("x-goog-channel-token");
+  if (!channelId || !token) return null;
+  return { channelId, token, state: headers.get("x-goog-resource-state") };
+}

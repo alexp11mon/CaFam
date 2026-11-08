@@ -8,6 +8,8 @@ const PUBLIC_PATHS = [
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/favicon.ico",
+  // Google notices arrive without a session (spec 020 T11).
+  "/api/sync/google-push",
 ];
 
 describe("getRouteAccess", () => {

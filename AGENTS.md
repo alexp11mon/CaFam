@@ -554,6 +554,7 @@ Variables (documentadas en `.env.example`):
 | `CRON_SECRET` | Vercel, `.env.local` y `.env.test.local` | Secreto del servidor. Desde la spec 007 debe ser igual que `cron_secret` en Vault (los tests de `sync-worker` lo usan) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `.env.local` y Vercel | Cliente OAuth de Google (spec 007), solo servidor. En dev, con la URI `http://localhost:3000/api/oauth/google/callback` |
 | `GROQ_API_KEY` | `.env.local`, `.env.test.local` y Vercel | Clave de Groq del asistente (spec 015), solo servidor y solo en `lib/assistant/provider.ts`. Dev y prod con claves distintas |
+| `SYNC_PUSH_URL` | Solo Vercel (Production) | Spec 020: dirección de los avisos de Google (`https://calendario-familia-five.vercel.app/api/sync/google-push`), solo servidor. Vacía en dev y previews: sin canales, cada 15 min |
 | `SUPABASE_SECRET_KEY` | **Solo `.env.test.local`** | Crea y borra usuarios en `test:db`. Nunca en Vercel ni en `src/` |
 
 **Permisos registrados en Google** (pantalla de consentimiento, proyecto `CaFam`), todos con el prefijo `https://www.googleapis.com/auth/`:

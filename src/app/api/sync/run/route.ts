@@ -7,8 +7,8 @@ import type { Database } from "@/types/database";
 export const maxDuration = 60;
 
 /**
- * Woken up every hour by pg_cron through pg_net (spec 007; plan D2, D4;
- * RF-22). No session and no service role key: the secret opens the sync
+ * Woken up by pg_cron through pg_net when there is work, every minute since
+ * spec 020 (spec 007 plan D2, D4; RF-22). No session and no service role key: the secret opens the sync
  * functions.
  */
 export async function POST(request: Request) {
@@ -28,6 +28,8 @@ export async function POST(request: Request) {
       secret,
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+      // Without it no Google channels are made (spec 020 D8).
+      pushUrl: process.env.SYNC_PUSH_URL || undefined,
     });
     return Response.json({ ok: true, calendars });
   } catch {
