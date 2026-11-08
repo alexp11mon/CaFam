@@ -64,7 +64,7 @@
   Pasos: la ruta, `pushHeaders` en `channel.ts`, `SYNC_PUSH_URL` en `.env.example` y en la tabla de variables de `AGENTS.md`.
   Hecho cuando: `npm test -- google-push channel route-access` en verde (entorno node) con: aviso válido → `sync_push` con canal, token y estado y `200` sin cuerpo; sin cabeceras, token falso o error de la base de datos → también `200` sin cuerpo, y en los dos últimos casos con la misma respuesta que el válido; no lee el cuerpo; la ruta es pública en `getRouteAccess`. Cubre: RF-19, RF-21, RF-24 | Módulo: `google-push/route.ts`, `channel.ts`
 
-- [ ] T12 Probar la sincronización rápida de punta a punta en dev
+- [x] T12 Probar la sincronización rápida de punta a punta en dev
   Pasos: con la app en el puerto 3000 y una cuenta de Google e iCloud conectadas, simular un aviso con `curl` usando un canal sembrado; dejar correr las comprobaciones de 15 minutos.
   Hecho cuando: en la sección "Evidencia" consta: un aviso simulado lleva el cambio a CaFam en 2 minutos o menos; tres avisos en 30 s producen una sola lectura completa; una comprobación sin cambios no descarga eventos y actualiza "última actualización" en "Mis calendarios" y en la ficha; un cambio hecho en iCloud llega en 15 minutos o menos; dejar de traer un calendario de Google cancela su canal. Cubre: RF-19, RF-24, RF-26, RF-27, RF-28, RF-30 | Módulo: validación
 
@@ -195,6 +195,17 @@ stop: 204
 - `SYNC_PUSH_URL` documentada en `.env.example` y en la tabla de variables de `AGENTS.md`.
 - `npm test -- google-push channel route-access`: 3 archivos, 39 tests en verde (aviso válido → `sync_push` y `200` vacío sin leer el cuerpo; sin cabeceras, token falso, error y excepción de la base de datos → la misma respuesta; sin `CRON_SECRET` no llama; `/api/sync/google-push` es pública en `getRouteAccess`).
 - P8: typecheck ok, lint 0 errores (2 avisos previos), format ok, `npm test` 260 archivos y 2489 tests en verde, build ok.
+
+### T12 (2026-11-08)
+
+- App compilada en el puerto 3100 con `SYNC_PUSH_URL` de producción; el cron se simula con `POST /api/sync/run` cada minuto (en dev `pg_cron` no llega a `localhost`). Cuenta de Google de dev con 4 calendarios (1 propio, 3 de solo lectura). Scripts en el scratchpad, sin commit; solo imprimen estados, horas y recuentos.
+- Primera pasada (10:27:18): 4 calendarios leídos enteros, versión guardada y **4 canales reales creados en Google**, que caducan a los 7 días (2026-11-15).
+- **Comprobación sin cambios** (10:45:42, más de 15 min después): los 3 calendarios sin cambios no descargaron eventos (`full_read_at` sigue en 10:27) y sí pusieron `last_synced_at` a 10:45:43, la columna que muestran "Mis calendarios" y la ficha de la cuenta; el calendario con un evento creado en Google a las 10:45:29 se leyó entero y lo trajo.
+- **Aviso simulado** con un canal sembrado de token conocido: evento borrado en Google a las 10:45:56; avisos con `curl` a las 10:45:57, 10:46:12 y 10:46:27, más uno con token falso, todos `200` sin cuerpo. Pasada de las 10:46:29: 0 calendarios (menos de 1 min desde el último intento); pasada de las 10:47:31: 1 calendario y el evento ya no está en CaFam. **95 s** del cambio en Google a CaFam, y **una sola lectura completa** para los tres avisos.
+- El canal real sustituido por el sembrado se canceló en esa misma pasada (cola de paradas vacía después).
+- **Dejar de traer**: borrar la fila `synced_calendars` de un calendario (lo mismo que `detach_synced_calendars`) encoló su canal; la pasada siguiente lo canceló en Google (un segundo `channels.stop` del mismo canal responde `404`) y la cola quedó vacía. La fila se restauró después para no cambiar los datos de dev.
+- Limpieza: evento de prueba borrado en Google, todos los canales de dev cancelados (`sync_channels` y la cola vacías) y la app reiniciada sin `SYNC_PUSH_URL`.
+- **Pendiente: iCloud.** En dev no hay ninguna cuenta de iCloud conectada (hace falta la contraseña específica de app del usuario), así que "un cambio hecho en iCloud llega en 15 minutos o menos" se comprueba con la prueba del iPhone en producción de la T13. El camino de iCloud (`getctag`, comprobación cada 15 min) está cubierto por los tests de la T9.
 
 ## Dudas abiertas
 
