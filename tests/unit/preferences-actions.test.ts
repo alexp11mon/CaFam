@@ -48,7 +48,7 @@ vi.mock("@/lib/calendar/queries", () => ({
   requireActionUser: async () => ({ supabase: fakeSupabase(), userId: ME }),
 }));
 
-const { saveOrder, setCalendarVisibility, setPersonVisibility } =
+const { saveOrder, setCalendarVisibility, setPersonVisibility, setShowBusy } =
   await import("@/app/dashboard/calendar/preferences-actions");
 
 beforeEach(() => {
@@ -185,5 +185,32 @@ describe("saveOrder (RF-45)", () => {
 
     expect(result.error).toBe("Revisa los datos e inténtalo de nuevo.");
     expect(state.upserts).toEqual([]);
+  });
+});
+
+// Spec 020, T4: the people whose busy times the user shows (RF-6, RF-7, D4).
+describe("setShowBusy (RF-7)", () => {
+  it("upserts only show_busy, so the position is kept", async () => {
+    expect(await setShowBusy(UUID_A, true)).toEqual({});
+    expect(state.upserts).toEqual([
+      {
+        table: "person_preferences",
+        rows: { user_id: ME, person_id: UUID_A, show_busy: true },
+        options: { onConflict: "user_id,person_id" },
+      },
+    ]);
+  });
+
+  it("rejects an invalid id or value without touching the database", async () => {
+    expect((await setShowBusy("nope", true)).error).toBeDefined();
+    expect(
+      (await setShowBusy(UUID_A, "yes" as unknown as boolean)).error,
+    ).toBeDefined();
+    expect(state.upserts).toEqual([]);
+  });
+
+  it("translates a database error", async () => {
+    state.upsertError = { code: "42501" };
+    expect((await setShowBusy(UUID_B, false)).error).toBeDefined();
   });
 });

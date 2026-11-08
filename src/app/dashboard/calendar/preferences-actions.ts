@@ -92,6 +92,33 @@ export async function setPersonVisibility(
   return {};
 }
 
+/**
+ * Shows or hides a person's busy times in the grid (spec 020 RF-6, RF-7, D4).
+ * Only show_busy is written, so the person's position is kept.
+ */
+export async function setShowBusy(
+  personId: string,
+  show: boolean,
+): Promise<Result> {
+  if (!z.uuid().safeParse(personId).success || typeof show !== "boolean") {
+    return { error: CALENDAR_MESSAGES.invalidData };
+  }
+  const { supabase, userId } = await requireActionUser();
+  try {
+    const { error } = await supabase
+      .from("person_preferences")
+      .upsert(
+        { user_id: userId, person_id: personId, show_busy: show },
+        PERSON_CONFLICT,
+      );
+    if (error) return { error: getCalendarErrorMessage(error) };
+  } catch (error) {
+    return { error: getCalendarErrorMessage(error) };
+  }
+  refresh();
+  return {};
+}
+
 /** Saves the position of every person and of every calendar within its owner (RF-45). */
 export async function saveOrder(order: SavedOrder): Promise<Result> {
   const parsed = orderSchema.safeParse(order);

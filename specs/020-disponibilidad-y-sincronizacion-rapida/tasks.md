@@ -31,7 +31,7 @@
 - [x] T3 Calcular los bloques "Ocupado" (`lib/availability/busy.ts`)
   Hecho cuando: `npm test -- busy` en verde con: 9–10 y 9:30–11 → un bloque 9:00–11:00; 9–10 y 10–11 → uno; un intervalo idéntico a un evento visible desaparece y otro a la vez no; día completo → `BusyDay` por fechas UTC; repeticiones expandidas cuentan una a una; dos personas no se juntan entre sí; horas en la zona de quien mira. Cubre: RF-10, RF-11, RF-12, RF-13 | Módulo: `lib/availability/busy.ts`
 
-- [ ] T4 Leer la disponibilidad y guardar las opciones (`queries.ts` y acciones)
+- [x] T4 Leer la disponibilidad y guardar las opciones (`queries.ts` y acciones)
   Pasos: `getBusyPeople()` y `getBusyBlocks(range, visibles)` en `lib/availability/queries.ts` (con `expandRows`); `setShareBusy` en `settings/actions.ts` y `setShowBusy` en `calendar/preferences-actions.ts`.
   Hecho cuando: `npm test -- availability-queries busy-actions` en verde (zod rechaza un id no válido, el upsert de `show_busy` no toca `position`, un error de la base de datos se traduce) y `npm run test:db -- busy-grid` sigue en verde. Cubre: RF-1, RF-4, RF-6, RF-7, RF-8, RF-18 | Módulo: `lib/availability/queries.ts`, acciones
 
@@ -135,6 +135,12 @@ stop: 204
 - `npm test -- busy.test`: 7 de 7 en verde (rojo antes: el módulo no existía).
 - Los bloques guardan instantes UTC; la conversión a la zona de quien mira la hace la vista como con los eventos (se comprueba en T7).
 - Verificación P8: typecheck, lint (0 errores), format:check, `npm test` (254 archivos, 2.424 tests) y build en verde.
+
+### T4 (2026-11-08)
+
+- `npm test -- settings-actions preferences-actions availability-queries`: en verde (rojo antes: `setShareBusy`, `setShowBusy` y el módulo no existían).
+- `npm run test:db -- busy-grid`: 10 de 10.
+- Verificación P8: typecheck, lint (0 errores), format:check, `npm test` (255 archivos, 2.433 tests) y build en verde.
 
 ## Dudas abiertas
 

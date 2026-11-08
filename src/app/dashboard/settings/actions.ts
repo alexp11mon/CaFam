@@ -83,6 +83,25 @@ export async function setShareAvailability(share: boolean): Promise<Result> {
   return {};
 }
 
+/** Lets people who share a calendar see my busy times in their grid (spec 020 RF-1, RF-2, D1). */
+export async function setShareBusy(share: boolean): Promise<Result> {
+  if (typeof share !== "boolean") return { error: SHARE_NOT_SAVED };
+
+  const { supabase, userId } = await requireActionUser();
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ share_busy: share })
+      .eq("id", userId)
+      .select("id");
+    if (error || !data?.length) return { error: SHARE_NOT_SAVED };
+  } catch {
+    return { error: CALENDAR_MESSAGES.connection };
+  }
+  revalidatePath("/dashboard", "layout");
+  return {};
+}
+
 const VIEW_NOT_SAVED = "No se ha podido guardar. Inténtalo de nuevo.";
 
 type ViewOptionsUpdate =

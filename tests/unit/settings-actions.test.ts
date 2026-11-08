@@ -52,7 +52,7 @@ vi.mock("@/lib/calendar/queries", () => ({
   requireActionUser: async () => ({ supabase: fakeSupabase(), userId: ME }),
 }));
 
-const { setAccent, setShareAvailability, setTheme } =
+const { setAccent, setShareAvailability, setShareBusy, setTheme } =
   await import("@/app/dashboard/settings/actions");
 
 beforeEach(() => {
@@ -195,5 +195,31 @@ describe("setShareAvailability (RF-20)", () => {
     );
     state.throws = true;
     expect((await setShareAvailability(false)).error).toMatch(/conectar/);
+  });
+});
+
+// Spec 020, T4: the consent to show busy times in other people's grid (RF-1, RF-2).
+describe("setShareBusy (RF-1)", () => {
+  it("saves only share_busy, never the assistant's consent (RF-2)", async () => {
+    expect(await setShareBusy(true)).toEqual({});
+    expect(state.updates).toEqual([
+      { table: "profiles", values: { share_busy: true }, eq: ["id", ME] },
+    ]);
+    expect(state.revalidated).toEqual([["/dashboard", "layout"]]);
+  });
+
+  it("rejects anything but a boolean without touching the database", async () => {
+    const result = await setShareBusy(1 as unknown as boolean);
+    expect(result.error).toBeDefined();
+    expect(state.updates).toEqual([]);
+  });
+
+  it("explains a failed save and a lost connection", async () => {
+    state.result = { data: [], error: null };
+    expect((await setShareBusy(false)).error).toBe(
+      "No se ha podido guardar el permiso. Inténtalo de nuevo.",
+    );
+    state.throws = true;
+    expect((await setShareBusy(false)).error).toMatch(/conectar/);
   });
 });
