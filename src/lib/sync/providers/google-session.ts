@@ -1,6 +1,7 @@
 import { convertGoogleEvents } from "../google-events";
 import { toGoogleEvent, toGooglePatch } from "../google-payload";
 import {
+  calendarVersion,
   deleteCalendar,
   deleteEvent,
   insertCalendar,
@@ -22,6 +23,9 @@ export function googleSession(
 ): ProviderSession {
   return {
     listCalendars: () => listCalendars(accessToken, fetchFn),
+
+    calendarVersion: (calendarId) =>
+      calendarVersion(accessToken, calendarId, fetchFn),
 
     async listEvents(calendarId, range) {
       const { events, accessRole } = await listEvents(

@@ -1,6 +1,11 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { runDue, syncCalendars, type SyncDeps } from "@/lib/sync/run-sync";
+import {
+  needsFullRead,
+  runDue,
+  syncCalendars,
+  type SyncDeps,
+} from "@/lib/sync/run-sync";
 import { summaryText, SYNC_ERRORS } from "@/lib/sync/summary";
 
 // Spec 007, T8: the sync engine with fake Google and a fake rpc (plan D1, D5,
@@ -312,6 +317,134 @@ describe("syncCalendars with iCloud", () => {
 
     expect(results.every((r) => "summary" in r)).toBe(true);
     expect(named("sync_apply_events")).toHaveLength(2);
+  });
+});
+
+// Spec 020, T9: the version check before reading (plan D9, D12; RF-23, RF-26
+// to RF-30).
+describe("needsFullRead", () => {
+  const now = new Date("2026-11-08T12:00:00Z");
+  const base = {
+    version: "v1",
+    stored: "v1",
+    pushPending: false,
+    fullReadAt: "2026-11-08T09:00:00Z",
+    now,
+  };
+
+  it("skips the read when nothing says it changed", () => {
+    expect(needsFullRead(base)).toBe(false);
+  });
+
+  it.each([
+    ["another version", { version: "v2" }],
+    ["no stored version", { stored: null }],
+    ["no version from the provider", { version: null }],
+    ["a Google notice", { pushPending: true }],
+    ["never read in full", { fullReadAt: null }],
+    ["read in full over 6 h ago", { fullReadAt: "2026-11-08T05:59:00Z" }],
+  ])("reads everything with %s", (_, change) => {
+    expect(needsFullRead({ ...base, ...change })).toBe(true);
+  });
+});
+
+describe("syncCalendars with the version check", () => {
+  const VERSION_FIELDS = "updated";
+  const checked = (extra = {}) => ({
+    ...calendar(1),
+    remote_version: "2026-11-08T10:00:00Z",
+    full_read_at: "2026-10-27T10:00:00Z",
+    push_pending_at: null,
+    ...extra,
+  });
+
+  function google(version: string | null) {
+    fetchFn.mockImplementation(async (input) => {
+      if (String(input) === TOKEN_URL) return json({ access_token: "at" });
+      const url = new URL(String(input));
+      if (url.searchParams.get("fields") === VERSION_FIELDS) {
+        return json(version ? { updated: version } : {});
+      }
+      return json({ items: [googleEvent("e1")] });
+    });
+  }
+  const reads = () =>
+    fetchFn.mock.calls.filter(([u]) =>
+      new URL(String(u)).searchParams.has("singleEvents"),
+    );
+
+  it("same version, no notice and a recent full read: only marks it checked", async () => {
+    google("2026-11-08T10:00:00Z");
+    const [result] = await syncCalendars([checked()], deps());
+
+    expect(reads()).toHaveLength(0);
+    expect(named("sync_apply_events")).toHaveLength(0);
+    expect(named("sync_mark_checked")[0].args).toEqual({
+      p_secret: "s3cret",
+      p_calendar_id: "cal-1",
+      p_version: "2026-11-08T10:00:00Z",
+      p_full: false,
+    });
+    expect(result).toEqual({
+      calendarId: "cal-1",
+      summary: { added: 0, changed: 0, removed: 0 },
+    });
+  });
+
+  it.each([
+    ["another version", {}, "2026-11-08T11:00:00Z"],
+    ["no stored version", { remote_version: null }, "2026-11-08T10:00:00Z"],
+    [
+      "a notice",
+      { push_pending_at: "2026-10-27T11:59:00Z" },
+      "2026-11-08T10:00:00Z",
+    ],
+    [
+      "a full read over 6 h ago",
+      { full_read_at: "2026-10-27T05:00:00Z" },
+      "2026-11-08T10:00:00Z",
+    ],
+  ])(
+    "%s: reads everything and stores the version",
+    async (_, extra, version) => {
+      google(version);
+      await syncCalendars([checked(extra)], deps());
+
+      expect(reads()).toHaveLength(1);
+      const order = calls.map((c) => c.fn);
+      expect(order.indexOf("sync_apply_events")).toBeLessThan(
+        order.indexOf("sync_mark_checked"),
+      );
+      expect(named("sync_mark_checked")[0].args).toEqual({
+        p_secret: "s3cret",
+        p_calendar_id: "cal-1",
+        p_version: version,
+        p_full: true,
+      });
+    },
+  );
+
+  it("asks for the version before reading", async () => {
+    google("2026-11-08T11:00:00Z");
+    await syncCalendars([checked()], deps());
+    const urls = fetchFn.mock.calls
+      .map(([u]) => new URL(String(u)))
+      .filter((u) => u.origin === "https://www.googleapis.com");
+    expect(urls[0].searchParams.get("fields")).toBe(VERSION_FIELDS);
+    expect(urls[1].searchParams.get("singleEvents")).toBe("true");
+  });
+
+  it("a failure asking for the version goes to sync_fail with its kind", async () => {
+    fetchFn.mockImplementation(async (input) => {
+      if (String(input) === TOKEN_URL) return json({ access_token: "at" });
+      return json({}, 404);
+    });
+    const [result] = await syncCalendars([checked()], deps());
+
+    expect(reads()).toHaveLength(0);
+    expect(named("sync_mark_checked")).toHaveLength(0);
+    expect(named("sync_fail")[0].args).toMatchObject({ p_kind: "missing" });
+    expect(result).toEqual({ calendarId: "cal-1", error: "missing" });
   });
 });
 

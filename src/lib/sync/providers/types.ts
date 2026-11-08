@@ -46,6 +46,8 @@ export interface ProviderEvents {
 /** A connection opened with its credential; every call may throw ProviderError. */
 export interface ProviderSession {
   listCalendars(): Promise<ProviderCalendar[]>;
+  /** A cheap mark that changes when the calendar changes; null if none (spec 020 D9). */
+  calendarVersion(calendarId: string): Promise<string | null>;
   listEvents(
     calendarId: string,
     range: { from: Date; to: Date },

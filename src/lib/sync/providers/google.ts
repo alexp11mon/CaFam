@@ -257,6 +257,27 @@ export async function listEvents(
   return { events: events.slice(0, MAX_FETCHED_EVENTS), accessRole };
 }
 
+/**
+ * The last change of the calendar, without its events (spec 020 D9, RF-23):
+ * `updated` of the events collection.
+ */
+export async function calendarVersion(
+  accessToken: string,
+  calendarId: string,
+  fetchFn: Fetch = fetch,
+): Promise<string | null> {
+  const url = new URL(eventsUrl(calendarId));
+  url.search = new URLSearchParams({
+    maxResults: "1",
+    fields: "updated",
+  }).toString();
+  const response = await call(fetchFn, url.toString(), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const { updated } = (await response.json()) as { updated?: unknown };
+  return typeof updated === "string" ? updated : null;
+}
+
 /** Withdraws CaFam's access in Google (RF-30). */
 export async function revokeToken(
   token: string,

@@ -352,3 +352,43 @@ describe("verifyIcloud (RF-5, RF-6, RF-8)", () => {
     });
   });
 });
+
+describe("calendarVersion (spec 020 RF-26, RF-27, plan D9)", () => {
+  it("reads getctag with a depth 0 PROPFIND of the calendar", async () => {
+    let body = "";
+    let depth: string | null = null;
+    route("PROPFIND", CALENDAR, async (request) => {
+      body = await request.text();
+      depth = request.headers.get("depth");
+      return new Response(
+        multistatus(
+          response(
+            "/123456/calendars/home/",
+            "<CS:getctag>HwoQEgwAAAA</CS:getctag>",
+          ),
+        ),
+        { status: 207, headers: XML },
+      );
+    });
+
+    expect(await session().calendarVersion(CALENDAR)).toBe("HwoQEgwAAAA");
+    expect(depth).toBe("0");
+    expect(body).toContain("getctag");
+    // Straight to the calendar: no discovery for a version.
+    expect(calls.map((c) => c.url)).toEqual([CALENDAR]);
+  });
+
+  it("gives null without a getctag and a missing calendar is missing", async () => {
+    route(
+      "PROPFIND",
+      CALENDAR,
+      multistatus(
+        response("/123456/calendars/home/", "<displayname>Casa</displayname>"),
+      ),
+    );
+    expect(await session().calendarVersion(CALENDAR)).toBeNull();
+    await expect(
+      session().calendarVersion(`${HOME}gone/`),
+    ).rejects.toMatchObject({ kind: "missing" });
+  });
+});

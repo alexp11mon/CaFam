@@ -295,6 +295,19 @@ export function icloudSession(
       return calendars;
     },
 
+    // Straight to the calendar, no discovery: it runs every 15 min (spec 020 D9).
+    async calendarVersion(calendarId) {
+      const props = firstProps(
+        await propfind({
+          url: icloudUrl(calendarId, ROOT),
+          props: { "cs:getctag": {} },
+          depth: "0",
+          fetch: davFetch,
+        }),
+      );
+      return text(props?.getctag);
+    },
+
     async listEvents(calendarId, range): Promise<ProviderEvents> {
       const url = icloudUrl(calendarId, ROOT);
       const access = accessOf(

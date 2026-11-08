@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   authorizationUrl,
+  calendarVersion,
   deleteCalendar,
   deleteEvent,
   exchangeCode,
@@ -393,5 +394,31 @@ describe("listCalendars access (spec 009 RF-8)", () => {
     );
     const calendars = await listCalendars("at", fn);
     expect(calendars.map((c) => c.access)).toEqual(["owner", "reader"]);
+  });
+});
+
+describe("calendarVersion (spec 020 RF-23, RF-27, plan D9)", () => {
+  it("asks only for the updated field of the events collection", async () => {
+    const fn = fakeFetch(json({ updated: "2026-11-08T10:00:00.123Z" }));
+    expect(await calendarVersion("at", "fam@group", fn)).toBe(
+      "2026-11-08T10:00:00.123Z",
+    );
+    const url = calledUrl(fn);
+    expect(url.pathname).toBe("/calendar/v3/calendars/fam%40group/events");
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      maxResults: "1",
+      fields: "updated",
+    });
+  });
+
+  it("gives null when Google sends no version", async () => {
+    expect(await calendarVersion("at", "x", fakeFetch(json({})))).toBeNull();
+  });
+
+  it("classifies its failures like any read", async () => {
+    const fn = fakeFetch(json({ error: { code: 404 } }, 404));
+    await expect(calendarVersion("at", "x", fn)).rejects.toMatchObject({
+      kind: "missing",
+    });
   });
 });

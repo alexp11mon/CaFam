@@ -24,3 +24,20 @@ export const FAILURES_BEFORE_NOTICE = 3;
 
 /** Every synced calendar is updated at least this often (RF-22). */
 export const AUTO_INTERVAL_HOURS = 6;
+
+// Fast sync (spec 020 plan D7 to D9). Mirrored in sync_due_calendars.
+
+/** A calendar is checked at least this often (RF-23, RF-26). */
+export const POLL_MINUTES = 15;
+
+/** After a Google notice, wait this long since the last attempt (RF-24). */
+export const PUSH_DEBOUNCE_MS = 60_000;
+
+/** Everything is read again this often even if the version did not change (R3). */
+export const FULL_READ_HOURS = 6;
+
+/** A Google channel is renewed when it has less than this left (D8). */
+export const CHANNEL_RENEW_HOURS = 24;
+
+/** What a Google channel is asked to last; Google caps it at 7 days (T1). */
+export const CHANNEL_TTL_DAYS = 7;

@@ -52,7 +52,7 @@
   Pasos: columnas de `synced_calendars`, `sync_channels`, `sync_channel_stops` y su trigger, `sync_push`, `sync_store_channel`, `sync_mark_checked`, `sync_claim_stops`, `sync_done_stop`, los cambios en `sync_due_calendars`, `sync_claim_due`, `sync_trigger` y `connect_account`, y `sync-run-due` cada minuto; `db:push` y `db:types`.
   Hecho cuando: `npm run test:db -- sync-fast sync-worker` en verde con: due a los 15 min y no antes; con aviso, due a 1 min del último intento y no antes; un calendario en curso no se reclama; `sync_push` con token malo, canal desconocido o estado `sync` no marca nada y no da error; `sync_mark_checked` pone `last_synced_at`, reinicia fallos y conserva un aviso posterior al inicio; borrar el calendario, dejar de traerlo o renovar el canal encola la cancelación; reconectar borra los canales; ningún cliente lee `sync_channels`; el trabajo de cron es `* * * * *`. Cubre: RF-19, RF-21, RF-22, RF-23, RF-24, RF-25, RF-26, RF-29, RF-30 | Módulo: migración `sync_fast`
 
-- [ ] T9 Pedir la versión del calendario y saltarse la lectura si no cambió
+- [x] T9 Pedir la versión del calendario y saltarse la lectura si no cambió
   Pasos: `calendarVersion` en `providers/google.ts` e `icloud.ts`, `needsFullRead` y su uso en `syncOne`, constantes en `limits.ts`.
   Hecho cuando: `npm test -- google icloud run-sync` en verde con: misma versión, sin aviso y lectura completa de hace menos de 6 h → no se llama a `listEvents` y sí a `sync_mark_checked`; versión distinta, sin versión guardada, aviso o más de 6 h → lectura completa y versión guardada; la versión se pide antes de leer; un error al pedirla va a `sync_fail` con su tipo. Cubre: RF-23, RF-26, RF-27, RF-28, RF-29, RF-30 | Módulo: `providers`, `run-sync.ts`, `limits.ts`
 
@@ -171,6 +171,14 @@ stop: 204
 - `sync-worker` ajustado: `sync-run-due` cada minuto (`* * * * *`) y 'reciente' a 5 min.
 - Decisión añadida: un calendario con fallos seguidos espera los 15 min aunque haya aviso, para no llamar a Google cada minuto mientras falla.
 - P8: typecheck ok, lint 0 errores (2 avisos previos en `event-form.tsx` y `event-images.test.ts`), format ok, `npm test` 258 archivos y 2444 tests en verde, build ok.
+
+### T9 (2026-11-08)
+
+- `calendarVersion` en Google (`events?maxResults=1&fields=updated`, en `google.ts` y `google-session.ts`) e iCloud (`PROPFIND` de profundidad 0 a `cs:getctag`, directo al calendario sin descubrimiento); método nuevo de `ProviderSession`.
+- `needsFullRead` (pura) en `run-sync.ts`: lee todo si la versión es nula o distinta, no hay versión guardada, hay aviso, nunca se leyó entera o hace más de `FULL_READ_HOURS` (6). `syncOne` pide la versión antes de leer; sin cambios llama a `sync_mark_checked` con `p_full: false` y devuelve un resumen a cero; tras una lectura completa, `sync_mark_checked` con `p_full: true`. Un fallo al pedir la versión va a `sync_fail` con su tipo. Constantes en `limits.ts`.
+- La reclamación manual ("Actualizar ahora") no trae versión, así que siempre lee todo.
+- `npm test -- google icloud run-sync`: 12 archivos, 157 tests en verde (misma versión sin aviso y lectura reciente → sin `listEvents` y con `sync_mark_checked`; versión distinta, sin versión guardada, aviso o más de 6 h → lectura completa y versión guardada; versión antes de leer; fallo de la versión → `sync_fail` con `missing`).
+- P8: typecheck ok, lint 0 errores (2 avisos previos), format ok, `npm test` 258 archivos y 2463 tests en verde, build ok.
 
 ## Dudas abiertas
 

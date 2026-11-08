@@ -24,6 +24,7 @@ const session = {
   insertCalendar: vi.fn(),
   renameCalendar: vi.fn(),
   deleteCalendar: vi.fn(),
+  calendarVersion: vi.fn(),
 } satisfies Record<keyof ProviderSession, unknown>;
 
 vi.mock("@/lib/sync/providers/icloud", () => ({

@@ -1,4 +1,5 @@
 import { rpc, type SyncDeps } from "./deps";
+import { FULL_READ_HOURS } from "./limits";
 import { limitEvents } from "./limit-events";
 import { openSession } from "./providers";
 import {
@@ -25,7 +26,31 @@ export interface ClaimedCalendar {
   /** From sync_claim_*; Google when missing (calendars claimed before spec 018). */
   provider?: string;
   external_id: string;
+  /** From sync_claim_due since spec 020; missing in a manual claim, which reads everything. */
+  remote_version?: string | null;
+  full_read_at?: string | null;
+  push_pending_at?: string | null;
 }
+
+/**
+ * Whether the events must be read again, or the version shows nothing changed
+ * (spec 020 plan D9; RF-27, RF-28). A notice or 6 h without a full read always
+ * read (R3).
+ */
+export function needsFullRead(input: {
+  version: string | null;
+  stored: string | null;
+  pushPending: boolean;
+  fullReadAt: string | null;
+  now: Date;
+}): boolean {
+  const { version, stored, pushPending, fullReadAt, now } = input;
+  if (version === null || version !== stored || pushPending) return true;
+  if (!fullReadAt) return true;
+  return now.getTime() - Date.parse(fullReadAt) > FULL_READ_HOURS * 3_600_000;
+}
+
+const UNCHANGED: UpdateSummary = { added: 0, changed: 0, removed: 0 };
 
 export type SyncResult =
   | { calendarId: string; summary: UpdateSummary }
@@ -39,9 +64,30 @@ async function syncOne(
   // Taken before reading: CaFam changes after it win (spec 009 RF-27, plan D5).
   const now = deps.now?.() ?? new Date();
   try {
-    const read = await (
-      await session
-    ).listEvents(calendar.external_id, syncWindow(now));
+    const provider = await session;
+    // Asked before reading, so a change while reading shows next time (D9).
+    const version = await provider.calendarVersion(calendar.external_id);
+    const full = needsFullRead({
+      version,
+      stored: calendar.remote_version ?? null,
+      pushPending: Boolean(calendar.push_pending_at),
+      fullReadAt: calendar.full_read_at ?? null,
+      now,
+    });
+    if (!full) {
+      await rpc(deps, "sync_mark_checked", {
+        p_secret: deps.secret,
+        p_calendar_id: calendar.calendar_id,
+        p_version: version,
+        p_full: false,
+      });
+      return { calendarId: calendar.calendar_id, summary: UNCHANGED };
+    }
+
+    const read = await provider.listEvents(
+      calendar.external_id,
+      syncWindow(now),
+    );
     const { events, omitted } = limitEvents(read.events, now);
     const summary = (await rpc(deps, "sync_apply_events", {
       p_secret: deps.secret,
@@ -52,6 +98,12 @@ async function syncOne(
       p_read_at: now.toISOString(),
       p_access: read.access,
     })) as UpdateSummary;
+    await rpc(deps, "sync_mark_checked", {
+      p_secret: deps.secret,
+      p_calendar_id: calendar.calendar_id,
+      p_version: version,
+      p_full: true,
+    });
     return { calendarId: calendar.calendar_id, summary };
   } catch (error) {
     // Anything unexpected is retried in the next run (RF-33).
