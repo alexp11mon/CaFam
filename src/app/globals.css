@@ -269,6 +269,18 @@ body {
   background-image: var(--gradient-agenda-band);
 }
 
+/* Someone else's busy time: a soft diagonal hatch on paper, never a pastel
+   fill, so it does not read as an event (spec 020 RF-9, plan D6). */
+@utility bg-busy-hatch {
+  --gradient-busy-hatch: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--line) 70%, transparent) 0 2px,
+    transparent 2px 8px
+  );
+  background-color: var(--paper);
+  background-image: var(--gradient-busy-hatch);
+}
+
 /* Microinteraction of buttons and controls (RF-16, plan D13). */
 @utility press {
   transition-property:

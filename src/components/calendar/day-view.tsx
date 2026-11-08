@@ -1,5 +1,6 @@
 import type { DraftRange } from "@/lib/calendar/draft-drag";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
+import type { BusyGridItem } from "./busy-block";
 import { TimeGrid, type CreateInGrid, type GridDraft } from "./time-grid";
 
 /** A single day (RF-29, RF-37). */
@@ -12,7 +13,10 @@ export function DayView({
   draft,
   duration,
   onDraftChange,
+  busy,
 }: {
+  /** Other people's busy times (spec 020 RF-8). */
+  busy?: BusyGridItem[];
   duration?: number;
   day: string;
   events: CalendarEventItem[];
@@ -33,6 +37,7 @@ export function DayView({
       draft={draft}
       duration={duration}
       onDraftChange={onDraftChange}
+      busy={busy}
     />
   );
 }

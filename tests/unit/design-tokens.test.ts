@@ -23,8 +23,9 @@ const SOURCES = files(ROOT).map((path) => ({
 
 // The floating shadow and glass only on what floats: dialogs, the "Más" sheet, the phone drawer,
 // the rail tooltips, the time list, the toast, an event lifted while dragging (spec 017)
-// and the round buttons (spec 016 and 015).
+// the round buttons (spec 016 and 015) and the note of a busy block (spec 020).
 const FLOATING = new Set([
+  "src/components/calendar/busy-block.tsx",
   "src/components/calendar/confirm-dialog.tsx",
   "src/components/calendar/calendar-workspace.tsx",
   "src/components/calendar/draggable-event.tsx",

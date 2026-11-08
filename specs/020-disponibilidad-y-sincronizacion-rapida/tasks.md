@@ -42,7 +42,7 @@
 - [x] T6 Añadir la sección "Disponibilidad" a los filtros
   Hecho cuando: `npm test -- calendar-filters` en verde con: sin personas no hay sección; cada persona con su avatar y una casilla desmarcada por defecto; marcar llama a `setShowBusy(id, true)`; con 8 marcadas la novena casilla está deshabilitada con "Como mucho 8 personas a la vez"; todo con teclado. Capturas del panel y del cajón del móvil. Cubre: RF-5, RF-6, RF-17 | Módulo: `calendar-filters.tsx`
 
-- [ ] T7 Pintar los bloques "Ocupado" en semana y día
+- [x] T7 Pintar los bloques "Ocupado" en semana y día
   Pasos: `BusyBlock` (D6, token `bg-busy-hatch`), la página pide `getBusyBlocks` solo en semana y día y las vistas los colocan con `layoutTimedDay` y en la franja de día completo.
   Hecho cuando: `npm test -- busy-block week-view day-view month-view agenda-view design-tokens` en verde con: "Ocupado · Ana" con el tinte en `style` y sin relleno pastel; pulsarlo abre el globo con nombre y horas, sin enlace; sin `data-event-id`, sin arrastre, sin menú contextual ni teclas de evento; mes y agenda no los pintan. Capturas a 390, 768 y 1440 px, claro y oscuro, rojo y amarillo, con dos usuarios de prueba en dev. Cubre: RF-8, RF-9, RF-11, RF-14, RF-15, RF-16 | Módulo: `BusyBlock`, `time-grid.tsx`, vistas
 
@@ -155,6 +155,14 @@ stop: 204
 - `npm test -- calendar-filters calendar-workspace availability`: 43 de 43.
 - En el navegador (`next start -p 3100`, usuarios sembrados en dev): la sección lista a Ana y Luis con su avatar; desmarcar a Luis se guarda y sigue desmarcado al recargar; en el cajón del móvil (375 px, oscuro) aparece tras "Calendarios".
 - Verificación P8: typecheck, lint (0 errores), format:check, `npm test` (257 archivos, 2.440 tests) y build en verde.
+
+### T7 (2026-11-08)
+
+- `npm test -- busy-block week-view day-view time-grid design-tokens availability-queries`: en verde (rojo antes: `busy-block` no existía). `busy-block.tsx` entra en la lista de lo que flota de la guardia de diseño por su globo (`glass-float`).
+- Cambio respecto a T4: `getBusyBlocks` pasa a `getBusyIntervals` y devuelve los intervalos expandidos; `busyBlocks` se aplica en el navegador con los eventos que dejan ver los filtros (`shown`), que es lo que pide D3 (un calendario oculto no cuenta como visto).
+- En el navegador con usuarios sembrados en dev: Ana 07:00–13:00 y 13:00–14:00 UTC → un bloque "08:00 – 15:00" (RF-12); el "Dentista" que Ana creó en el calendario de Marta, que Marta ve, no sale como Ocupado (RF-13); la serie semanal sale el lunes 18:00–19:00 (hubo que corregir la regla sembrada: la app siempre escribe `BYDAY`); el viaje de Luis en la franja de día completo; pulsar un bloque abre la nota "Ana García / Ocupado de 09:30 a 11:00" sin abrir el alta rápida; mes y agenda no tienen bloques (0).
+- Capturas: semana a 1440 px en claro con acento amarillo y día a 375 px en oscuro.
+- Verificación P8: typecheck, lint (0 errores), format:check, `npm test` (258 archivos, 2.444 tests) y build en verde.
 
 ## Dudas abiertas
 

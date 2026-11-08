@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { getBusyBlocks, getBusyPeople } from "@/lib/availability/queries";
+import { getBusyIntervals, getBusyPeople } from "@/lib/availability/queries";
 
 // Spec 020, T4 (RF-5, RF-8, RF-10, RF-18; plan D2).
 const ANA = "11111111-1111-4111-8111-111111111111";
@@ -27,7 +27,7 @@ describe("getBusyPeople", () => {
   });
 });
 
-describe("getBusyBlocks", () => {
+describe("getBusyIntervals", () => {
   const from = new Date("2026-11-09T00:00:00Z");
   const to = new Date("2026-11-16T00:00:00Z");
 
@@ -52,7 +52,7 @@ describe("getBusyBlocks", () => {
         exdates: ["2026-11-09T17:00:00+00:00"],
       },
     ]);
-    const { timed } = await getBusyBlocks(client, from, to, []);
+    const intervals = await getBusyIntervals(client, from, to);
     expect(calls).toEqual([
       {
         fn: "grid_busy",
@@ -60,8 +60,8 @@ describe("getBusyBlocks", () => {
       },
     ]);
     // 10–11 November of the series (9 is excluded, 12 is past COUNT), plus the single.
-    expect(timed.map((b) => b.startsAt)).toEqual([
-      "2026-11-10T08:00:00.000Z",
+    expect(intervals.map((b) => b.startsAt)).toEqual([
+      "2026-11-10T08:00:00+00:00",
       "2026-11-10T17:00:00.000Z",
       "2026-11-11T17:00:00.000Z",
     ]);
@@ -69,7 +69,7 @@ describe("getBusyBlocks", () => {
 
   it("throws a database error, so the page shows its error", async () => {
     const { client } = fakeClient(null, { code: "22023" });
-    await expect(getBusyBlocks(client, from, to, [])).rejects.toEqual({
+    await expect(getBusyIntervals(client, from, to)).rejects.toEqual({
       code: "22023",
     });
   });

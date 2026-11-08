@@ -1,13 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { expandRows } from "@/lib/recurrence/read-series";
 import type { Database } from "@/types/database";
-import {
-  busyBlocks,
-  type BusyBlock,
-  type BusyDay,
-  type BusyInput,
-  type VisibleTimes,
-} from "./busy";
+import type { BusyInput } from "./busy";
 
 // Reads of other people's busy times (spec 020 plan "lib/availability/queries.ts").
 // Server only: expandRows uses ical.js.
@@ -32,15 +26,16 @@ export async function getBusyPeople(supabase: Client): Promise<BusyPerson[]> {
 }
 
 /**
- * Busy blocks of the marked people in [from, to), at most 32 days (RF-8, RF-10,
- * RF-18), without what the user already sees (RF-13).
+ * Busy intervals of the marked people in [from, to), at most 32 days, one per
+ * repetition and times only (RF-8, RF-10, RF-18). The browser drops what it
+ * already shows and merges them (busyBlocks), as the filters decide what is
+ * visible (plan D3).
  */
-export async function getBusyBlocks(
+export async function getBusyIntervals(
   supabase: Client,
   from: Date,
   to: Date,
-  visible: readonly VisibleTimes[],
-): Promise<{ timed: BusyBlock[]; allDay: BusyDay[] }> {
+): Promise<BusyInput[]> {
   const { data, error } = await supabase.rpc("grid_busy", {
     p_from: from.toISOString(),
     p_to: to.toISOString(),
@@ -69,5 +64,5 @@ export async function getBusyBlocks(
       allDay: row.all_day,
     });
   }
-  return busyBlocks(inputs, visible);
+  return inputs;
 }

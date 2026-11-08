@@ -27,6 +27,7 @@ import {
 import { useGridZoom } from "@/lib/hooks/use-grid-zoom";
 import { useIsPhone } from "@/lib/hooks/use-is-phone";
 import { useNow } from "@/lib/hooks/use-now";
+import { BusyBlock, isBusyItem, type BusyGridItem } from "./busy-block";
 import { DraggableEvent } from "./draggable-event";
 import { ScrollOnMount } from "./scroll-on-mount";
 import { SlotLayer } from "./slot-layer";
@@ -73,7 +74,10 @@ export function TimeGrid({
   draft,
   duration,
   onDraftChange,
+  busy = [],
 }: {
+  /** Other people's busy times, beside the events (spec 020 RF-8, RF-11). */
+  busy?: BusyGridItem[];
   /** The provisional block moved or stretched on a phone (spec 019 RF-35 to RF-38). */
   onDraftChange?: (range: DraftRange) => void;
   /** The account's length of a new event (spec 019 RF-32). */
@@ -95,8 +99,9 @@ export function TimeGrid({
   const columns = {
     gridTemplateColumns: `3rem repeat(${days.length}, minmax(0, 1fr))`,
   };
+  const items = [...events, ...busy];
   const banners = layoutMonthWeek(
-    events.filter((event) => isBanner(event, timeZone)),
+    items.filter((event) => isBanner(event, timeZone)),
     days,
     timeZone,
   );
@@ -173,20 +178,33 @@ export function TimeGrid({
                 }}
               />
             ))}
-            {banners.map(({ event, start, span, lane }) => (
-              <DraggableEvent
-                key={event.id}
-                mode="strip"
-                event={event}
-                timeZone={timeZone}
-                shape="line"
-                className="mx-0.5 min-w-0"
-                style={{
-                  gridColumn: `${start + 2} / span ${span}`,
-                  gridRow: lane + 1,
-                }}
-              />
-            ))}
+            {banners.map(({ event, start, span, lane }) =>
+              isBusyItem(event) ? (
+                <BusyBlock
+                  key={event.id}
+                  item={event}
+                  hours={null}
+                  className="relative mx-0.5 h-5 min-w-0"
+                  style={{
+                    gridColumn: `${start + 2} / span ${span}`,
+                    gridRow: lane + 1,
+                  }}
+                />
+              ) : (
+                <DraggableEvent
+                  key={event.id}
+                  mode="strip"
+                  event={event}
+                  timeZone={timeZone}
+                  shape="line"
+                  className="mx-0.5 min-w-0"
+                  style={{
+                    gridColumn: `${start + 2} / span ${span}`,
+                    gridRow: lane + 1,
+                  }}
+                />
+              ),
+            )}
           </div>
           <ScrollOnMount
             scrollKey={`${days[0]}|${showsToday}`}
@@ -246,8 +264,25 @@ export function TimeGrid({
                       onChange={onDraftChange}
                     />
                   ) : null}
-                  {layoutTimedDay(events, day, timeZone).map((slot) => {
+                  {layoutTimedDay(items, day, timeZone).map((slot) => {
                     const width = 100 / slot.columns;
+                    const place = {
+                      top: `${(slot.startMinute / 60) * hourPx}px`,
+                      height: `${Math.max(((slot.endMinute - slot.startMinute) / 60) * hourPx, MIN_SLOT_PX)}px`,
+                      left: percent(slot.column * width),
+                      width: percent(width),
+                    };
+                    if (isBusyItem(slot.event)) {
+                      return (
+                        <BusyBlock
+                          key={slot.event.id}
+                          item={slot.event}
+                          hours={`${fromMinutes(slot.startMinute)} – ${fromMinutes(slot.endMinute)}`}
+                          className="absolute border border-paper"
+                          style={place}
+                        />
+                      );
+                    }
                     return (
                       <DraggableEvent
                         key={slot.event.id}
@@ -267,12 +302,7 @@ export function TimeGrid({
                         icons={slot.endMinute - slot.startMinute >= 30}
                         // A paper edge parts blocks that touch, as Google.
                         className="absolute border border-paper"
-                        style={{
-                          top: `${(slot.startMinute / 60) * hourPx}px`,
-                          height: `${Math.max(((slot.endMinute - slot.startMinute) / 60) * hourPx, MIN_SLOT_PX)}px`,
-                          left: percent(slot.column * width),
-                          width: percent(width),
-                        }}
+                        style={place}
                       />
                     );
                   })}

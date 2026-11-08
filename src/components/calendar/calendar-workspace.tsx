@@ -14,6 +14,7 @@ import {
   ViewTransition,
 } from "react";
 import { createPortal } from "react-dom";
+import { busyBlocks, type BusyInput } from "@/lib/availability/busy";
 import { assignTints } from "@/lib/people/avatar";
 import {
   useCalendarHeader,
@@ -57,6 +58,7 @@ import {
 } from "@/lib/calendar/transition-types";
 import { AgendaView, type AgendaEvent } from "./agenda-view";
 import type { MonthMarks } from "@/lib/calendar/month-marks";
+import type { BusyGridItem } from "./busy-block";
 import {
   AvailabilityFilter,
   type BusyPersonOption,
@@ -232,6 +234,7 @@ export function CalendarWorkspace({
   showWeekends = true,
   defaultDuration = 60,
   busyPeople = [],
+  busyIntervals = [],
   setShowBusy,
 }: {
   view: CalendarView;
@@ -275,6 +278,8 @@ export function CalendarWorkspace({
   defaultDuration?: number;
   /** People who let the user see their busy times (spec 020 RF-5). */
   busyPeople?: BusyPersonOption[];
+  /** Their busy times in the week or day shown, times only (spec 020 RF-8, RF-10). */
+  busyIntervals?: BusyInput[];
   setShowBusy?: (personId: string, show: boolean) => Promise<Result>;
 }) {
   const [keyDialog, setKeyDialog] = useState<"goto" | "help" | null>(null);
@@ -627,6 +632,37 @@ export function CalendarWorkspace({
     ...busyPeople.map((p) => p.id),
   ]);
 
+  // Busy blocks without what the filters already show, merged per person
+  // (spec 020 RF-12, RF-13, plan D3); an unmarked person goes at once (RF-6).
+  const busyNames = new Map(
+    shownBusyPeople.filter((p) => p.shown).map((p) => [p.id, p.name]),
+  );
+  const busyTimes = busyBlocks(
+    busyIntervals.filter((b) => busyNames.has(b.personId)),
+    shown,
+  );
+  const person = (personId: string) => ({
+    personId,
+    name: busyNames.get(personId) ?? "",
+    tint: personTints.get(personId) ?? "",
+  });
+  const gridBusy: BusyGridItem[] = [
+    ...busyTimes.timed.map((b) => ({
+      ...person(b.personId),
+      id: `busy:${b.personId}:${b.startsAt}`,
+      startsAt: b.startsAt,
+      endsAt: b.endsAt,
+      allDay: false,
+    })),
+    ...busyTimes.allDay.map((d) => ({
+      ...person(d.personId),
+      id: `busy-day:${d.personId}:${d.startDate}`,
+      startsAt: `${d.startDate}T00:00:00Z`,
+      endsAt: `${d.endDate}T00:00:00Z`,
+      allDay: true,
+    })),
+  ];
+
   async function toggleBusy(personId: string, show: boolean) {
     if (!setShowBusy) return;
     setBusyMarks((marks) => new Map(marks).set(personId, show));
@@ -848,6 +884,7 @@ export function CalendarWorkspace({
               <WeekView
                 days={days}
                 events={shown}
+                busy={gridBusy}
                 timeZone={timeZone}
                 today={today}
                 onCreate={createInGrid}
@@ -859,6 +896,7 @@ export function CalendarWorkspace({
               <DayView
                 day={date}
                 events={shown}
+                busy={gridBusy}
                 timeZone={timeZone}
                 today={today}
                 onCreate={createInGrid}

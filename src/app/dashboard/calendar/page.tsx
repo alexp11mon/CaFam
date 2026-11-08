@@ -38,7 +38,7 @@ import {
   setPersonVisibility,
   setShowBusy,
 } from "./preferences-actions";
-import { getBusyPeople } from "@/lib/availability/queries";
+import { getBusyIntervals, getBusyPeople } from "@/lib/availability/queries";
 import { setGroupVisibility } from "../calendars/group-actions";
 
 export const metadata: Metadata = { title: "Calendario" };
@@ -79,6 +79,7 @@ async function CalendarContent({
     preferences,
     userGroups,
     busyPeople,
+    busyIntervals,
   ] = await Promise.all([
     getMyCalendars(supabase, userId),
     getEventsInRange(supabase, range.from, range.to),
@@ -90,6 +91,10 @@ async function CalendarContent({
     getPreferences(supabase, userId),
     getGroups(supabase, userId),
     getBusyPeople(supabase),
+    // Only the week and the day show them (RF-16).
+    view === "week" || view === "day"
+      ? getBusyIntervals(supabase, range.from, range.to)
+      : [],
   ]);
 
   if (calendars.length === 0) {
@@ -206,6 +211,7 @@ async function CalendarContent({
         showWeekends={viewOptions.showWeekends}
         defaultDuration={viewOptions.duration}
         busyPeople={busyPeople}
+        busyIntervals={busyIntervals}
         setShowBusy={setShowBusy}
       />
     </>
