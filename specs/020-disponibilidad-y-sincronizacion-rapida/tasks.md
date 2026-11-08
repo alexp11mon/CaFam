@@ -207,6 +207,69 @@ stop: 204
 - Limpieza: evento de prueba borrado en Google, todos los canales de dev cancelados (`sync_channels` y la cola vacías) y la app reiniciada sin `SYNC_PUSH_URL`.
 - **Pendiente: iCloud.** En dev no hay ninguna cuenta de iCloud conectada (hace falta la contraseña específica de app del usuario), así que "un cambio hecho en iCloud llega en 15 minutos o menos" se comprueba con la prueba del iPhone en producción de la T13. El camino de iCloud (`getctag`, comprobación cada 15 min) está cubierto por los tests de la T9.
 
+### T13 (2026-11-08, sin cerrar: faltan las pruebas en producción y la aprobación)
+
+**Validación RF por RF**
+
+| RF | Test o comprobación |
+|----|---------------------|
+| RF-1 | `busy-setting.test.tsx` (opción en Ajustes, desactivada por defecto); `busy-grid.test.ts` (`share_busy` por defecto `false`) |
+| RF-2 | `busy-grid.test.ts` (activar `share_busy` no toca `share_availability` ni al revés); `busy-setting.test.tsx` |
+| RF-3 | `busy-setting.test.tsx` (texto explicativo); `privacy-page.test.tsx` (sección "Disponibilidad en el calendario") |
+| RF-4 | Prueba con usuarios sembrados: al retirar el consentimiento la siguiente lectura de `grid_busy` ya no devuelve nada (todo el script, 2,6 s); `busy-grid.test.ts` |
+| RF-5 | `busy-grid.test.ts` (`busy_people` solo con quien consiente y comparte calendario); `availability-filter.test.tsx` |
+| RF-6 | `availability-filter.test.tsx` (marcar y desmarcar, todas desmarcadas al empezar) |
+| RF-7 | `preferences-actions.test.ts` (`setShowBusy` guarda `person_preferences.show_busy`); `busy-grid.test.ts` (`shown`) |
+| RF-8 | `busy-block.test.tsx` ("Ocupado · nombre" a su hora en la zona del lector); comprobación en el navegador de la T7 |
+| RF-9 | `busy-block.test.tsx` (rayado, sin relleno pastel, borde del color del avatar) |
+| RF-10 | `busy-grid.test.ts` (calendarios que el lector no ve y D13: propios y creados donde sigue siendo miembro); prueba con usuarios sembrados (solo persona, inicio, fin, día completo y regla) |
+| RF-11 | `busy-block.test.tsx` (franja de día completo); `busy.test.ts` |
+| RF-12 | `busy.test.ts` (solapados y contiguos en un solo bloque) |
+| RF-13 | `busy.test.ts` (coincidencia exacta con un evento visible); comprobación en el navegador de la T7 (Dentista) |
+| RF-14 | `busy-block.test.tsx` (nota con nombre y horas, sin enlace; Escape la cierra) |
+| RF-15 | `busy-block.test.tsx` (sin `data-event-id`, enlace, arrastre ni menú) |
+| RF-16 | Comprobación en el navegador de la T7 (0 bloques en mes y agenda); la página solo pide `grid_busy` en semana y día |
+| RF-17 | `busy-grid.test.ts`; prueba con usuarios sembrados (al retirar el consentimiento, `busy_people` vacío) |
+| RF-18 | `busy-grid.test.ts` y prueba con usuarios sembrados (34 días → `22023`) |
+| RF-19 | T12: 95 s del cambio en Google a CaFam con un aviso simulado; `google-push-route.test.ts`; `sync-fast.test.ts` (vencimiento a 1 min); `sync-worker.test.ts` (cron cada minuto). **Falta la prueba con un aviso real en producción** |
+| RF-20 | `run-sync.test.ts` (sin canal o a menos de 24 h → `watch`); `provider-google.test.ts`; T12 (4 canales reales creados, 7 días); `sync-fast.test.ts` (reconectar borra los canales) |
+| RF-21 | `sync-fast.test.ts` (canal desconocido, token falso o estado `sync` no marcan nada); `google-push-route.test.ts` (misma respuesta); T12 (aviso con token falso) |
+| RF-22 | `sync-fast.test.ts` (cola al sustituir o reconectar); `run-sync.test.ts` (la cola llama a `stop`); T12 (dejar de traer → canal cancelado en Google, segundo `stop` da `404`) |
+| RF-23 | `sync-fast.test.ts` (sin aviso, vence a los 15 min); T12 (comprobación de los 15 min) |
+| RF-24 | T12 (tres avisos en 30 s → una sola lectura); `sync-fast.test.ts` (aviso con intento hace 30 s no vence) |
+| RF-25 | `sync-worker.test.ts` ("Actualizar ahora" sigue diciendo `too_soon` antes de 5 min); `sync-fast.test.ts` (los avisos no usan esa espera) |
+| RF-26 | `sync-fast.test.ts` (15 min para cualquier proveedor); `provider-icloud-read.test.ts` (`getctag`). **Falta la prueba con iCloud en el iPhone en producción** (en dev no hay cuenta de iCloud) |
+| RF-27 | `run-sync.test.ts` (misma versión → sin `listEvents`); `provider-icloud-read.test.ts`; T12 con Google |
+| RF-28 | `run-sync.test.ts` (versión distinta → lectura completa en la misma pasada) |
+| RF-29 | `run-sync.test.ts` (fallo al pedir la versión → `sync_fail` con su tipo); `sync-fast.test.ts` (un calendario con fallos no se adelanta) |
+| RF-30 | `sync-fast.test.ts` (`sync_mark_checked` pone `last_synced_at` en el calendario y en la conexión); T12 (la comprobación sin cambios actualizó `last_synced_at`) |
+
+**Privacidad con dos usuarios** (usuarios `@cafam.test` sembrados, sesión real de cada uno): Marta recibe de `grid_busy` 7 filas de Ana y Luis con las claves `person_id, starts_at, ends_at, all_day, recurrence, recurrence_tz, exdates` (sin id, título, lugar, descripción ni calendario); `busy_people` solo da `id, display_name, shown`. Ana y Luis, que no han marcado a nadie, no reciben nada. Al retirar los dos el consentimiento, `busy_people` y `grid_busy` vuelven vacíos para todos en la lectura siguiente.
+
+**Verificación P8 completa**
+
+- typecheck ok, lint 0 errores (2 avisos previos en `event-form.tsx` y `event-images.test.ts`), format ok, `npm test` 260 archivos y 2489 tests en verde, build ok.
+- `npm run test:db`: 31 archivos en verde a la primera; los otros 16 cayeron en sus `beforeAll` por `AuthApiError: Request rate limit reached` (trampa conocida del límite de Supabase Auth) y al repetirlos con `--no-file-parallelism` pasaron los 16 (103 tests). Los 38 usuarios de prueba que dejaron esas ejecuciones se borraron de dev.
+- `AGENTS.md` al día: estado, sección "Añadido por la spec 020", base de datos, ruta, variable `SYNC_PUSH_URL`, patrón y dos trampas nuevas.
+
+**Pasos de producción (los ejecuta el usuario, en este orden)**
+
+1. Migraciones a prod (antes del despliegue; el código antiguo sigue funcionando con ellas):
+   ```
+   npx supabase link --project-ref yznbdoskvtxeasujtirk
+   npx supabase db push
+   npx supabase link --project-ref uthubyzhonrtrmbcqcjh
+   ```
+2. En Vercel → Settings → Environment Variables, solo en **Production**: `SYNC_PUSH_URL` = `https://calendario-familia-five.vercel.app/api/sync/google-push`.
+3. Subir la rama e integrarla en `main` (despliega):
+   ```
+   git push origin 020-disponibilidad-y-sincronizacion-rapida
+   git checkout main
+   git merge --ff-only 020-disponibilidad-y-sincronizacion-rapida
+   git push origin main
+   ```
+4. Pruebas en producción: esperar unos 15 minutos tras el despliegue (cada calendario crea su canal la primera vez que toca); cambiar un evento en Google Calendar y comprobar que llega a CaFam en 2 minutos o menos; cambiar uno en el Calendario del iPhone (iCloud) y comprobar que llega en 15 minutos o menos. Con eso, aprobar el cierre de la spec.
+
 ## Dudas abiertas
 
 - Ninguna.
