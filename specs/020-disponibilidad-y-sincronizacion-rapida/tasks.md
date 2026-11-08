@@ -28,7 +28,7 @@
   Pasos: `profiles.share_busy`, `person_preferences.show_busy`, `busy_people()` y `grid_busy()` según el modelo de datos del plan (D2, D4, D5, D13); `db:push` y `db:types`.
   Hecho cuando: `npm run test:db -- busy-grid` en verde con: un usuario ajeno no recibe nada; una persona que no consiente no sale ni en `busy_people` ni en `grid_busy`; las columnas devueltas son solo `person_id`, `starts_at`, `ends_at`, `all_day`, `recurrence`, `recurrence_tz` y `exdates`; un evento que otro puso en un calendario compartido no cuenta y uno que ella creó sí (D13); las excepciones salen sueltas y su fecha original está en los `exdates` de la serie; periodo de 33 días → `22023`; con 9 personas marcadas devuelve 8; desmarcar o retirar el consentimiento deja de devolverla. Cubre: RF-1, RF-2, RF-4, RF-5, RF-7, RF-10, RF-17, RF-18 | Módulo: migración `busy_grid`
 
-- [ ] T3 Calcular los bloques "Ocupado" (`lib/availability/busy.ts`)
+- [x] T3 Calcular los bloques "Ocupado" (`lib/availability/busy.ts`)
   Hecho cuando: `npm test -- busy` en verde con: 9–10 y 9:30–11 → un bloque 9:00–11:00; 9–10 y 10–11 → uno; un intervalo idéntico a un evento visible desaparece y otro a la vez no; día completo → `BusyDay` por fechas UTC; repeticiones expandidas cuentan una a una; dos personas no se juntan entre sí; horas en la zona de quien mira. Cubre: RF-10, RF-11, RF-12, RF-13 | Módulo: `lib/availability/busy.ts`
 
 - [ ] T4 Leer la disponibilidad y guardar las opciones (`queries.ts` y acciones)
@@ -129,6 +129,12 @@ stop: 204
 - Migración `20261108100000_busy_grid` aplicada en dev; tipos regenerados.
 - `npm run test:db -- busy-grid`: 10 de 10 en verde.
 - `typecheck`, `lint` (0 errores; los 2 avisos ya existían), `format:check`, `npm test` (253 archivos, 2.417 tests) y `build` en verde.
+
+### T3 (2026-11-08)
+
+- `npm test -- busy.test`: 7 de 7 en verde (rojo antes: el módulo no existía).
+- Los bloques guardan instantes UTC; la conversión a la zona de quien mira la hace la vista como con los eventos (se comprueba en T7).
+- Verificación P8: typecheck, lint (0 errores), format:check, `npm test` (254 archivos, 2.424 tests) y build en verde.
 
 ## Dudas abiertas
 
