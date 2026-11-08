@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-07, al terminar las tareas de la spec 021 (animaciones y microinteracciones), pendiente de aprobar su cierre.
+> Última actualización: 2026-11-08, al cerrar la spec 021 (animaciones y microinteracciones).
 
 ## 1. Qué es
 
@@ -47,7 +47,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: bloques rellenos, cabecera con cajón y "+", deslizar, agenda continua y fila de meses (enmienda 4 de la constitución) | **Cerrada** (2026-10-30), T1–T13 hechas; sin migraciones. La prueba en el iPhone se hace en producción |
 | 017-mover-eventos-y-menu | Mover y redimensionar arrastrando, menú contextual en el ordenador, "Deshacer" en los avisos, detalle en hoja inferior en el móvil, pellizcar para ampliar y atajos nuevos (enmienda 5) | **Cerrada** (2026-11-01), T1–T16 hechas; 2 migraciones aplicadas en prod |
 | 018-sincronizacion-icloud | Calendarios de iCloud (iPhone) por CalDAV con contraseña específica de app, con el mismo alcance que Google en la 007 y la 009 (leer, escribir, renombrar, crear y subir). Dependencia `tsdav` aprobada; se instala en la primera tarea | **Cerrada** (2026-11-01), T1–T15 hechas; 2 migraciones aplicadas en prod; enmienda 6 aplicada |
-| 021-animaciones-y-microinteracciones | Movimiento con intención en toda la app: curvas y duraciones como tokens, desplegables que nacen del disparador, listas escalonadas, interruptor, pulso de guardado, regreso en arco, evento → detalle, seguir al dedo con goma, selector de vista y revelado del tema | T1–T18 hechas; T19 (validación) con la evidencia escrita y **pendiente de aprobar el cierre**. Sin migraciones ni dependencias nuevas |
+| 021-animaciones-y-microinteracciones | Movimiento con intención en toda la app: curvas y duraciones como tokens, desplegables que nacen del disparador, listas escalonadas, interruptor, pulso de guardado, regreso en arco, evento → detalle, seguir al dedo con goma, selector de vista y revelado del tema | **Cerrada** (2026-11-08), T1–T19 hechas; sin migraciones ni dependencias nuevas. Pendientes del usuario la prueba en el iPhone (plan R2) y la medida con la CPU ralentizada |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -210,7 +210,7 @@ Añadido por la spec 019 (migraciones aplicadas en prod el 2026-11-02):
 - **Bloque provisional en el móvil**: con la hoja de `QuickCreate` abierta en semana o día, el bloque se mueve con el dedo y se estira desde su tirador en cuartos de hora (`draft-drag.ts`, `DraftBlock` en `time-grid.tsx`), y las horas de la hoja y el bloque van a la par. En el móvil la hoja se abre **sin modal** (`show()`) para que la rejilla siga usable, y la rejilla se desplaza para dejar el bloque por encima.
 - **Tiempo real**: cuando cambia un evento, un calendario o sus miembros, Postgres manda un mensaje privado `changed` con `{actor}` (sin datos del evento) al tema `user:<id>` de cada miembro (`live_notify`, un mensaje por usuario y transacción). `useLiveCalendar` (en el workspace) escucha solo con la pestaña visible, ignora los cambios propios, junta los mensajes 400 ms y hace `router.refresh()`; refresca también al reconectar. Mientras el usuario arrastra, crea o edita, el refresco espera (`holdLive`/`useHoldLive`, `live-hold.ts`). Si el evento abierto desaparece por un cambio ajeno, se avisa "Otra persona ha borrado este evento". Una región `aria-live` dice "Calendario actualizado a las HH:MM:SS". Medido en dev: percentil 95 de 985 ms.
 
-Añadido por la spec 021 (sin migraciones ni dependencias; rama `021-animaciones-y-microinteracciones`):
+Añadido por la spec 021 (cerrada el 2026-11-08; sin migraciones ni dependencias):
 
 - **Tokens de movimiento** en `globals.css`: `--ease-out` (entrar y salir) y `--ease-in-out` (moverse), duraciones `--motion-*-in`/`-out` (la salida es el 80 % de la entrada), `--motion-move` 300 ms, `--motion-pulse`, `--motion-reveal`, `--pulse-scale` 1,04, `--pop-scale` 0,95 y `--motion-distance`. Con `prefers-reduced-motion` se quedan en fundidos cortos y sin escala, arco ni goma. En JavaScript se leen con `motionMs()` y `motionToken()` (`EASE_OUT` y `EASE_IN_OUT` son los respaldos).
 - **Utilidades** (`@utility`): `press` y `press-quiet` (pulsar al 97 %), `pop` (desplegable desde `--pop-origin`, al cerrar `data-leaving`), `stagger` (filas 2 a 8 con 30 ms, solo bajo `data-entering`), `row-in`, `settle` (detalle 50 ms después), `swap` y `reveal-down`. Los `<dialog>` entran desde el 95 %; `[data-sheet]` desde abajo y `[data-drawer]` desde la izquierda.
@@ -731,6 +731,6 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **017 (mover eventos, menú y "Deshacer")** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod. Al soltar, cambiar el color o borrar una repetición se pregunta el alcance; "Deshacer" solo con "Solo este evento".
 - La **018 (iCloud)** está cerrada (2026-11-01), con sus 2 migraciones aplicadas en prod. La comprobación con una cuenta real confirmó `MOVE` y renombrar.
 - La **015 (asistente de chat)** está cerrada (2026-11-04), con la ampliación de comentarios y botón flotante (sin migraciones). La migración `assistant` y `GROQ_API_KEY` están en prod.
-- La **021 (animaciones y microinteracciones)** tiene T1–T18 hechas y la evidencia de T19 escrita en su `tasks.md`; falta que el usuario la pruebe en el iPhone (plan R2), mida el rendimiento con la CPU ralentizada y apruebe el cierre.
+- La **021 (animaciones y microinteracciones)** está cerrada (2026-11-08), sin migraciones. Tras el `git push` y el merge a `main`, queda que el usuario la pruebe en el iPhone en producción (plan R2: pellizco y desplazamiento de la semana con `touch-pan-y`) y mida el rendimiento con la CPU ralentizada; la evidencia está en su `tasks.md`.
 - La **019 (escritorio, móvil y tiempo real)** está cerrada (2026-11-02). Sus migraciones `live_changes` y `profile_view_options` están aplicadas en prod (2026-11-02). La 020 (disponibilidad en la rejilla y sincronización rápida) está redactada y sin aprobar.
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.

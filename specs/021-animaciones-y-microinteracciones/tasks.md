@@ -1,6 +1,6 @@
 # Tasks 021 - Animaciones y microinteracciones
 
-> Estado: **aprobadas** (2026-11-07).
+> Estado: **hechas** (T1–T19). Spec cerrada el 2026-11-08 con la aprobación del usuario.
 > Spec: `specs/021-animaciones-y-microinteracciones/spec.md` (aprobada el 2026-11-07). Plan: `specs/021-animaciones-y-microinteracciones/plan.md` (aprobado el 2026-11-07).
 > 19 tareas en dos iteraciones:
 >
@@ -300,7 +300,7 @@
   - Borde de un evento: por debajo de 15 min el bloque se encoge con `scale` desde arriba (la goma, como mucho a la mitad de un bloque de 15 min, porque 64 px no caben en él) y al soltar vuelve con `play`. Con movimiento reducido se para en seco.
   - Sin prueba en el navegador: la tarea solo pide los tests; queda en la revisión de T19.
 
-- [ ] T19 Validar la spec RF por RF y cerrarla
+- [x] T19 Validar la spec RF por RF y cerrarla
   Pasos:
   - Tabla RF-1 a RF-68 con el test o la comprobación manual que cubre cada uno, en la sección de evidencia de este archivo.
   - Prueba en el iPhone en producción (como la 016) y en el ordenador con ratón y con teclado:
@@ -319,7 +319,7 @@
 
   Hecho cuando: la tabla de RF está completa con evidencia, la verificación obligatoria está reportada y el usuario aprueba el cierre. Cubre: RF-1 a RF-68 | Módulo: validación
 
-## Evidencia (T19, 2026-11-07)
+## Evidencia (T19, 2026-11-07; cierre aprobado por el usuario el 2026-11-08)
 
 Verificación obligatoria al cerrar T18, en la rama `021-animaciones-y-microinteracciones`: `typecheck ok`, `lint ok`, `format ok`, `Test Files 253 passed (253)`, `Tests 2417 passed (2417)`, `build ok`. Sin migraciones, así que sin `test:db`. `package.json` y `package-lock.json` no cambian respecto a `main`.
 
@@ -365,7 +365,7 @@ Fuera de alcance comprobado: ninguna vista del calendario lleva `stagger` (`list
 
 Revisión en el navegador del panel (`next start -p 3100`, tema oscuro y acento rojo): semana a 390 px, Ajustes a 768 px y mes en escritorio sin nada roto.
 
-Queda para el usuario, porque necesita su dispositivo o producción:
+El usuario aprobó el cierre el 2026-11-08 con estas comprobaciones pendientes de su lado, porque necesitan su dispositivo o producción:
 
 - Prueba en el iPhone en producción: pellizco y desplazamiento de la semana con `touch-pan-y` (plan R2), cajón, hoja, visor y deslizar.
 - Safari de iOS: la píldora del selector de vista no se duplica en el fundido (plan R1).

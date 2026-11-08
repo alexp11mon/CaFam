@@ -1,5 +1,7 @@
 # Spec 021 — Animaciones y microinteracciones
 
+> Estado: **Cerrada** (2026-11-08). Aprobada por el usuario el 2026-11-07; cierre aprobado el 2026-11-08. La enmienda 8 de la constitución se aplicó al aprobarla. Sin migraciones.
+
 ## Contexto y objetivo
 
 La spec 011 dio movimiento a CaFam: los botones responden al pulsarlos, las ventanas y los avisos entran y salen, y cambiar de vista o de periodo tiene transición. Pero todo usa la misma curva y la misma duración. Hay desplegables que aparecen de golpe, lo que se desliza con el dedo no se mueve hasta soltar, y abrir un evento muestra una superficie nueva que no sale de su bloque.
