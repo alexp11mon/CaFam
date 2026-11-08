@@ -933,6 +933,65 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_channel_stops: {
+        Row: {
+          channel_id: string
+          connection_id: string
+          queued_at: string
+          resource_id: string
+        }
+        Insert: {
+          channel_id: string
+          connection_id: string
+          queued_at?: string
+          resource_id: string
+        }
+        Update: {
+          channel_id?: string
+          connection_id?: string
+          queued_at?: string
+          resource_id?: string
+        }
+        Relationships: []
+      }
+      sync_channels: {
+        Row: {
+          calendar_id: string
+          channel_id: string
+          connection_id: string
+          created_at: string
+          expires_at: string
+          resource_id: string
+          token_hash: string
+        }
+        Insert: {
+          calendar_id: string
+          channel_id: string
+          connection_id: string
+          created_at?: string
+          expires_at: string
+          resource_id: string
+          token_hash: string
+        }
+        Update: {
+          calendar_id?: string
+          channel_id?: string
+          connection_id?: string
+          created_at?: string
+          expires_at?: string
+          resource_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_channels_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: true
+            referencedRelation: "synced_calendars"
+            referencedColumns: ["calendar_id"]
+          },
+        ]
+      }
       synced_calendars: {
         Row: {
           calendar_id: string
@@ -940,12 +999,15 @@ export type Database = {
           consecutive_failures: number
           created_at: string
           external_id: string
+          full_read_at: string | null
           google_access: string | null
           last_attempt_at: string | null
           last_error: string | null
           last_summary: Json | null
           last_synced_at: string | null
           provider: string
+          push_pending_at: string | null
+          remote_version: string | null
           state: string
           sync_started_at: string | null
           can_write: boolean | null
@@ -956,12 +1018,15 @@ export type Database = {
           consecutive_failures?: number
           created_at?: string
           external_id: string
+          full_read_at?: string | null
           google_access?: string | null
           last_attempt_at?: string | null
           last_error?: string | null
           last_summary?: Json | null
           last_synced_at?: string | null
           provider: string
+          push_pending_at?: string | null
+          remote_version?: string | null
           state?: string
           sync_started_at?: string | null
         }
@@ -971,12 +1036,15 @@ export type Database = {
           consecutive_failures?: number
           created_at?: string
           external_id?: string
+          full_read_at?: string | null
           google_access?: string | null
           last_attempt_at?: string | null
           last_error?: string | null
           last_summary?: Json | null
           last_synced_at?: string | null
           provider?: string
+          push_pending_at?: string | null
+          remote_version?: string | null
           state?: string
           sync_started_at?: string | null
         }
@@ -1340,9 +1408,22 @@ export type Database = {
         Args: { p_limit?: number; p_secret: string }
         Returns: {
           calendar_id: string
+          channel_expires_at: string
           connection_id: string
           external_id: string
+          full_read_at: string
           provider: string
+          push_pending_at: string
+          remote_version: string
+        }[]
+      }
+      sync_claim_stops: {
+        Args: { p_limit?: number; p_secret: string }
+        Returns: {
+          channel_id: string
+          connection_id: string
+          provider: string
+          resource_id: string
         }[]
       }
       sync_commit_event: {
@@ -1356,6 +1437,10 @@ export type Database = {
         }
         Returns: string
       }
+      sync_done_stop: {
+        Args: { p_channel_id: string; p_secret: string }
+        Returns: undefined
+      }
       sync_due_calendars: {
         Args: never
         Returns: {
@@ -1364,12 +1449,15 @@ export type Database = {
           consecutive_failures: number
           created_at: string
           external_id: string
+          full_read_at: string | null
           google_access: string | null
           last_attempt_at: string | null
           last_error: string | null
           last_summary: Json | null
           last_synced_at: string | null
           provider: string
+          push_pending_at: string | null
+          remote_version: string | null
           state: string
           sync_started_at: string | null
         }[]
@@ -1387,6 +1475,15 @@ export type Database = {
       sync_get_token: {
         Args: { p_connection_id: string; p_secret: string }
         Returns: string
+      }
+      sync_mark_checked: {
+        Args: {
+          p_calendar_id: string
+          p_full: boolean
+          p_secret: string
+          p_version: string
+        }
+        Returns: undefined
       }
       sync_own_writable_connection: {
         Args: { p_connection_id: string }
@@ -1409,6 +1506,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      sync_push: {
+        Args: {
+          p_channel_id: string
+          p_secret: string
+          p_state: string
+          p_token: string
+        }
+        Returns: undefined
+      }
       sync_scheduled_jobs: {
         Args: never
         Returns: {
@@ -1418,6 +1524,17 @@ export type Database = {
       }
       sync_set_access: {
         Args: { p_connection_id: string; p_items: Json; p_secret: string }
+        Returns: undefined
+      }
+      sync_store_channel: {
+        Args: {
+          p_calendar_id: string
+          p_channel_id: string
+          p_expires_at: string
+          p_resource_id: string
+          p_secret: string
+          p_token: string
+        }
         Returns: undefined
       }
       sync_store_token: {

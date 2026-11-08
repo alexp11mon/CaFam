@@ -48,7 +48,7 @@
 
 ### Iteración 2
 
-- [ ] T8 Crear la migración `sync_fast` con sus tests de base de datos
+- [x] T8 Crear la migración `sync_fast` con sus tests de base de datos
   Pasos: columnas de `synced_calendars`, `sync_channels`, `sync_channel_stops` y su trigger, `sync_push`, `sync_store_channel`, `sync_mark_checked`, `sync_claim_stops`, `sync_done_stop`, los cambios en `sync_due_calendars`, `sync_claim_due`, `sync_trigger` y `connect_account`, y `sync-run-due` cada minuto; `db:push` y `db:types`.
   Hecho cuando: `npm run test:db -- sync-fast sync-worker` en verde con: due a los 15 min y no antes; con aviso, due a 1 min del último intento y no antes; un calendario en curso no se reclama; `sync_push` con token malo, canal desconocido o estado `sync` no marca nada y no da error; `sync_mark_checked` pone `last_synced_at`, reinicia fallos y conserva un aviso posterior al inicio; borrar el calendario, dejar de traerlo o renovar el canal encola la cancelación; reconectar borra los canales; ningún cliente lee `sync_channels`; el trabajo de cron es `* * * * *`. Cubre: RF-19, RF-21, RF-22, RF-23, RF-24, RF-25, RF-26, RF-29, RF-30 | Módulo: migración `sync_fast`
 
@@ -163,6 +163,14 @@ stop: 204
 - En el navegador con usuarios sembrados en dev: Ana 07:00–13:00 y 13:00–14:00 UTC → un bloque "08:00 – 15:00" (RF-12); el "Dentista" que Ana creó en el calendario de Marta, que Marta ve, no sale como Ocupado (RF-13); la serie semanal sale el lunes 18:00–19:00 (hubo que corregir la regla sembrada: la app siempre escribe `BYDAY`); el viaje de Luis en la franja de día completo; pulsar un bloque abre la nota "Ana García / Ocupado de 09:30 a 11:00" sin abrir el alta rápida; mes y agenda no tienen bloques (0).
 - Capturas: semana a 1440 px en claro con acento amarillo y día a 375 px en oscuro.
 - Verificación P8: typecheck, lint (0 errores), format:check, `npm test` (258 archivos, 2.444 tests) y build en verde.
+
+### T8 (2026-11-08)
+
+- Migración `20261108110000_sync_fast` aplicada en dev (`npx supabase db push`) y tipos regenerados (`npm run db:types`).
+- `npm run test:db -- sync-fast sync-worker`: 2 archivos, 46 tests en verde (22 de `sync-fast`: tablas fuera del alcance de los clientes, token solo en SHA-256, `sync_push` con canal o token falsos sin error ni efecto, 'sync' ignorado, vencimiento de 1 min con aviso y 15 min sin él, un calendario con fallos no se adelanta, `sync_mark_checked` sin cambios cuenta como actualización y conserva el aviso posterior, cola de paradas al sustituir o reconectar, `sync_trigger` despierta por paradas solas, se tiran las paradas de cuentas que no funcionan).
+- `sync-worker` ajustado: `sync-run-due` cada minuto (`* * * * *`) y 'reciente' a 5 min.
+- Decisión añadida: un calendario con fallos seguidos espera los 15 min aunque haya aviso, para no llamar a Google cada minuto mientras falla.
+- P8: typecheck ok, lint 0 errores (2 avisos previos en `event-form.tsx` y `event-images.test.ts`), format ok, `npm test` 258 archivos y 2444 tests en verde, build ok.
 
 ## Dudas abiertas
 

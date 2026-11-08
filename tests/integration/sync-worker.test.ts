@@ -380,7 +380,8 @@ describe("claiming (RF-22, RF-24)", () => {
 
   it("sync_claim_due returns only due calendars and marks them", async () => {
     const old = new Date(Date.now() - 6 * 3_600_000).toISOString();
-    const recent = new Date(Date.now() - 3_600_000).toISOString();
+    // Spec 020: due after 15 minutes instead of 5 hours.
+    const recent = new Date(Date.now() - 5 * 60_000).toISOString();
     await admin
       .from("synced_calendars")
       .update({ last_attempt_at: recent, sync_started_at: null })
@@ -503,9 +504,9 @@ describe("revoked (RF-31)", () => {
 });
 
 describe("hourly run (D2, D3)", () => {
-  it("schedules sync-run-due every hour", async () => {
+  it("schedules sync-run-due every minute (spec 020 RF-19)", async () => {
     const { data } = await admin.rpc("sync_scheduled_jobs");
-    expect(data).toEqual([{ jobname: "sync-run-due", schedule: "0 * * * *" }]);
+    expect(data).toEqual([{ jobname: "sync-run-due", schedule: "* * * * *" }]);
   });
 
   it("sync_trigger does nothing without due calendars", async () => {
