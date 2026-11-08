@@ -14,6 +14,7 @@ import {
   ViewTransition,
 } from "react";
 import { createPortal } from "react-dom";
+import { assignTints } from "@/lib/people/avatar";
 import {
   useCalendarHeader,
   usePublishCalendarHeader,
@@ -56,6 +57,10 @@ import {
 } from "@/lib/calendar/transition-types";
 import { AgendaView, type AgendaEvent } from "./agenda-view";
 import type { MonthMarks } from "@/lib/calendar/month-marks";
+import {
+  AvailabilityFilter,
+  type BusyPersonOption,
+} from "./availability-filter";
 import { CalendarFilters, type FilterCategory } from "./calendar-filters";
 import { DayView } from "./day-view";
 import {
@@ -226,6 +231,8 @@ export function CalendarWorkspace({
   userId,
   showWeekends = true,
   defaultDuration = 60,
+  busyPeople = [],
+  setShowBusy,
 }: {
   view: CalendarView;
   date: string;
@@ -266,6 +273,9 @@ export function CalendarWorkspace({
   showWeekends?: boolean;
   /** The length of a new event from a slot (spec 019 RF-32). */
   defaultDuration?: number;
+  /** People who let the user see their busy times (spec 020 RF-5). */
+  busyPeople?: BusyPersonOption[];
+  setShowBusy?: (personId: string, show: boolean) => Promise<Result>;
 }) {
   const [keyDialog, setKeyDialog] = useState<"goto" | "help" | null>(null);
   useCalendarShortcuts({
@@ -293,6 +303,11 @@ export function CalendarWorkspace({
     new Set(),
   );
   const [error, setError] = useState<string>();
+  // Marked at once, undone if saving fails; the server's answer brings the
+  // blocks (spec 020 RF-6, RF-7).
+  const [busyMarks, setBusyMarks] = useState<ReadonlyMap<string, boolean>>(
+    new Map(),
+  );
   const [panelOpen, setPanelOpen] = useState(false);
   const panelId = useId();
   // The event being created from an empty slot (spec 008 RF-37, RF-40).
@@ -602,6 +617,32 @@ export function CalendarWorkspace({
         )
     : undefined;
 
+  const shownBusyPeople = busyPeople.map((p) => ({
+    ...p,
+    shown: busyMarks.get(p.id) ?? p.shown,
+  }));
+  // One tint per person in the filters and the blocks (spec 005 RF-28, spec 020 RF-9).
+  const personTints = assignTints([
+    ...groups.filter((g) => !g.groupId).map((g) => g.person.id),
+    ...busyPeople.map((p) => p.id),
+  ]);
+
+  async function toggleBusy(personId: string, show: boolean) {
+    if (!setShowBusy) return;
+    setBusyMarks((marks) => new Map(marks).set(personId, show));
+    setError(undefined);
+    let result: Result;
+    try {
+      result = await setShowBusy(personId, show);
+    } catch {
+      result = { error: CALENDAR_MESSAGES.connection };
+    }
+    if (result.error) {
+      setBusyMarks((marks) => new Map(marks).set(personId, !show));
+      setError(result.error);
+    }
+  }
+
   const filters = (
     <>
       <FormAlert message={error} />
@@ -613,6 +654,12 @@ export function CalendarWorkspace({
         onTogglePerson={togglePerson}
         onToggleCategory={toggleCategory}
         onMove={move}
+        tints={personTints}
+      />
+      <AvailabilityFilter
+        people={shownBusyPeople}
+        tints={personTints}
+        onToggle={(id, show) => void toggleBusy(id, show)}
       />
     </>
   );

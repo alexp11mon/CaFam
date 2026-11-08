@@ -106,6 +106,7 @@ export function CalendarFilters({
   onTogglePerson,
   onToggleCategory,
   onMove,
+  tints: sharedTints,
 }: {
   groups: FilterSection[];
   categories: FilterCategory[];
@@ -118,13 +119,16 @@ export function CalendarFilters({
     id: string,
     direction: Direction,
   ) => void;
+  /** Tints shared with the busy blocks (spec 020 RF-9). */
+  tints?: ReadonlyMap<string, string>;
 }) {
   const headingId = useId();
   // With nobody else sharing, the person level would only repeat my own name.
   const showPeople = groups.length > 1;
   const people = groups.filter((group) => !group.groupId);
   // Same tint for a person everywhere, whatever the saved order (spec 005 RF-28).
-  const tints = assignTints(people.map((group) => group.person.id));
+  const tints =
+    sharedTints ?? assignTints(people.map((group) => group.person.id));
   // Groups move among groups and people among people; the group without
   // owner stays last (spec 006 RF-22, spec 007 RF-38).
   const userGroups = groups.filter((group) => group.groupId);

@@ -39,7 +39,7 @@
   Pasos: `BusySetting` con `Switch` junto a `AvailabilitySetting`, con la explicación de RF-3; párrafo en la política de privacidad.
   Hecho cuando: `npm test -- busy-setting privacy` en verde (desactivada por defecto, cambiarla llama a `setShareBusy` y no a `setShareAvailability`, el texto nombra "Ocupado" y que solo lo ven quienes comparten calendario) y capturas de Ajustes a 390 y 1440 px. Cubre: RF-1, RF-2, RF-3 | Módulo: `BusySetting`, `/privacy`
 
-- [ ] T6 Añadir la sección "Disponibilidad" a los filtros
+- [x] T6 Añadir la sección "Disponibilidad" a los filtros
   Hecho cuando: `npm test -- calendar-filters` en verde con: sin personas no hay sección; cada persona con su avatar y una casilla desmarcada por defecto; marcar llama a `setShowBusy(id, true)`; con 8 marcadas la novena casilla está deshabilitada con "Como mucho 8 personas a la vez"; todo con teclado. Capturas del panel y del cajón del móvil. Cubre: RF-5, RF-6, RF-17 | Módulo: `calendar-filters.tsx`
 
 - [ ] T7 Pintar los bloques "Ocupado" en semana y día
@@ -148,6 +148,13 @@ stop: 204
 - `BusySetting` reutiliza el interruptor de `AvailabilitySetting` (que gana `label` y `description` opcionales) en una sección nueva "Disponibilidad" de Ajustes, antes de "Asistente".
 - Capturas en `next start -p 3100` con usuarios sembrados en dev: Ajustes a 375 y 1440 px (tema oscuro): la opción y su explicación se leen enteras, separada del permiso del asistente.
 - Verificación P8: typecheck, lint (0 errores), format:check, `npm test` (256 archivos, 2.436 tests; un fallo intermitente de `agenda-view` desapareció al repetir) y build en verde.
+
+### T6 (2026-11-08)
+
+- Componente propio `AvailabilityFilter` (`availability-filter.tsx`) que el workspace pinta bajo `CalendarFilters`, en el panel y en el cajón; test en `availability-filter.test.tsx` (4 de 4). Los tintes salen de `assignTints` sobre las personas de los filtros y las de la disponibilidad, compartidos con `CalendarFilters` (prop `tints`) y con los bloques de T7.
+- `npm test -- calendar-filters calendar-workspace availability`: 43 de 43.
+- En el navegador (`next start -p 3100`, usuarios sembrados en dev): la sección lista a Ana y Luis con su avatar; desmarcar a Luis se guarda y sigue desmarcado al recargar; en el cajón del móvil (375 px, oscuro) aparece tras "Calendarios".
+- Verificación P8: typecheck, lint (0 errores), format:check, `npm test` (257 archivos, 2.440 tests) y build en verde.
 
 ## Dudas abiertas
 
