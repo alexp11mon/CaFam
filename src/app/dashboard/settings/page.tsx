@@ -6,6 +6,7 @@ import { PasswordForm } from "@/components/account/password-form";
 import { ProfileForm } from "@/components/account/profile-form";
 import { AccentPicker } from "@/components/settings/accent-picker";
 import { AvailabilitySetting } from "@/components/settings/availability-setting";
+import { BusySetting } from "@/components/settings/busy-setting";
 import { ThemePicker } from "@/components/settings/theme-picker";
 import { FormAlert } from "@/components/ui/form-alert";
 import { getConfirmNotice } from "@/lib/account/confirm-type";
@@ -20,6 +21,7 @@ import {
   setAccent,
   setDefaultDuration,
   setShareAvailability,
+  setShareBusy,
   setShowWeekends,
   setTheme,
 } from "./actions";
@@ -70,6 +72,18 @@ async function AssistantSection() {
       current={data?.share_availability ?? false}
       save={setShareAvailability}
     />
+  );
+}
+
+async function BusySection() {
+  const { supabase, userId } = await requireUser();
+  const { data } = await supabase
+    .from("profiles")
+    .select("share_busy")
+    .eq("id", userId)
+    .maybeSingle();
+  return (
+    <BusySetting current={data?.share_busy ?? false} save={setShareBusy} />
   );
 }
 
@@ -154,6 +168,11 @@ export default function SettingsPage({
       <Section id="settings-calendar" title="Calendario">
         <Suspense fallback={LOADING}>
           <CalendarSection />
+        </Suspense>
+      </Section>
+      <Section id="settings-busy" title="Disponibilidad">
+        <Suspense fallback={LOADING}>
+          <BusySection />
         </Suspense>
       </Section>
       <Section id="settings-assistant" title="Asistente">

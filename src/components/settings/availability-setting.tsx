@@ -15,9 +15,14 @@ type Result = { error?: string };
 export function AvailabilitySetting({
   current,
   save,
+  label = "Permitir que el asistente de otros consulte mi disponibilidad",
+  description = "Quienes comparten calendarios contigo podrán preguntar a su asistente cuándo estáis libres. Verá solo si estás libre u ocupado, nunca el título ni los detalles de tus eventos.",
 }: {
   current: boolean;
   save: (share: boolean) => Promise<Result>;
+  /** Spec 020 reuses the switch for its own consent (BusySetting). */
+  label?: string;
+  description?: string;
 }) {
   const [checked, setChecked] = useState(current);
   const [error, setError] = useState<string>();
@@ -46,8 +51,8 @@ export function AvailabilitySetting({
   return (
     <div className="flex flex-col gap-3">
       <Switch
-        label="Permitir que el asistente de otros consulte mi disponibilidad"
-        description="Quienes comparten calendarios contigo podrán preguntar a su asistente cuándo estáis libres. Verá solo si estás libre u ocupado, nunca el título ni los detalles de tus eventos."
+        label={label}
+        description={description}
         checked={checked}
         onCheckedChange={toggle}
       />

@@ -185,6 +185,23 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
+        <Section title="Disponibilidad en el calendario">
+          <p>
+            Si lo activas en Ajustes, las personas con las que compartes algún
+            calendario pueden elegir ver en su semana y su día cuándo estás
+            ocupado. De cada uno de tus eventos solo reciben el inicio y el fin,
+            como un bloque «Ocupado» con tu nombre: nunca el título, el lugar,
+            la descripción ni el calendario.
+          </p>
+          <p>
+            Cuentan los eventos de tus calendarios, también los traídos de
+            Google o iCloud, y los que tú creas en calendarios compartidos. Está
+            desactivado por defecto, es independiente del permiso del asistente
+            y, si lo desactivas, los demás dejan de verlo en cuanto vuelven a
+            cargar su calendario.
+          </p>
+        </Section>
+
         <Section title="Asistente de chat">
           <p>
             Lo que preguntas al asistente de CaFam lo responde Groq (Groq, Inc.,

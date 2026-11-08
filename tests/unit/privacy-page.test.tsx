@@ -100,3 +100,16 @@ describe("home page (RF-40)", () => {
     ).toHaveAttribute("href", "/privacy");
   });
 });
+
+// Spec 020, T5: the busy times in other people's grid (NFR privacidad).
+describe("/privacy: busy times (spec 020)", () => {
+  it("explains that only consenting people's busy times are shown, without details", () => {
+    render(<PrivacyPage />);
+    expect(
+      screen.getByRole("heading", { name: "Disponibilidad en el calendario" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/solo reciben el inicio y el fin/),
+    ).toBeInTheDocument();
+  });
+});

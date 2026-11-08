@@ -35,7 +35,7 @@
   Pasos: `getBusyPeople()` y `getBusyBlocks(range, visibles)` en `lib/availability/queries.ts` (con `expandRows`); `setShareBusy` en `settings/actions.ts` y `setShowBusy` en `calendar/preferences-actions.ts`.
   Hecho cuando: `npm test -- availability-queries busy-actions` en verde (zod rechaza un id no válido, el upsert de `show_busy` no toca `position`, un error de la base de datos se traduce) y `npm run test:db -- busy-grid` sigue en verde. Cubre: RF-1, RF-4, RF-6, RF-7, RF-8, RF-18 | Módulo: `lib/availability/queries.ts`, acciones
 
-- [ ] T5 Añadir la opción en Ajustes y en `/privacy`
+- [x] T5 Añadir la opción en Ajustes y en `/privacy`
   Pasos: `BusySetting` con `Switch` junto a `AvailabilitySetting`, con la explicación de RF-3; párrafo en la política de privacidad.
   Hecho cuando: `npm test -- busy-setting privacy` en verde (desactivada por defecto, cambiarla llama a `setShareBusy` y no a `setShareAvailability`, el texto nombra "Ocupado" y que solo lo ven quienes comparten calendario) y capturas de Ajustes a 390 y 1440 px. Cubre: RF-1, RF-2, RF-3 | Módulo: `BusySetting`, `/privacy`
 
@@ -141,6 +141,13 @@ stop: 204
 - `npm test -- settings-actions preferences-actions availability-queries`: en verde (rojo antes: `setShareBusy`, `setShowBusy` y el módulo no existían).
 - `npm run test:db -- busy-grid`: 10 de 10.
 - Verificación P8: typecheck, lint (0 errores), format:check, `npm test` (255 archivos, 2.433 tests) y build en verde.
+
+### T5 (2026-11-08)
+
+- `npm test -- busy-setting privacy-page availability-setting`: 11 de 11 (rojo antes: el componente y la sección no existían).
+- `BusySetting` reutiliza el interruptor de `AvailabilitySetting` (que gana `label` y `description` opcionales) en una sección nueva "Disponibilidad" de Ajustes, antes de "Asistente".
+- Capturas en `next start -p 3100` con usuarios sembrados en dev: Ajustes a 375 y 1440 px (tema oscuro): la opción y su explicación se leen enteras, separada del permiso del asistente.
+- Verificación P8: typecheck, lint (0 errores), format:check, `npm test` (256 archivos, 2.436 tests; un fallo intermitente de `agenda-view` desapareció al repetir) y build en verde.
 
 ## Dudas abiertas
 
