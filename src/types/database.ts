@@ -851,6 +851,7 @@ export type Database = {
           created_at: string
           person_id: string
           position: number | null
+          show_busy: boolean
           updated_at: string
           user_id: string
         }
@@ -858,6 +859,7 @@ export type Database = {
           created_at?: string
           person_id: string
           position?: number | null
+          show_busy?: boolean
           updated_at?: string
           user_id: string
         }
@@ -865,6 +867,7 @@ export type Database = {
           created_at?: string
           person_id?: string
           position?: number | null
+          show_busy?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -894,6 +897,7 @@ export type Database = {
           id: string
           last_view: string | null
           share_availability: boolean
+          share_busy: boolean
           show_weekends: boolean
           theme: string
           time_zone: string
@@ -907,6 +911,7 @@ export type Database = {
           id: string
           last_view?: string | null
           share_availability?: boolean
+          share_busy?: boolean
           show_weekends?: boolean
           theme?: string
           time_zone?: string
@@ -920,6 +925,7 @@ export type Database = {
           id?: string
           last_view?: string | null
           share_availability?: boolean
+          share_busy?: boolean
           show_weekends?: boolean
           theme?: string
           time_zone?: string
@@ -1036,6 +1042,14 @@ export type Database = {
           schedule: string
         }[]
       }
+      busy_people: {
+        Args: never
+        Returns: {
+          display_name: string
+          id: string
+          shown: boolean
+        }[]
+      }
       calendar_members_with_names: {
         Args: { p_calendar_ids: string[] }
         Returns: {
@@ -1119,6 +1133,18 @@ export type Database = {
           calendar_name: string
           owner_name: string
           role: Database["public"]["Enums"]["calendar_role"]
+        }[]
+      }
+      grid_busy: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          all_day: boolean
+          ends_at: string
+          exdates: string[]
+          person_id: string
+          recurrence: string
+          recurrence_tz: string
+          starts_at: string
         }[]
       }
       image_object_id: { Args: { p_name: string }; Returns: string }

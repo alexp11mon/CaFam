@@ -24,7 +24,7 @@
   Pasos: con una cuenta de Google conectada en dev, un script en el scratchpad (sin commit) pide `POST .../events/watch` con `address` = `https://calendario-familia-five.vercel.app/api/sync/google-push`, apunta la respuesta y cancela el canal con `channels.stop`. Si Google exige verificar el dominio, probar la etiqueta `meta` de Search Console; si tampoco, se deja `SYNC_PUSH_URL` vacía (T11) y RF-19 queda en 15 minutos, como se acordó.
   Hecho cuando: el resultado (aceptado, aceptado tras verificar o rechazado, con el código y el mensaje de Google y la caducidad que devuelve) está anotado en la sección "Evidencia" de este archivo. Cubre: RF-19, RF-20, RF-23 | Módulo: riesgo R1
 
-- [ ] T2 Crear la migración `busy_grid` con sus tests de base de datos
+- [x] T2 Crear la migración `busy_grid` con sus tests de base de datos
   Pasos: `profiles.share_busy`, `person_preferences.show_busy`, `busy_people()` y `grid_busy()` según el modelo de datos del plan (D2, D4, D5, D13); `db:push` y `db:types`.
   Hecho cuando: `npm run test:db -- busy-grid` en verde con: un usuario ajeno no recibe nada; una persona que no consiente no sale ni en `busy_people` ni en `grid_busy`; las columnas devueltas son solo `person_id`, `starts_at`, `ends_at`, `all_day`, `recurrence`, `recurrence_tz` y `exdates`; un evento que otro puso en un calendario compartido no cuenta y uno que ella creó sí (D13); las excepciones salen sueltas y su fecha original está en los `exdates` de la serie; periodo de 33 días → `22023`; con 9 personas marcadas devuelve 8; desmarcar o retirar el consentimiento deja de devolverla. Cubre: RF-1, RF-2, RF-4, RF-5, RF-7, RF-10, RF-17, RF-18 | Módulo: migración `busy_grid`
 
@@ -123,6 +123,12 @@ stop: 204
 - `events?maxResults=1&fields=updated` responde con `updated` (la versión de D9).
 - `channels.stop` responde `204`.
 - No se comprobó que el aviso llegue: la ruta aún no existe en producción. Se comprueba en T13.
+
+### T2 (2026-11-08)
+
+- Migración `20261108100000_busy_grid` aplicada en dev; tipos regenerados.
+- `npm run test:db -- busy-grid`: 10 de 10 en verde.
+- `typecheck`, `lint` (0 errores; los 2 avisos ya existían), `format:check`, `npm test` (253 archivos, 2.417 tests) y `build` en verde.
 
 ## Dudas abiertas
 
