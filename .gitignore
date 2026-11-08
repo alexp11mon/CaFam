@@ -62,3 +62,6 @@ next-env.d.ts
 
 # Referencia visual de la interfaz (solo local, no se sube)
 docs/referencia.jpg
+
+# Notas locales de la skill replica-entrepreneur (reseñas de terceros)
+replica/
