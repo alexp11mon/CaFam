@@ -20,7 +20,7 @@
 
 ### Iteración 1
 
-- [ ] T1 Comprobar si Google acepta avisos en la URL de producción (plan R1)
+- [x] T1 Comprobar si Google acepta avisos en la URL de producción (plan R1)
   Pasos: con una cuenta de Google conectada en dev, un script en el scratchpad (sin commit) pide `POST .../events/watch` con `address` = `https://calendario-familia-five.vercel.app/api/sync/google-push`, apunta la respuesta y cancela el canal con `channels.stop`. Si Google exige verificar el dominio, probar la etiqueta `meta` de Search Console; si tampoco, se deja `SYNC_PUSH_URL` vacía (T11) y RF-19 queda en 15 minutos, como se acordó.
   Hecho cuando: el resultado (aceptado, aceptado tras verificar o rechazado, con el código y el mensaje de Google y la caducidad que devuelve) está anotado en la sección "Evidencia" de este archivo. Cubre: RF-19, RF-20, RF-23 | Módulo: riesgo R1
 
@@ -107,7 +107,22 @@
 
 ## Evidencia
 
-(Se rellena al cerrar cada tarea.)
+### T1 (2026-11-08)
+
+Script en el scratchpad (sin commit) con la cuenta de Google de dev (cliente `CaFam Local`), vuelta a conectar por el usuario porque su token había caducado (`invalid_grant`):
+
+```
+refresh: 200
+watch: 200 {"kind":"api#channel","expiration":"2026-11-15T09:33:43.000Z","hasResourceId":true}
+version: 200 {"updated":"2026-11-08T09:17:01.548Z"}
+stop: 204
+```
+
+- Google **acepta** `https://calendario-familia-five.vercel.app/api/sync/google-push` sin verificar el dominio: RF-19 sigue en 2 minutos y no hace falta Search Console.
+- Con `ttl` de 7 días devuelve una caducidad de exactamente 7 días (`CHANNEL_TTL_DAYS = 7` del plan sirve).
+- `events?maxResults=1&fields=updated` responde con `updated` (la versión de D9).
+- `channels.stop` responde `204`.
+- No se comprobó que el aviso llegue: la ruta aún no existe en producción. Se comprueba en T13.
 
 ## Dudas abiertas
 
