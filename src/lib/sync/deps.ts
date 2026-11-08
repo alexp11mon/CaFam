@@ -14,6 +14,8 @@ export interface SyncDeps {
   clientSecret: string;
   fetchFn?: typeof fetch;
   now?: () => Date;
+  /** Where Google sends notices; without it no channels are made (spec 020 D8). */
+  pushUrl?: string;
   /** Time spent so far; the run stops claiming after 50 s (plan D19). */
   elapsedMs?: () => number;
 }

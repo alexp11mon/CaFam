@@ -56,7 +56,7 @@
   Pasos: `calendarVersion` en `providers/google.ts` e `icloud.ts`, `needsFullRead` y su uso en `syncOne`, constantes en `limits.ts`.
   Hecho cuando: `npm test -- google icloud run-sync` en verde con: misma versión, sin aviso y lectura completa de hace menos de 6 h → no se llama a `listEvents` y sí a `sync_mark_checked`; versión distinta, sin versión guardada, aviso o más de 6 h → lectura completa y versión guardada; la versión se pide antes de leer; un error al pedirla va a `sync_fail` con su tipo. Cubre: RF-23, RF-26, RF-27, RF-28, RF-29, RF-30 | Módulo: `providers`, `run-sync.ts`, `limits.ts`
 
-- [ ] T10 Crear, renovar y cancelar los canales de Google
+- [x] T10 Crear, renovar y cancelar los canales de Google
   Pasos: `lib/sync/channel.ts` (`newChannel`, `shouldRenew`), `watchCalendar` y `stopChannel` en `providers/google.ts`, la renovación en `syncOne` y la cola de cancelaciones en `runDue`.
   Hecho cuando: `npm test -- channel google run-sync` en verde con: sin canal o a menos de 24 h de caducar → `watch` y `sync_store_channel`; con más de 24 h no se toca; iCloud nunca crea canales; sin `SYNC_PUSH_URL` no se crean; la cola llama a `channels.stop` y a `sync_done_stop`, y un fallo de `stop` no tumba la pasada; el token no aparece en ningún registro. Cubre: RF-20, RF-22 | Módulo: `channel.ts`, `providers/google.ts`, `run-sync.ts`
 
@@ -179,6 +179,14 @@ stop: 204
 - La reclamación manual ("Actualizar ahora") no trae versión, así que siempre lee todo.
 - `npm test -- google icloud run-sync`: 12 archivos, 157 tests en verde (misma versión sin aviso y lectura reciente → sin `listEvents` y con `sync_mark_checked`; versión distinta, sin versión guardada, aviso o más de 6 h → lectura completa y versión guardada; versión antes de leer; fallo de la versión → `sync_fail` con `missing`).
 - P8: typecheck ok, lint 0 errores (2 avisos previos), format ok, `npm test` 258 archivos y 2463 tests en verde, build ok.
+
+### T10 (2026-11-08)
+
+- `lib/sync/channel.ts`: `newChannel` (id `randomUUID` y token de 32 bytes en base64url) y `shouldRenew` (sin canal o a menos de `CHANNEL_RENEW_HOURS`).
+- `watchCalendar` (`POST .../events/watch` con `web_hook`, token y `ttl` de 7 días; la caducidad en ms pasa a ISO) y `stopChannel` (`POST /channels/stop`) en `providers/google.ts` y en la sesión de Google; métodos opcionales de `ProviderSession`, que iCloud no tiene.
+- `syncOne` renueva el canal tras abrir la sesión si hay `pushUrl` (`SYNC_PUSH_URL`, leída en `engineDeps`), el proveedor tiene canales y la reclamación trae `channel_expires_at` (la manual no lo trae y no toca los canales); un fallo no tumba la actualización y se reintenta en la pasada siguiente. `runDue` procesa al final hasta 20 paradas con `sync_claim_stops`, llama a `stopChannel` y siempre a `sync_done_stop` (si `stop` falla, el canal caduca solo, R4).
+- `npm test -- channel google run-sync`: 4 archivos, 93 tests en verde (sin canal o a menos de 24 h → `watch` y `sync_store_channel`; con más de 24 h no se toca; iCloud nunca; sin `SYNC_PUSH_URL` ni en la reclamación manual; la cola llama a `channels.stop` y a `sync_done_stop` aunque un `stop` falle; el token no aparece en ningún `console`).
+- P8: typecheck ok, lint 0 errores (2 avisos previos), format ok, `npm test` 259 archivos y 2480 tests en verde, build ok.
 
 ## Dudas abiertas
 

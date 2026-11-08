@@ -1,5 +1,5 @@
 import type { GoogleEvent } from "../google-events";
-import { MAX_FETCHED_EVENTS } from "../limits";
+import { CHANNEL_TTL_DAYS, MAX_FETCHED_EVENTS } from "../limits";
 import { GOOGLE_SCOPES } from "../scopes";
 import {
   ProviderError,
@@ -276,6 +276,57 @@ export async function calendarVersion(
   });
   const { updated } = (await response.json()) as { updated?: unknown };
   return typeof updated === "string" ? updated : null;
+}
+
+/**
+ * A notification channel on the events of a calendar (spec 020 D8, RF-20).
+ * Google answers with the resource and the expiry in milliseconds.
+ */
+export async function watchCalendar(
+  accessToken: string,
+  calendarId: string,
+  channel: { id: string; token: string },
+  address: string,
+  fetchFn: Fetch = fetch,
+): Promise<{ resourceId: string; expiresAt: string }> {
+  const response = await send(
+    fetchFn,
+    accessToken,
+    "POST",
+    `${eventsUrl(calendarId)}/watch`,
+    {
+      id: channel.id,
+      type: "web_hook",
+      address,
+      token: channel.token,
+      params: { ttl: String(CHANNEL_TTL_DAYS * 24 * 3600) },
+    },
+  );
+  const body = (await response.json()) as {
+    resourceId?: unknown;
+    expiration?: unknown;
+  };
+  const expires = Number(body.expiration);
+  if (typeof body.resourceId !== "string" || !Number.isFinite(expires)) {
+    throw new ProviderError("transient", "Google sent no channel");
+  }
+  return {
+    resourceId: body.resourceId,
+    expiresAt: new Date(expires).toISOString(),
+  };
+}
+
+/** Ends a channel (RF-22). */
+export async function stopChannel(
+  accessToken: string,
+  channelId: string,
+  resourceId: string,
+  fetchFn: Fetch = fetch,
+): Promise<void> {
+  await send(fetchFn, accessToken, "POST", `${API}/channels/stop`, {
+    id: channelId,
+    resourceId,
+  });
 }
 
 /** Withdraws CaFam's access in Google (RF-30). */

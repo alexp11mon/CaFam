@@ -11,6 +11,8 @@ import {
   moveEvent,
   patchCalendar,
   patchEvent,
+  stopChannel,
+  watchCalendar,
 } from "./google";
 import type { ProviderSession } from "./types";
 
@@ -26,6 +28,12 @@ export function googleSession(
 
     calendarVersion: (calendarId) =>
       calendarVersion(accessToken, calendarId, fetchFn),
+
+    watchCalendar: (calendarId, channel, address) =>
+      watchCalendar(accessToken, calendarId, channel, address, fetchFn),
+
+    stopChannel: (channelId, resourceId) =>
+      stopChannel(accessToken, channelId, resourceId, fetchFn),
 
     async listEvents(calendarId, range) {
       const { events, accessRole } = await listEvents(

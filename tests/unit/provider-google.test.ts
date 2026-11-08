@@ -16,6 +16,8 @@ import {
   ProviderError,
   refreshAccessToken,
   revokeToken,
+  stopChannel,
+  watchCalendar,
 } from "@/lib/sync/providers/google";
 import { GOOGLE_SCOPES } from "@/lib/sync/scopes";
 
@@ -419,6 +421,60 @@ describe("calendarVersion (spec 020 RF-23, RF-27, plan D9)", () => {
     const fn = fakeFetch(json({ error: { code: 404 } }, 404));
     await expect(calendarVersion("at", "x", fn)).rejects.toMatchObject({
       kind: "missing",
+    });
+  });
+});
+
+describe("channels (spec 020 RF-20, RF-22, plan D8)", () => {
+  it("watchCalendar asks for a web hook with the token and a 7-day ttl", async () => {
+    const fn = fakeFetch(
+      json({ resourceId: "res-1", expiration: "1794821623000" }),
+    );
+    const result = await watchCalendar(
+      "at",
+      "fam@group",
+      { id: "ch-1", token: "tok-1" },
+      "https://cafam.test/api/sync/google-push",
+      fn,
+    );
+
+    expect(result).toEqual({
+      resourceId: "res-1",
+      expiresAt: new Date(1794821623000).toISOString(),
+    });
+    expect(calledUrl(fn).pathname).toBe(
+      "/calendar/v3/calendars/fam%40group/events/watch",
+    );
+    const init = fn.mock.calls[0][1]!;
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({
+      id: "ch-1",
+      type: "web_hook",
+      address: "https://cafam.test/api/sync/google-push",
+      token: "tok-1",
+      params: { ttl: String(7 * 24 * 3600) },
+    });
+  });
+
+  it("watchCalendar fails when Google sends no resource", async () => {
+    await expect(
+      watchCalendar(
+        "at",
+        "x",
+        { id: "c", token: "t" },
+        "https://a",
+        fakeFetch(json({})),
+      ),
+    ).rejects.toMatchObject({ kind: "transient" });
+  });
+
+  it("stopChannel posts the id and the resource", async () => {
+    const fn = fakeFetch(new Response(null, { status: 204 }));
+    await stopChannel("at", "ch-1", "res-1", fn);
+    expect(calledUrl(fn).pathname).toBe("/calendar/v3/channels/stop");
+    expect(JSON.parse(String(fn.mock.calls[0][1]!.body))).toEqual({
+      id: "ch-1",
+      resourceId: "res-1",
     });
   });
 });

@@ -25,7 +25,11 @@ const session = {
   renameCalendar: vi.fn(),
   deleteCalendar: vi.fn(),
   calendarVersion: vi.fn(),
-} satisfies Record<keyof ProviderSession, unknown>;
+  // iCloud has no notification channels (spec 020 D8).
+} satisfies Record<
+  Exclude<keyof ProviderSession, "watchCalendar" | "stopChannel">,
+  unknown
+>;
 
 vi.mock("@/lib/sync/providers/icloud", () => ({
   icloudSession: vi.fn(() => session),

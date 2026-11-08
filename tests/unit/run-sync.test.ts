@@ -448,6 +448,163 @@ describe("syncCalendars with the version check", () => {
   });
 });
 
+// Spec 020, T10: channels renewed in the engine pass and the stops queue
+// (plan D8, D11; RF-20, RF-22).
+describe("Google channels in the engine", () => {
+  const PUSH = "https://cafam.test/api/sync/google-push";
+  const claimed = (expires: string | null, provider = "google") => ({
+    ...calendar(1),
+    provider,
+    remote_version: null,
+    full_read_at: null,
+    push_pending_at: null,
+    channel_expires_at: expires,
+  });
+  const watches = () =>
+    fetchFn.mock.calls.filter(([u]) => String(u).endsWith("/events/watch"));
+
+  beforeEach(() => {
+    fetchFn.mockImplementation(async (input) => {
+      if (String(input) === TOKEN_URL) return json({ access_token: "at" });
+      if (String(input).endsWith("/events/watch")) {
+        return json({ resourceId: "res-new", expiration: "1794821623000" });
+      }
+      if (String(input).endsWith("/channels/stop")) {
+        return new Response(null, { status: 204 });
+      }
+      return json({ items: [] });
+    });
+  });
+
+  it.each([
+    ["without a channel", null],
+    ["with a channel expiring in 23 h", "2026-10-28T11:00:00Z"],
+  ])("%s: watches and stores the channel", async (_, expires) => {
+    await syncCalendars([claimed(expires)], deps({ pushUrl: PUSH }));
+
+    expect(watches()).toHaveLength(1);
+    const body = JSON.parse(String(watches()[0][1]!.body));
+    expect(body.address).toBe(PUSH);
+    expect(named("sync_store_channel")[0].args).toEqual({
+      p_secret: "s3cret",
+      p_calendar_id: "cal-1",
+      p_channel_id: body.id,
+      p_resource_id: "res-new",
+      p_token: body.token,
+      p_expires_at: new Date(1794821623000).toISOString(),
+    });
+  });
+
+  it("leaves a channel with more than 24 h alone", async () => {
+    await syncCalendars(
+      [claimed("2026-10-29T13:00:00Z")],
+      deps({ pushUrl: PUSH }),
+    );
+    expect(watches()).toHaveLength(0);
+    expect(named("sync_store_channel")).toHaveLength(0);
+  });
+
+  it("creates no channel without SYNC_PUSH_URL, nor in a manual claim", async () => {
+    await syncCalendars([claimed(null)], deps());
+    await syncCalendars([calendar(2)], deps({ pushUrl: PUSH }));
+    expect(watches()).toHaveLength(0);
+  });
+
+  it("iCloud never creates channels", async () => {
+    handlers.sync_get_token = () =>
+      JSON.stringify({ v: 1, username: "a@icloud.com", password: "p" });
+    await syncCalendars(
+      [
+        {
+          ...claimed(null, "icloud"),
+          external_id: "https://p1-caldav.icloud.com/1/calendars/home/",
+        },
+      ],
+      deps({ pushUrl: PUSH }),
+    );
+    expect(watches()).toHaveLength(0);
+    expect(named("sync_store_channel")).toHaveLength(0);
+  });
+
+  it("a failed watch does not fail the update", async () => {
+    fetchFn.mockImplementation(async (input) => {
+      if (String(input) === TOKEN_URL) return json({ access_token: "at" });
+      if (String(input).endsWith("/events/watch")) return json({}, 403);
+      return json({ items: [] });
+    });
+    const [result] = await syncCalendars(
+      [claimed(null)],
+      deps({ pushUrl: PUSH }),
+    );
+    expect(result).toMatchObject({ calendarId: "cal-1", summary: {} });
+    expect(named("sync_fail")).toHaveLength(0);
+  });
+
+  it("runDue stops the queued channels and marks them done, even when stop fails", async () => {
+    handlers.sync_claim_due = () => [];
+    handlers.sync_claim_stops = () => [
+      {
+        channel_id: "ch-a",
+        resource_id: "res-a",
+        connection_id: "conn-1",
+        provider: "google",
+      },
+      {
+        channel_id: "ch-b",
+        resource_id: "res-b",
+        connection_id: "conn-1",
+        provider: "google",
+      },
+    ];
+    let first = true;
+    fetchFn.mockImplementation(async (input) => {
+      if (String(input) === TOKEN_URL) return json({ access_token: "at" });
+      if (String(input).endsWith("/channels/stop")) {
+        if (first) {
+          first = false;
+          return json({}, 503);
+        }
+        return new Response(null, { status: 204 });
+      }
+      return json({ items: [] });
+    });
+
+    await expect(runDue(deps())).resolves.toBe(0);
+
+    const stopCalls = fetchFn.mock.calls.filter(([u]) =>
+      String(u).endsWith("/channels/stop"),
+    );
+    expect(stopCalls.map(([, init]) => JSON.parse(String(init!.body)))).toEqual(
+      [
+        { id: "ch-a", resourceId: "res-a" },
+        { id: "ch-b", resourceId: "res-b" },
+      ],
+    );
+    expect(named("sync_done_stop").map((c) => c.args.p_channel_id)).toEqual([
+      "ch-a",
+      "ch-b",
+    ]);
+  });
+
+  it("the channel token never reaches a log", async () => {
+    const spies = (["log", "warn", "error", "info"] as const).map((m) =>
+      vi.spyOn(console, m).mockImplementation(() => undefined),
+    );
+    fetchFn.mockImplementation(async (input) => {
+      if (String(input) === TOKEN_URL) return json({ access_token: "at" });
+      // Even when Google refuses the channel.
+      if (String(input).endsWith("/events/watch")) return json({}, 400);
+      return json({ items: [] });
+    });
+    await syncCalendars([claimed(null)], deps({ pushUrl: PUSH }));
+    const token = JSON.parse(String(watches()[0][1]!.body)).token as string;
+    for (const spy of spies) {
+      expect(JSON.stringify(spy.mock.calls)).not.toContain(token);
+      spy.mockRestore();
+    }
+  });
+});
+
 describe("runDue (RF-22, plan D19)", () => {
   it("claims in batches of 4 until nothing is due", async () => {
     const batches = [

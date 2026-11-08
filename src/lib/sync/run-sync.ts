@@ -1,3 +1,4 @@
+import { newChannel, shouldRenew } from "./channel";
 import { rpc, type SyncDeps } from "./deps";
 import { FULL_READ_HOURS } from "./limits";
 import { limitEvents } from "./limit-events";
@@ -30,6 +31,15 @@ export interface ClaimedCalendar {
   remote_version?: string | null;
   full_read_at?: string | null;
   push_pending_at?: string | null;
+  /** Null without a channel; missing in a manual claim, which leaves channels alone. */
+  channel_expires_at?: string | null;
+}
+
+interface QueuedStop {
+  channel_id: string;
+  resource_id: string;
+  connection_id: string;
+  provider: string;
 }
 
 /**
@@ -52,6 +62,40 @@ export function needsFullRead(input: {
 
 const UNCHANGED: UpdateSummary = { added: 0, changed: 0, removed: 0 };
 
+/**
+ * Makes the Google channel of a calendar when it has none or it is about to
+ * expire (spec 020 D8, RF-20). A failure only waits for the next pass: the
+ * calendar is still checked every 15 minutes. The token is never logged.
+ */
+async function renewChannel(
+  deps: SyncDeps,
+  calendar: ClaimedCalendar,
+  provider: ProviderSession,
+  now: Date,
+) {
+  if (!deps.pushUrl || !provider.watchCalendar) return;
+  if (calendar.channel_expires_at === undefined) return;
+  if (!shouldRenew(calendar.channel_expires_at, now)) return;
+  const channel = newChannel();
+  try {
+    const { resourceId, expiresAt } = await provider.watchCalendar(
+      calendar.external_id,
+      channel,
+      deps.pushUrl,
+    );
+    await rpc(deps, "sync_store_channel", {
+      p_secret: deps.secret,
+      p_calendar_id: calendar.calendar_id,
+      p_channel_id: channel.id,
+      p_resource_id: resourceId,
+      p_token: channel.token,
+      p_expires_at: expiresAt,
+    });
+  } catch {
+    // Retried in the next pass (D8).
+  }
+}
+
 export type SyncResult =
   | { calendarId: string; summary: UpdateSummary }
   | { calendarId: string; error: FailureKind };
@@ -65,6 +109,7 @@ async function syncOne(
   const now = deps.now?.() ?? new Date();
   try {
     const provider = await session;
+    await renewChannel(deps, calendar, provider, now);
     // Asked before reading, so a change while reading shows next time (D9).
     const version = await provider.calendarVersion(calendar.external_id);
     const full = needsFullRead({
@@ -164,5 +209,35 @@ export async function runDue(deps: SyncDeps): Promise<number> {
     await syncCalendars(batch, deps);
     count += batch.length;
   }
+  await stopQueued(deps).catch(() => undefined);
   return count;
+}
+
+/**
+ * Stops the channels of calendars no longer synced (spec 020 D11, RF-22).
+ * Each one leaves the queue even if stop fails: Google ends it within 7 days
+ * anyway, and its notices find no channel (R4).
+ */
+async function stopQueued(deps: SyncDeps) {
+  const stops = ((await rpc(deps, "sync_claim_stops", {
+    p_secret: deps.secret,
+    p_limit: 20,
+  })) ?? []) as QueuedStop[];
+  const sessions = new Map<string, Promise<ProviderSession>>();
+  for (const stop of stops) {
+    try {
+      let session = sessions.get(stop.connection_id);
+      if (!session) {
+        session = openSession(deps, stop.provider, stop.connection_id);
+        sessions.set(stop.connection_id, session);
+      }
+      await (await session).stopChannel?.(stop.channel_id, stop.resource_id);
+    } catch {
+      // Left to expire (R4).
+    }
+    await rpc(deps, "sync_done_stop", {
+      p_secret: deps.secret,
+      p_channel_id: stop.channel_id,
+    });
+  }
 }

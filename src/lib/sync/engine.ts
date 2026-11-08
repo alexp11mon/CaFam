@@ -24,6 +24,7 @@ export function engineDeps(): SyncDeps {
     secret: process.env.CRON_SECRET ?? "",
     clientId: process.env.GOOGLE_CLIENT_ID ?? "",
     clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    pushUrl: process.env.SYNC_PUSH_URL || undefined,
   };
 }
 

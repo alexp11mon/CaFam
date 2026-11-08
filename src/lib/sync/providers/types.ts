@@ -48,6 +48,14 @@ export interface ProviderSession {
   listCalendars(): Promise<ProviderCalendar[]>;
   /** A cheap mark that changes when the calendar changes; null if none (spec 020 D9). */
   calendarVersion(calendarId: string): Promise<string | null>;
+  /** Google only: asks for notices of changes at `address` (spec 020 D8, RF-20). */
+  watchCalendar?(
+    calendarId: string,
+    channel: { id: string; token: string },
+    address: string,
+  ): Promise<{ resourceId: string; expiresAt: string }>;
+  /** Google only: no more notices from a channel (RF-22). */
+  stopChannel?(channelId: string, resourceId: string): Promise<void>;
   listEvents(
     calendarId: string,
     range: { from: Date; to: Date },
