@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { prepareImage } from "@/lib/images/prepare-image";
+import { prepareForAssistant, prepareImage } from "@/lib/images/prepare-image";
 import { IMAGE_MESSAGES } from "@/lib/images/error-messages";
 
 // Spec 012, T7: reducing and recompressing on the device (plan D2; RF-3,
@@ -84,6 +84,58 @@ describe("prepareImage", () => {
       expect(result.full.type).toBe("image/jpeg");
       expect(result.thumb.type).toBe("image/jpeg");
     }
+  });
+
+  it("prepares a 1600 px JPEG data URL for the assistant (spec 022, RF-9)", async () => {
+    const result = await prepareForAssistant(file(5_000_000));
+    expect(blobs).toEqual([
+      { width: 1600, height: 1200, type: "image/jpeg", quality: 0.8 },
+    ]);
+    expect(close).toHaveBeenCalled();
+    expect(result).toMatchObject({
+      dataUrl: expect.stringMatching(/^data:image\/jpeg;base64,/),
+    });
+  });
+
+  it("retries at 1280 px when the image is over 1.2 MB (spec 022, R6)", async () => {
+    let call = 0;
+    HTMLCanvasElement.prototype.toBlob = function (
+      this: HTMLCanvasElement,
+      callback: BlobCallback,
+      type?: string,
+      quality?: number,
+    ) {
+      blobs.push({
+        width: this.width,
+        height: this.height,
+        type: type ?? "",
+        quality: quality ?? 0,
+      });
+      const size = call++ === 0 ? 1_300_000 : 10;
+      callback(new Blob([new Uint8Array(size)], { type }));
+    };
+    const result = await prepareForAssistant(file(5_000_000));
+    expect(blobs.map((b) => b.width)).toEqual([1600, 1280]);
+    expect("dataUrl" in result).toBe(true);
+  });
+
+  it("refuses an image that stays over 1.2 MB (spec 022, R6)", async () => {
+    HTMLCanvasElement.prototype.toBlob = function (
+      this: HTMLCanvasElement,
+      callback: BlobCallback,
+      type?: string,
+    ) {
+      callback(new Blob([new Uint8Array(1_300_000)], { type }));
+    };
+    const result = await prepareForAssistant(file(5_000_000));
+    expect(result).toEqual({ error: IMAGE_MESSAGES.tooDetailed });
+  });
+
+  it("checks type and size before decoding for the assistant too", async () => {
+    expect(await prepareForAssistant(file(100, "image/gif", "a.gif"))).toEqual({
+      error: IMAGE_MESSAGES.type,
+    });
+    expect(createImageBitmap).not.toHaveBeenCalled();
   });
 
   it("says the browser cannot read an image it fails to decode", async () => {

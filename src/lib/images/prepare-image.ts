@@ -1,6 +1,10 @@
 import { IMAGE_MESSAGES } from "./error-messages";
 import { fitWithin } from "./fit";
 import {
+  ASSISTANT_MAX_BYTES,
+  ASSISTANT_QUALITY,
+  ASSISTANT_RETRY_SIDE,
+  ASSISTANT_SIDE,
   FULL_QUALITY,
   FULL_SIDE,
   MAX_SOURCE_BYTES,
@@ -33,6 +37,43 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
   } finally {
     decoded.release();
   }
+}
+
+export type AssistantImage = { dataUrl: string } | { error: string };
+
+/**
+ * Spec 022 (RF-9, plan D7, R6): one JPEG of 1600 px without metadata, as a
+ * data URL for the assistant; 1280 px if it is still over 1.2 MB.
+ */
+export async function prepareForAssistant(file: File): Promise<AssistantImage> {
+  if (!isAcceptedType(file.type, file.name)) {
+    return { error: IMAGE_MESSAGES.type };
+  }
+  if (file.size > MAX_SOURCE_BYTES) return { error: IMAGE_MESSAGES.tooBig };
+
+  const decoded = await decode(file);
+  if (!decoded) return { error: IMAGE_MESSAGES.unreadable };
+  try {
+    for (const side of [ASSISTANT_SIDE, ASSISTANT_RETRY_SIDE]) {
+      const out = await render(decoded.source, side, ASSISTANT_QUALITY);
+      if (!out) return { error: IMAGE_MESSAGES.unreadable };
+      if (out.blob.size <= ASSISTANT_MAX_BYTES) {
+        return { dataUrl: await toDataUrl(out.blob) };
+      }
+    }
+    return { error: IMAGE_MESSAGES.tooDetailed };
+  } finally {
+    decoded.release();
+  }
+}
+
+function toDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
 }
 
 /** createImageBitmap applies the EXIF orientation; an <img> is the fallback (plan R2). */

@@ -12,6 +12,8 @@ export const IMAGE_MESSAGES = {
   type: "Solo se admiten imágenes JPEG, PNG, WebP o HEIC.",
   tooBig: "La imagen pesa más de 20 MB.",
   unreadable: "Este navegador no puede leer esta imagen.",
+  tooDetailed:
+    "La imagen tiene demasiado detalle para el asistente. Prueba con una captura más pequeña.",
   upload: "No se ha podido subir la imagen.",
   forbidden: CALENDAR_MESSAGES.forbidden,
   connection: CALENDAR_MESSAGES.connection,

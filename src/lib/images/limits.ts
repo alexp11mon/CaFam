@@ -9,6 +9,11 @@ export const FULL_SIDE = 2048;
 export const THUMB_SIDE = 400;
 export const FULL_QUALITY = 0.82;
 export const THUMB_QUALITY = 0.75;
+/** Images sent to the assistant (spec 022, plan D7 and R6). */
+export const ASSISTANT_SIDE = 1600;
+export const ASSISTANT_RETRY_SIDE = 1280;
+export const ASSISTANT_QUALITY = 0.8;
+export const ASSISTANT_MAX_BYTES = 1_200_000;
 
 const ACCEPTED_TYPES = [
   "image/jpeg",
