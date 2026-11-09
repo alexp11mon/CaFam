@@ -109,19 +109,23 @@ describe("createRows", () => {
       .eq("created_by", ana.id)
       .gte("starts_at", "2026-12-06T00:00:00Z")
       .order("starts_at");
-    expect(data).toEqual([
-      expect.objectContaining({
-        calendar_id: anaCal,
-        starts_at: "2026-12-07T07:00:00+00:00",
-        ends_at: "2026-12-07T14:00:00+00:00",
-        recurrence: null,
-      }),
-      expect.objectContaining({ calendar_id: luisCal }),
-      expect.objectContaining({
-        starts_at: "2026-12-12T21:00:00+00:00",
-        ends_at: "2026-12-13T05:00:00+00:00",
-      }),
-    ]);
+    // Two rows start at the same instant: their order is not defined.
+    expect(data).toHaveLength(3);
+    expect(data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          calendar_id: anaCal,
+          starts_at: "2026-12-07T07:00:00+00:00",
+          ends_at: "2026-12-07T14:00:00+00:00",
+          recurrence: null,
+        }),
+        expect.objectContaining({ calendar_id: luisCal }),
+        expect.objectContaining({
+          starts_at: "2026-12-12T21:00:00+00:00",
+          ends_at: "2026-12-13T05:00:00+00:00",
+        }),
+      ]),
+    );
     const { count } = await admin
       .from("events")
       .select("id", { count: "exact", head: true })
