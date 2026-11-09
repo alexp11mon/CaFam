@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-09, al implementar la spec 022 (eventos desde una imagen en el asistente).
+> Última actualización: 2026-11-09, al cerrar la spec 022 (eventos desde una imagen en el asistente).
 
 ## 1. Qué es
 
@@ -49,7 +49,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 018-sincronizacion-icloud | Calendarios de iCloud (iPhone) por CalDAV con contraseña específica de app, con el mismo alcance que Google en la 007 y la 009 (leer, escribir, renombrar, crear y subir). Dependencia `tsdav` aprobada; se instala en la primera tarea | **Cerrada** (2026-11-01), T1–T15 hechas; 2 migraciones aplicadas en prod; enmienda 6 aplicada |
 | 020-disponibilidad-y-sincronizacion-rapida | Bloques "Ocupado" de otras personas (con su consentimiento) en semana y día, avisos de Google en minutos, iCloud cada 15 minutos y comprobación de versión antes de leer | **Cerrada** (2026-11-09), T1–T13 hechas; migraciones `busy_grid` y `sync_fast` aplicadas en prod, `SYNC_PUSH_URL` en Vercel y pruebas de Google e iPhone en producción correctas |
 | 021-animaciones-y-microinteracciones | Movimiento con intención en toda la app: curvas y duraciones como tokens, desplegables que nacen del disparador, listas escalonadas, interruptor, pulso de guardado, regreso en arco, evento → detalle, seguir al dedo con goma, selector de vista y revelado del tema | **Cerrada** (2026-11-08), T1–T19 hechas; sin migraciones ni dependencias nuevas. Pendientes del usuario la prueba en el iPhone (plan R2) y la medida con la CPU ralentizada |
-| 022-eventos-desde-imagen | Adjuntar hasta 3 imágenes (un horario de trabajo) al asistente, que devuelve una propuesta de eventos sueltos editable y corregible por chat; nada se crea hasta pulsar "Crear", en cualquier calendario escribible (también Google e iCloud) | **Implementada** (2026-11-09), T1–T12 hechas; sin migraciones ni dependencias. Pendiente la aprobación del cierre y la prueba del usuario en el iPhone en producción |
+| 022-eventos-desde-imagen | Adjuntar hasta 3 imágenes (un horario de trabajo) al asistente, que devuelve una propuesta de eventos sueltos editable y corregible por chat; nada se crea hasta pulsar "Crear", en cualquier calendario escribible (también Google e iCloud) | **Cerrada** (2026-11-09), T1–T12 hechas; sin migraciones ni dependencias. Pendiente la prueba del usuario en el iPhone en producción |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -228,7 +228,7 @@ Añadido por la spec 021 (cerrada el 2026-11-08; sin migraciones ni dependencias
 - **Hooks**: `use-presence.ts` (desmontar tras la salida), `use-enter-once.ts`, `use-pulse-on.ts` (un pulso por resultado) y `use-follow-drag.ts` (seguir al dedo en horizontal: la vista del calendario, el cajón y el visor de imágenes). `use-swipe.ts` y `lib/calendar/swipe.ts` se borraron.
 - **Goma** en la hoja de detalle, el pellizco de las horas (24–144 px, vuelve con `scale`) y el borde de un evento por debajo de 15 min.
 
-Añadido por la spec 022 (implementada el 2026-11-09; sin migraciones ni dependencias):
+Añadido por la spec 022 (cerrada el 2026-11-09; sin migraciones ni dependencias):
 
 - **Adjuntar imágenes** en `/dashboard/assistant` (`ImageAttach`, `image-attach.tsx`): "Adjuntar imagen" (`image/*`, `multiple`, sin `capture`: el móvil ofrece cámara y galería), pegar con Ctrl/⌘+V, miniaturas con "Quitar imagen", hasta 3 (`checkAttachments`, `lib/assistant/attachments.ts`) y nota con enlace a `/privacy`. `prepareForAssistant` (`lib/images/prepare-image.ts`) las reduce a 1600 px JPEG 0,8 (1280 px si pasan de 1,2 MB) y las manda como `data:` URL. **No se guardan en ningún sitio**: viajan en la petición y se olvidan.
 - **Petición** (`assistantRequestSchema`): solo el último mensaje lleva `images`; una corrección manda `proposal` (las filas como las dejó el usuario). Si la respuesta a un mensaje con imágenes es una pregunta ("¿de qué semana es?"), el navegador vuelve a adjuntar las mismas imágenes al siguiente mensaje (plan D2). La ruta tiene `maxDuration` 45 y un mensaje con imágenes cuenta como una pregunta de las 30.
@@ -765,6 +765,6 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **015 (asistente de chat)** está cerrada (2026-11-04), con la ampliación de comentarios y botón flotante (sin migraciones). La migración `assistant` y `GROQ_API_KEY` están en prod.
 - La **020 (disponibilidad y sincronización rápida)** está cerrada (2026-11-09), con `busy_grid` y `sync_fast` aplicadas en prod y `SYNC_PUSH_URL` en Vercel (Production). Las pruebas en producción de Google (2 minutos o menos) e iCloud en el iPhone (15 minutos o menos) salieron bien.
 - La **021 (animaciones y microinteracciones)** está cerrada (2026-11-08), sin migraciones. Tras el `git push` y el merge a `main`, queda que el usuario la pruebe en el iPhone en producción (plan R2: pellizco y desplazamiento de la semana con `touch-pan-y`) y mida el rendimiento con la CPU ralentizada; la evidencia está en su `tasks.md`.
-- La **022 (eventos desde una imagen)** está implementada (2026-11-09), sin migraciones ni variables nuevas. Queda que el usuario apruebe el cierre, haga el `git push` y el merge, y la pruebe con el iPhone en producción (foto de un horario real).
+- La **022 (eventos desde una imagen)** está cerrada (2026-11-09), sin migraciones ni variables nuevas. Queda que el usuario haga el `git push` y el merge, y la pruebe con el iPhone en producción (foto de un horario real).
 - La **019 (escritorio, móvil y tiempo real)** está cerrada (2026-11-02). Sus migraciones `live_changes` y `profile_view_options` están aplicadas en prod (2026-11-02).
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.

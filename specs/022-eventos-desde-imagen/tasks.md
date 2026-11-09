@@ -2,7 +2,7 @@
 
 Spec: `specs/022-eventos-desde-imagen/spec.md`. Plan: `specs/022-eventos-desde-imagen/plan.md` (los dos aprobados el 2026-11-09).
 
-> Estado: **aprobado** por el usuario (2026-11-09). Implementación sin empezar: el usuario avisará.
+> Estado: **hechas** (T1–T12). Spec cerrada el 2026-11-09 con la aprobación del usuario. Queda la prueba del usuario en el iPhone en producción.
 
 Cada tarea se hace sola y con el test primero (rojo → verde), y se cierra con la verificación de P8 en verde y su salida reportada:
 `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, más `npm run test:db` en T7. Sin migraciones ni dependencias nuevas.
@@ -84,7 +84,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde), y se cierra con 
 | RF-55, RF-56, RF-58 | T8 |
 | RF-57 | T10 |
 
-## Validación RF por RF (T12, 2026-11-09)
+## Validación RF por RF (T12, 2026-11-09; cierre aprobado por el usuario el 2026-11-09)
 
 | RF | Cubierto por |
 |----|--------------|

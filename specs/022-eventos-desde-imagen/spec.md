@@ -1,6 +1,6 @@
 # Spec 022 — Eventos desde una imagen en el asistente
 
-> Estado: **aprobada** por el usuario (2026-11-09).
+> Estado: **Cerrada** (2026-11-09). Aprobada por el usuario el 2026-11-09; cierre aprobado el 2026-11-09.
 
 ## Contexto y objetivo
 
