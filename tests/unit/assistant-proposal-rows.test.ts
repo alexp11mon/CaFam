@@ -94,6 +94,24 @@ describe("rowInstants", () => {
     });
   });
 
+  it("follows the summer time change of the zone", () => {
+    // 28 March 2027: Madrid goes from UTC+1 to UTC+2 at 02:00.
+    expect(
+      rowInstants(
+        row({
+          startDate: "2027-03-27",
+          endDate: "2027-03-28",
+          start: "22:00",
+          end: "06:00",
+        }),
+        TZ,
+      ),
+    ).toEqual({
+      startsAt: "2027-03-27T21:00:00.000Z",
+      endsAt: "2027-03-28T04:00:00.000Z",
+    });
+  });
+
   it("keeps all-day rows at 00:00 UTC with an exclusive end (spec 002)", () => {
     expect(
       rowInstants(row({ allDay: true, start: null, end: null }), TZ),
