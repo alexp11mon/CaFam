@@ -2,14 +2,22 @@
 // it reads GROQ_API_KEY (P4) and no client component may import it.
 
 const ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
-/** R5: per call; the route allows 30 s in total. */
+/** R5: per call; the route allows 45 s in total. */
 const CALL_TIMEOUT_MS = 8_000;
+/** Spec 022, D6: reading images takes longer. */
+const VISION_TIMEOUT_MS = 20_000;
 
 /** D1: main model, then the fallback after a 429 (each has its own limit, R1). */
 export const ASSISTANT_MODELS = [
   "openai/gpt-oss-120b",
   "qwen/qwen3.8-27b",
 ] as const;
+
+/**
+ * Spec 022, D1: the only model of Groq's free tier that reads images. Tools
+ * failed with images in T1, so it answers JSON (D3); no fallback reads images.
+ */
+export const VISION_MODEL = "qwen/qwen3.8-27b";
 
 /**
  * RF-31, D12: Groq's Services Agreement (4.2) forbids training on inputs and
@@ -36,8 +44,14 @@ interface RawToolCall {
   function: { name: string; arguments: string };
 }
 
+/** Spec 022: text and images of one user message (OpenAI format). */
+export type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+
 export type ProviderMessage =
   | { role: "system" | "user"; content: string }
+  | { role: "user"; content: ContentPart[] }
   | { role: "assistant"; content: string | null; tool_calls?: RawToolCall[] }
   | { role: "tool"; tool_call_id: string; content: string };
 
@@ -57,16 +71,14 @@ export interface ProviderReply {
 type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
 
 async function callModel(
-  model: string,
   key: string,
-  messages: readonly ProviderMessage[],
-  tools: readonly ToolDefinition[],
+  body: object,
   signal: AbortSignal | undefined,
-  requireTool: boolean,
   fetcher: Fetcher,
+  timeoutMs = CALL_TIMEOUT_MS,
 ): Promise<Response> {
   const timeout = new AbortController();
-  const timer = setTimeout(() => timeout.abort(), CALL_TIMEOUT_MS);
+  const timer = setTimeout(() => timeout.abort(), timeoutMs);
   try {
     return await fetcher(ENDPOINT, {
       method: "POST",
@@ -74,13 +86,7 @@ async function callModel(
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model,
-        temperature: 0,
-        messages,
-        ...(tools.length > 0 ? { tools } : {}),
-        ...(requireTool ? { tool_choice: "required" } : {}),
-      }),
+      body: JSON.stringify(body),
       signal: signal
         ? AbortSignal.any([signal, timeout.signal])
         : timeout.signal,
@@ -132,12 +138,15 @@ export async function chat(
   let failure = "";
   for (const model of ASSISTANT_MODELS) {
     response = await callModel(
-      model,
       key,
-      messages,
-      tools,
+      {
+        model,
+        temperature: 0,
+        messages,
+        ...(tools.length > 0 ? { tools } : {}),
+        ...(requireTool ? { tool_choice: "required" } : {}),
+      },
       signal,
-      requireTool,
       fetcher,
     );
     if (response.ok) break;
@@ -168,4 +177,43 @@ export async function chat(
     })),
     message,
   };
+}
+
+/**
+ * Spec 022 (D1, D3, D6): one call to the vision model, which must answer a
+ * JSON object. No fallback: no other free model reads images (R2).
+ */
+export async function visionChat(
+  messages: readonly ProviderMessage[],
+  signal?: AbortSignal,
+  fetcher: Fetcher = fetch,
+): Promise<string> {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) throw new AssistantUnavailable("missing GROQ_API_KEY");
+  const response = await callModel(
+    key,
+    {
+      model: VISION_MODEL,
+      temperature: 0,
+      messages,
+      response_format: { type: "json_object" },
+    },
+    signal,
+    fetcher,
+    VISION_TIMEOUT_MS,
+  );
+  if (!response.ok) {
+    const code = await errorCode(response);
+    throw new AssistantUnavailable(`status ${response.status} ${code}`.trim());
+  }
+  try {
+    const body = (await response.json()) as {
+      choices?: { message?: { content?: unknown } }[];
+    };
+    const content = body.choices?.[0]?.message?.content;
+    if (typeof content === "string" && content) return content;
+  } catch {
+    // Falls through to the error below.
+  }
+  throw new AssistantUnavailable("malformed answer");
 }

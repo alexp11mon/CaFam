@@ -4,7 +4,9 @@ import {
   ASSISTANT_MODELS,
   AssistantUnavailable,
   PROVIDER_TRAINS_ON_DATA,
+  VISION_MODEL,
   chat,
+  visionChat,
 } from "@/lib/assistant/provider";
 
 // Spec 015, T5: the only client of Groq (plan assistant-provider, D1, D12;
@@ -175,6 +177,64 @@ describe("chat", () => {
     await expect(
       chat(MESSAGES, TOOLS, undefined, false, fetcher),
     ).rejects.toThrow("status 413 rate_limit_exceeded");
+  });
+
+  it("sends images to the vision model as JSON, without tools or fallback (spec 022, D1, D3)", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValue(textReply('{"question":null,"events":[]}'));
+    const messages = [
+      {
+        role: "user" as const,
+        content: [
+          { type: "text" as const, text: "Mi horario" },
+          {
+            type: "image_url" as const,
+            image_url: { url: "data:image/jpeg;base64,AA==" },
+          },
+        ],
+      },
+    ];
+    const content = await visionChat(messages, undefined, fetcher);
+    expect(content).toBe('{"question":null,"events":[]}');
+    const body = JSON.parse(fetcher.mock.calls[0]![1].body);
+    expect(body).toEqual({
+      model: VISION_MODEL,
+      temperature: 0,
+      messages,
+      response_format: { type: "json_object" },
+    });
+    expect(VISION_MODEL).toBe("qwen/qwen3.8-27b");
+  });
+
+  it("does not retry the vision model after a 429 (spec 022, R2)", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValue(
+        reply({ error: { code: "rate_limit_exceeded" } }, 429),
+      );
+    await expect(visionChat(MESSAGES, undefined, fetcher)).rejects.toThrow(
+      "status 429 rate_limit_exceeded",
+    );
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives the vision model 20 s (spec 022, D6)", async () => {
+    vi.useFakeTimers();
+    const fetcher = vi.fn(
+      (_url: string, init: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init.signal?.addEventListener("abort", () =>
+            reject(new DOMException("aborted", "AbortError")),
+          );
+        }),
+    );
+    const pending = visionChat(MESSAGES, undefined, fetcher);
+    const check = expect(pending).rejects.toThrow("timeout");
+    await vi.advanceTimersByTimeAsync(19_000);
+    expect(fetcher.mock.calls[0]![1].signal?.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(1_000);
+    await check;
   });
 
   it("is unavailable on a network error or a malformed answer", async () => {

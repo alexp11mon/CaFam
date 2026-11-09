@@ -27,6 +27,10 @@ export const MAX_SEARCH_RESULTS = 20;
 export const SEARCH_WINDOW_DAYS = 365;
 /** D8: shorter free gaps are not worth proposing. */
 export const MIN_FREE_MINUTES = 30;
+/** Spec 022, RF-21: rows of a proposal. */
+export const MAX_PROPOSAL = 50;
+/** Spec 022: the event title limit of spec 002. */
+export const TITLE_MAX = 100;
 /** R1: model-tools rounds per question. */
 export const MAX_TOOL_ROUNDS = 3;
 

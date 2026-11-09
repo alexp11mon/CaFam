@@ -17,8 +17,9 @@ Cada tarea se hace sola y con el test primero (rojo → verde), y se cierra con 
   Hecho cuando: `npm test -- attachments prepare-image` en verde: rechazo de la cuarta imagen, de tipos no aceptados, de archivos ilegibles y de más de 20 MB con su texto; salida JPEG de 1600 px como mucho, sin EXIF y por debajo de 1,2 MB (con el reintento a 1280 px de R6). Cubre: RF-4, RF-5, RF-6, RF-7, RF-8, RF-9 | Módulo: attachments, prepare-image
   Evidencia (2026-11-09): `assistant-attachments` (5) y `prepare-image` (8, 4 nuevos) en verde, primero en rojo. P8 en verde: typecheck, lint (0 errores, 2 avisos previos), format:check, `npm test` 261 archivos y 2.498 tests, build.
 
-- [ ] T3 Aceptar imágenes y propuesta en la petición y llamar al modelo con visión
+- [x] T3 Aceptar imágenes y propuesta en la petición y llamar al modelo con visión
   Hecho cuando: `npm test -- assistant-schemas assistant-provider` en verde: mensaje con 0 a 3 imágenes JPEG de 1,2 MB como mucho, solo en el último mensaje; pregunta vacía válida si hay imágenes; campo `proposal`; las partes `image_url` llegan a Groq con `qwen/qwen3.8-27b`, sin modelo de reserva y con plazo de 20 s; las peticiones sin imágenes no cambian. Cubre: RF-4, RF-12, RF-14, RF-33 | Módulo: schemas, provider (D1, D6)
+  Evidencia (2026-11-09): `assistant-image-request` (6) y 3 casos nuevos en `assistant-provider` en verde, primero en rojo (`visionChat` con `qwen/qwen3.8-27b`, `json_object`, 20 s y sin reserva). P8 en verde: 262 archivos y 2.507 tests, build; lint sin el aviso nuevo (`question` sin usar, quitado).
 
 - [ ] T4 Validar filas de la propuesta y marcar duplicados
   Hecho cuando: `npm test -- proposal-rows duplicates` en verde: fin anterior o igual al inicio el mismo día es error, un turno que acaba al día siguiente es válido, conteo de seleccionadas y texto "Crear N eventos", y duplicado solo si coinciden el calendario, el inicio y el fin (también con una repetición de una serie). Cubre: RF-35, RF-37, RF-39, RF-41, RF-42 | Módulo: proposal-rows, duplicates
