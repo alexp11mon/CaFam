@@ -94,6 +94,36 @@ export function syncedWrite(
   return writeEvent(request, writeEngineDeps(supabase));
 }
 
+/**
+ * Creates one single event, in the provider first if the calendar is synced
+ * (spec 009). Shared by pasting (spec 017) and the assistant's proposals
+ * (spec 022 plan D5). RLS still decides who may write.
+ */
+export async function createSingle(
+  supabase: Supabase,
+  userId: string,
+  row: ReturnType<typeof toRow>,
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const synced = await syncedWrite(supabase, { op: "create", row });
+  if (synced.status === "failed") {
+    return {
+      ok: false,
+      error: writeErrorText(synced.failure, synced.provider),
+    };
+  }
+  if (synced.status === "dbError") {
+    return { ok: false, error: getCalendarErrorMessage(synced.error) };
+  }
+  if (synced.status === "done") return { ok: true, id: synced.eventId };
+  const { data, error } = await supabase
+    .from("events")
+    .insert({ ...row, created_by: userId })
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: getCalendarErrorMessage(error) };
+  return { ok: true, id: data.id };
+}
+
 /** The event as it is now: its calendar and what Google gets compared with (RF-14). */
 export async function currentEvent(supabase: Supabase, id: string) {
   const { data, error } = await supabase

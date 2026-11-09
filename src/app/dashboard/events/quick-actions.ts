@@ -32,6 +32,7 @@ import {
 import type { EventRowInput } from "@/lib/sync/write-event";
 import { goneText, writeErrorText } from "@/lib/sync/write-errors";
 import {
+  createSingle,
   deleteOccurrences,
   deleteSingle,
   isSyncedCalendar,
@@ -286,28 +287,14 @@ export async function pasteEvent(
       ...times,
     });
 
-    const synced = await syncedWrite(supabase, { op: "create", row });
-    if (synced.status === "failed") {
-      return {
-        ok: false,
-        error: writeErrorText(synced.failure, synced.provider),
-      };
-    }
-    if (synced.status === "dbError") return errorOf(synced.error);
-    let id: string;
-    if (synced.status === "done") {
-      id = synced.eventId;
-    } else {
-      const { data, error } = await supabase
-        .from("events")
-        .insert({ ...row, created_by: userId })
-        .select("id")
-        .single();
-      if (error) return errorOf(error);
-      id = data.id;
-    }
+    const created = await createSingle(supabase, userId, row);
+    if (!created.ok) return created;
     refresh();
-    return { ok: true, id, undo: { kind: "unpaste", id } };
+    return {
+      ok: true,
+      id: created.id,
+      undo: { kind: "unpaste", id: created.id },
+    };
   } catch (error) {
     return errorOf(error);
   }
