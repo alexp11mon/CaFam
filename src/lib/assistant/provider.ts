@@ -183,29 +183,48 @@ export async function chat(
  * Spec 022 (D1, D3, D6): one call to the vision model, which must answer a
  * JSON object. No fallback: no other free model reads images (R2).
  */
-export async function visionChat(
+export function visionChat(
   messages: readonly ProviderMessage[],
   signal?: AbortSignal,
   fetcher: Fetcher = fetch,
 ): Promise<string> {
+  return jsonChat(messages, [VISION_MODEL], signal, fetcher, VISION_TIMEOUT_MS);
+}
+
+/**
+ * Spec 022 (D2, D3): a JSON answer from the first model that gives one; the
+ * corrections of a proposal use the text models with their fallback.
+ */
+export async function jsonChat(
+  messages: readonly ProviderMessage[],
+  models: readonly string[] = ASSISTANT_MODELS,
+  signal?: AbortSignal,
+  fetcher: Fetcher = fetch,
+  timeoutMs = CALL_TIMEOUT_MS,
+): Promise<string> {
   const key = process.env.GROQ_API_KEY;
   if (!key) throw new AssistantUnavailable("missing GROQ_API_KEY");
-  const response = await callModel(
-    key,
-    {
-      model: VISION_MODEL,
-      temperature: 0,
-      messages,
-      response_format: { type: "json_object" },
-    },
-    signal,
-    fetcher,
-    VISION_TIMEOUT_MS,
-  );
-  if (!response.ok) {
+  let response: Response | undefined;
+  let failure = "";
+  for (const model of models) {
+    response = await callModel(
+      key,
+      {
+        model,
+        temperature: 0,
+        messages,
+        response_format: { type: "json_object" },
+      },
+      signal,
+      fetcher,
+      timeoutMs,
+    );
+    if (response.ok) break;
     const code = await errorCode(response);
-    throw new AssistantUnavailable(`status ${response.status} ${code}`.trim());
+    failure = `status ${response.status} ${code}`.trim();
+    if (!worthFallback(response.status, code)) break;
   }
+  if (!response?.ok) throw new AssistantUnavailable(failure);
   try {
     const body = (await response.json()) as {
       choices?: { message?: { content?: unknown } }[];

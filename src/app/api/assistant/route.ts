@@ -11,16 +11,50 @@ import {
   AssistantUnavailable,
   PROVIDER_TRAINS_ON_DATA,
   chat,
+  jsonChat,
+  visionChat,
 } from "@/lib/assistant/provider";
-import { runAssistant } from "@/lib/assistant/run";
+import type { ProposalDeps } from "@/lib/assistant/proposal";
+import { runAssistant, runProposal } from "@/lib/assistant/run";
 import { assistantRequestSchema } from "@/lib/assistant/schemas";
 import { runTool } from "@/lib/assistant/tools";
-import { getProfileTimeZone } from "@/lib/calendar/queries";
+import {
+  getEventsInRange,
+  getMyCalendars,
+  getProfileTimeZone,
+} from "@/lib/calendar/queries";
+import { canWriteEvents } from "@/lib/sync/read-only";
 import { createClient } from "@/lib/supabase/server";
 
 // Spec 015 plan assistant-route (D3): one question of the chat. The thread is
 // not stored (RF-6); only answered questions count for the quota (D9).
-export const maxDuration = 30;
+// Spec 022: images are read in the same request and never stored (RF-13).
+export const maxDuration = 45;
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+/** Spec 022: what the proposal may use, always with the session (RF-26, D8). */
+async function proposalDeps(
+  supabase: Supabase,
+  userId: string,
+  timeZone: string,
+): Promise<ProposalDeps> {
+  const calendars = await getMyCalendars(supabase, userId);
+  return {
+    calendars: calendars.map((calendar) => ({
+      id: calendar.id,
+      name: calendar.name,
+      canWrite: canWriteEvents(calendar),
+    })),
+    timeZone,
+    loadEvents: async (from, to) =>
+      (await getEventsInRange(supabase, from, to)).map((event) => ({
+        calendarId: event.calendarId,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+      })),
+  };
+}
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -52,27 +86,49 @@ export async function POST(request: Request) {
     return Response.json({ error: QUOTA_TEXT }, { status: 429 });
   }
 
+  const { messages, proposal } = parsed.data;
+  const last = messages.at(-1);
+  // Spec 022: images, or a pending proposal to correct, make a proposal.
+  const proposing =
+    (last?.role === "user" && (last.images?.length ?? 0) > 0) ||
+    (proposal?.length ?? 0) > 0;
+
   let result;
   try {
-    result = await runAssistant(
-      parsed.data.messages,
-      {
-        chat,
-        // RF-29: the tools always act as the session user, whatever the thread says.
-        runTool: (name, args, refs) =>
-          runTool(name, args, {
-            supabase,
-            userId,
-            timeZone,
+    result = proposing
+      ? await runProposal(
+          messages,
+          proposal,
+          {
+            json: (input, vision, signal) =>
+              vision
+                ? visionChat(input, signal)
+                : jsonChat(input, undefined, signal),
+            proposal: await proposalDeps(supabase, userId, timeZone),
             now,
-            refs,
-            excludeSynced: PROVIDER_TRAINS_ON_DATA,
-          }),
-        now,
-        timeZone,
-      },
-      request.signal,
-    );
+            timeZone,
+          },
+          request.signal,
+        )
+      : await runAssistant(
+          messages,
+          {
+            chat,
+            // RF-29: the tools always act as the session user, whatever the thread says.
+            runTool: (name, args, refs) =>
+              runTool(name, args, {
+                supabase,
+                userId,
+                timeZone,
+                now,
+                refs,
+                excludeSynced: PROVIDER_TRAINS_ON_DATA,
+              }),
+            now,
+            timeZone,
+          },
+          request.signal,
+        );
   } catch (error) {
     // The user cancelled (RF-4): nobody reads this answer.
     if (request.signal.aborted) return new Response(null, { status: 499 });
@@ -91,6 +147,9 @@ export async function POST(request: Request) {
   return Response.json({
     answer: result.answer,
     events: result.events,
+    ...("proposal" in result && result.proposal
+      ? { proposal: result.proposal }
+      : {}),
     remaining: DAILY_QUESTIONS - used - 1,
   });
 }

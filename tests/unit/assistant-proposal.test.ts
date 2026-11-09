@@ -217,6 +217,36 @@ describe("buildProposal", () => {
     );
   });
 
+  it("keeps each row's own calendar in a correction (RF-33, RF-36)", async () => {
+    const result = await buildProposal(
+      json({
+        events: [
+          {
+            title: "A",
+            date: "2026-11-16",
+            start: "08:00",
+            end: "09:00",
+            calendar: "Familia",
+          },
+          {
+            title: "B",
+            date: "2026-11-17",
+            start: "08:00",
+            end: "09:00",
+            calendar: "Turnos del equipo",
+          },
+        ],
+      }),
+      deps(),
+    );
+    if (result.kind !== "proposal") throw new Error(result.kind);
+    // A calendar the user cannot write to falls back to the named one.
+    expect(result.proposal.rows.map((row) => row.calendarId)).toEqual([
+      FAMILY,
+      WORK,
+    ]);
+  });
+
   it("treats JSON that does not validate as the provider failing (RF-54)", async () => {
     for (const bad of [
       "no es json",

@@ -6,6 +6,7 @@ import {
   PROVIDER_TRAINS_ON_DATA,
   VISION_MODEL,
   chat,
+  jsonChat,
   visionChat,
 } from "@/lib/assistant/provider";
 
@@ -217,6 +218,19 @@ describe("chat", () => {
       "status 429 rate_limit_exceeded",
     );
     expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("corrects with the text model in JSON mode and its fallback (spec 022, D2)", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        reply({ error: { code: "rate_limit_exceeded" } }, 429),
+      )
+      .mockResolvedValueOnce(textReply("{}"));
+    expect(await jsonChat(MESSAGES, undefined, undefined, fetcher)).toBe("{}");
+    const bodies = fetcher.mock.calls.map((call) => JSON.parse(call[1].body));
+    expect(bodies.map((b) => b.model)).toEqual([...ASSISTANT_MODELS]);
+    expect(bodies[1].response_format).toEqual({ type: "json_object" });
   });
 
   it("gives the vision model 20 s (spec 022, D6)", async () => {

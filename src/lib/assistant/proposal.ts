@@ -63,6 +63,8 @@ const modelSchema = z.object({
         end: time.nullish(),
         endDate: date.nullish(),
         allDay: z.boolean().nullish(),
+        /** A correction keeps each row's calendar (RF-33, RF-36). */
+        calendar: text,
       }),
     )
     .max(200)
@@ -159,9 +161,14 @@ export async function buildProposal(
   if ("text" in calendar) return { kind: "message", text: calendar.text };
 
   // Two images may repeat a day: the same row is proposed once.
+  const writable = deps.calendars.filter((c) => c.canWrite);
   const unique = new Map<string, ProposalRow>();
   for (const event of answer.events) {
-    const row = toRow(event, calendar.id);
+    const own = event.calendar ? matchPerson(event.calendar, writable) : null;
+    const row = toRow(
+      event,
+      own?.status === "ok" ? own.person.id : calendar.id,
+    );
     unique.set(sortKey(row), row);
   }
   const sorted = [...unique.entries()]

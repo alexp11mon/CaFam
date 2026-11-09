@@ -1,14 +1,15 @@
 import { createRefs, extractCitations, type Refs } from "./citations";
 import { dateContext } from "./dates";
 import { MAX_TOOL_ROUNDS } from "./limits";
-import { systemPrompt } from "./prompt";
+import { proposalPrompt, systemPrompt } from "./prompt";
+import { buildProposal, type Proposal, type ProposalDeps } from "./proposal";
 import {
   AssistantUnavailable,
   type ProviderMessage,
   type ProviderReply,
   type ToolDefinition,
 } from "./provider";
-import type { ChatMessage } from "./schemas";
+import type { ChatMessage, ProposalRow } from "./schemas";
 import { TOOL_DEFINITIONS } from "./tool-definitions";
 import type { CitedEvent } from "./tools";
 
@@ -94,4 +95,88 @@ export async function runAssistant(
       });
     }
   }
+}
+
+export interface ProposalRunDeps {
+  /** One JSON answer; `vision` picks the model that reads images (D1, D2). */
+  json: (
+    messages: readonly ProviderMessage[],
+    vision: boolean,
+    signal?: AbortSignal,
+  ) => Promise<string>;
+  proposal: ProposalDeps;
+  now: Date;
+  timeZone: string;
+}
+
+/** RF-12: images sent without text still need a user text part. */
+const IMAGES_ONLY_TEXT = "Aquí tienes mi horario.";
+
+/**
+ * Spec 022 (plan "run", D1b, D2, D3): a proposal from the images of the last
+ * message, or the correction of the current one. Never writes (RF-40).
+ */
+export async function runProposal(
+  thread: readonly ChatMessage[],
+  current: readonly ProposalRow[] | undefined,
+  deps: ProposalRunDeps,
+  signal?: AbortSignal,
+): Promise<AssistantAnswer & { proposal?: Proposal }> {
+  signal?.throwIfAborted();
+  const last = thread.at(-1);
+  const images = last?.role === "user" ? (last.images ?? []) : [];
+  const messages: ProviderMessage[] = [
+    {
+      role: "system",
+      content: proposalPrompt(
+        dateContext(deps.now, deps.timeZone),
+        deps.timeZone,
+      ),
+    },
+  ];
+  // RF-33: the rows the user kept, with calendar names and never ids.
+  const kept = (current ?? []).filter((row) => row.selected);
+  if (kept.length > 0) {
+    const name = new Map(deps.proposal.calendars.map((c) => [c.id, c.name]));
+    const events = kept.map((row) => ({
+      title: row.title,
+      date: row.startDate,
+      start: row.start,
+      end: row.end,
+      endDate: row.endDate === row.startDate ? null : row.endDate,
+      allDay: row.allDay,
+      calendar: name.get(row.calendarId) ?? null,
+    }));
+    messages.push({
+      role: "system",
+      content: `Propuesta actual: ${JSON.stringify({ events })}`,
+    });
+  }
+  for (const message of thread) {
+    if (message === last && images.length > 0) {
+      messages.push({
+        role: "user",
+        content: [
+          { type: "text", text: message.content || IMAGES_ONLY_TEXT },
+          ...images.map((url) => ({
+            type: "image_url" as const,
+            image_url: { url },
+          })),
+        ],
+      });
+    } else {
+      messages.push(
+        message.role === "user"
+          ? { role: "user", content: message.content }
+          : { role: "assistant", content: message.content },
+      );
+    }
+  }
+
+  const raw = await deps.json(messages, images.length > 0, signal);
+  signal?.throwIfAborted();
+  const result = await buildProposal(raw, deps.proposal);
+  return result.kind === "proposal"
+    ? { answer: result.text, events: [], proposal: result.proposal }
+    : { answer: result.text, events: [] };
 }

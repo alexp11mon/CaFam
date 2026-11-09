@@ -4,12 +4,24 @@ import { AssistantUnavailable } from "@/lib/assistant/provider";
 
 // Spec 015, T8: POST /api/assistant (plan assistant-route, D3, D9; RF-3,
 // RF-4, RF-27, RF-28).
-const { getClaims, gte, insert, runAssistant, runTool } = vi.hoisted(() => ({
+const {
+  getClaims,
+  gte,
+  insert,
+  runAssistant,
+  runProposal,
+  runTool,
+  getMyCalendars,
+  getEventsInRange,
+} = vi.hoisted(() => ({
   getClaims: vi.fn(),
   gte: vi.fn(),
   insert: vi.fn(),
   runAssistant: vi.fn(),
+  runProposal: vi.fn(),
   runTool: vi.fn(),
+  getMyCalendars: vi.fn(),
+  getEventsInRange: vi.fn(),
 }));
 
 const supabase = {
@@ -25,11 +37,13 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("@/lib/calendar/queries", () => ({
   getProfileTimeZone: async () => "Europe/Madrid",
+  getMyCalendars,
+  getEventsInRange,
 }));
-vi.mock("@/lib/assistant/run", () => ({ runAssistant }));
+vi.mock("@/lib/assistant/run", () => ({ runAssistant, runProposal }));
 vi.mock("@/lib/assistant/tools", () => ({ runTool }));
 
-import { POST } from "@/app/api/assistant/route";
+import { POST, maxDuration } from "@/app/api/assistant/route";
 
 const QUESTION = { messages: [{ role: "user", content: "¿Qué hay hoy?" }] };
 
@@ -129,5 +143,114 @@ describe("POST /api/assistant", () => {
     expect(runAssistant.mock.calls[0]![2]).toBeInstanceOf(AbortSignal);
     expect(response.status).toBe(499);
     expect(insert).not.toHaveBeenCalled();
+  });
+});
+
+// Spec 022, T6: images and proposals (RF-13, RF-14, RF-33, RF-53, RF-54; D6).
+describe("POST /api/assistant with images", () => {
+  const IMG = "data:image/jpeg;base64,/9j/4AAQ";
+  const WITH_IMAGES = {
+    messages: [{ role: "user", content: "Soy Ana", images: [IMG] }],
+  };
+  const PROPOSAL = { id: "p1", rows: [], omitted: 0 };
+
+  beforeEach(() => {
+    runProposal.mockResolvedValue({
+      answer: "He leído 1 evento.",
+      events: [],
+      proposal: PROPOSAL,
+    });
+    getMyCalendars.mockResolvedValue([
+      { id: "c1", name: "Trabajo", role: "editor", synced: null },
+      { id: "c2", name: "Cole", role: "viewer", synced: null },
+      {
+        id: "c3",
+        name: "Google",
+        role: "owner",
+        synced: { canWrite: false },
+      },
+    ]);
+    getEventsInRange.mockResolvedValue([
+      {
+        id: "e1",
+        calendarId: "c1",
+        startsAt: "2026-11-16T07:00:00Z",
+        endsAt: "2026-11-16T14:00:00Z",
+        title: "Turno",
+      },
+    ]);
+  });
+
+  it("allows 45 s for reading images (D6)", () => {
+    expect(maxDuration).toBe(45);
+  });
+
+  it("answers a message with images with a proposal and counts it (RF-14, RF-53)", async () => {
+    const response = await post(WITH_IMAGES);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      answer: "He leído 1 evento.",
+      events: [],
+      proposal: PROPOSAL,
+      remaining: 26,
+    });
+    expect(runAssistant).not.toHaveBeenCalled();
+    expect(runProposal.mock.calls[0]![0]).toEqual(WITH_IMAGES.messages);
+    expect(runProposal.mock.calls[0]![1]).toBeUndefined();
+    expect(insert).toHaveBeenCalledWith({ user_id: "user-1" });
+  });
+
+  it("gives the proposal only the calendars the user can write to (RF-26)", async () => {
+    await post(WITH_IMAGES);
+    const deps = runProposal.mock.calls[0]![2];
+    expect(deps.proposal.calendars).toEqual([
+      { id: "c1", name: "Trabajo", canWrite: true },
+      { id: "c2", name: "Cole", canWrite: false },
+      { id: "c3", name: "Google", canWrite: false },
+    ]);
+    expect(await deps.proposal.loadEvents(new Date(), new Date())).toEqual([
+      {
+        calendarId: "c1",
+        startsAt: "2026-11-16T07:00:00Z",
+        endsAt: "2026-11-16T14:00:00Z",
+      },
+    ]);
+  });
+
+  it("sends a correction with the current proposal to runProposal (RF-33)", async () => {
+    const row = {
+      key: "r1",
+      title: "Turno",
+      startDate: "2026-11-17",
+      start: "08:00",
+      endDate: "2026-11-17",
+      end: "15:00",
+      allDay: false,
+      calendarId: "6f1c0a5e-8f0e-4c1e-9a43-2b7d7a1f0c11",
+      selected: true,
+      duplicate: false,
+    };
+    await post({
+      messages: [{ role: "user", content: "El martes a las 9" }],
+      proposal: [row],
+    });
+    expect(runAssistant).not.toHaveBeenCalled();
+    expect(runProposal.mock.calls[0]![1]).toEqual([row]);
+  });
+
+  it("answers 503 without logging the images when the provider fails (RF-54, R8)", async () => {
+    const spies = (["log", "warn", "error", "info"] as const).map((level) =>
+      vi.spyOn(console, level).mockImplementation(() => {}),
+    );
+    runProposal.mockRejectedValue(new AssistantUnavailable("status 429"));
+    const response = await post(WITH_IMAGES);
+    expect(response.status).toBe(503);
+    expect(insert).not.toHaveBeenCalled();
+    for (const spy of spies) {
+      for (const call of spy.mock.calls) {
+        expect(JSON.stringify(call)).not.toContain("base64");
+      }
+      spy.mockRestore();
+    }
   });
 });
