@@ -22,6 +22,7 @@ import type { CitedEvent } from "@/lib/assistant/tools";
 import { prepareForAssistant } from "@/lib/images/prepare-image";
 import { CitedEvents } from "./cited-events";
 import { ImageAttach, type Attachment } from "./image-attach";
+import { ProposalCard } from "./proposal-card";
 
 // The chat of the assistant (spec 015 plan assistant-ui). The thread lives
 // only in this component: leaving the page or "Nueva conversación" forgets it
@@ -39,6 +40,8 @@ interface Message {
 /** Spec 022: a proposal in the thread; only the last pending one is live. */
 export interface ChatProposal extends Proposal {
   status: "pending" | "superseded" | "created";
+  /** RF-45: what "Crear" has already written, for the links. */
+  created?: { id: string; title: string }[];
 }
 
 /** Spec 022: calendars the proposal may use, for its selector (RF-26). */
@@ -55,6 +58,7 @@ const EXAMPLES = [
 
 export function AssistantChat({
   timeZone,
+  calendars = [],
 }: {
   timeZone: string;
   calendars?: readonly ChatCalendar[];
@@ -326,6 +330,19 @@ export function AssistantChat({
               <span className="sr-only">Asistente: </span>
               <p className="whitespace-pre-line">{message.content}</p>
               <CitedEvents events={message.events ?? []} timeZone={timeZone} />
+              {message.proposal ? (
+                <ProposalCard
+                  proposal={message.proposal}
+                  calendars={calendars}
+                  onChange={(proposal) =>
+                    setMessages((current) =>
+                      current.map((item, i) =>
+                        i === index ? { ...item, proposal } : item,
+                      ),
+                    )
+                  }
+                />
+              ) : null}
             </div>
           ),
         )}
@@ -362,7 +379,7 @@ export function AssistantChat({
 
       <form
         noValidate
-        className="sticky bottom-0 mt-auto flex flex-col gap-2 pb-2"
+        className="sticky bottom-0 mt-auto flex flex-col gap-2 bg-stone pt-2 pb-2"
         onSubmit={(event) => {
           event.preventDefault();
           void send(draft);

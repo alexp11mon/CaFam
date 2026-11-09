@@ -1,15 +1,28 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AssistantChat } from "@/components/assistant/assistant-chat";
-import { getProfileTimeZone, requireUser } from "@/lib/calendar/queries";
+import {
+  getMyCalendars,
+  getProfileTimeZone,
+  requireUser,
+} from "@/lib/calendar/queries";
+import { canWriteEvents } from "@/lib/sync/read-only";
 
 export const metadata: Metadata = { title: "Asistente" };
 
-// Spec 015 (RF-1): the chat reads the profile's zone to show the cited events.
+// Spec 015 (RF-1): the chat reads the profile's zone to show the cited events;
+// spec 022 adds the writable calendars for the proposal.
 async function Chat() {
   const { supabase, userId } = await requireUser();
-  const timeZone = await getProfileTimeZone(supabase, userId);
-  return <AssistantChat timeZone={timeZone} />;
+  const [timeZone, all] = await Promise.all([
+    getProfileTimeZone(supabase, userId),
+    getMyCalendars(supabase, userId),
+  ]);
+  // Spec 022 RF-26: only calendars where the user can create events.
+  const calendars = all
+    .filter(canWriteEvents)
+    .map(({ id, name }) => ({ id, name }));
+  return <AssistantChat timeZone={timeZone} calendars={calendars} />;
 }
 
 export default function AssistantPage() {
