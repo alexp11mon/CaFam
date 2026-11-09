@@ -41,7 +41,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe("AssistantChat", () => {
   it("starts with the privacy notice and three examples (RF-2, RF-33)", () => {
     setup();
-    expect(screen.getByText(/se envían a Groq/)).toBeInTheDocument();
+    expect(screen.getByText(/se envían a Groq, que no/)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "política de privacidad" }),
     ).toHaveAttribute("href", "/privacy");
@@ -78,7 +78,9 @@ describe("AssistantChat", () => {
     expect(link).toHaveAttribute("href", `/dashboard/events/${EVENT.id}`);
     expect(link).toHaveTextContent("Familia");
     expect(field()).toHaveFocus();
-    expect(screen.queryByText(/se envían a Groq/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/se envían a Groq, que no/),
+    ).not.toBeInTheDocument();
   });
 
   it("validates the question (RF-3) and sends with Enter, new line with Shift+Enter", async () => {
@@ -154,7 +156,7 @@ describe("AssistantChat", () => {
       screen.getByRole("button", { name: "Nueva conversación" }),
     );
     expect(screen.queryByText("Fútbol.")).not.toBeInTheDocument();
-    expect(screen.getByText(/se envían a Groq/)).toBeInTheDocument();
+    expect(screen.getByText(/se envían a Groq, que no/)).toBeInTheDocument();
   });
 
   it("offers to retry when the assistant is unavailable (RF-28)", async () => {

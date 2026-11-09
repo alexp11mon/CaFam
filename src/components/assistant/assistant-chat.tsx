@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type KeyboardEvent,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { TextArea } from "@/components/ui/text-area";
 import {
@@ -9,9 +15,13 @@ import {
   QUESTION_MESSAGES,
   UNAVAILABLE_TEXT,
 } from "@/lib/assistant/error-messages";
+import { checkAttachments } from "@/lib/assistant/attachments";
 import { MAX_MESSAGES, QUESTION_MAX } from "@/lib/assistant/limits";
+import type { Proposal } from "@/lib/assistant/proposal";
 import type { CitedEvent } from "@/lib/assistant/tools";
+import { prepareForAssistant } from "@/lib/images/prepare-image";
 import { CitedEvents } from "./cited-events";
+import { ImageAttach, type Attachment } from "./image-attach";
 
 // The chat of the assistant (spec 015 plan assistant-ui). The thread lives
 // only in this component: leaving the page or "Nueva conversación" forgets it
@@ -21,6 +31,20 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   events?: CitedEvent[];
+  /** Spec 022 RF-11: the images sent with this message, as data URLs. */
+  images?: string[];
+  proposal?: ChatProposal;
+}
+
+/** Spec 022: a proposal in the thread; only the last pending one is live. */
+export interface ChatProposal extends Proposal {
+  status: "pending" | "superseded" | "created";
+}
+
+/** Spec 022: calendars the proposal may use, for its selector (RF-26). */
+export interface ChatCalendar {
+  id: string;
+  name: string;
 }
 
 const EXAMPLES = [
@@ -29,8 +53,18 @@ const EXAMPLES = [
   "¿Qué tardes tengo libres la semana que viene?",
 ];
 
-export function AssistantChat({ timeZone }: { timeZone: string }) {
+export function AssistantChat({
+  timeZone,
+}: {
+  timeZone: string;
+  calendars?: readonly ChatCalendar[];
+}) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [attachErrors, setAttachErrors] = useState<string[]>([]);
+  // Plan D2: images re-sent while the assistant asks before proposing.
+  const carried = useRef<string[]>([]);
+  const preparing = useRef(0);
   const [draft, setDraft] = useState("");
   const [fieldError, setFieldError] = useState<string>();
   const [error, setError] = useState<{ text: string; retry: boolean }>();
@@ -46,39 +80,98 @@ export function AssistantChat({ timeZone }: { timeZone: string }) {
     end.current?.scrollIntoView({ block: "end" });
   }, [messages.length, pending]);
 
+  /** Spec 022 RF-4 to RF-9: checked, then reduced on the device. */
+  async function addFiles(files: File[]) {
+    const { accepted, errors } = checkAttachments(
+      attachments.length + preparing.current,
+      files,
+    );
+    setAttachErrors(errors);
+    preparing.current += accepted.length;
+    for (const file of accepted) {
+      const result = await prepareForAssistant(file);
+      preparing.current -= 1;
+      if ("error" in result) {
+        setAttachErrors((current) => [
+          ...current,
+          `${file.name}: ${result.error}`,
+        ]);
+      } else {
+        setAttachments((current) => [
+          ...current,
+          { id: crypto.randomUUID(), url: result.dataUrl },
+        ]);
+      }
+    }
+  }
+
+  function onPaste(event: ClipboardEvent<HTMLTextAreaElement>) {
+    // RF-3: a pasted image is attached; pasted text stays text.
+    const files = [...event.clipboardData.files].filter((file) =>
+      file.type.startsWith("image/"),
+    );
+    if (files.length === 0) return;
+    event.preventDefault();
+    void addFiles(files);
+  }
+
   async function send(text: string) {
     if (pending || quotaReached) return;
     const question = text.trim();
-    // RF-3, the same rules as the server.
-    if (!question || question.length > QUESTION_MAX) {
+    const attached = attachments;
+    const images = attached.length
+      ? attached.map((attachment) => attachment.url)
+      : carried.current;
+    // RF-3, the same rules as the server; spec 022 RF-12: images need no text.
+    if (
+      (!question && attached.length === 0) ||
+      question.length > QUESTION_MAX
+    ) {
       setFieldError(
         question ? QUESTION_MESSAGES.tooLong : QUESTION_MESSAGES.empty,
       );
       field.current?.focus();
       return;
     }
-    const asked: Message = { role: "user", content: question };
-    const thread = [...messages, asked]
-      .slice(-MAX_MESSAGES)
-      .map(({ role, content }) => ({ role, content }));
+    const asked: Message = {
+      role: "user",
+      content: question,
+      ...(attached.length ? { images } : {}),
+    };
+    // Plan D2: images travel only with the last message.
+    const thread = [
+      ...messages.map(({ role, content }) => ({ role, content })),
+      { role: "user", content: question, ...(images.length ? { images } : {}) },
+    ].slice(-MAX_MESSAGES);
+    // RF-33: a correction carries the proposal as the user left it.
+    const live = messages.findLast(
+      (message) => message.proposal?.status === "pending",
+    )?.proposal;
     setFieldError(undefined);
     setError(undefined);
+    setAttachErrors([]);
     setMessages((current) => [...current, asked]);
     setDraft("");
+    setAttachments([]);
     setPending(true);
     const abort = new AbortController();
     controller.current = abort;
 
-    // On failure or cancel the question goes back to the field (RF-4, RF-28).
+    // On failure or cancel the question and its images go back (RF-4, RF-28;
+    // spec 022 RF-54, RF-55).
     const giveBack = () => {
       setMessages((current) => current.filter((message) => message !== asked));
       setDraft(text);
+      setAttachments(attached);
     };
     try {
       const response = await fetch("/api/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: thread }),
+        body: JSON.stringify({
+          messages: thread,
+          ...(live ? { proposal: live.rows } : {}),
+        }),
         signal: abort.signal,
       });
       const body = await response.json().catch(() => ({}));
@@ -92,9 +185,30 @@ export function AssistantChat({ timeZone }: { timeZone: string }) {
         });
         return;
       }
+      const proposal: Proposal | undefined = body.proposal;
+      // Plan D2: the assistant asked something before proposing.
+      carried.current = !proposal && images.length ? images : [];
       setMessages((current) => [
-        ...current,
-        { role: "assistant", content: body.answer, events: body.events },
+        // RF-34: a new proposal replaces the pending one.
+        ...current.map((message) =>
+          proposal && message.proposal?.status === "pending"
+            ? {
+                ...message,
+                proposal: {
+                  ...message.proposal,
+                  status: "superseded" as const,
+                },
+              }
+            : message,
+        ),
+        {
+          role: "assistant",
+          content: body.answer,
+          events: body.events,
+          ...(proposal
+            ? { proposal: { ...proposal, status: "pending" as const } }
+            : {}),
+        },
       ]);
     } catch {
       giveBack();
@@ -108,7 +222,11 @@ export function AssistantChat({ timeZone }: { timeZone: string }) {
 
   function restart() {
     controller.current?.abort();
+    // RF-56: the pending proposal is dropped without creating anything.
     setMessages([]);
+    setAttachments([]);
+    setAttachErrors([]);
+    carried.current = [];
     setDraft("");
     setError(undefined);
     setFieldError(undefined);
@@ -185,6 +303,20 @@ export function AssistantChat({ timeZone }: { timeZone: string }) {
             >
               <span className="sr-only">Tú: </span>
               {message.content}
+              {message.images?.length ? (
+                <span className="mt-2 flex flex-wrap justify-end gap-2">
+                  {message.images.map((url, i) => (
+                    // A data URL kept in memory (RF-13): next/image would not help.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={i}
+                      src={url}
+                      alt={`Imagen adjunta ${i + 1}`}
+                      className="size-20 rounded-xl object-cover"
+                    />
+                  ))}
+                </span>
+              ) : null}
             </p>
           ) : (
             <div
@@ -246,14 +378,28 @@ export function AssistantChat({ timeZone }: { timeZone: string }) {
           disabled={quotaReached}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
+          onPaste={onPaste}
         />
-        <Button
-          type="submit"
-          disabled={pending || quotaReached}
-          className="self-end"
-        >
-          Enviar
-        </Button>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <ImageAttach
+            attachments={attachments}
+            errors={attachErrors}
+            disabled={pending || quotaReached}
+            onPick={(files) => void addFiles(files)}
+            onRemove={(id) =>
+              setAttachments((current) =>
+                current.filter((attachment) => attachment.id !== id),
+              )
+            }
+          />
+          <Button
+            type="submit"
+            disabled={pending || quotaReached}
+            className="ml-auto self-end"
+          >
+            Enviar
+          </Button>
+        </div>
       </form>
     </div>
   );
