@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-09, al cerrar la spec 020 (disponibilidad en el calendario y sincronización rápida).
+> Última actualización: 2026-11-09, al implementar la spec 022 (eventos desde una imagen en el asistente).
 
 ## 1. Qué es
 
@@ -49,6 +49,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 018-sincronizacion-icloud | Calendarios de iCloud (iPhone) por CalDAV con contraseña específica de app, con el mismo alcance que Google en la 007 y la 009 (leer, escribir, renombrar, crear y subir). Dependencia `tsdav` aprobada; se instala en la primera tarea | **Cerrada** (2026-11-01), T1–T15 hechas; 2 migraciones aplicadas en prod; enmienda 6 aplicada |
 | 020-disponibilidad-y-sincronizacion-rapida | Bloques "Ocupado" de otras personas (con su consentimiento) en semana y día, avisos de Google en minutos, iCloud cada 15 minutos y comprobación de versión antes de leer | **Cerrada** (2026-11-09), T1–T13 hechas; migraciones `busy_grid` y `sync_fast` aplicadas en prod, `SYNC_PUSH_URL` en Vercel y pruebas de Google e iPhone en producción correctas |
 | 021-animaciones-y-microinteracciones | Movimiento con intención en toda la app: curvas y duraciones como tokens, desplegables que nacen del disparador, listas escalonadas, interruptor, pulso de guardado, regreso en arco, evento → detalle, seguir al dedo con goma, selector de vista y revelado del tema | **Cerrada** (2026-11-08), T1–T19 hechas; sin migraciones ni dependencias nuevas. Pendientes del usuario la prueba en el iPhone (plan R2) y la medida con la CPU ralentizada |
+| 022-eventos-desde-imagen | Adjuntar hasta 3 imágenes (un horario de trabajo) al asistente, que devuelve una propuesta de eventos sueltos editable y corregible por chat; nada se crea hasta pulsar "Crear", en cualquier calendario escribible (también Google e iCloud) | **Implementada** (2026-11-09), T1–T12 hechas; sin migraciones ni dependencias. Pendiente la aprobación del cierre y la prueba del usuario en el iPhone en producción |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -226,6 +227,17 @@ Añadido por la spec 021 (cerrada el 2026-11-08; sin migraciones ni dependencias
 - **`lib/motion/`**: `play.ts` (`play` con WAAPI, que fija y cancela lo que corre antes y devuelve `null` sin `animate` o con movimiento reducido; `pulse`), `origin.ts` (`originFrom`), `marks.ts` (`markPulse`, `captureReturn`, `takeMark`: lo que deja un cambio para el bloque que se pinte después), `flight.ts` (arco de regreso), `morph.ts` (bloque → tarjeta, hoja o ventana con `translate` y `clip-path`), `release.ts` (`releaseDecision`, `lockAxis`, `trackVelocity`) y `rubber-band.ts` (`rubberBand`, `banded`, 64 px como mucho).
 - **Hooks**: `use-presence.ts` (desmontar tras la salida), `use-enter-once.ts`, `use-pulse-on.ts` (un pulso por resultado) y `use-follow-drag.ts` (seguir al dedo en horizontal: la vista del calendario, el cajón y el visor de imágenes). `use-swipe.ts` y `lib/calendar/swipe.ts` se borraron.
 - **Goma** en la hoja de detalle, el pellizco de las horas (24–144 px, vuelve con `scale`) y el borde de un evento por debajo de 15 min.
+
+Añadido por la spec 022 (implementada el 2026-11-09; sin migraciones ni dependencias):
+
+- **Adjuntar imágenes** en `/dashboard/assistant` (`ImageAttach`, `image-attach.tsx`): "Adjuntar imagen" (`image/*`, `multiple`, sin `capture`: el móvil ofrece cámara y galería), pegar con Ctrl/⌘+V, miniaturas con "Quitar imagen", hasta 3 (`checkAttachments`, `lib/assistant/attachments.ts`) y nota con enlace a `/privacy`. `prepareForAssistant` (`lib/images/prepare-image.ts`) las reduce a 1600 px JPEG 0,8 (1280 px si pasan de 1,2 MB) y las manda como `data:` URL. **No se guardan en ningún sitio**: viajan en la petición y se olvidan.
+- **Petición** (`assistantRequestSchema`): solo el último mensaje lleva `images`; una corrección manda `proposal` (las filas como las dejó el usuario). Si la respuesta a un mensaje con imágenes es una pregunta ("¿de qué semana es?"), el navegador vuelve a adjuntar las mismas imágenes al siguiente mensaje (plan D2). La ruta tiene `maxDuration` 45 y un mensaje con imágenes cuenta como una pregunta de las 30.
+- **Modelo**: con imágenes, `visionChat` (`qwen/qwen3.8-27b`, `VISION_MODEL`, 20 s, sin reserva ni herramientas) con `response_format: json_object` y el prompt corto `proposalPrompt`; las correcciones sin imagen usan `jsonChat` con `ASSISTANT_MODELS`. Las herramientas con imágenes fallaban en Groq (T1).
+- **Propuesta** (`lib/assistant/proposal.ts`, `buildProposal`): valida el JSON con zod, elige el calendario por nombre entre los escribibles (o pregunta), turno de noche al día siguiente, sin horas = día completo, título "Trabajo" por defecto, ordena, quita repetidas, corta en 50 y marca **duplicados** con `getEventsInRange` (también repeticiones de series; `markDuplicates`, `duplicates.ts`). `runProposal` (`run.ts`) la monta; nunca escribe.
+- **Tarjeta** (`ProposalCard`, `proposal-card.tsx`): filas editables (casilla, título, fechas, horas con `TimeField`, "Todo el día" y calendario), duplicado sin seleccionar, error por fila (`rowError`, `proposal-rows.ts`), `checkProposal` 500 ms después de editar, "Crear N eventos" con bloqueo de doble pulsación, enlaces a lo creado, filas fallidas para reintentar y estados "Sustituida" y "Creada". Las filas viven en el mensaje del chat (`ChatProposal`).
+- **Crear** (`app/dashboard/assistant/actions.ts`: `checkProposal`, `createProposedEvents`; lógica en `proposal-writes.ts`): valida con `proposalSchema`, usa la zona del perfil y crea fila a fila con `createSingle` (`event-writes.ts`, extraída de `pasteEvent`): en un traído, primero el proveedor. Un fallo deja las demás.
+- **Calidad**: `npm run eval:schedule` manda los 12 horarios sintéticos de `tests/fixtures/schedules/` (`cases.ts`, imágenes generadas con `scripts/make-schedules.mjs`) al modelo de verdad, con 60 s entre casos y `EVAL_ONLY`; exige el 90 % de filas bien y el 90 % en 20 s o menos. Sin base de datos; gasta cuota de Groq.
+- **Privacidad**: sección "Imágenes en el asistente" en `/privacy`.
 
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 
@@ -592,6 +604,7 @@ npm run test:db        # vitest proyecto db contra Supabase dev → npm run test
 npm run db:push        # aplica migraciones al proyecto enlazado (dev)
 npm run db:types       # regenera src/types/database.ts
 npm run eval:assistant # spec 015: 39 preguntas a Groq contra dev (~10 min, gasta cuota)
+npm run eval:schedule  # spec 022: 12 horarios sintéticos al modelo con visión (~12 min, gasta cuota)
 ```
 
 ## 9. Patrones del código (síguelos)
@@ -717,6 +730,8 @@ npm run eval:assistant # spec 015: 39 preguntas a Groq contra dev (~10 min, gast
 - **El aviso `sync_revoked` solo guarda el correo de la cuenta**: con el mismo correo en Google y como Apple ID, `getNotices` elige la conexión en `needs_reauth`.
 - **La cuota de Groq es por organización, no por clave** (spec 015): 200K tokens al día y 8K por minuto por modelo, compartidos por dev, `eval:assistant` (unos 70K por ejecución) y prod si su clave está en la misma organización. Se repone a unos 140 tokens por minuto. Agotada, el asistente responde "no disponible" (503). No lances el eval más de una o dos veces al día. Si se corta (cuota, red o deteniéndolo), no borra sus usuarios: quedan `test-<uuid>@cafam.test` en dev que hay que borrar a mano.
 - **Groq a veces responde 400 `tool_use_failed`** (el modelo escribe mal la llamada a la herramienta) y 413 o 5xx: el proveedor pasa entonces al modelo de reserva, como con 429. El error lleva el estado y el código de Groq, y la ruta lo registra con `console.warn("assistant unavailable: …")` para verlo en los logs de Vercel.
+- **Imágenes en Groq** (spec 022): con imágenes, las herramientas fallan (nombres inventados, campos cambiados) y `json_schema` estricto coloca mal los campos; por eso la propuesta usa `json_object` con un ejemplo en el prompt. Llama 4 Scout se retiró: el modelo con visión es `qwen/qwen3.8-27b` (ITPM 7.000; tres imágenes son unos 4.800 tokens).
+- **El `input` de "Adjuntar imagen" está oculto**: en Playwright usa `page.waitForEvent("filechooser")` y pulsa el botón, no `setInputFiles` sobre el `input`.
 - **Vitest 5 oculta los `console.log` de los tests que pasan**: `eval:assistant` lleva `--silent=false` para ver el informe (en la configuración del proyecto no surte efecto).
 - **Realtime añade su propio `id` a la carga del mensaje** (spec 019): en los tests compara con `toMatchObject`, no con `toEqual`.
 - **Playwright sin navegadores descargados**: el `playwright-core` global no trae Chromium; usa `chromium.launch({ channel: "msedge" })` con el Edge del sistema.
@@ -750,5 +765,6 @@ La **007 (sincronización de Google, solo lectura, y grupos)** y la **009 (sincr
 - La **015 (asistente de chat)** está cerrada (2026-11-04), con la ampliación de comentarios y botón flotante (sin migraciones). La migración `assistant` y `GROQ_API_KEY` están en prod.
 - La **020 (disponibilidad y sincronización rápida)** está cerrada (2026-11-09), con `busy_grid` y `sync_fast` aplicadas en prod y `SYNC_PUSH_URL` en Vercel (Production). Las pruebas en producción de Google (2 minutos o menos) e iCloud en el iPhone (15 minutos o menos) salieron bien.
 - La **021 (animaciones y microinteracciones)** está cerrada (2026-11-08), sin migraciones. Tras el `git push` y el merge a `main`, queda que el usuario la pruebe en el iPhone en producción (plan R2: pellizco y desplazamiento de la semana con `touch-pan-y`) y mida el rendimiento con la CPU ralentizada; la evidencia está en su `tasks.md`.
+- La **022 (eventos desde una imagen)** está implementada (2026-11-09), sin migraciones ni variables nuevas. Queda que el usuario apruebe el cierre, haga el `git push` y el merge, y la pruebe con el iPhone en producción (foto de un horario real).
 - La **019 (escritorio, móvil y tiempo real)** está cerrada (2026-11-02). Sus migraciones `live_changes` y `profile_view_options` están aplicadas en prod (2026-11-02).
 - Los usuarios de prueba usan `@cafam.test`. Los antiguos del dominio anterior se borraron de dev en la spec 010 (T5), con permiso del usuario.

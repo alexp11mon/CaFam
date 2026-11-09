@@ -53,8 +53,9 @@ Cada tarea se hace sola y con el test primero (rojo → verde), y se cierra con 
   Hecho cuando: al menos 10 horarios sintéticos (sin datos reales) en `tests/fixtures/schedules/` con sus respuestas esperadas, incluidos días libres, turno de noche, turno partido, horas de 12 h, cuadrante de varias personas (con persona, sin persona y con una que no aparece), imagen sin fechas e imagen sin horario; `npm run eval:schedule` informa del 90 % o más de filas con la fecha y las horas bien y del 90 % o más de respuestas en 20 s o menos, con 60 s entre casos y `EVAL_ONLY`. No corre en `npm test`. Cubre: RF-17, RF-18, RF-20a, RF-20b, RF-20c, RF-24, RF-50, RF-51 y los RNF de calidad y tiempo | Módulo: evaluación (D10)
   Evidencia (2026-11-09): 12 horarios sintéticos en `tests/fixtures/schedules/` (`cases.ts` con las respuestas esperadas; imágenes generadas con `scripts/make-schedules.mjs` y Edge): semana con fechas, días libres, turno de noche, turno partido, horas de 12 h en inglés, cuadrante de tres personas (con persona, sin persona y con una que no aparece), sin fechas, sin fechas con "la semana que viene", imagen sin horario y lista vertical de móvil. `npm run eval:schedule` (proyecto `eval-schedule`, sin base de datos, 60 s entre casos, `EVAL_ONLY`): filas bien 39/39 (100 %) y 12/12 respuestas en 20 s o menos (la más lenta, 4,3 s). No corre en `npm test`. P8 en verde: 268 archivos y 2.571 tests (una ejecución tuvo un fallo intermitente que no se repitió).
 
-- [ ] T12 Validar la spec RF por RF y probar a mano
+- [x] T12 Validar la spec RF por RF y probar a mano
   Hecho cuando: tabla RF-1 a RF-58 (con RF-20a a RF-20c) con el test o la prueba que cubre cada uno; prueba manual en dev con una foto desde el móvil (≤ 768 px) y una captura pegada en el escritorio, en un calendario normal y en uno traído de Google, con los eventos apareciendo en el calendario sin recargar (RF-49); comprobación de que nada de "Fuera de alcance" se ha implementado; y AGENTS.md actualizado. La prueba con el iPhone en producción queda para el usuario tras el merge. Cubre: todos | Módulo: validación
+  Evidencia (2026-11-09): Tabla RF por RF en "Validación RF por RF" (abajo), con el fuera de alcance comprobado. `test:db` completo en verde: 535 tests (en serie; la primera ejecución chocó con el límite de Supabase Auth y la siguiente mostró que `proposed-events` dependía del orden de dos eventos a la misma hora, corregido en su propio commit; `live-changes` falló una vez por tiempo y pasó al repetirlo). Prueba manual en dev con Groq de verdad y un usuario `@cafam.test` (borrado desde Ajustes al terminar): en el escritorio (1440 px), captura pegada → propuesta de 6 eventos en 2,4 s → "Crear" → los 6 aparecen en el calendario navegando dentro de la app, sin recargar (RF-49); en el móvil (390 px), imagen elegida con "Adjuntar imagen" → 3 turnos de noche en 1,9 s → corrección por chat ("El primer turno empieza a las 23:00") que deja la anterior "Sustituida". Dos ejecuciones anteriores no vieron la sustitución sin dejar error, justo después de respuestas 429 de Groq; no se pudo reproducir. Una segunda pestaña del mismo usuario no se refresca sola: el tiempo real de la 019 ignora los cambios propios. Sin probar: un calendario traído de Google real (escritura simulada en `assistant-proposal-actions`) y el iPhone en producción, que quedan para el usuario. AGENTS.md actualizado.
 
 ## Trazabilidad RF → Tareas
 
@@ -82,6 +83,47 @@ Cada tarea se hace sola y con el test primero (rojo → verde), y se cierra con 
 | RF-54 | T6, T8 |
 | RF-55, RF-56, RF-58 | T8 |
 | RF-57 | T10 |
+
+## Validación RF por RF (T12, 2026-11-09)
+
+| RF | Cubierto por |
+|----|--------------|
+| RF-1 | `assistant-chat-images` (botón "Adjuntar imagen" junto al campo); capturas de la T9 |
+| RF-2 | `assistant-chat-images` (`accept="image/*"`, `multiple`, sin `capture`) |
+| RF-3 | `assistant-chat-images` (pegar); prueba manual: captura pegada en el escritorio |
+| RF-4, RF-5 | `assistant-attachments`, `assistant-chat-images` (cuarta rechazada con "Puedes adjuntar 3 imágenes como mucho"), `assistant-image-request` (zod: 1 a 3) |
+| RF-6, RF-7, RF-8 | `assistant-attachments` (tipo, 20 MB, motivo por archivo), `assistant-chat-images` ("rara.png: …"), `prepare-image` |
+| RF-9 | `prepare-image` (1600 px, JPEG 0,8 por canvas, que quita EXIF; 1280 px si pasa de 1,2 MB; "demasiado detallada") |
+| RF-10, RF-11, RF-12 | `assistant-chat-images` (miniaturas con "Quitar imagen", "Imagen adjunta 1" en el hilo, envío sin texto), `assistant-image-request` |
+| RF-13 | Diseño (D2): las imágenes solo viajan en la petición; `assistant-route` (un 503 no registra el cuerpo ni las imágenes); `grep`: la única escritura en `lib/assistant`, `api/assistant` y `dashboard/assistant` es la fila de cuota (`assistant_questions`, solo `user_id`) |
+| RF-14 | `assistant-run-proposal`, `assistant-route` (propuesta, nunca escritura) |
+| RF-15 | `proposal-card` |
+| RF-16 | `assistant-proposal` (título de la imagen o "Trabajo"); eval: "Vigilancia Nave 3" |
+| RF-17, RF-18 | `assistant-proposal` (noche → día siguiente), eval `days-off` y `night` |
+| RF-19 | `assistant-proposal-rows` (zona del perfil, cambio de hora), `proposed-events` (`test:db`) |
+| RF-20 | `assistant-run-proposal` (prompt "Nunca propongas repeticiones ni series"), `proposed-events` (`recurrence` nula) |
+| RF-20a, RF-20b, RF-20c | eval `team-person`, `team-no-person`, `team-missing-person`; prompt en `assistant-run-proposal` |
+| RF-21, RF-22 | `assistant-proposal` (corte en 50 por fecha y "dejado fuera") |
+| RF-23, RF-24, RF-25 | eval `single-week`, `no-dates`, `no-dates-relative`; `dateContext` en el prompt |
+| RF-26 a RF-30 | `assistant-proposal` (solo escribibles, por nombre, preguntar, no existe o no escribible con alternativas, varios), `assistant-route` (calendarios escribibles) |
+| RF-31, RF-32 | `proposal-card` |
+| RF-33, RF-34 | `assistant-chat-images` (la corrección lleva la propuesta), `assistant-run-proposal` (propuesta vigente como contexto), `proposal-card` ("Sustituida"); prueba manual en el móvil |
+| RF-35 | `assistant-proposal-rows`, `proposal-card` |
+| RF-36 | `proposed-events` (`test:db`: propio y como Editor en la misma propuesta) |
+| RF-37, RF-38, RF-39 | `assistant-proposal-rows` (`markDuplicates`), `assistant-proposal`, `proposed-events` (repetición de una serie), `assistant-proposal-actions`, `proposal-card` |
+| RF-40, RF-43 | `assistant-proposal-actions`, `proposed-events` (sesión del usuario y RLS) |
+| RF-41, RF-42 | `assistant-proposal-rows`, `proposal-card` |
+| RF-44 | `assistant-proposal-actions` (proveedor primero con `writeEvent` simulado); la prueba con una cuenta de Google real queda para el usuario |
+| RF-45, RF-46, RF-47, RF-48 | `proposal-card`, `assistant-proposal-actions`, `proposed-events`; "Crear" real en dev (T9 y T12) |
+| RF-49 | Prueba manual: tras "Crear", el calendario muestra los eventos navegando dentro de la app, sin recargar (como cualquier evento nuevo; `refresh()` revalida). Otra pestaña del mismo usuario no se refresca sola: el tiempo real de la 019 ignora los cambios propios |
+| RF-50, RF-51 | `assistant-proposal` ("ningún horario", lo que no se pudo leer), eval `no-schedule` |
+| RF-52 | `assistant-run-proposal` (el prompt trata el texto de la imagen como datos) |
+| RF-53 | `assistant-route` (cuenta como una pregunta) |
+| RF-54, RF-55, RF-56 | `assistant-chat-images`, `assistant-route` |
+| RF-57 | `privacy-page` |
+| RF-58 | `assistant-chat-images` (nota con enlace a `/privacy`) |
+
+Fuera de alcance comprobado: sin series (las filas se crean con `recurrence` nula y el prompt las prohíbe), solo `image/*` (sin PDF), sin crear sin imagen (`proposing` exige imágenes o una propuesta vigente), sin editar ni borrar eventos existentes, la imagen no se guarda en el evento, nada se guarda entre sesiones, el botón flotante no adjunta y la propuesta no tiene categoría, color, lugar, descripción ni invitados.
 
 ## Dudas abiertas
 
