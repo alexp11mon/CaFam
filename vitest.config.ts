@@ -41,6 +41,16 @@ export default defineConfig({
           hookTimeout: 120_000,
         },
       },
+      {
+        extends: true,
+        test: {
+          // Spec 022, T11: `npm run eval:schedule`, against Groq only.
+          name: "eval-schedule",
+          environment: "node",
+          include: ["scripts/schedule-eval.ts"],
+          env: loadEnv("test", process.cwd(), ""),
+        },
+      },
     ],
   },
 });

@@ -13,6 +13,7 @@
     "test": "vitest run --project unit",
     "test:db": "vitest run --project db --passWithNoTests",
     "eval:assistant": "vitest run --project eval --silent=false",
+    "eval:schedule": "vitest run --project eval-schedule --silent=false",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --linked > src/types/database.ts"
   },
