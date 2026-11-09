@@ -113,3 +113,19 @@ describe("/privacy: busy times (spec 020)", () => {
     ).toBeInTheDocument();
   });
 });
+
+// Spec 022, T10: images sent to the assistant (RF-57).
+describe("/privacy: images in the assistant (spec 022)", () => {
+  it("says the images go to Groq to be read and that CaFam does not keep them", () => {
+    render(<PrivacyPage />);
+    expect(
+      screen.getByRole("heading", { name: "Imágenes en el asistente" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/se envían a Groq solo para leer los eventos/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/CaFam no guarda las imágenes/),
+    ).toBeInTheDocument();
+  });
+});

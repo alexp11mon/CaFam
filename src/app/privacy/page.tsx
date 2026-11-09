@@ -234,6 +234,20 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
+        <Section title="Imágenes en el asistente">
+          <p>
+            Si adjuntas una imagen al asistente (por ejemplo, tu horario de
+            trabajo), tu navegador la reduce y se envían a Groq solo para leer
+            los eventos que contiene, con las mismas condiciones que el resto de
+            la conversación: no las usa para entrenar y no las guarda.
+          </p>
+          <p>
+            CaFam no guarda las imágenes en ningún sitio: viajan con tu mensaje
+            y desaparecen al responder. Ningún evento se crea hasta que revisas
+            la propuesta y pulsas «Crear».
+          </p>
+        </Section>
+
         <Section title="Contacto">
           <p>
             Para cualquier duda, escribe al correo de asistencia que muestra
