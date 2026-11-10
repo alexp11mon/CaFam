@@ -181,8 +181,9 @@ describe("POST /api/assistant with images", () => {
     ]);
   });
 
-  it("allows 45 s for reading images (D6)", () => {
-    expect(maxDuration).toBe(45);
+  // D6, plus a wait of up to 35 s for Groq's per-minute limit and a 20 s read.
+  it("allows 60 s for reading images (D6)", () => {
+    expect(maxDuration).toBe(60);
   });
 
   it("answers a message with images with a proposal and counts it (RF-14, RF-53)", async () => {

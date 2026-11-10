@@ -29,7 +29,8 @@ import { createClient } from "@/lib/supabase/server";
 // Spec 015 plan assistant-route (D3): one question of the chat. The thread is
 // not stored (RF-6); only answered questions count for the quota (D9).
 // Spec 022: images are read in the same request and never stored (RF-13).
-export const maxDuration = 45;
+// Up to 35 s waiting for Groq's per-minute limit plus a 20 s read (plan D6).
+export const maxDuration = 60;
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 

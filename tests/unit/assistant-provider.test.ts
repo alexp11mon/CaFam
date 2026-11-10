@@ -208,15 +208,83 @@ describe("chat", () => {
     expect(VISION_MODEL).toBe("qwen/qwen3.8-27b");
   });
 
-  it("does not retry the vision model after a 429 (spec 022, R2)", async () => {
+  // Groq allows 7,000 input tokens a minute and an image takes about 3,200:
+  // a second image within the minute got a 429 asking to wait about 25 s.
+  it("waits and retries once when Groq asks for a short wait (spec 022, R2)", async () => {
+    const limited = new Response(
+      JSON.stringify({ error: { code: "rate_limit_exceeded" } }),
+      { status: 429, headers: { "retry-after": "12" } },
+    );
     const fetcher = vi
       .fn()
-      .mockResolvedValue(
-        reply({ error: { code: "rate_limit_exceeded" } }, 429),
-      );
-    await expect(visionChat(MESSAGES, undefined, fetcher)).rejects.toThrow(
-      "status 429 rate_limit_exceeded",
+      .mockResolvedValueOnce(limited)
+      .mockResolvedValueOnce(textReply('{"events":[]}'));
+    const sleep = vi.fn(async () => {});
+    await expect(visionChat(MESSAGES, undefined, fetcher, sleep)).resolves.toBe(
+      '{"events":[]}',
     );
+    expect(sleep).toHaveBeenCalledWith(12_000);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("reads the wait from Groq's message when there is no header", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        reply(
+          {
+            error: {
+              code: "rate_limit_exceeded",
+              message:
+                "Rate limit reached. Please try again in 6.4s. Need more",
+            },
+          },
+          429,
+        ),
+      )
+      .mockResolvedValueOnce(textReply('{"events":[]}'));
+    const sleep = vi.fn(async () => {});
+    await visionChat(MESSAGES, undefined, fetcher, sleep);
+    expect(sleep).toHaveBeenCalledWith(6_400);
+  });
+
+  it("waits up to 35 s, what Groq asked in a real run (25.4 s)", async () => {
+    const limited = (seconds: string) =>
+      new Response("{}", {
+        status: 429,
+        headers: { "retry-after": seconds },
+      });
+    const sleep = vi.fn(async () => {});
+    const ok = vi
+      .fn()
+      .mockResolvedValueOnce(limited("26"))
+      .mockResolvedValueOnce(textReply("{}"));
+    await visionChat(MESSAGES, undefined, ok, sleep);
+    expect(sleep).toHaveBeenCalledWith(26_000);
+    const tooLong = vi.fn().mockResolvedValue(limited("36"));
+    await expect(
+      visionChat(MESSAGES, undefined, tooLong, sleep),
+    ).rejects.toThrow("status 429");
+    expect(tooLong).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not wait for the daily quota (spec 022, R2)", async () => {
+    const fetcher = vi.fn().mockResolvedValue(
+      reply(
+        {
+          error: {
+            code: "rate_limit_exceeded",
+            message: "tokens per day (TPD). Please try again in 19m37.6s.",
+          },
+        },
+        429,
+      ),
+    );
+    const sleep = vi.fn(async () => {});
+    await expect(
+      visionChat(MESSAGES, undefined, fetcher, sleep),
+    ).rejects.toThrow("status 429 rate_limit_exceeded");
+    expect(sleep).not.toHaveBeenCalled();
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 

@@ -2,7 +2,7 @@
 // it reads GROQ_API_KEY (P4) and no client component may import it.
 
 const ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
-/** R5: per call; the route allows 45 s in total. */
+/** R5: per call; the route allows 60 s in total. */
 const CALL_TIMEOUT_MS = 8_000;
 /** Spec 022, D6: reading images takes longer. */
 const VISION_TIMEOUT_MS = 20_000;
@@ -183,12 +183,48 @@ export async function chat(
  * Spec 022 (D1, D3, D6): one call to the vision model, which must answer a
  * JSON object. No fallback: no other free model reads images (R2).
  */
-export function visionChat(
+export async function visionChat(
   messages: readonly ProviderMessage[],
   signal?: AbortSignal,
   fetcher: Fetcher = fetch,
+  sleep: (ms: number) => Promise<void> = (ms) =>
+    new Promise((resolve) => setTimeout(resolve, ms)),
 ): Promise<string> {
-  return jsonChat(messages, [VISION_MODEL], signal, fetcher, VISION_TIMEOUT_MS);
+  // Groq allows 7,000 input tokens a minute and an image takes about 3,200,
+  // so a second image within the minute gets a 429 with a short wait.
+  let waitMs: number | undefined;
+  const watching: Fetcher = async (url, init) => {
+    const response = await fetcher(url, init);
+    if (response.status === 429) waitMs = await retryWait(response.clone());
+    return response;
+  };
+  const call = (through: Fetcher) =>
+    jsonChat(messages, [VISION_MODEL], signal, through, VISION_TIMEOUT_MS);
+  try {
+    return await call(watching);
+  } catch (error) {
+    // Once, and only for a wait that fits in the route's 60 s (not the daily quota).
+    if (waitMs === undefined || waitMs > MAX_RETRY_WAIT_MS) throw error;
+    await sleep(waitMs);
+    signal?.throwIfAborted();
+    return call(fetcher);
+  }
+}
+
+// 35 s of wait plus a 20 s read stay within the route's 60 s.
+const MAX_RETRY_WAIT_MS = 35_000;
+
+/** The wait Groq asks for, from `retry-after` or its message ("try again in 6.4s"). */
+async function retryWait(response: Response): Promise<number | undefined> {
+  const header = Number(response.headers.get("retry-after"));
+  if (header > 0) return header * 1000;
+  const body = (await response.json().catch(() => null)) as {
+    error?: { message?: unknown };
+  } | null;
+  const message = String(body?.error?.message ?? "");
+  const match = /try again in (?:(\d+)m)?([\d.]+)s/.exec(message);
+  if (!match) return undefined;
+  return Math.ceil((Number(match[1] ?? 0) * 60 + Number(match[2])) * 1000);
 }
 
 /**
