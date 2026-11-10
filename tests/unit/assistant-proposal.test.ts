@@ -78,6 +78,18 @@ describe("buildProposal", () => {
     });
   });
 
+  // A real photo with 20 people: the model read another person's row, and
+  // it ignored a rule to stop. The code decides from the count it reports.
+  it("asks for a crop when the table has more than 10 people (RF-20a)", async () => {
+    expect(await buildProposal(json({ people: 20 }), deps())).toEqual({
+      kind: "message",
+      text: PROPOSAL_TEXTS.cropNeeded,
+    });
+    expect(PROPOSAL_TEXTS.cropNeeded).toContain("fila de las fechas");
+    const crop = await buildProposal(json({ people: 1 }), deps());
+    expect(crop.kind).toBe("proposal");
+  });
+
   it("asks for the calendar when none is named (RF-28)", async () => {
     const result = await buildProposal(json({ calendar: null }), deps());
     expect(result).toEqual({

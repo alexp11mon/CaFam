@@ -41,7 +41,13 @@ export const PROPOSAL_TEXTS = {
   nothingFound:
     "No he encontrado ningún horario ni evento en la imagen. Prueba con una foto más nítida o una captura.",
   noWritable: "No tienes ningún calendario en el que puedas crear eventos.",
+  cropNeeded:
+    "El cuadrante tiene demasiadas personas para leer bien tu fila. Recorta la foto para que solo se vean la fila de las fechas y la tuya, y envíamela.",
 } as const;
+
+// A real photo with 20 people: the model read another person's row and
+// ignored a rule to stop, so the code decides from the count it reports.
+const CROWDED_TABLE = 10;
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 // The model sometimes writes "8:00": it is padded below.
@@ -53,6 +59,7 @@ const modelSchema = z.object({
   question: text,
   calendar: text,
   person: text,
+  people: z.number().int().nullish(),
   unreadable: text,
   events: z
     .array(
@@ -153,6 +160,9 @@ export async function buildProposal(
 
   if (answer.question?.trim()) {
     return { kind: "message", text: answer.question.trim() };
+  }
+  if ((answer.people ?? 0) > CROWDED_TABLE) {
+    return { kind: "message", text: PROPOSAL_TEXTS.cropNeeded };
   }
   if (answer.events.length === 0) {
     return { kind: "message", text: PROPOSAL_TEXTS.nothingFound };

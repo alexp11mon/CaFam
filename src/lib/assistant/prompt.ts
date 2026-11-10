@@ -52,6 +52,7 @@ export function proposalPrompt(context: DateContext, timeZone: string): string {
     question: null,
     calendar: "Trabajo",
     person: "Ana",
+    people: 3,
     unreadable: null,
     events: [
       {
@@ -83,6 +84,7 @@ export function proposalPrompt(context: DateContext, timeZone: string): string {
     '- date y endDate en AAAA-MM-DD; start y end en HH:MM de 24 horas ("9 AM" es 09:00; "9-17" es de 09:00 a 17:00).',
     '- Usa las fechas que diga la imagen o el usuario ("esta semana", "la que viene", "la del 16"). Si no sabes a qué fechas corresponde el horario, pon en question la pregunta para el usuario y deja events vacío.',
     "- Si en la imagen hay varias personas y el usuario no ha dicho cuál es la suya, pregúntalo en question y deja events vacío. Si dice una persona, propón solo sus turnos y ponla en person. Si esa persona no aparece en la imagen, dilo en question y deja events vacío.",
+    "- En people pon cuántas personas (filas con nombre) tiene la imagen de la que sacas los eventos; en un recorte con solo la fila de esa persona, 1; sin personas, null.",
     "- calendar es el nombre del calendario que diga el usuario, tal como lo diga; si no dice ninguno, null.",
     "- No propongas los días libres, de descanso o de vacaciones.",
     "- Un turno que pasa de medianoche es un solo evento: end es la hora de salida y endDate el día siguiente. En los demás, endDate es null.",

@@ -200,4 +200,11 @@ describe("proposalPrompt", () => {
       expect(prompt).toContain(rule);
     }
   });
+
+  // A real photo with 20 people: the model read another person's row. The
+  // code asks for a crop from the count (assistant-proposal).
+  it("asks how many people the table has (RF-20a)", () => {
+    expect(prompt).toContain('"people"');
+    expect(prompt).toContain("cuántas personas");
+  });
 });

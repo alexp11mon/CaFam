@@ -72,6 +72,9 @@ describe("attaching images", () => {
     expect(input()).not.toHaveAttribute("capture");
     const note = screen.getByText(/se envían a Groq para leerlas/);
     expect(within(note).getByRole("link")).toHaveAttribute("href", "/privacy");
+    expect(
+      screen.getByText(/recorta la foto a la fila de las fechas y la tuya/),
+    ).toBeInTheDocument();
   });
 
   it("shows each image with «Quitar imagen» and removes it (RF-10)", async () => {

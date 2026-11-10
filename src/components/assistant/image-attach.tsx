@@ -39,7 +39,9 @@ export function ImageAttach({
           Adjuntar imagen
         </Button>
         <p className="text-xs text-muted">
-          Las imágenes se envían a Groq para leerlas; CaFam no las guarda.{" "}
+          Si el cuadrante tiene muchas personas, recorta la foto a la fila de
+          las fechas y la tuya. Las imágenes se envían a Groq para leerlas;
+          CaFam no las guarda.{" "}
           <Link
             href="/privacy"
             className="font-semibold text-ink underline decoration-control underline-offset-4"
