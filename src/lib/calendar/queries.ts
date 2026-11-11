@@ -458,6 +458,32 @@ export interface CalendarEventRecord {
   seriesId: string | null;
 }
 
+const PAGE_ROWS = 1000;
+
+/**
+ * Every row of a query, page by page: PostgREST answers 1,000 rows at most
+ * and says nothing about the rest (spec 023 RF-13, plan D10). The query must
+ * have a stable order. 20 pages at most, so a mistake cannot loop.
+ */
+async function allRows<Row>(
+  page: (
+    first: number,
+    last: number,
+  ) => PromiseLike<{ data: Row[] | null; error: unknown }>,
+): Promise<Row[]> {
+  const rows: Row[] = [];
+  for (let index = 0; index < 20; index += 1) {
+    const { data, error } = await page(
+      index * PAGE_ROWS,
+      (index + 1) * PAGE_ROWS - 1,
+    );
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if ((data?.length ?? 0) < PAGE_ROWS) break;
+  }
+  return rows;
+}
+
 /**
  * Events of every calendar the user belongs to that overlap [from, to) (RF-31),
  * with the occurrences of their series (spec 013 RF-9, RF-11, plan D2).
@@ -468,33 +494,39 @@ export async function getEventsInRange(
   from: Date,
   to: Date,
 ): Promise<CalendarEventRecord[]> {
-  const [single, series] = await Promise.all([
-    supabase
-      .from("events")
-      .select(
-        "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location, series_id, event_images(count), event_comments(count)",
-      )
-      // The uploader also sees their pending images: count the ready ones only.
-      .eq("event_images.status", "ready")
-      .is("recurrence", null)
-      .lt("starts_at", to.toISOString())
-      .gte("ends_at", from.toISOString())
-      .order("starts_at"),
-    supabase
-      .from("events")
-      .select(
-        "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location, recurrence, recurrence_tz, exdates",
-      )
-      .not("recurrence", "is", null)
-      .lt("starts_at", to.toISOString())
-      .or(
-        `recurrence_until.is.null,recurrence_until.gte.${from.toISOString()}`,
-      ),
+  const [single, seriesRows] = await Promise.all([
+    allRows((first, last) =>
+      supabase
+        .from("events")
+        .select(
+          "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location, series_id, event_images(count), event_comments(count)",
+        )
+        // The uploader also sees their pending images: count the ready ones only.
+        .eq("event_images.status", "ready")
+        .is("recurrence", null)
+        .lt("starts_at", to.toISOString())
+        .gte("ends_at", from.toISOString())
+        .order("starts_at")
+        .order("id")
+        .range(first, last),
+    ),
+    allRows((first, last) =>
+      supabase
+        .from("events")
+        .select(
+          "id, calendar_id, title, starts_at, ends_at, all_day, color, category_id, location, recurrence, recurrence_tz, exdates",
+        )
+        .not("recurrence", "is", null)
+        .lt("starts_at", to.toISOString())
+        .or(
+          `recurrence_until.is.null,recurrence_until.gte.${from.toISOString()}`,
+        )
+        .order("id")
+        .range(first, last),
+    ),
   ]);
-  if (single.error) throw single.error;
-  if (series.error) throw series.error;
 
-  const records: CalendarEventRecord[] = (single.data ?? []).map((row) => ({
+  const records: CalendarEventRecord[] = single.map((row) => ({
     id: row.id,
     calendarId: row.calendar_id,
     title: row.title,
@@ -509,7 +541,6 @@ export async function getEventsInRange(
     commentCount: row.event_comments[0]?.count ?? 0,
     seriesId: row.series_id,
   }));
-  const seriesRows = series.data ?? [];
   if (seriesRows.length === 0) return records;
 
   // Exceptions whose occurrence could overlap the range, wherever they moved
@@ -519,23 +550,22 @@ export async function getEventsInRange(
       (row) => Date.parse(row.ends_at) - Date.parse(row.starts_at),
     ),
   );
-  const { data: keys, error } = await supabase
-    .from("events")
-    .select("series_id, original_start")
-    .not("series_id", "is", null)
-    .lt("original_start", to.toISOString())
-    .gte(
-      "original_start",
-      new Date(from.getTime() - longest - 86_400_000).toISOString(),
-    );
-  if (error) throw error;
+  const keys = await allRows((first, last) =>
+    supabase
+      .from("events")
+      .select("series_id, original_start")
+      .not("series_id", "is", null)
+      .lt("original_start", to.toISOString())
+      .gte(
+        "original_start",
+        new Date(from.getTime() - longest - 86_400_000).toISOString(),
+      )
+      .order("series_id")
+      .order("original_start")
+      .range(first, last),
+  );
 
-  for (const { row, occurrence } of expandRows(
-    seriesRows,
-    keys ?? [],
-    from,
-    to,
-  )) {
+  for (const { row, occurrence } of expandRows(seriesRows, keys, from, to)) {
     records.push({
       id: occurrenceId(row.id, occurrence.originalStart),
       calendarId: row.calendar_id,
