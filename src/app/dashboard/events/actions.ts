@@ -94,7 +94,8 @@ function readScope(formData: FormData): SeriesScope | null {
 
 /**
  * A single event becomes a series (RF-21). With images it stays as the first
- * occurrence of a new series row, which never holds images (plan D7).
+ * occurrence of a new series row, which never holds images (plan D7); with
+ * comments too (spec 023 RF-12).
  */
 async function convertToSeries(
   supabase: Supabase,
@@ -114,13 +115,21 @@ async function convertToSeries(
   if (!columns) {
     return { fieldErrors: { repeat: RECURRENCE_MESSAGES.empty }, values };
   }
-  const { count, error: countError } = await supabase
-    .from("event_images")
-    .select("id", { count: "exact", head: true })
-    .eq("event_id", event.id);
-  if (countError) throw countError;
+  // Images and comments hang from the row of an occurrence, never from the
+  // series: with either, the event stays as its first occurrence (spec 023
+  // RF-12).
+  const [images, comments] = await Promise.all(
+    (["event_images", "event_comments"] as const).map((table) =>
+      supabase
+        .from(table)
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", event.id),
+    ),
+  );
+  if (images.error) throw images.error;
+  if (comments.error) throw comments.error;
 
-  if (!count) {
+  if (!images.count && !comments.count) {
     const { error } = await supabase
       .from("events")
       .update({ ...toRow(data), ...columns })
