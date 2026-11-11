@@ -17,8 +17,9 @@ Cada tarea se hace sola y con el test primero (rojo → verde), y se cierra con 
   Hecho cuando: `npm run test:db -- assistant` en verde con un caso nuevo: una persona que consiente y es Lectora del calendario de un tercero no expone los eventos de ese tercero; sus calendarios propios y lo que creó siguen saliendo. Cubre: RF-2 | Módulo: migración `assistant_busy_scope` (D2)
   Evidencia (2026-11-11): caso nuevo en `assistant.test.ts`, primero en rojo (salía el evento de Sam a través de Luis) y en verde con `assistant_busy_scope` en dev: no sale lo del tercero, sí lo que Luis creó allí y lo de su calendario. Misma ejecución de `test:db` y de P8 que la T1. No se lanzó `eval:assistant` (cuota de Groq; plan R3).
 
-- [ ] T3 Serializar los intentos de `join_with_code`
+- [x] T3 Serializar los intentos de `join_with_code`
   Hecho cuando: la migración `join_code_lock` añade los dos bloqueos de transacción antes del recuento y `npm run test:db -- access-code` (los tests existentes del ID y PIN) sigue en verde. Cubre: RF-3 | Módulo: migración `join_code_lock` (D3)
+  Evidencia (2026-11-11): migración `join_code_lock` aplicada en dev (dos `pg_advisory_xact_lock`, por ID y por usuario, antes del recuento); `access-codes.test.ts` en verde en la misma ejecución de `test:db`. La concurrencia no se prueba con un test (no es determinista): la garantía es el bloqueo. Misma ejecución de P8 que la T1.
 
 - [ ] T4 Cabeceras de seguridad, `robots` y comparación de secretos en tiempo constante
   Hecho cuando: `npm test -- security-headers cron-secret keep-alive sync-run images-purge` en verde: `next.config.ts` devuelve las cuatro cabeceras para `/:path*` antes de las de `/invite` y `/sw.js`; el layout raíz exporta `robots` sin indexar; `hasCronSecret` acepta solo el `Bearer` exacto y las tres rutas lo usan con las mismas respuestas. Comprobado en el navegador que la app carga y las cabeceras llegan. Cubre: RF-4, RF-5, RF-6 | Módulo: `next.config.ts`, layout, `cron-secret` (D4, D5)
