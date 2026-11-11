@@ -258,3 +258,40 @@ describe("placeAt (RF-58, RF-59)", () => {
     });
   });
 });
+
+// Spec 023, T7: an event that starts after 23:45 keeps its hour when only the
+// day changes, and never moves backwards (RF-10, RF-11).
+describe("events in the last quarter of the day", () => {
+  // Tuesday 3 November 2026, 23:50–23:55 in Madrid.
+  const LATE: Times = {
+    startsAt: "2026-11-03T22:50:00.000Z",
+    endsAt: "2026-11-03T22:55:00.000Z",
+    allDay: false,
+  };
+  const NEXT_DAY: Times = {
+    startsAt: "2026-11-04T22:50:00.000Z",
+    endsAt: "2026-11-04T22:55:00.000Z",
+    allDay: false,
+  };
+
+  it("keep their hour on another day", () => {
+    expect(moveInMonth(LATE, "2026-11-04", TZ)).toEqual(NEXT_DAY);
+    expect(nudge(LATE, "nextDay", TZ)).toEqual(NEXT_DAY);
+    expect(moveTimed(LATE, { days: 1, minutes: 0 }, TZ)).toEqual(NEXT_DAY);
+  });
+
+  it("stay where they are instead of moving backwards", () => {
+    expect(nudge(LATE, "later", TZ)).toBeNull();
+    expect(moveTimed(LATE, { days: 0, minutes: 15 }, TZ)).toBeNull();
+  });
+
+  it("still move earlier", () => {
+    expect(nudge(LATE, "earlier", TZ)?.startsAt).toBe(
+      "2026-11-03T22:35:00.000Z",
+    );
+  });
+
+  it("are pasted at their own hour", () => {
+    expect(placeAt(LATE, "2026-11-04", undefined, TZ)).toEqual(NEXT_DAY);
+  });
+});

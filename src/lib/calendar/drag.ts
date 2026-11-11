@@ -94,9 +94,12 @@ export function moveTimed(
   const start = Date.parse(event.startsAt);
   const duration = Date.parse(event.endsAt) - start;
   const day = addDays(zonedDateKey(start, timeZone), delta.days);
-  let minute = minuteOfDay(start, timeZone) + delta.minutes;
+  const from = minuteOfDay(start, timeZone);
+  let minute = from + delta.minutes;
   if (!exact && delta.minutes !== 0) minute = snap(minute);
-  minute = clamp(minute, 0, DAY_MINUTES - STEP);
+  // An event already in the last quarter keeps its hour on another day and
+  // never goes back when asked to go later (spec 023 RF-10, RF-11).
+  minute = clamp(minute, 0, Math.max(DAY_MINUTES - STEP, from));
   const next = wallClock(day, minute, timeZone);
   return changed(event, timed(next, next + duration));
 }
@@ -202,7 +205,9 @@ export function placeAt(
   const start = Date.parse(event.startsAt);
   const at = wallClock(
     day,
-    clamp(minute ?? minuteOfDay(start, timeZone), 0, DAY_MINUTES - STEP),
+    minute === undefined
+      ? minuteOfDay(start, timeZone)
+      : clamp(minute, 0, DAY_MINUTES - STEP),
     timeZone,
   );
   return timed(at, at + Date.parse(event.endsAt) - start);
