@@ -286,6 +286,32 @@ describe("restore_event (RF-28, RF-29)", () => {
       .eq("event_id", created.id);
     expect(count).toBe(1);
   });
+
+  it("refuses an event of another calendar as the target (spec 023 RF-1)", async () => {
+    const event = await createEvent();
+    await seedComment(event.id);
+    const { data: trashId } = await snapshot(editor, event.id);
+    await deleteAs(editor, event.id);
+
+    const foreign = await createEvent({
+      calendar_id: await getOwnCalendarId(stranger.id),
+      created_by: stranger.id,
+    });
+    const { error } = await restore(editor, trashId!, foreign.id);
+    expect(error?.code).toBe("CF404");
+
+    const { data: row } = await admin
+      .from("events")
+      .select("created_by")
+      .eq("id", foreign.id)
+      .single();
+    expect(row?.created_by).toBe(stranger.id);
+    const { count } = await admin
+      .from("event_comments")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", foreign.id);
+    expect(count).toBe(0);
+  });
 });
 
 describe("trash_row (T4)", () => {

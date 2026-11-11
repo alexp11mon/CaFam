@@ -9,8 +9,9 @@ Cada tarea se hace sola y con el test primero (rojo → verde), y se cierra con 
 
 ## Tareas
 
-- [ ] T1 Impedir que `restore_event` escriba en un evento ajeno
+- [x] T1 Impedir que `restore_event` escriba en un evento ajeno
   Hecho cuando: `npm run test:db -- event-undo` en verde con un caso nuevo: restaurar una copia propia sobre el id de un evento de otro calendario da `CF404` y el evento ajeno no gana comentarios, imágenes ni cambia de autor; los casos existentes siguen en verde. Cubre: RF-1 | Módulo: migración `restore_event_guard` (D1)
+  Evidencia (2026-11-11): caso nuevo en `event-undo.test.ts`, primero en rojo contra dev (la restauración sobre un evento de otro calendario se aceptaba) y en verde tras aplicar `restore_event_guard` en dev: `CF404`, el evento ajeno conserva su autor y no gana comentarios. `npm run test:db -- event-undo assistant access-codes` 63/63. P8 en verde: typecheck, lint (0 errores, 2 avisos previos), format:check, `npm test` 268 archivos y 2.576 tests, build.
 
 - [ ] T2 Acotar `assistant_busy` a los calendarios propios y a lo creado por la persona
   Hecho cuando: `npm run test:db -- assistant` en verde con un caso nuevo: una persona que consiente y es Lectora del calendario de un tercero no expone los eventos de ese tercero; sus calendarios propios y lo que creó siguen saliendo. Cubre: RF-2 | Módulo: migración `assistant_busy_scope` (D2)
