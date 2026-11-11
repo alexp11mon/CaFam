@@ -35,12 +35,12 @@ export async function loadEventCard(
   if (typeof id !== "string" || !parseEventId(id)) return { gone: true };
   const { supabase, userId } = await requireActionUser();
   const event = await getEvent(supabase, id);
-  const calendar = event
-    ? await getCalendar(supabase, userId, event.calendarId)
-    : null;
-  if (!event || !calendar) return { gone: true };
-
-  const members = await getMembers(supabase, [event.calendarId]);
+  if (!event) return { gone: true };
+  const [calendar, members] = await Promise.all([
+    getCalendar(supabase, userId, event.calendarId),
+    getMembers(supabase, [event.calendarId]),
+  ]);
+  if (!calendar) return { gone: true };
   return {
     description: event.description,
     author: authorLabel(event.createdBy, members),

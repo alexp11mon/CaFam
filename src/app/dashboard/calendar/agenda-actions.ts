@@ -30,11 +30,15 @@ export async function loadAgendaEvents(
 
   const { supabase, userId } = await requireActionUser();
   try {
-    const timeZone = await getProfileTimeZone(supabase, userId);
-    const range = daysRange(from, to, timeZone);
-    const [calendars, records] = await Promise.all([
-      getMyCalendars(supabase, userId),
-      getEventsInRange(supabase, range.from, range.to),
+    // Only the events need the zone: the calendars do not wait for it
+    // (spec 023 RF-15).
+    const calendarsRead = getMyCalendars(supabase, userId);
+    const [records, calendars] = await Promise.all([
+      getProfileTimeZone(supabase, userId).then((timeZone) => {
+        const range = daysRange(from, to, timeZone);
+        return getEventsInRange(supabase, range.from, range.to);
+      }),
+      calendarsRead,
     ]);
     return { events: toViewEvents(records, calendars) };
   } catch {

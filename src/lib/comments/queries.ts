@@ -93,30 +93,33 @@ export async function listComments(
   // An occurrence without its own row has no comments yet (RF-28).
   if (row === undefined) return { comments: [], hasOlder: false };
 
-  const columns = "id, author_id, body, created_at, edited_at";
-  let rows;
-  let hasOlder: boolean;
-  if (options.since) {
-    const [page, older] = await Promise.all([
-      supabase
-        .from("event_comments")
-        .select(columns)
-        .eq("event_id", row.id)
-        .or(after(options.since))
-        .order("created_at")
-        .order("id"),
-      supabase
-        .from("event_comments")
-        .select("id")
-        .eq("event_id", row.id)
-        .or(beforeFilter(options.since))
-        .limit(1),
-    ]);
-    if (page.error) throw page.error;
-    if (older.error) throw older.error;
-    rows = page.data ?? [];
-    hasOlder = (older.data ?? []).length > 0;
-  } else {
+  // The page, the members and the role do not depend on each other: one wave
+  // instead of two on every poll (spec 023 RF-15).
+  const readPage = async () => {
+    const columns = "id, author_id, body, created_at, edited_at";
+    if (options.since) {
+      const [page, older] = await Promise.all([
+        supabase
+          .from("event_comments")
+          .select(columns)
+          .eq("event_id", row.id)
+          .or(after(options.since))
+          .order("created_at")
+          .order("id"),
+        supabase
+          .from("event_comments")
+          .select("id")
+          .eq("event_id", row.id)
+          .or(beforeFilter(options.since))
+          .limit(1),
+      ]);
+      if (page.error) throw page.error;
+      if (older.error) throw older.error;
+      return {
+        rows: page.data ?? [],
+        hasOlder: (older.data ?? []).length > 0,
+      };
+    }
     let query = supabase
       .from("event_comments")
       .select(columns)
@@ -127,11 +130,14 @@ export async function listComments(
       .order("id", { ascending: false })
       .limit(COMMENTS_PAGE + 1);
     if (error) throw error;
-    hasOlder = (data ?? []).length > COMMENTS_PAGE;
-    rows = (data ?? []).slice(0, COMMENTS_PAGE).reverse();
-  }
+    return {
+      rows: (data ?? []).slice(0, COMMENTS_PAGE).reverse(),
+      hasOlder: (data ?? []).length > COMMENTS_PAGE,
+    };
+  };
 
-  const [members, role] = await Promise.all([
+  const [{ rows, hasOlder }, members, role] = await Promise.all([
+    readPage(),
     getMembers(supabase, [row.calendarId]),
     supabase
       .from("calendar_members")

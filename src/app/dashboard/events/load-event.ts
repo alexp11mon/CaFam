@@ -46,14 +46,24 @@ export interface EventData {
 export async function loadEvent(id: string): Promise<EventData | null> {
   const { supabase, userId } = await requireUser();
   const event = await getEvent(supabase, id);
-  const calendar = event
-    ? await getCalendar(supabase, userId, event.calendarId)
-    : null;
-  if (!event || !calendar) return null;
+  if (!event) return null;
+  // Independent reads go together: opening an event was a chain of 7 to 10
+  // round trips (spec 023 RF-14).
+  const [calendar, timeZone, members] = await Promise.all([
+    getCalendar(supabase, userId, event.calendarId),
+    getProfileTimeZone(supabase, userId),
+    getMembers(supabase, [event.calendarId]),
+  ]);
+  if (!calendar) return null;
 
   const canEdit = canWriteEvents(calendar);
-  const timeZone = await getProfileTimeZone(supabase, userId);
-  const myCalendars = canEdit ? await getMyCalendars(supabase, userId) : [];
+  const [myCalendars, images] = await Promise.all([
+    canEdit ? getMyCalendars(supabase, userId) : [],
+    // An occurrence without its own row has no images yet (spec 013 RF-24).
+    event.rowId
+      ? getEventImages(supabase, event.rowId, userId, calendar.role, members)
+      : [],
+  ]);
   // A synced event only moves inside its Google account (spec 009 RF-19, RF-20).
   const editable = moveTargets(calendar, myCalendars);
   const categories = await getCategoriesForCalendars(
@@ -61,17 +71,6 @@ export async function loadEvent(id: string): Promise<EventData | null> {
     canEdit ? editable.map((c) => c.id) : [event.calendarId],
   );
   const category = categories.find((c) => c.id === event.categoryId);
-  const members = await getMembers(supabase, [event.calendarId]);
-  // An occurrence without its own row has no images yet (spec 013 RF-24).
-  const images = event.rowId
-    ? await getEventImages(
-        supabase,
-        event.rowId,
-        userId,
-        calendar.role,
-        members,
-      )
-    : [];
 
   return {
     detail: {
