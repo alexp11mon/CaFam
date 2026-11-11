@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 import type { Database } from "@/types/database";
+import { hasCronSecret } from "@/lib/auth/cron-secret";
 
 /**
  * Called once a day by Vercel Cron (vercel.json) so Supabase Free does not
@@ -9,7 +10,7 @@ import type { Database } from "@/types/database";
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
   // Vercel Cron sends "Authorization: Bearer <CRON_SECRET>".
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!secret || !hasCronSecret(request)) {
     return Response.json({ ok: false }, { status: 401 });
   }
 

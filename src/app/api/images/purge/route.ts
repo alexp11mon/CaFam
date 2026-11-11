@@ -1,4 +1,5 @@
 import { purgeDeps, purgeObjects } from "@/lib/images/purge";
+import { hasCronSecret } from "@/lib/auth/cron-secret";
 
 export const maxDuration = 60;
 
@@ -8,7 +9,7 @@ export const maxDuration = 60;
  */
 export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!secret || !hasCronSecret(request)) {
     return Response.json({ ok: false }, { status: 401 });
   }
 

@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 import { runDue } from "@/lib/sync/run-sync";
 import type { Database } from "@/types/database";
+import { hasCronSecret } from "@/lib/auth/cron-secret";
 
 // One run handles at most 50 s of work (plan D19).
 export const maxDuration = 60;
@@ -13,7 +14,7 @@ export const maxDuration = 60;
  */
 export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!secret || !hasCronSecret(request)) {
     return Response.json({ ok: false }, { status: 401 });
   }
 

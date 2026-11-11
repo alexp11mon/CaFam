@@ -14,6 +14,19 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Every route: never inside a frame, no type sniffing, a short Referer
+        // and out of search engines. First, because the last matching rule
+        // wins and the two below are more specific (spec 023 RF-4, RF-5).
+        source: "/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+      {
         // The invite token is in the URL: keep it out of the Referer and out of
         // search engines (plan D12).
         source: "/invite/:path*",
