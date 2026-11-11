@@ -297,3 +297,110 @@ describe("planSeriesDelete (RF-20, RF-24b)", () => {
     });
   });
 });
+
+// Spec 023, T5 and T6: moving an occurrence to another day moves the series
+// (RF-7, RF-8), at the wall-clock time chosen whatever the season (RF-9).
+describe("planSeriesChange: moving an occurrence to another day", () => {
+  // The Wednesday 11 November occurrence dragged to Thursday 12.
+  const MOVED = {
+    startDate: "2026-11-12",
+    row: {
+      ...ROW,
+      starts_at: "2026-11-12T17:00:00.000Z",
+      ends_at: "2026-11-12T18:00:00.000Z",
+    },
+  };
+
+  it("'Todos' moves the whole series to Thursdays", () => {
+    expect(plan({ scope: "all", ...MOVED })).toMatchObject({
+      fn: "update_series",
+      args: {
+        p_drop_exceptions: true,
+        p_fields: {
+          recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=TH",
+          // Thursday 8 October at 18:00 in Madrid (summer time).
+          starts_at: "2026-10-08T16:00:00.000Z",
+          ends_at: "2026-10-08T17:00:00.000Z",
+        },
+      },
+    });
+  });
+
+  it("'Este y los siguientes' starts the new series on the day chosen", () => {
+    expect(plan({ scope: "following", ...MOVED })).toMatchObject({
+      fn: "split_series",
+      args: {
+        p_old_until: "2026-11-04T18:00:00.000Z",
+        p_new: {
+          recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=TH",
+          starts_at: "2026-11-12T17:00:00.000Z",
+          ends_at: "2026-11-12T18:00:00.000Z",
+        },
+      },
+    });
+  });
+
+  it("does not touch a rule the user changed", () => {
+    expect(plan({ scope: "all", ...MOVED, repeat: "daily" })).toMatchObject({
+      args: { p_fields: { recurrence: "FREQ=DAILY;INTERVAL=1" } },
+    });
+  });
+});
+
+describe("planSeriesChange: 'Todos' across the clock change (RF-9)", () => {
+  it("keeps 18:00 when a daily series that starts in summer moves a day", () => {
+    const result = plan({
+      scope: "all",
+      series: {
+        ...SERIES,
+        recurrence: "FREQ=DAILY;INTERVAL=1",
+        // 18:00 in Madrid on Saturday 24 October, the last day of summer time.
+        startsAt: "2026-10-24T16:00:00.000Z",
+        endsAt: "2026-10-24T17:00:00.000Z",
+      },
+      repeat: "custom:FREQ=DAILY;INTERVAL=1",
+      startDate: "2026-11-12",
+      row: {
+        ...ROW,
+        starts_at: "2026-11-12T17:00:00.000Z",
+        ends_at: "2026-11-12T18:00:00.000Z",
+      },
+    });
+    expect(result).toMatchObject({
+      args: {
+        // 18:00 on 25 October is already winter time: 17:00 UTC.
+        p_fields: { starts_at: "2026-10-25T17:00:00.000Z" },
+      },
+    });
+  });
+
+  it("gives an all-day series the hour chosen in a winter occurrence", () => {
+    const result = plan({
+      scope: "all",
+      series: {
+        ...SERIES,
+        recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=WE",
+        recurrenceTz: null,
+        startsAt: "2026-10-07T00:00:00.000Z",
+        endsAt: "2026-10-08T00:00:00.000Z",
+        allDay: true,
+        originalStart: "2026-11-11T00:00:00.000Z",
+      },
+      occurrence: {
+        calendarId: "cal",
+        startsAt: "2026-11-11T00:00:00.000Z",
+        endsAt: "2026-11-12T00:00:00.000Z",
+        allDay: true,
+      },
+    });
+    expect(result).toMatchObject({
+      args: {
+        // 18:00 in Madrid on 7 October (summer time), not 19:00.
+        p_fields: {
+          starts_at: "2026-10-07T16:00:00.000Z",
+          ends_at: "2026-10-07T17:00:00.000Z",
+        },
+      },
+    });
+  });
+});

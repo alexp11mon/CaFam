@@ -1,8 +1,13 @@
-import { utcDateKey, zonedDateKey } from "@/lib/calendar/time-zone";
+import {
+  utcDateKey,
+  utcToZonedParts,
+  zonedDateKey,
+  zonedLocalToUtc,
+} from "@/lib/calendar/time-zone";
 import { RECURRENCE_MESSAGES } from "./error-messages";
 import { firstOccurrence, seriesBound, truncateBefore } from "./expand";
 import { resolveRepeat } from "./presets";
-import { toRRule, type RecurrenceRule } from "./rule";
+import { shiftRule, toRRule, type RecurrenceRule } from "./rule";
 
 // What a new series stores (plan "series-actions", D5). Server only: it
 // expands the rule with ical.js.
@@ -119,6 +124,38 @@ function shifted(instant: string, ms: number): string {
 }
 
 /**
+ * What the clock on the wall shows at an instant, as if it were UTC. An
+ * all-day event is already a UTC date (plan 002 D6).
+ */
+function wallMs(instant: string, allDay: boolean, zone: string): number {
+  if (allDay) return Date.parse(instant);
+  const parts = utcToZonedParts(instant, zone);
+  return Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second,
+  );
+}
+
+function fromWallMs(wall: number, allDay: boolean, zone: string): string {
+  if (allDay) return new Date(wall).toISOString();
+  const date = new Date(wall);
+  return zonedLocalToUtc(
+    {
+      year: date.getUTCFullYear(),
+      month: date.getUTCMonth() + 1,
+      day: date.getUTCDate(),
+      hour: date.getUTCHours(),
+      minute: date.getUTCMinutes(),
+    },
+    zone,
+  ).toISOString();
+}
+
+/**
  * The function and arguments of a change to an occurrence (plan "Flujo" 3,
  * D8, D10 to D12). Pure apart from ical.js: the action asks series_loss and
  * calls it.
@@ -133,8 +170,7 @@ export function planSeriesChange(input: SeriesChangeInput): SeriesChangePlan {
       message: RECURRENCE_MESSAGES.invalid,
     };
   }
-  const rule = resolved.rule;
-  const recurrence = rule ? toRRule(rule, row.all_day) : null;
+  const recurrence = resolved.rule ? toRRule(resolved.rule, row.all_day) : null;
   const ruleChanged =
     recurrence !== series.recurrence || row.all_day !== series.allDay;
   const delta = Date.parse(row.starts_at) - Date.parse(occurrence.startsAt);
@@ -143,6 +179,11 @@ export function planSeriesChange(input: SeriesChangeInput): SeriesChangePlan {
     : zonedDateKey(occurrence.startsAt, input.timeZone);
   const dateChanged = input.startDate !== occurrenceDate;
   const zone = series.recurrenceTz ?? input.timeZone;
+  // The same rule on another date: the rule moves with the occurrence (D6).
+  const rule =
+    resolved.rule && !ruleChanged && dateChanged
+      ? shiftRule(resolved.rule, occurrenceDate, input.startDate)
+      : resolved.rule;
 
   if (scope === "this") {
     if (row.calendar_id !== occurrence.calendarId) {
@@ -216,8 +257,16 @@ export function planSeriesChange(input: SeriesChangeInput): SeriesChangePlan {
     }
   }
 
-  // "Todos los eventos": the first occurrence moves as this one did.
-  const startsAt = shifted(series.startsAt, delta);
+  // "Todos los eventos": the first occurrence moves as this one did, on the
+  // wall clock: in milliseconds a series that starts in summer would end up an
+  // hour off when the occurrence edited is in winter (spec 023 RF-9, plan D7).
+  const startsAt = fromWallMs(
+    wallMs(series.startsAt, series.allDay, zone) +
+      wallMs(row.starts_at, row.all_day, zone) -
+      wallMs(occurrence.startsAt, occurrence.allDay, zone),
+    row.all_day,
+    zone,
+  );
   const times = {
     starts_at: startsAt,
     ends_at: shifted(startsAt, duration),

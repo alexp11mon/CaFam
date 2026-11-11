@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { addDays, parseDateKey, weekdayIndex } from "@/lib/calendar/time-zone";
 import { MAX_RRULE_LENGTH } from "./limits";
 import { recurrenceRuleSchema, WEEKDAYS } from "./schemas";
 
@@ -39,6 +40,53 @@ export function toRRule(rule: RecurrenceRule, allDay: boolean): string {
     parts.push(`UNTIL=${allDay ? date : `${date}T235959`}`);
   }
   return parts.join(";");
+}
+
+/**
+ * The rule of a series whose occurrence of `from` was moved to `to` (date
+ * keys): the weekdays move as many days, and a monthly or yearly rule takes
+ * the day of the new date. Without it the old rule looks for its old day again
+ * and the occurrence moved goes missing (spec 023 RF-7, RF-8, plan D6).
+ */
+export function shiftRule(
+  rule: RecurrenceRule,
+  from: string,
+  to: string,
+): RecurrenceRule {
+  const date = parseDateKey(to);
+  if (!date || !parseDateKey(from)) return rule;
+  switch (rule.freq) {
+    case "daily":
+      return rule;
+    case "weekly": {
+      const days = (weekdayIndex(to) - weekdayIndex(from) + 7) % 7;
+      const moved = new Set(
+        rule.byDay.map((day) => WEEKDAYS[(WEEKDAYS.indexOf(day) + days) % 7]!),
+      );
+      return { ...rule, byDay: WEEKDAYS.filter((day) => moved.has(day)) };
+    }
+    case "monthly": {
+      if ("day" in rule.monthly) {
+        return { ...rule, monthly: { day: date.day } };
+      }
+      const position = Math.ceil(date.day / 7);
+      const last = parseDateKey(addDays(to, 7))!.month !== date.month;
+      // There is no "fifth": like the presets, it is the last one.
+      const pos =
+        position === 1 || position === 2 || position === 3 || position === 4
+          ? position
+          : -1;
+      return {
+        ...rule,
+        monthly: {
+          pos: rule.monthly.pos === -1 && last ? -1 : pos,
+          weekday: WEEKDAYS[weekdayIndex(to)]!,
+        },
+      };
+    }
+    case "yearly":
+      return { ...rule, yearly: { month: date.month, day: date.day } };
+  }
 }
 
 const ALLOWED = new Set([

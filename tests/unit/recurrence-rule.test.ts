@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { fromRRule, toRRule, type RecurrenceRule } from "@/lib/recurrence/rule";
+import {
+  fromRRule,
+  toRRule,
+  type RecurrenceRule,
+  shiftRule,
+} from "@/lib/recurrence/rule";
 
 const NEVER = { kind: "never" } as const;
 
@@ -109,5 +114,108 @@ describe("toRRule and fromRRule (RF-3, RF-4, plan D5)", () => {
     `FREQ=WEEKLY;BYDAY=${Array(60).fill("MO").join(",")}`,
   ])("rejects %s", (text) => {
     expect(fromRRule(text)).toBeNull();
+  });
+});
+
+// Spec 023, T5: an occurrence moved to another date takes its rule with it
+// (RF-7, RF-8, plan D6).
+describe("shiftRule", () => {
+  const NEVER = { kind: "never" } as const;
+
+  it("moves the weekday of a weekly rule", () => {
+    expect(
+      shiftRule(
+        { freq: "weekly", interval: 1, byDay: ["WE"], end: NEVER },
+        "2026-11-11",
+        "2026-11-12",
+      ),
+    ).toMatchObject({ byDay: ["TH"] });
+  });
+
+  it("moves every weekday alike, in week order, also backwards", () => {
+    expect(
+      shiftRule(
+        { freq: "weekly", interval: 2, byDay: ["MO", "WE", "SU"], end: NEVER },
+        "2026-11-11",
+        "2026-11-10",
+      ),
+    ).toMatchObject({ interval: 2, byDay: ["TU", "SA", "SU"] });
+  });
+
+  it("keeps a weekly rule moved whole weeks", () => {
+    const rule = {
+      freq: "weekly",
+      interval: 1,
+      byDay: ["WE"],
+      end: NEVER,
+    } as const;
+    expect(
+      shiftRule({ ...rule, byDay: ["WE"] }, "2026-11-11", "2026-11-18"),
+    ).toEqual(rule);
+  });
+
+  it("takes the day of the new date in a monthly rule by day", () => {
+    expect(
+      shiftRule(
+        { freq: "monthly", interval: 1, monthly: { day: 11 }, end: NEVER },
+        "2026-11-11",
+        "2026-11-20",
+      ),
+    ).toMatchObject({ monthly: { day: 20 } });
+  });
+
+  it("takes the position and weekday of the new date in a monthly rule by position", () => {
+    // 11 November 2026 is the second Wednesday; the 19th, the third Thursday.
+    expect(
+      shiftRule(
+        {
+          freq: "monthly",
+          interval: 1,
+          monthly: { pos: 2, weekday: "WE" },
+          end: NEVER,
+        },
+        "2026-11-11",
+        "2026-11-19",
+      ),
+    ).toMatchObject({ monthly: { pos: 3, weekday: "TH" } });
+  });
+
+  it("a fifth weekday becomes the last one", () => {
+    expect(
+      shiftRule(
+        {
+          freq: "monthly",
+          interval: 1,
+          monthly: { pos: 2, weekday: "WE" },
+          end: NEVER,
+        },
+        "2026-11-11",
+        "2026-11-30",
+      ),
+    ).toMatchObject({ monthly: { pos: -1, weekday: "MO" } });
+  });
+
+  it("takes the month and day of the new date in a yearly rule", () => {
+    expect(
+      shiftRule(
+        {
+          freq: "yearly",
+          interval: 1,
+          yearly: { month: 11, day: 11 },
+          end: NEVER,
+        },
+        "2026-11-11",
+        "2026-12-03",
+      ),
+    ).toMatchObject({ yearly: { month: 12, day: 3 } });
+  });
+
+  it("leaves a daily rule and the end as they are", () => {
+    const rule = {
+      freq: "daily",
+      interval: 3,
+      end: { kind: "count", count: 5 },
+    } as const;
+    expect(shiftRule(rule, "2026-11-11", "2026-11-12")).toEqual(rule);
   });
 });
