@@ -269,6 +269,47 @@ describe("assistant_busy (RF-19, RF-20, RF-23, RF-24, RF-29)", () => {
     expect(error?.code).toBe("22023");
   });
 
+  it("does not expose a third person's calendar where they are only a member (spec 023 RF-2)", async () => {
+    // Luis reads Sam's calendar; Sam's events are not Luis's availability.
+    const { error: memberError } = await admin
+      .from("calendar_members")
+      .insert({ calendar_id: strangerCal, user_id: luis.id, role: "editor" });
+    if (memberError) throw memberError;
+    const { error: eventsError } = await admin.from("events").insert([
+      {
+        calendar_id: strangerCal,
+        title: "De Sam",
+        created_by: stranger.id,
+        starts_at: "2026-11-12T08:00:00Z",
+        ends_at: "2026-11-12T09:00:00Z",
+      },
+      {
+        calendar_id: strangerCal,
+        title: "De Luis en el de Sam",
+        created_by: luis.id,
+        starts_at: "2026-11-13T08:00:00Z",
+        ends_at: "2026-11-13T09:00:00Z",
+      },
+    ]);
+    if (eventsError) throw eventsError;
+
+    const { data, error } = await asker.client.rpc("assistant_busy", {
+      p_person_ids: [luis.id],
+      p_from: FROM,
+      p_to: TO,
+    });
+    await admin
+      .from("calendar_members")
+      .delete()
+      .eq("calendar_id", strangerCal)
+      .eq("user_id", luis.id);
+    expect(error).toBeNull();
+    const starts = (data ?? []).map((row) => row.starts_at.slice(0, 13));
+    expect(starts).not.toContain("2026-11-12T08");
+    expect(starts).toContain("2026-11-13T08");
+    expect(starts).toContain("2026-11-10T16");
+  });
+
   it("is not available to anon", async () => {
     const { error } = await anonClient().rpc("assistant_busy", {
       p_person_ids: [luis.id],
