@@ -129,3 +129,13 @@ describe("C", () => {
     expect(rows[0]!.keys).toBe("N o C");
   });
 });
+
+// Spec 023, T13: the help lists the undo shortcut (RF-21).
+describe("SHORTCUTS undo", () => {
+  it("lists Ctrl + Z", () => {
+    expect(SHORTCUTS).toContainEqual({
+      keys: "Ctrl + Z",
+      description: "Deshacer la última acción",
+    });
+  });
+});

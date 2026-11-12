@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { isTyping } from "@/lib/calendar/shortcuts";
 
 const DURATION_MS = 4000;
 // "Deshacer" stays this long (spec 017 RF-26).
@@ -92,14 +93,35 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     };
   }, [id, duration, setToast]);
 
-  async function runUndo(undo: NonNullable<ToastOptions["undo"]>) {
-    setUndoing(true);
-    try {
-      show((await undo()) ?? UNDONE);
-    } finally {
-      setUndoing(false);
-    }
-  }
+  const runUndo = useCallback(
+    async (undo: NonNullable<ToastOptions["undo"]>) => {
+      setUndoing(true);
+      try {
+        show((await undo()) ?? UNDONE);
+      } finally {
+        setUndoing(false);
+      }
+    },
+    [show],
+  );
+
+  // Ctrl/⌘+Z while the notice offers it: with the keyboard the button is at
+  // the end of the tab order and lasts 10 s (spec 023 RF-20, enmienda 9).
+  const undo = toast?.undo;
+  useEffect(() => {
+    if (!undo || undoing) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "z") return;
+      if (!(event.ctrlKey || event.metaKey) || event.shiftKey || event.altKey)
+        return;
+      // In a text field it is the browser's own undo.
+      if (isTyping(event.target)) return;
+      event.preventDefault();
+      void runUndo(undo);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [undo, undoing, runUndo]);
 
   return (
     <ToastContext value={value}>

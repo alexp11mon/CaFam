@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider, useToast } from "@/components/ui/toast";
 
@@ -217,5 +217,55 @@ describe("toast with Deshacer", () => {
     act(() => screen.getByRole("button", { name: "Uno" }).click());
     act(() => screen.getByRole("button", { name: "Dos" }).click());
     expect(screen.queryByRole("button", { name: "Deshacer" })).toBeNull();
+  });
+});
+
+// Spec 023, T13: "Deshacer" replaced the delete confirmation, but with the
+// keyboard its button is at the end of the tab order and lasts 10 s. Ctrl/⌘+Z
+// reaches it from anywhere (RF-20, enmienda 9).
+describe("Ctrl/⌘+Z while a notice offers Deshacer", () => {
+  function setup(undo = vi.fn(async () => null)) {
+    render(
+      <ToastProvider>
+        <UndoTrigger text="Evento borrado" undo={undo} />
+        <input aria-label="Título" />
+      </ToastProvider>,
+    );
+    return undo;
+  }
+
+  const notify = () =>
+    act(() => screen.getByRole("button", { name: "Evento borrado" }).click());
+  const press = (target: Element, init: KeyboardEventInit) =>
+    act(async () => {
+      fireEvent.keyDown(target, { key: "z", ...init });
+    });
+
+  it.each([{ ctrlKey: true }, { metaKey: true }])(
+    "undoes once with %o",
+    async (modifier) => {
+      const undo = setup();
+      notify();
+
+      await press(document.body, modifier);
+
+      expect(screen.getByRole("status")).toHaveTextContent("Deshecho");
+      expect(undo).toHaveBeenCalledTimes(1);
+      // The notice is gone: a second press has nothing to undo.
+      await press(document.body, modifier);
+      expect(undo).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("does nothing without a notice, without the modifier or while typing", async () => {
+    const undo = setup();
+    await press(document.body, { ctrlKey: true });
+    notify();
+    await press(document.body, {});
+    await press(document.body, { ctrlKey: true, shiftKey: true });
+    // In a text field Ctrl+Z belongs to the browser.
+    await press(screen.getByLabelText("Título"), { ctrlKey: true });
+
+    expect(undo).not.toHaveBeenCalled();
   });
 });
