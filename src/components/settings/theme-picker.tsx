@@ -45,7 +45,7 @@ export function ThemePicker({
 
   return (
     <fieldset className="flex flex-col gap-4">
-      <legend className="mb-1 text-lg font-bold text-ink">Tema</legend>
+      <legend className="mb-1 text-lg font-semibold text-ink">Tema</legend>
       <p className="text-muted">
         &ldquo;Como el sistema&rdquo; cambia solo cuando cambia tu dispositivo.
       </p>

@@ -60,7 +60,7 @@ function NoticeItem({
       : NOTICE_LINKS[notice.kind];
 
   return (
-    <li className="flex flex-col gap-3 rounded-2xl bg-paper p-4 sm:flex-row sm:items-start sm:justify-between">
+    <li className="flex flex-col gap-3 rounded-3xl bg-paper p-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 flex-col gap-2">
         <p className="break-words text-ink">{noticeText(notice)}</p>
         {link ? (

@@ -41,19 +41,19 @@ export function InviteJoinCard({
     <div className="flex flex-col gap-4 text-ink">
       <dl className="flex flex-col gap-3 rounded-3xl bg-paper p-4">
         <div>
-          <dt className="text-sm">Calendario</dt>
+          <dt className="text-sm text-muted">Calendario</dt>
           <dd className="min-w-0 break-words text-lg font-bold">
             {preview.calendarName}
           </dd>
         </div>
         <div>
-          <dt className="text-sm">Propietario</dt>
+          <dt className="text-sm text-muted">Propietario</dt>
           <dd className="min-w-0 break-words font-semibold">
             {preview.ownerName}
           </dd>
         </div>
         <div>
-          <dt className="text-sm">Tu rol</dt>
+          <dt className="text-sm text-muted">Tu rol</dt>
           <dd className="font-semibold">{ROLE_LABELS[preview.role]}</dd>
         </div>
       </dl>

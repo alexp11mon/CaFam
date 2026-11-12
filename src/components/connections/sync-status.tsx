@@ -27,7 +27,7 @@ export function SyncStatus({
       {calendars.map((calendar) => (
         <li
           key={calendar.calendarId}
-          className="flex flex-col gap-1 rounded-2xl bg-paper p-3 text-sm text-ink"
+          className="flex flex-col gap-1 rounded-3xl bg-paper p-4 text-sm text-ink"
         >
           <span className="font-semibold">{calendar.name}</span>
           {calendar.state === "missing" ? (

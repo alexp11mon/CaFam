@@ -170,10 +170,21 @@ export function PlusIcon() {
   );
 }
 
-export function ChevronIcon({ direction }: { direction: "left" | "right" }) {
+const CHEVRONS = {
+  left: "m15 6-6 6 6 6",
+  right: "m9 6 6 6-6 6",
+  up: "m6 15 6-6 6 6",
+  down: "m6 9 6 6 6-6",
+} as const;
+
+export function ChevronIcon({
+  direction,
+}: {
+  direction: keyof typeof CHEVRONS;
+}) {
   return (
     <Icon>
-      <path d={direction === "left" ? "m15 6-6 6 6 6" : "m9 6 6 6-6 6"} />
+      <path d={CHEVRONS[direction]} />
     </Icon>
   );
 }

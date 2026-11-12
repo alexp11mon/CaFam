@@ -58,7 +58,12 @@ export function ProfileForm({
           </option>
         ))}
       </Select>
-      <Button ref={button} type="submit" disabled={pending}>
+      <Button
+        ref={button}
+        type="submit"
+        disabled={pending}
+        className="self-start"
+      >
         <SwapLabel busy={pending} idle="Guardar perfil" busyText="Guardando…" />
       </Button>
     </form>

@@ -49,7 +49,7 @@ export function AccentPicker({
 
   return (
     <fieldset className="flex flex-col gap-4">
-      <legend className="mb-1 text-lg font-bold text-ink">
+      <legend className="mb-1 text-lg font-semibold text-ink">
         Color de acento
       </legend>
       <p className="text-muted">

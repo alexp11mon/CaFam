@@ -28,11 +28,11 @@ export function OrphanCalendarItem({
   const [state, formAction, pending] = useActionState(keepAction, {});
 
   return (
-    <li className="flex flex-col gap-3 rounded-2xl bg-paper p-4">
+    <li className="flex flex-col gap-3 rounded-3xl bg-paper p-4">
       <p className="flex min-w-0 items-center gap-2 font-semibold text-ink">
         <span
           aria-hidden="true"
-          className="size-4 shrink-0 rounded-full ring-1 ring-pastel-ink/15"
+          className="size-4 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
           style={{ backgroundColor: calendar.color }}
         />
         <span className="min-w-0 break-words">{calendar.name}</span>

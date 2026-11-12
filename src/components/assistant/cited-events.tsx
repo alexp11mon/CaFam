@@ -27,7 +27,7 @@ export function CitedEvents({
             {/* The calendar's color is data, so it goes in style (P9). */}
             <span
               aria-hidden="true"
-              className="w-1 shrink-0 rounded-full border border-ink/15"
+              className="w-1 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
               style={{ backgroundColor: event.color }}
             />
             <span className="flex min-w-0 flex-col">

@@ -166,7 +166,7 @@ async function ConnectionDetail({
           <h2 id="create-heading" className="text-lg font-semibold text-ink">
             Crear un calendario en {providerName(connection.provider)}
           </h2>
-          <p className="text-ink">
+          <p className="text-muted">
             Se crea en esta cuenta de {providerName(connection.provider)} y se
             trae a CaFam.
           </p>
@@ -184,7 +184,7 @@ async function ConnectionDetail({
         <h2 id="disconnect-heading" className="text-lg font-semibold text-ink">
           Desconectar la cuenta
         </h2>
-        <p className="text-ink">
+        <p className="text-muted">
           Podrás conservar sus calendarios como normales o borrarlos.
         </p>
         <div>

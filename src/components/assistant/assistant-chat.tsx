@@ -252,7 +252,9 @@ export function AssistantChat({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-ink">Asistente</h1>
+        <h1 className="text-2xl font-bold text-ink max-tab:sr-only">
+          Asistente
+        </h1>
         <Button variant="secondary" onClick={restart}>
           Nueva conversación
         </Button>

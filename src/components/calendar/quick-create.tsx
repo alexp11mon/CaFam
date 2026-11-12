@@ -294,7 +294,7 @@ export function QuickCreate({
         <div className="flex items-end gap-3">
           <span
             aria-hidden="true"
-            className="mb-4 size-3 shrink-0 rounded-full ring-1 ring-pastel-ink/15"
+            className="mb-4 size-3 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
             style={{ backgroundColor: color }}
           />
           <div className="min-w-0 flex-1">

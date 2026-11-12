@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import { Avatar } from "@/components/people/avatar";
+import { ChevronIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
 import { ORPHAN_GROUP_ID } from "@/lib/calendar/grouping";
 import { assignTints } from "@/lib/people/avatar";
@@ -44,7 +45,7 @@ function MoveButtons({
         onClick={() => onMove(kind, id, "up")}
         className="min-w-11 px-2"
       >
-        <span aria-hidden="true">↑</span>
+        <ChevronIcon direction="up" />
       </Button>
       <Button
         variant="secondary"
@@ -54,7 +55,7 @@ function MoveButtons({
         onClick={() => onMove(kind, id, "down")}
         className="min-w-11 px-2"
       >
-        <span aria-hidden="true">↓</span>
+        <ChevronIcon direction="down" />
       </Button>
     </span>
   );

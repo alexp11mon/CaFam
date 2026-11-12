@@ -13,7 +13,7 @@ export function ImportSummary({ result }: { result: ImportSummaryData }) {
   return (
     <div
       role="status"
-      className="flex flex-col gap-2 rounded-3xl bg-paper p-4 text-ink"
+      className="flex flex-col gap-2 rounded-3xl bg-paper p-4 text-ink tabular-nums"
     >
       <p className="font-semibold">Calendario creado con {events(created)}.</p>
       {skipped > 0 ? (

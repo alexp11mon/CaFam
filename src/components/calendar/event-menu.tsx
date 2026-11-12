@@ -148,7 +148,7 @@ export function EventMenu({
         <span
           aria-hidden="true"
           style={{ backgroundColor: calendarColor }}
-          className="size-4 rounded-full ring-1 ring-pastel-ink/15"
+          className="size-4 rounded-full ring-1 ring-pastel-ink/20"
         />
         <span className="flex-1">Color del calendario</span>
         {ownColor === null ? <CheckIcon /> : null}

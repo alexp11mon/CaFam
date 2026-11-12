@@ -44,7 +44,12 @@ export function PasswordForm({
         hint="Mínimo 8 caracteres"
         error={state.fieldErrors?.newPassword}
       />
-      <Button ref={button} type="submit" disabled={pending}>
+      <Button
+        ref={button}
+        type="submit"
+        disabled={pending}
+        className="self-start"
+      >
         <SwapLabel
           busy={pending}
           idle="Cambiar contraseña"

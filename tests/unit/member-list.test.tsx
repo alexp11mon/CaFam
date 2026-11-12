@@ -53,6 +53,19 @@ function row(name: string) {
 }
 
 describe("MemberList (RF-24..RF-28)", () => {
+  it("shows each person's avatar with the same tint as the other lists (spec 023 RF-29)", () => {
+    setup("luis");
+
+    const avatar = row("Ana").getByText("A");
+    expect(avatar).toHaveAttribute("data-avatar");
+    expect(avatar).toHaveAttribute("aria-hidden", "true");
+    // Ids sorted: ana, luis, owner, so Ana gets the first tint.
+    expect(avatar).toHaveStyle({ backgroundColor: "#EDC7C0" });
+    expect(row("Marta").getByText("M")).toHaveStyle({
+      backgroundColor: "#C0EDC7",
+    });
+  });
+
   it("everyone sees names and roles, owner included, and no email (RF-24)", () => {
     setup("luis");
 

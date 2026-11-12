@@ -68,11 +68,23 @@ export function DisconnectDialog({
             ¿Qué hacemos con sus calendarios?
           </legend>
           <label className="flex min-h-11 items-center gap-3">
-            <input type="radio" name="decision" value="keep" required />
+            <input
+              type="radio"
+              name="decision"
+              value="keep"
+              required
+              className="size-5 shrink-0 accent-ink"
+            />
             Conservarlos como calendarios normales y editables
           </label>
           <label className="flex min-h-11 items-center gap-3">
-            <input type="radio" name="decision" value="delete" required />
+            <input
+              type="radio"
+              name="decision"
+              value="delete"
+              required
+              className="size-5 shrink-0 accent-ink"
+            />
             Borrarlos con sus eventos, también para quien los comparte
           </label>
         </fieldset>

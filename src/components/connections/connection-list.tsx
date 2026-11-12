@@ -73,7 +73,7 @@ export function ConnectionList({
         </StaggerList>
       )}
 
-      <p className="text-muted">
+      <p className="max-w-prose text-muted">
         ¿Solo quieres una copia de un calendario de otro servicio?{" "}
         <Link href="/dashboard/import" className={LINK}>
           Importar un .ics

@@ -48,13 +48,13 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
         Ver miembros
       </Link>
       <section aria-labelledby="invite-heading" className="flex flex-col gap-4">
-        <h2 id="invite-heading" className="text-lg font-bold text-ink">
+        <h2 id="invite-heading" className="text-lg font-semibold text-ink">
           Invitar con un enlace
         </h2>
         <InviteForm action={createInvite.bind(null, id)} />
       </section>
       <section aria-labelledby="active-heading" className="flex flex-col gap-4">
-        <h2 id="active-heading" className="text-lg font-bold text-ink">
+        <h2 id="active-heading" className="text-lg font-semibold text-ink">
           Invitaciones vigentes
         </h2>
         <InviteList
@@ -64,7 +64,7 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
         />
       </section>
       <section aria-labelledby="code-heading" className="flex flex-col gap-4">
-        <h2 id="code-heading" className="text-lg font-bold text-ink">
+        <h2 id="code-heading" className="text-lg font-semibold text-ink">
           Invitar con ID y PIN
         </h2>
         <AccessCodePanel

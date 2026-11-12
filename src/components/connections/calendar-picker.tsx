@@ -94,7 +94,7 @@ export function CalendarPicker({
               />
               <span
                 aria-hidden="true"
-                className="size-3 shrink-0 rounded-full ring-1 ring-pastel-ink/15"
+                className="size-3 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
                 style={{ backgroundColor: calendar.color ?? undefined }}
               />
               <span className="min-w-0 truncate">{calendar.name}</span>
@@ -125,11 +125,23 @@ export function CalendarPicker({
             ¿Qué hacemos con los calendarios que dejas de traer?
           </legend>
           <label className="flex min-h-11 items-center gap-3 text-ink">
-            <input type="radio" name="decision" value="keep" required />
+            <input
+              type="radio"
+              name="decision"
+              value="keep"
+              required
+              className="size-5 shrink-0 accent-ink"
+            />
             Conservarlos como calendarios normales y editables
           </label>
           <label className="flex min-h-11 items-center gap-3 text-ink">
-            <input type="radio" name="decision" value="delete" required />
+            <input
+              type="radio"
+              name="decision"
+              value="delete"
+              required
+              className="size-5 shrink-0 accent-ink"
+            />
             Borrarlos con sus eventos, también para quien los comparte
           </label>
           {state.fieldErrors?.decision ? (

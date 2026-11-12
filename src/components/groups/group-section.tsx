@@ -2,8 +2,10 @@
 
 import { useActionState, useId, useState, useTransition } from "react";
 import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
+import { ChevronIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
+import { SwapLabel } from "@/components/ui/swap-label";
 import { TextField } from "@/components/ui/text-field";
 import type { GroupVisibility } from "@/lib/calendar/organize-groups";
 import type { ConfirmState, FormState } from "@/lib/forms/form-state";
@@ -119,7 +121,7 @@ export function GroupSection({
             onClick={() => onMove("up")}
             className="min-w-11 px-2"
           >
-            <span aria-hidden="true">↑</span>
+            <ChevronIcon direction="up" />
           </Button>
           <Button
             variant="secondary"
@@ -128,7 +130,7 @@ export function GroupSection({
             onClick={() => onMove("down")}
             className="min-w-11 px-2"
           >
-            <span aria-hidden="true">↓</span>
+            <ChevronIcon direction="down" />
           </Button>
         </div>
       </div>
@@ -151,7 +153,11 @@ export function GroupSection({
           </div>
           <div className="flex flex-wrap gap-3">
             <Button type="submit" disabled={renaming}>
-              {renaming ? "Guardando…" : "Guardar nombre"}
+              <SwapLabel
+                busy={renaming}
+                idle="Guardar nombre"
+                busyText="Guardando…"
+              />
             </Button>
             <Button variant="secondary" onClick={() => setEditing(false)}>
               Cancelar
@@ -160,7 +166,7 @@ export function GroupSection({
         </form>
       ) : null}
       {calendarCount === 0 ? (
-        <p className="rounded-3xl bg-paper px-4 py-4 text-sm text-muted">
+        <p className="rounded-3xl bg-paper px-4 py-6 text-center text-ink">
           Este grupo aún no tiene calendarios. Elige el grupo en la ficha de un
           calendario.
         </p>

@@ -2,10 +2,12 @@
 
 import { useActionState } from "react";
 import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
+import { Avatar } from "@/components/people/avatar";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Select } from "@/components/ui/select";
 import type { ConfirmState, FormAction } from "@/lib/forms/form-state";
+import { assignTints } from "@/lib/people/avatar";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
 import { StaggerList } from "@/components/ui/stagger-list";
 import { SwapLabel } from "@/components/ui/swap-label";
@@ -79,6 +81,9 @@ export function MemberList({
     (member) => member.userId === currentUserId && member.role === "owner",
   );
 
+  // Assigned in id order, so a person keeps the tint of the other lists (spec 023 RF-29).
+  const tints = assignTints(members.map((member) => member.userId));
+
   return (
     <div className="flex flex-col gap-6">
       <StaggerList className="flex flex-col gap-3">
@@ -88,8 +93,11 @@ export function MemberList({
             className="flex flex-col gap-3 rounded-3xl bg-paper p-4"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="min-w-0 break-words font-semibold text-ink">
-                {member.name}
+              <span className="flex min-w-0 items-center gap-3">
+                <Avatar name={member.name} tint={tints.get(member.userId)!} />
+                <span className="min-w-0 break-words font-semibold text-ink">
+                  {member.name}
+                </span>
               </span>
               {isOwner && member.role !== "owner" ? null : (
                 <span className="shrink-0 rounded-full bg-stone px-2.5 py-0.5 text-sm font-medium text-ink">

@@ -54,7 +54,12 @@ export function EmailForm({
         autoComplete="current-password"
         error={state.fieldErrors?.currentPassword}
       />
-      <Button ref={button} type="submit" disabled={pending}>
+      <Button
+        ref={button}
+        type="submit"
+        disabled={pending}
+        className="self-start"
+      >
         <SwapLabel busy={pending} idle="Cambiar email" busyText="Enviando…" />
       </Button>
     </form>

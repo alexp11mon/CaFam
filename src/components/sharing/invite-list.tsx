@@ -55,11 +55,11 @@ export function InviteList({
         >
           <div className="flex min-w-0 flex-col gap-1 text-ink">
             <span className="font-semibold">{ROLE_LABELS[invite.role]}</span>
-            <span className="text-sm">
+            <span className="text-sm text-muted tabular-nums">
               Usos restantes: {invite.maxUses - invite.useCount} de{" "}
               {invite.maxUses}
             </span>
-            <span className="text-sm">
+            <span className="text-sm text-muted tabular-nums">
               {expiryLabel(invite.expiresAt, current)}
             </span>
           </div>

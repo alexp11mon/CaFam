@@ -145,7 +145,7 @@ export function MergeForm({
               className="size-3 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
               style={{ backgroundColor: calendar.color }}
             />
-            <span className="min-w-0 break-words">
+            <span className="min-w-0 break-words tabular-nums">
               {calendar.name} · {eventsLabel(calendar.eventCount)}
             </span>
           </label>

@@ -101,12 +101,14 @@ export function AccessCodePanel({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1 rounded-3xl bg-paper p-4 text-ink">
-        <p className="text-sm">ID del calendario</p>
+        <p className="text-sm text-muted">ID del calendario</p>
         <p className="text-3xl font-extrabold tracking-[0.2em] tabular-nums select-all">
           {code.publicCode}
         </p>
-        <p className="text-sm">Rol de quien se une: {ROLE_LABELS[code.role]}</p>
-        <p className="text-sm">
+        <p className="text-sm text-muted">
+          Rol de quien se une: {ROLE_LABELS[code.role]}
+        </p>
+        <p className="text-sm text-muted">
           El PIN no se puede consultar: nadie puede volver a verlo. Si lo
           olvidas, elige uno nuevo.
         </p>

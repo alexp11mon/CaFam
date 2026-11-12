@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef } from "react";
+import { CloseIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
 
 export interface Attachment {
@@ -82,9 +83,9 @@ export function ImageAttach({
               >
                 <span
                   aria-hidden
-                  className="flex size-6 items-center justify-center rounded-full bg-ink text-sm font-bold text-on-ink"
+                  className="flex size-6 items-center justify-center rounded-full bg-ink text-on-ink [&_svg]:size-4"
                 >
-                  ×
+                  <CloseIcon />
                 </span>
               </button>
             </li>
