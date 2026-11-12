@@ -65,3 +65,6 @@ docs/referencia.jpg
 
 # Notas locales de la skill replica-entrepreneur (reseñas de terceros)
 replica/
+
+# Screenshots of the playwright-cli tool (spec 023 RF-40)
+.playwright-cli/

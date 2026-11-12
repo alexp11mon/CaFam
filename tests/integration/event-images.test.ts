@@ -620,7 +620,8 @@ describe("copies of ownerless calendars (RF-31)", () => {
       )
       .eq("events.calendar_id", copy!);
     expect(copied).toHaveLength(1);
-    const { events: _events, ...row } = copied![0];
+    const { events, ...row } = copied![0];
+    expect(events).toEqual({ calendar_id: copy });
     expect(row).toEqual(original);
 
     const { data: canRead } = await cleo.client.rpc("can_read_event_image", {

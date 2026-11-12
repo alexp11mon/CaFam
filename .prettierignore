@@ -10,3 +10,6 @@ specs/
 .opencode/
 AGENTS.md
 replica/
+
+# Screenshots of the playwright-cli tool (spec 023 RF-40)
+.playwright-cli/

@@ -119,9 +119,12 @@ describe("create_invite (RF-1, RF-3, RF-4, RF-29)", () => {
       created_by: owner.id,
       revoked_at: null,
     });
-    const days = (new Date(row.expires_at).getTime() - Date.now()) / 86_400_000;
-    expect(days).toBeGreaterThan(6.99);
-    expect(days).toBeLessThanOrEqual(7);
+    // Both come from the same now() in the database: no local clock (spec 023 D15).
+    const days =
+      (new Date(row.expires_at).getTime() -
+        new Date(row.created_at).getTime()) /
+      86_400_000;
+    expect(days).toBe(7);
   });
 
   it("rejects the owner role and uses outside 1 to 20", async () => {
