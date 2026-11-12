@@ -2,7 +2,7 @@
 
 Spec: `specs/023-auditoria-y-correcciones/spec.md`. Plan: `specs/023-auditoria-y-correcciones/plan.md` (los dos aprobados de antemano por el usuario en el prompt de arranque, 2026-11-10).
 
-> Estado: **en curso**.
+> Estado: **cerrada** (2026-11-12).
 
 Cada tarea se hace sola y con el test primero (rojo → verde), y se cierra con la verificación de P8 en verde y su salida reportada:
 `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, más `npm run test:db` en las que tocan la base de datos (T1, T2, T3, T8, T15). Tres migraciones nuevas, solo en dev. Sin dependencias.
@@ -69,8 +69,38 @@ Cada tarea se hace sola y con el test primero (rojo → verde), y se cierra con 
   Hecho cuando: `npm run test:db -- invites` en verde comparando `expires_at` con `created_at`; `.playwright-cli/` en `.gitignore` y `.prettierignore`; `npm run lint` sin el aviso de `_events`. Cubre: RF-39, RF-40 | Módulo: tests, configuración (D15)
   Evidencia (2026-11-11): npm run test:db -- invites event-images: 2 archivos y 45 tests en verde (la caducidad se compara con created_at y da 7 días exactos; la copia de imágenes comprueba ahora el calendario unido en lugar de descartarlo). .playwright-cli/ en .gitignore y .prettierignore. P8 completa con salida 0: lint con un solo aviso (el deliberado de event-form.tsx:103), 272 archivos y 2.613 tests, build compilado.
 
-- [ ] T16 Validar la spec RF por RF, actualizar la documentación y cerrar
+- [x] T16 Validar la spec RF por RF, actualizar la documentación y cerrar
   Hecho cuando: tabla RF-1 a RF-40 con el test o la prueba que cubre cada uno; P8 completo en verde con `test:db` entero; comprobado que nada de "Diferido" se ha implementado; AGENTS.md (estado, "Añadido por la spec 023", migraciones, trampas, §12) y la constitución (enmienda 9) actualizados; usuario de prueba borrado de dev, puerto 3100 libre y `.playwright-cli/` borrada. Cubre: todos | Módulo: validación
+  Evidencia (2026-11-11): Tabla RF-1 a RF-40 en «Validación RF por RF». npm run test:db -- --no-file-parallelism: 45 de 48 archivos en verde a la primera; los otros 3 (account-notices-read, login, profile-last-view) fallaron en el beforeAll con «AuthApiError: Request rate limit reached» (trampa conocida) y al repetirlos 4 minutos después pasaron (3 archivos, 11 tests): 48 archivos y 537 tests (11 omitidos de siempre). P8 final: la primera ejecución dio un fallo intermitente en event-modal-form.test.tsx («Evento creado» no llegó a tiempo con la máquina cargada por test:db; T16 no toca código), que pasa solo (5 de 5) y en la repetición completa: salida 0, lint sin errores con el aviso deliberado de event-form.tsx:103, format OK, 272 archivos y 2.613 tests, build compilado. AGENTS.md actualizado (estado, «Añadido por la spec 023», migraciones, dos trampas y §12) y enmienda 9 en la constitución (T13). Usuario auditoria-023@cafam.test borrado de dev desde Ajustes (el login posterior da «Email o contraseña incorrectos»), puerto 3100 libre, .playwright-cli/ inexistente y vista del navegador restablecida.
+
+## Validación RF por RF
+
+| RF | Cubierto por |
+|----|--------------|
+| RF-1 | `tests/integration/event-undo.test.ts` ("refuses an event of another calendar as the target": rojo contra dev antes de la migración, verde después) |
+| RF-2 | `tests/integration/assistant.test.ts` (el calendario de un tercero donde la persona solo es miembro no aparece) |
+| RF-3 | `tests/integration/access-codes.test.ts` (límites de fallos sin cambios) y revisión de la migración: los dos bloqueos se toman antes de contar. La concurrencia real no se reproduce en un test (ver Riesgos) |
+| RF-4 | `tests/unit/next-config-headers.test.ts`; en el navegador, `/`, `/api/cron/keep-alive`, `/invite/abc` (`no-referrer`) y `/sw.js` (su CSP) |
+| RF-5 | `next-config-headers.test.ts` (`X-Robots-Tag: noindex, nofollow` como cabecera global, en lugar de `robots` en el layout: cubre también las rutas de API) |
+| RF-6 | `tests/unit/cron-secret.test.ts` y `keep-alive-route`, `sync-run-route` e `images-purge-route` con las mismas respuestas |
+| RF-7, RF-8 | `tests/unit/recurrence-rule.test.ts` (`shiftRule`, 8 casos) y `tests/unit/series-write.test.ts` (miércoles → jueves con "Todos" y "Este y los siguientes") |
+| RF-9 | `series-write.test.ts` (serie de verano editada en invierno, y al revés) |
+| RF-10, RF-11 | `tests/unit/drag.test.ts` (evento de las 23:50 en el mes y con Alt+→; Alt+↓ que no cabe) |
+| RF-12 | `tests/unit/convert-to-series.test.ts` (con comentarios no se actualiza en el sitio: toma el camino de las imágenes) |
+| RF-13 | `tests/unit/events-in-range.test.ts` (1.000 + N filas, orden estable) y `tests/integration/range-performance.test.ts` |
+| RF-14, RF-15 | Revisión del código (`Promise.all`) y los tests existentes de los cargadores en verde, también `tests/integration/comment-queries.test.ts` |
+| RF-16, RF-17 | `tests/unit/error-pages.test.tsx`; en el navegador, `/nope` responde 404 con la página en español, en claro y en oscuro |
+| RF-18 | `tests/unit/app-frame.test.tsx`; en el navegador, el primer Tab enfoca "Saltar al contenido" e Intro lleva el foco a `#contenido` |
+| RF-19 | `tests/unit/event-modal.test.tsx` |
+| RF-20, RF-21 | `tests/unit/toast.test.tsx` y `tests/unit/shortcuts.test.ts` |
+| RF-22 | `tests/unit/nav-drawer.test.tsx` |
+| RF-23 | `tests/unit/view-toolbar.test.tsx` (sin transparencia sobre el acento; `accents.test.ts` ya garantiza 4,5:1 de `on-accent`) |
+| RF-24 | `tests/unit/text-field.test.tsx`, `signup-form.test.tsx` y `password-form.test.tsx` |
+| RF-25 a RF-38 | `tests/unit/member-list.test.tsx` (avatar), guardia `design-tokens.test.ts` y capturas a 375 y 1440 px (T14) |
+| RF-39 | `tests/integration/invites.test.ts` (7 días exactos entre `created_at` y `expires_at`) |
+| RF-40 | `.gitignore` y `.prettierignore`; `npm run lint` sin el aviso de `_events` |
+
+Nada de la tabla "Diferido" de la spec se ha implementado: los cambios de la rama son solo los de T1–T15 (`git log main..023-auditoria-y-correcciones`).
 
 ## Trazabilidad RF → Tareas
 

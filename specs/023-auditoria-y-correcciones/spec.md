@@ -1,6 +1,6 @@
 # Spec 023 — Auditoría y correcciones
 
-> Estado: **En curso** (2026-11-11). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-10): spec, plan, tareas, implementación y cierre, sin aprobación entre fases. Se mantienen sus límites: nada sobre producción, sin dependencias nuevas, coste cero y migraciones solo en dev.
+> Estado: **Cerrada** (2026-11-12). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-10): spec, plan, tareas, implementación y cierre, sin aprobación entre fases. Se mantienen sus límites: nada sobre producción, sin dependencias nuevas, coste cero y migraciones solo en dev.
 
 ## Contexto y objetivo
 
