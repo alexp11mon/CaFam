@@ -28,3 +28,30 @@ describe("field focus transition (RF-16)", () => {
     expect(screen.getByLabelText("Calendario")).toHaveClass(FADE);
   });
 });
+
+// Spec 023, T12: a hint under the field, read with it (RF-24).
+describe("TextField hint", () => {
+  it("is linked to the input, next to the error", () => {
+    const { rerender } = render(
+      <TextField
+        label="Contraseña"
+        name="password"
+        hint="Mínimo 8 caracteres"
+      />,
+    );
+    const input = screen.getByLabelText("Contraseña");
+    expect(input).toHaveAccessibleDescription("Mínimo 8 caracteres");
+
+    rerender(
+      <TextField
+        label="Contraseña"
+        name="password"
+        hint="Mínimo 8 caracteres"
+        error="Es demasiado corta"
+      />,
+    );
+    expect(input).toHaveAccessibleDescription(
+      "Mínimo 8 caracteres Es demasiado corta",
+    );
+  });
+});

@@ -148,3 +148,17 @@ describe("NavDrawer under a finger", () => {
     expect(drawer).toHaveAttribute("open");
   });
 });
+
+// Spec 023, T12: without a keyboard there was no control to leave the drawer
+// (RF-22).
+describe("NavDrawer close button", () => {
+  it("closes the drawer", async () => {
+    const { drawer } = await openDrawer();
+
+    await userEvent.click(
+      within(drawer).getByRole("button", { name: "Cerrar" }),
+    );
+
+    expect(drawer).not.toHaveAttribute("open");
+  });
+});

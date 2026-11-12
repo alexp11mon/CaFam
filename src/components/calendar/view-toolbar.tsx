@@ -249,7 +249,7 @@ function ViewSwitcher({
           {VIEWS.map((item) => (
             <span key={item.view} className={VIEW_ITEM}>
               {item.label}
-              <kbd className="ml-2 hidden font-sans text-xs font-semibold text-on-accent/70 lg:inline">
+              <kbd className="ml-2 hidden font-sans text-xs font-semibold text-on-accent lg:inline">
                 {item.key}
               </kbd>
             </span>

@@ -297,7 +297,12 @@ export function EventModal({
           <p id={`${titleId}-discard`} className="flex-1 font-semibold">
             ¿Descartar los cambios?
           </p>
-          <Button variant="secondary" onClick={() => setConfirming(false)}>
+          {/* Focused as it appears: an alertdialog nobody focuses is not announced (spec 023 RF-19). */}
+          <Button
+            variant="secondary"
+            autoFocus
+            onClick={() => setConfirming(false)}
+          >
             Seguir editando
           </Button>
           <Button variant="danger" onClick={leave}>

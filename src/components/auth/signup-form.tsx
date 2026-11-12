@@ -52,6 +52,7 @@ export function SignupForm({ action }: { action: FormAction<SignUpState> }) {
         name="password"
         type="password"
         autoComplete="new-password"
+        hint="Mínimo 8 caracteres"
         error={errors.password}
       />
       <input type="hidden" name="timeZone" value={timeZone} />

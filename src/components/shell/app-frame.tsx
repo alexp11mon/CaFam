@@ -36,13 +36,24 @@ export function AppFrame({
       data-accent={accent}
       className="group/frame flex min-h-full flex-1 flex-col"
     >
+      {/* First stop of the keyboard: past the navigation (spec 023 RF-18). */}
+      <a
+        href="#contenido"
+        className="sr-only rounded-full bg-ink px-4 py-2 font-semibold text-on-ink focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
+      >
+        Saltar al contenido
+      </a>
       <ThemeSync theme={theme} />
       <ToastProvider>
         <EventClipboardProvider>
           <CalendarHeaderProvider>
             <SideRail signOutAction={signOutAction} />
             <TopBar displayName={displayName} signOutAction={signOutAction} />
-            <div className="flex flex-1 flex-col pt-[calc(3.5rem+env(safe-area-inset-top))] tab:pt-0 tab:pb-24 lg:pb-0 lg:pl-20">
+            <div
+              id="contenido"
+              tabIndex={-1}
+              className="flex flex-1 flex-col pt-[calc(3.5rem+env(safe-area-inset-top))] outline-none tab:pt-0 tab:pb-24 lg:pb-0 lg:pl-20"
+            >
               {children}
             </div>
             <AssistantFab />

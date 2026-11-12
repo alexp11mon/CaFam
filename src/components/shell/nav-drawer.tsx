@@ -63,9 +63,19 @@ export function NavDrawer({
       className="m-0 h-full touch-pan-y max-h-none w-[min(20rem,85vw)] max-w-none overflow-y-auto rounded-r-3xl glass-float p-0 text-ink backdrop:bg-scrim/50"
     >
       <div className="flex min-h-full flex-col gap-3 p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <h2 id={titleId} className="px-3 text-lg font-bold">
-          CaFam
-        </h2>
+        <div className="flex items-center justify-between gap-3 pl-3">
+          <h2 id={titleId} className="text-lg font-bold">
+            CaFam
+          </h2>
+          {/* The backdrop and the swipe are no use to a screen reader (spec 023 RF-22). */}
+          <button
+            type="button"
+            onClick={close}
+            className="min-h-11 rounded-full px-4 font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          >
+            Cerrar
+          </button>
+        </div>
         <div ref={setDrawerSlot} className="empty:hidden" />
         {/* The destinations land one after another each time it opens (spec 021 RF-16). */}
         <ul

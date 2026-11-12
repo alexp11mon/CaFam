@@ -56,3 +56,25 @@ describe("FrameSkeleton (RF-9)", () => {
     expect(container.innerHTML).not.toMatch(/accent/);
   });
 });
+
+// Spec 023, T12: keyboard users skip the navigation (RF-18, WCAG 2.4.1).
+describe("AppFrame skip link", () => {
+  it("is the first link and leads to the content", () => {
+    render(
+      <AppFrame
+        accent="red"
+        theme="system"
+        displayName="Ana López"
+        signOutAction={vi.fn(async () => {})}
+      >
+        <p>Contenido</p>
+      </AppFrame>,
+    );
+
+    const skip = screen.getAllByRole("link")[0];
+    expect(skip).toHaveAccessibleName("Saltar al contenido");
+    const target = document.querySelector(skip.getAttribute("href")!);
+    expect(target).toContainElement(screen.getByText("Contenido"));
+    expect(target).toHaveAttribute("tabindex", "-1");
+  });
+});

@@ -41,6 +41,7 @@ export function PasswordForm({
         name="newPassword"
         type="password"
         autoComplete="new-password"
+        hint="Mínimo 8 caracteres"
         error={state.fieldErrors?.newPassword}
       />
       <Button ref={button} type="submit" disabled={pending}>

@@ -300,6 +300,11 @@ describe("EventModal as a sheet", () => {
     drag(screen.getByRole("button", { name: "Ampliar" }), 150);
     expect(router.back).not.toHaveBeenCalled();
     expect(screen.getByText("¿Descartar los cambios?")).toBeVisible();
+    // The question takes the focus, or a screen reader never hears it
+    // (spec 023 RF-19).
+    expect(
+      screen.getByRole("button", { name: "Seguir editando" }),
+    ).toHaveFocus();
     expect(dialog).toHaveAttribute("data-sheet", "half");
   });
 

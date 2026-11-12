@@ -245,3 +245,19 @@ describe("ViewToolbar transitions (spec 011 RF-17, RF-18)", () => {
     expect(types("Hoy")).toBeNull();
   });
 });
+
+// Spec 023, T12: at 70 % the key of the chosen view was under 4.5:1 with five
+// of the six accents (RF-23).
+describe("ViewToolbar shortcut keys", () => {
+  it("shows the key of the chosen view at full contrast", () => {
+    const { container } = render(
+      <ViewToolbar view="week" date="2026-10-14" today={TODAY} />,
+    );
+
+    const keys = [...container.querySelectorAll("kbd")];
+    expect(keys.length).toBeGreaterThan(0);
+    for (const key of keys) {
+      expect(key.className).not.toMatch(/text-on-accent\/\d/);
+    }
+  });
+});

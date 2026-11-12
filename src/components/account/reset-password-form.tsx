@@ -26,6 +26,7 @@ export function ResetPasswordForm({
         name="password"
         type="password"
         autoComplete="new-password"
+        hint="Mínimo 8 caracteres"
         error={state.fieldErrors?.password}
       />
       <Button type="submit" disabled={pending}>

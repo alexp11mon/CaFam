@@ -40,8 +40,9 @@ describe("SignupForm", () => {
     const email = screen.getByLabelText("Email");
     expect(email).toHaveAccessibleDescription("Introduce un email válido.");
     expect(email).toHaveAttribute("aria-invalid", "true");
+    // The hint of the field first, then its error (spec 023 RF-24).
     expect(screen.getByLabelText("Contraseña")).toHaveAccessibleDescription(
-      "La contraseña debe tener al menos 8 caracteres.",
+      "Mínimo 8 caracteres La contraseña debe tener al menos 8 caracteres.",
     );
     expect(screen.getByLabelText("Nombre visible")).toHaveAttribute(
       "aria-invalid",
@@ -112,6 +113,17 @@ describe("SignupForm", () => {
 
     expect(container.querySelector('input[name="next"]')).toHaveValue(
       "/invite/abcDEF123-_abcDEF123-_abcDEF123-_abcDEF123-_",
+    );
+  });
+});
+
+// Spec 023, T12: the minimum is said before it fails (RF-24).
+describe("SignupForm password hint", () => {
+  it("tells the minimum length next to the field", () => {
+    render(<SignupForm action={vi.fn(async (state: SignUpState) => state)} />);
+
+    expect(screen.getByLabelText("Contraseña")).toHaveAccessibleDescription(
+      "Mínimo 8 caracteres",
     );
   });
 });

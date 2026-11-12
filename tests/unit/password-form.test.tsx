@@ -34,10 +34,12 @@ describe("PasswordForm (RF-30 to RF-32)", () => {
     const message = await screen.findByText(
       "La contraseña nueva no puede ser igual a la actual.",
     );
-    expect(screen.getByLabelText("Nueva contraseña")).toHaveAttribute(
-      "aria-describedby",
-      message.id,
-    );
+    // After the hint of the field (spec 023 RF-24).
+    expect(
+      screen
+        .getByLabelText("Nueva contraseña")
+        .getAttribute("aria-describedby"),
+    ).toMatch(new RegExp(` ${message.id}$`));
   });
 
   it("confirms the change and that the other sessions were closed (RF-33)", async () => {
