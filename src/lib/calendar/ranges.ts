@@ -65,11 +65,8 @@ function startOfDay(dateKey: string, timeZone: string): Date {
   return zonedLocalToUtc({ year, month, day, hour: 0, minute: 0 }, timeZone);
 }
 
-export function getVisibleRange(
-  view: CalendarView,
-  dateKey: string,
-  timeZone: string,
-): VisibleRange {
+/** Every day a view shows for a date, Monday first; no zone needed. */
+export function visibleDayKeys(view: CalendarView, dateKey: string): string[] {
   let first: string;
   let count: number;
   if (view === "month") {
@@ -87,12 +84,16 @@ export function getVisibleRange(
     first = dateKey;
     count = 1;
   }
+  return listDays(first, count);
+}
 
-  return {
-    view,
-    days: listDays(first, count),
-    ...instantsOf(first, count, timeZone),
-  };
+export function getVisibleRange(
+  view: CalendarView,
+  dateKey: string,
+  timeZone: string,
+): VisibleRange {
+  const days = visibleDayKeys(view, dateKey);
+  return { view, days, ...instantsOf(days[0]!, days.length, timeZone) };
 }
 
 function instantsOf(first: string, count: number, timeZone: string) {
