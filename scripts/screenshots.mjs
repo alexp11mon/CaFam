@@ -4,7 +4,8 @@
 //   npx next start -p 3100 &
 //   node --env-file=.env.test.local scripts/screenshots.mjs <outDir> [route ...]
 //
-// SHOTS_WIDTHS, SHOTS_THEMES and SHOTS_ACCENTS (comma separated) narrow the
+// SHOTS_SCALE (2 by default) sets the pixel ratio. SHOTS_WIDTHS, SHOTS_THEMES
+// and SHOTS_ACCENTS (comma separated) narrow the
 // set. It seeds a @cafam.test user with a few events and deletes it at the end.
 import { mkdirSync } from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -120,7 +121,7 @@ try {
       for (const width of WIDTHS) {
         const context = await browser.newContext({
           viewport: { width, height: HEIGHT[width] ?? 900 },
-          deviceScaleFactor: 2,
+          deviceScaleFactor: Number(process.env.SHOTS_SCALE ?? 2),
           colorScheme: theme === "dark" ? "dark" : "light",
           isMobile: width < 500,
           hasTouch: width < 800,

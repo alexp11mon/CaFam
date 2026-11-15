@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { NEUTRALS } from "@/lib/theme/accents";
 
-/** Installable PWA manifest (RF-21, RNF-9); stone and the new icons from spec 005 (RF-52, RF-53). */
+/** Installable PWA manifest (RF-21, RNF-9), with the mist and the icons of the Orilla identity (spec 025 RF-7). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "CaFam",

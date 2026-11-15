@@ -1,5 +1,6 @@
-// The CaFam mark: "CF" in stone on ink (inverted in dark, spec 011 D5), the same drawing as
-// public/icons/icon.svg (spec 005 RF-51, plan D14). It never takes the accent.
+// The CaFam mark (constitution, amendment 10; spec 025 RF-7): a coral tile
+// with an open white "C" and the dot of "today" in its mouth. The same
+// drawing as public/icons/icon.svg. It never takes the user's accent.
 
 export function LogoMark({ className = "size-12" }: { className?: string }) {
   return (
@@ -11,15 +12,13 @@ export function LogoMark({ className = "size-12" }: { className?: string }) {
     >
       <rect width="512" height="512" className="fill-mark" />
       <path
-        d="M274.9 198.1A90 90 0 1 0 274.9 313.9"
+        d="M330.4 180.2A118 118 0 1 0 330.4 331.8"
         fill="none"
-        strokeWidth="60"
+        strokeWidth="64"
+        strokeLinecap="round"
         className="stroke-on-mark"
       />
-      <path
-        d="M316 136h110v58h-52v36h34v54h-34v92h-58z"
-        className="fill-on-mark"
-      />
+      <circle cx="376" cy="256" r="34" className="fill-on-mark" />
     </svg>
   );
 }
@@ -29,7 +28,7 @@ export function Logo() {
   return (
     <span className="inline-flex items-center gap-3">
       <LogoMark className="size-10" />
-      <span className="text-xl font-extrabold tracking-tight text-ink">
+      <span className="text-2xl font-extrabold tracking-tight text-ink">
         CaFam
       </span>
     </span>

@@ -1,6 +1,6 @@
 # Spec 025 — Sistema de diseño y marca "Orilla"
 
-> Estado: **En curso** (2026-11-15). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-15): spec, plan, tareas, implementación y cierre. Segunda spec del encargo de rediseño (tras la 024). Límites: sin dependencias nuevas, sin migraciones, nada sobre producción.
+> Estado: **Cerrada** (2026-11-15). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-15): spec, plan, tareas, implementación y cierre. Segunda spec del encargo de rediseño (tras la 024). Límites: sin dependencias nuevas, sin migraciones, nada sobre producción.
 
 ## Contexto y objetivo
 
@@ -19,7 +19,7 @@ Esta spec deja la base sobre la que se rehacen las pantallas: identidad escrita,
 | Acento | El usuario sigue eligiendo entre seis, con nombre nuevo: **Coral** (por defecto), **Mar**, **Alga**, **Sol**, **Lavanda** y **Roca**. El acento marca hoy, ahora, la selección **y la acción principal de cada pantalla** (botón primario y "+") |
 | Calendarios | La paleta pastel de la spec 002 no cambia (son datos del usuario) |
 | Tipografía | **Figtree** (400–800, con cifras tabulares), una sola familia. Títulos en 700–800 con interlineado ajustado; cuerpo de 16 px; nunca menos de 16 px en un campo (iOS amplía la página si no) |
-| Forma | Tres radios: **tarjeta** 24 px, **control** 16 px (botones, campos, filas pulsables) y **círculo** (avatares, "+", Venito, píldoras de selección y chips). Los botones dejan de ser píldoras |
+| Forma | Tres radios: **tarjeta** 24 px, **control** 16 px (botones, campos, filas pulsables) y **círculo** (avatares, "+", Venito, píldoras de selección y chips), más uno menor, **bloque** 8 px, para los bloques de evento. Los botones dejan de ser píldoras |
 | Elevación | Dos niveles: **reposo** (línea fina y sombra mínima) y **flotante** (sombra amplia y suave). **Sin desenfoque de fondo** en ninguna superficie: no se pudo medir en iOS y es el sospechoso habitual de los tirones (spec 024, H3) |
 | Densidad | Objetivos táctiles de 48 px (mínimo 44), 16 px de margen lateral en el móvil, aire entre bloques mayor que dentro de ellos |
 | Iconos | SVG propios de trazo de 1,75 px con extremos redondos, en rejilla de 24 px; rellenos solo para el estado activo de la navegación |

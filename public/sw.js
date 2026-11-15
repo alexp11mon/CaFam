@@ -4,7 +4,7 @@
 // device (plan R6).
 
 // Bump the version to drop old caches after a change (plan R5).
-const CACHE_NAME = "cafam-v3";
+const CACHE_NAME = "cafam-v4";
 const OFFLINE_URL = "/offline";
 const PRECACHE_URLS = [
   OFFLINE_URL,

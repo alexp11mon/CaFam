@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { BRAND } from "@/lib/theme/accents";
 
 // Spec 005, T10: the new icons, drawn once from public/icons/icon.svg
 // (RF-51, RF-52, RF-54; plan D14, D18).
@@ -22,12 +23,12 @@ describe("app icons (RF-52)", () => {
     expect(pngSize(file)).toEqual([size, size]);
   });
 
-  it("comes from one SVG in ink and stone, also used as favicon", () => {
+  it("comes from one SVG, the coral tile with the white C, also used as favicon (spec 025 RF-7)", () => {
     const master = readFileSync("public/icons/icon.svg", "utf8");
     const favicon = readFileSync("src/app/icon.svg", "utf8");
 
-    expect(master).toMatch(/#141414/i);
-    expect(master).toMatch(/#E8E5DD/i);
+    expect(master).toContain(BRAND.tile);
+    expect(master).toContain(BRAND.onTile);
     expect(favicon).toBe(master);
   });
 });
@@ -36,7 +37,7 @@ describe("service worker version (RF-54, plan D18)", () => {
   const code = readFileSync("public/sw.js", "utf8");
 
   it("uses a new cache name so installed apps drop the old icons", () => {
-    expect(code).toMatch(/const CACHE_NAME = "cafam-v3";/);
+    expect(code).toMatch(/const CACHE_NAME = "cafam-v4";/);
   });
 
   it("deletes every cache with another name when it activates", () => {
