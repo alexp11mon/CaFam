@@ -1,6 +1,6 @@
 # Spec 026 — Calendario móvil primero
 
-> Estado: **En curso** (2026-11-15). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-15). Tercera spec del encargo de rediseño. Sin migraciones ni dependencias.
+> Estado: **Cerrada** (2026-11-15). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-15). Tercera spec del encargo de rediseño. Sin migraciones ni dependencias.
 
 ## Contexto y objetivo
 
