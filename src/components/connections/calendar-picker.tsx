@@ -75,7 +75,7 @@ export function CalendarPicker({
           return (
             <label
               key={calendar.id}
-              className="flex min-h-11 items-center gap-3 rounded-xl px-2 text-ink hover:bg-stone has-disabled:opacity-60"
+              className="flex min-h-11 items-center gap-3 rounded-control px-2 text-ink hover:bg-stone has-disabled:opacity-60"
             >
               <input
                 type="checkbox"

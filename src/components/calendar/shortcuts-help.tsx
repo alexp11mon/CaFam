@@ -28,7 +28,7 @@ export function ShortcutsHelp({ onClose }: { onClose: () => void }) {
       <dl className="mt-4 grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
         {SHORTCUTS.map((shortcut) => (
           <div key={shortcut.keys} className="contents">
-            <dt className="justify-self-start rounded-md bg-stone px-2 py-0.5 font-semibold tabular-nums">
+            <dt className="justify-self-start rounded-block bg-stone px-2 py-0.5 font-semibold tabular-nums">
               {shortcut.keys}
             </dt>
             <dd>{shortcut.description}</dd>

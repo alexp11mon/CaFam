@@ -130,7 +130,7 @@ export function MonthView({
                 {draft?.day === day ? (
                   <span
                     aria-hidden="true"
-                    className="absolute inset-x-0.5 bottom-0.5 z-10 truncate rounded-md border border-dashed border-ink bg-paper px-1 text-xs font-semibold text-ink"
+                    className="absolute inset-x-0.5 bottom-0.5 z-10 truncate rounded-block border border-dashed border-ink bg-paper px-1 text-xs font-semibold text-ink"
                   >
                     {draft.title || "(Sin título)"}
                   </span>
@@ -167,7 +167,7 @@ export function MonthView({
                     date={week.days[column]!}
                     aria-label={`+${count} más, ${formatDateKeyFull(week.days[column]!)}`}
                     style={{ gridColumn: column + 1, gridRow: lanes }}
-                    className="pointer-events-auto mx-0.5 truncate rounded-md px-1 text-xs leading-[18px] font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink"
+                    className="pointer-events-auto mx-0.5 truncate rounded-block px-1 text-xs leading-[18px] font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink"
                   >
                     +{count}
                   </CalendarLink>

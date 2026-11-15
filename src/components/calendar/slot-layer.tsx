@@ -167,7 +167,7 @@ export function SlotLayer({
             top: `${(preview.start / DAY_MINUTES) * 100}%`,
             height: `${((preview.end - preview.start) / DAY_MINUTES) * 100}%`,
           }}
-          className="pointer-events-none absolute inset-x-0.5 overflow-hidden rounded-md border border-dashed border-ink bg-paper px-1 text-xs text-ink"
+          className="pointer-events-none absolute inset-x-0.5 overflow-hidden rounded-block border border-dashed border-ink bg-paper px-1 text-xs text-ink"
         >
           <span className="block font-semibold">(Sin título)</span>
           <span className="block tabular-nums">

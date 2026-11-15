@@ -368,7 +368,7 @@ export function AssistantChat({
           message.role === "user" ? (
             <p
               key={index}
-              className="max-w-[85%] self-end rounded-card rounded-br-lg bg-ink px-4 py-2 whitespace-pre-line text-on-ink"
+              className="max-w-[85%] self-end rounded-card rounded-br-block bg-ink px-4 py-2 whitespace-pre-line text-on-ink"
             >
               <span className="sr-only">Tú: </span>
               {message.content}
@@ -381,7 +381,7 @@ export function AssistantChat({
                       key={i}
                       src={url}
                       alt={`Imagen adjunta ${i + 1}`}
-                      className="size-20 rounded-xl object-cover"
+                      className="size-20 rounded-control object-cover"
                     />
                   ))}
                 </span>
@@ -390,7 +390,7 @@ export function AssistantChat({
           ) : (
             <div
               key={index}
-              className="surface max-w-[92%] self-start rounded-card rounded-bl-lg px-4 py-3 text-ink"
+              className="surface max-w-[92%] self-start rounded-card rounded-bl-block px-4 py-3 text-ink"
             >
               <span className="sr-only">Asistente: </span>
               <p className="whitespace-pre-line">{message.content}</p>

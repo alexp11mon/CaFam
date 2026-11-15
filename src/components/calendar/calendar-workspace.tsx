@@ -168,7 +168,7 @@ const DRAWER_VIEWS: { view: CalendarView; label: string }[] = [
 ];
 
 const DRAWER_ROW =
-  "flex min-h-12 w-full items-center rounded-xl px-3 text-base font-medium text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:border aria-[current=page]:border-accent-edge aria-[current=page]:bg-accent aria-[current=page]:text-on-accent";
+  "flex min-h-12 w-full items-center rounded-control px-3 text-base font-medium text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:border aria-[current=page]:border-accent-edge aria-[current=page]:bg-accent aria-[current=page]:text-on-accent";
 
 /** The views at the top of the phone drawer, the current one as the selection (spec 016 RF-13). */
 function DrawerViews({

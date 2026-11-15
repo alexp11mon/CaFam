@@ -1,4 +1,4 @@
-const BLOCK = "rounded-xl bg-stone motion-safe:animate-pulse";
+const BLOCK = "rounded-control bg-stone motion-safe:animate-pulse";
 
 /** Shape of the section while its comments load; the detail does not wait (RNF rendimiento). */
 export function CommentsSkeleton() {

@@ -111,7 +111,7 @@ La identidad se llama **Orilla**: una mañana clara en la costa. Bruma pálida, 
 
 - **Figtree** (400 a 800) cargada con `next/font`, una sola familia; cifras tabulares (`tabular-nums`) en horas, fechas y contadores. Sin monoespaciada.
 - Escala corta: 12, 14, 16 (cuerpo), 20, 24 y 32 px. Títulos en 700 u 800 con interlineado ajustado; mayúsculas solo al inicio de frase.
-- **Tres radios**, como tokens: **tarjeta** 24 px (paneles, hojas, tarjetas), **control** 16 px (botones, campos, filas pulsables) y **círculo** (avatares, "+", Venito, chips y la píldora de una selección). Un botón nunca es una píldora; un chip nunca es un rectángulo.
+- **Tres radios**, como tokens: **tarjeta** 24 px (paneles, hojas, tarjetas), **control** 16 px (botones, campos, filas pulsables) y **círculo** (avatares, "+", Venito, chips y la píldora de una selección). Un radio menor, **bloque** 8 px, queda para los bloques de evento y las marcas pequeñas. Un botón nunca es una píldora; un chip nunca es un rectángulo.
 - **Dos elevaciones**, como tokens: **reposo** (línea fina y sombra mínima, utilidad `surface`) y **flotante** (sombra amplia y suave, utilidad `surface-float`, solo para lo que flota: hojas, ventanas, menús, avisos, botones flotantes y la barra inferior).
 - **Sin desenfoque de fondo** (`backdrop-filter`) en ninguna parte: las superficies son opacas. No se pudo medir su coste en iOS y es el sospechoso habitual de los tirones (spec 024).
 - El espacio entre bloques es mayor que dentro de ellos; una idea por tarjeta.

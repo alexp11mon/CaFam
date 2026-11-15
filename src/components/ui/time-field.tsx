@@ -127,7 +127,7 @@ export function TimeField({
           if (tidy && tidy !== value) onValueChange(tidy);
         }}
         onKeyDown={onKeyDown}
-        className="w-full rounded-xl border border-control bg-paper px-3 py-2 text-base text-ink tabular-nums outline-none transition-[border-color,box-shadow] focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20 aria-invalid:border-danger"
+        className="w-full rounded-control border border-control bg-paper px-3 py-2 text-base text-ink tabular-nums outline-none transition-[border-color,box-shadow] focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20 aria-invalid:border-danger"
       />
       <ul
         ref={list}
@@ -138,7 +138,7 @@ export function TimeField({
         // It hangs from the field, so it grows from its top edge (spec 021
         // RF-8), and its options land one after another each time (RF-16).
         data-entering=""
-        className="pop stagger absolute top-full z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-line bg-paper py-1 shadow-float [--pop-origin:50%_0]"
+        className="pop stagger absolute top-full z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-control border border-line bg-paper py-1 shadow-float [--pop-origin:50%_0]"
       >
         {options.map((option, index) => (
           <li

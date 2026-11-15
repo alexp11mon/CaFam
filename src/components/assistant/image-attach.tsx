@@ -73,7 +73,7 @@ export function ImageAttach({
               <img
                 src={attachment.url}
                 alt={`Imagen ${index + 1} para enviar`}
-                className="size-16 rounded-xl border border-line object-cover"
+                className="size-16 rounded-control border border-line object-cover"
               />
               <button
                 type="button"

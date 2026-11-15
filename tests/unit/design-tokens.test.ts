@@ -44,6 +44,7 @@ const FLOATING = new Set([
   "src/components/shell/calendar-sheet.tsx",
   "src/components/shell/side-rail.tsx",
   "src/components/ui/time-field.tsx",
+  "src/components/ui/sheet.tsx",
   "src/components/ui/toast.tsx",
 ]);
 
@@ -74,8 +75,9 @@ const RULES: { name: string; pattern: RegExp; allow?: Set<string> }[] = [
   },
   // Three radii only: rounded-card, rounded-control and rounded-full.
   {
-    name: "a loose radius",
-    pattern: /(?<![\w-])rounded(?:-[trblse]{1,2})?-\[/,
+    name: "a radius that is not card, control, block or full",
+    pattern:
+      /(?<![\w-])rounded(?:-[trblse]{1,2})?-(?:\[|xs\b|sm\b|md\b|lg\b|xl\b|[234]xl\b)/,
   },
   {
     // box-shadow inside a transition-[…] list is a CSS property, not a class.

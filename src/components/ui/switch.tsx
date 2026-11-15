@@ -65,7 +65,7 @@ export function Switch({
           const saved = await onCheckedChange(!checked);
           if (saved === true && button.current) pulse(button.current);
         }}
-        className="press-quiet flex min-h-11 w-full cursor-pointer items-center justify-between gap-4 rounded-xl text-left text-base font-medium text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60"
+        className="press-quiet flex min-h-11 w-full cursor-pointer items-center justify-between gap-4 rounded-control text-left text-base font-medium text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60"
       >
         <span className="min-w-0">{label}</span>
         <span

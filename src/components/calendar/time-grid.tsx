@@ -397,7 +397,7 @@ function DraftBlock({
         top: `${(draft.startMinute / 60) * hourPx}px`,
         height: `${Math.max(((draft.endMinute - draft.startMinute) / 60) * hourPx, MIN_SLOT_PX)}px`,
       }}
-      className={`absolute inset-x-0.5 z-10 overflow-hidden rounded-md border border-dashed border-ink bg-paper px-1 text-xs text-ink ${editable ? "touch-none select-none" : "pointer-events-none"}`}
+      className={`absolute inset-x-0.5 z-10 overflow-hidden rounded-block border border-dashed border-ink bg-paper px-1 text-xs text-ink ${editable ? "touch-none select-none" : "pointer-events-none"}`}
     >
       <span className="block font-semibold">
         {draft.title || "(Sin título)"}

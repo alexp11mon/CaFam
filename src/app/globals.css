@@ -39,6 +39,8 @@
   /* The three radii of the identity; the third is rounded-full. */
   --radius-card: 1.5rem;
   --radius-control: 1rem;
+  /* Event blocks and small marks. */
+  --radius-block: 0.5rem;
   /* transition-colors and friends use the motion tokens too (spec 021 RF-1). */
   --default-transition-duration: var(--motion-fast-in);
   --default-transition-timing-function: var(--ease-out);

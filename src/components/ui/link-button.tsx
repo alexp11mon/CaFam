@@ -1,16 +1,16 @@
 import Link, { type LinkProps } from "next/link";
 import type { ReactNode } from "react";
+import {
+  BUTTON_BASE,
+  BUTTON_VARIANTS,
+  type ButtonVariant,
+} from "./button-styles";
 
 interface LinkButtonProps extends LinkProps {
   children: ReactNode;
-  variant?: "primary" | "secondary";
+  variant?: ButtonVariant;
   className?: string;
 }
-
-const VARIANTS = {
-  primary: "bg-ink text-on-ink hover:bg-ink/85",
-  secondary: "border border-control bg-paper text-ink hover:bg-stone",
-};
 
 /** Navigation styled as a button; same size and focus ring as Button (RNF-7, RNF-9). */
 export function LinkButton({
@@ -20,7 +20,7 @@ export function LinkButton({
 }: LinkButtonProps) {
   return (
     <Link
-      className={`inline-flex min-h-11 items-center justify-center rounded-control px-5 py-2 text-base font-semibold press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${VARIANTS[variant]} ${className}`}
+      className={`${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${className}`}
       {...props}
     />
   );

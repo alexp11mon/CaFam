@@ -66,7 +66,7 @@ export function BusyBlock({
         onClick={() => setOpen((value) => !value)}
         // The tint marks the person; no pastel fill, unlike events (plan D6).
         style={{ borderLeftColor: item.tint }}
-        className="press-quiet flex size-full flex-col overflow-hidden rounded-md border border-l-4 border-line bg-busy-hatch px-1 text-left text-xs text-ink focus-visible:outline-2 focus-visible:outline-ink"
+        className="press-quiet flex size-full flex-col overflow-hidden rounded-block border border-l-4 border-line bg-busy-hatch px-1 text-left text-xs text-ink focus-visible:outline-2 focus-visible:outline-ink"
       >
         <span className="truncate font-semibold">{label}</span>
         <span className="truncate tabular-nums text-muted">

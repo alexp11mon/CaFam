@@ -75,11 +75,11 @@ function CommentMark({ count, icon }: { count?: number; icon: boolean }) {
 
 const SHAPES = {
   // Month and all-day strip: one line, as Google (spec 016 RF-34, RF-40).
-  line: "block h-[18px] truncate rounded-md px-1 text-xs leading-[18px]",
+  line: "block h-[18px] truncate rounded-block px-1 text-xs leading-[18px]",
   // Week and day: wraps and is cut at the bottom (RF-41, RF-42).
-  grid: "block overflow-hidden rounded-md px-1 py-0.5 text-xs leading-tight break-words hyphens-auto",
+  grid: "block overflow-hidden rounded-block px-1 py-0.5 text-xs leading-tight break-words hyphens-auto",
   // Agenda: title and a line under it, each cut with an ellipsis (RF-54..RF-56).
-  card: "flex min-w-0 flex-col rounded-xl px-4 py-2.5 text-base",
+  card: "flex min-w-0 flex-col rounded-control px-4 py-2.5 text-base",
 } as const;
 
 /**

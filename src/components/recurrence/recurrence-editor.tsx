@@ -21,7 +21,7 @@ const UNITS: { value: Freq; one: string; many: string }[] = [
 const LETTERS = ["L", "M", "X", "J", "V", "S", "D"];
 
 const FIELD =
-  "rounded-xl border border-control bg-paper px-3 py-2 text-base text-ink outline-none focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20";
+  "rounded-control border border-control bg-paper px-3 py-2 text-base text-ink outline-none focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20";
 
 /** "Personalizado…" of the "Repetir" field (RF-3, RF-4, RF-5), whole with the keyboard. */
 export function RecurrenceEditor({

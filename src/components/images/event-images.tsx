@@ -27,7 +27,7 @@ function Thumb({
         type="button"
         onClick={onOpen}
         aria-label={`Ver ${alt}`}
-        className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl bg-stone press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-control bg-stone press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         {blob.status === "ready" ? (
           // blob: URLs cannot go through the image optimizer (plan D10).
