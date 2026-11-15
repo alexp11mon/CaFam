@@ -164,6 +164,18 @@ describe("mergeWindow", () => {
     expect(merged.events[1]!.endsAt).toBe("2026-12-01T02:00:00Z");
   });
 
+  it("keeps the object of an event that comes again unchanged (RNF-5)", () => {
+    const merged = mergeWindow(
+      window,
+      {
+        range: { from: "2026-12-01", to: "2026-12-31" },
+        events: [{ ...window.events[1]! }],
+      },
+      "extend",
+    );
+    expect(merged.events[1]).toBe(window.events[1]);
+  });
+
   it("drops the old window when replacing", () => {
     const fetched = {
       range: { from: "2027-06-01", to: "2027-06-30" },

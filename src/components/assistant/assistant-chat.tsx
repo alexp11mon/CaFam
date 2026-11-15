@@ -18,6 +18,12 @@ import {
 import { checkAttachments } from "@/lib/assistant/attachments";
 import { MAX_MESSAGES, QUESTION_MAX } from "@/lib/assistant/limits";
 import type { Proposal } from "@/lib/assistant/proposal";
+import {
+  NDJSON,
+  readLines,
+  STATUS,
+  type StreamLine,
+} from "@/lib/assistant/stream";
 import type { CitedEvent } from "@/lib/assistant/tools";
 import { prepareForAssistant } from "@/lib/images/prepare-image";
 import { CitedEvents } from "./cited-events";
@@ -56,13 +62,44 @@ const EXAMPLES = [
   "¿Qué tardes tengo libres la semana que viene?",
 ];
 
-export function AssistantChat({
-  timeZone,
-  calendars = [],
-}: {
+/** What the chat needs from the account, read after it is on screen. */
+export interface ChatContext {
   timeZone: string;
+  calendars: readonly ChatCalendar[];
+}
+
+export function AssistantChat({
+  timeZone: givenTimeZone,
+  calendars: givenCalendars,
+  loadContext,
+}: {
+  timeZone?: string;
   calendars?: readonly ChatCalendar[];
+  /**
+   * Reads the zone and the writable calendars once the chat is painted, so
+   * opening it waits for nothing (spec 024 RF-19).
+   */
+  loadContext?: () => Promise<ChatContext>;
 }) {
+  const [loaded, setLoaded] = useState<ChatContext | null>(null);
+  useEffect(() => {
+    if (!loadContext) return;
+    let gone = false;
+    void loadContext()
+      .then((context) => {
+        if (!gone) setLoaded(context);
+      })
+      .catch(() => {});
+    return () => {
+      gone = true;
+    };
+  }, [loadContext]);
+  // Until it arrives, the device's zone: the same for almost everyone.
+  const timeZone =
+    givenTimeZone ??
+    loaded?.timeZone ??
+    Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const calendars = givenCalendars ?? loaded?.calendars ?? [];
   const [messages, setMessages] = useState<Message[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [attachErrors, setAttachErrors] = useState<string[]>([]);
@@ -73,6 +110,8 @@ export function AssistantChat({
   const [fieldError, setFieldError] = useState<string>();
   const [error, setError] = useState<{ text: string; retry: boolean }>();
   const [pending, setPending] = useState(false);
+  // What the assistant is doing, as the server tells it (spec 024 RF-17).
+  const [status, setStatus] = useState<string>(STATUS.start);
   const [quotaReached, setQuotaReached] = useState(false);
   const controller = useRef<AbortController | null>(null);
   const field = useRef<HTMLTextAreaElement>(null);
@@ -157,6 +196,7 @@ export function AssistantChat({
     setMessages((current) => [...current, asked]);
     setDraft("");
     setAttachments([]);
+    setStatus(STATUS.start);
     setPending(true);
     const abort = new AbortController();
     controller.current = abort;
@@ -178,14 +218,37 @@ export function AssistantChat({
         }),
         signal: abort.signal,
       });
-      const body = await response.json().catch(() => ({}));
       if (!response.ok) {
+        const failure = await response.json().catch(() => ({}));
         giveBack();
         // RF-27: the quota is over until tomorrow, retrying would not help.
         if (response.status === 429) setQuotaReached(true);
         setError({
-          text: body.error ?? UNAVAILABLE_TEXT,
+          text: failure.error ?? UNAVAILABLE_TEXT,
           retry: response.status === 503,
+        });
+        return;
+      }
+      // Spec 024 RF-16, RF-17: lines of progress, then the answer.
+      let body: Extract<StreamLine, { type: "done" }> | null = null;
+      let failed: Extract<StreamLine, { type: "error" }> | null = null;
+      if (!response.headers.get("Content-Type")?.includes(NDJSON)) {
+        // Something on the way joined the stream into one JSON answer.
+        const whole = await response.json().catch(() => null);
+        if (whole?.answer) body = { type: "done", ...whole };
+      } else if (response.body) {
+        for await (const line of readLines(response.body)) {
+          if (line.type === "status") setStatus(line.text);
+          else if (line.type === "done") body = line;
+          else failed = line;
+        }
+      }
+      if (!body) {
+        giveBack();
+        if (abort.signal.aborted) return;
+        setError({
+          text: failed?.text ?? UNAVAILABLE_TEXT,
+          retry: failed?.retry ?? true,
         });
         return;
       }
@@ -353,7 +416,7 @@ export function AssistantChat({
       <div role="status" className="flex items-center gap-3 empty:hidden">
         {pending ? (
           <>
-            <span className="text-muted">Pensando…</span>
+            <span className="text-muted">{status}</span>
             <Button
               variant="secondary"
               onClick={() => controller.current?.abort()}

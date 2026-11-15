@@ -29,7 +29,13 @@ const server = http.createServer(async (req, res) => {
   }
   await wait(delay);
   const upstream = http.request(
-    { host: "127.0.0.1", port: target, path: req.url, method: req.method, headers: req.headers },
+    {
+      host: "127.0.0.1",
+      port: target,
+      path: req.url,
+      method: req.method,
+      headers: req.headers,
+    },
     (answer) => {
       res.writeHead(answer.statusCode ?? 502, answer.headers);
       answer.pipe(res);
@@ -60,4 +66,6 @@ server.on("upgrade", (req, socket, head) => {
   socket.on("error", () => upstream.destroy());
 });
 
-server.listen(port, () => console.log(`latency proxy :${port} -> :${target}, ${delay} ms`));
+server.listen(port, () =>
+  console.log(`latency proxy :${port} -> :${target}, ${delay} ms`),
+);

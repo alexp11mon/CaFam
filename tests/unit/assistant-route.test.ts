@@ -43,7 +43,18 @@ vi.mock("@/lib/calendar/queries", () => ({
 vi.mock("@/lib/assistant/run", () => ({ runAssistant, runProposal }));
 vi.mock("@/lib/assistant/tools", () => ({ runTool }));
 
-import { POST, maxDuration } from "@/app/api/assistant/route";
+import { GET, POST, maxDuration } from "@/app/api/assistant/route";
+
+/** Spec 024 RF-16: the lines of a streamed answer. */
+async function lines(response: Response) {
+  expect(response.headers.get("Content-Type")).toContain(
+    "application/x-ndjson",
+  );
+  return (await response.text())
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+}
 
 const QUESTION = { messages: [{ role: "user", content: "¿Qué hay hoy?" }] };
 
@@ -99,17 +110,17 @@ describe("POST /api/assistant", () => {
     runAssistant.mockResolvedValue({ answer: "Cine [visto].", events });
     const response = await post(QUESTION);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({
-      answer: "Cine [visto].",
-      events,
-      remaining: 26,
-    });
+    // Spec 024 RF-16: a first sign of life, then the answer.
+    expect(await lines(response)).toEqual([
+      { type: "status", text: "Pensando…" },
+      { type: "done", answer: "Cine [visto].", events, remaining: 26 },
+    ]);
     expect(insert).toHaveBeenCalledWith({ user_id: "user-1" });
     expect(runAssistant.mock.calls[0]![0]).toEqual(QUESTION.messages);
   });
 
   it("binds the tools to the session user (RF-29)", async () => {
-    await post(QUESTION);
+    await (await post(QUESTION)).text();
     const deps = runAssistant.mock.calls[0]![1];
     expect(deps.timeZone).toBe("Europe/Madrid");
     await deps.runTool("list_events", "{}", "refs");
@@ -126,9 +137,12 @@ describe("POST /api/assistant", () => {
   it("answers 503 and does not record when the provider fails (RF-28)", async () => {
     runAssistant.mockRejectedValue(new AssistantUnavailable("status 500"));
     const response = await post(QUESTION);
-    expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({
-      error: "El asistente no está disponible ahora mismo",
+    // Spec 024 RF-16: the stream has started, so the failure is its last line.
+    expect(response.status).toBe(200);
+    expect((await lines(response)).at(-1)).toEqual({
+      type: "error",
+      text: "El asistente no está disponible ahora mismo",
+      retry: true,
     });
     expect(insert).not.toHaveBeenCalled();
   });
@@ -140,9 +154,45 @@ describe("POST /api/assistant", () => {
       signal.throwIfAborted();
     });
     const response = await post(QUESTION, controller.signal);
+    // Spec 024 RF-16: the stream just ends; nobody reads it (RF-4).
+    expect(await lines(response)).toEqual([
+      { type: "status", text: "Pensando…" },
+    ]);
     expect(runAssistant.mock.calls[0]![2]).toBeInstanceOf(AbortSignal);
-    expect(response.status).toBe(499);
     expect(insert).not.toHaveBeenCalled();
+  });
+});
+
+// Spec 024, T8 (RF-16, RF-19).
+describe("streaming and warm-up", () => {
+  it("passes the steps of the run on as they happen", async () => {
+    runAssistant.mockImplementation(
+      async (_messages, deps: { onStatus: (text: string) => void }) => {
+        deps.onStatus("Buscando «dentista»…");
+        deps.onStatus("Escribiendo la respuesta…");
+        return { answer: "El sábado.", events: [] };
+      },
+    );
+    const all = await lines(await post(QUESTION));
+    expect(all.map((line) => line.text ?? line.type)).toEqual([
+      "Pensando…",
+      "Buscando «dentista»…",
+      "Escribiendo la respuesta…",
+      "done",
+    ]);
+  });
+
+  it("is not cached nor buffered on the way", async () => {
+    const response = await post(QUESTION);
+    expect(response.headers.get("Cache-Control")).toContain("no-store");
+    expect(response.headers.get("X-Accel-Buffering")).toBe("no");
+    await response.text();
+  });
+
+  it("answers the warm-up with nothing and reads nothing", () => {
+    const response = GET();
+    expect(response.status).toBe(204);
+    expect(getClaims).not.toHaveBeenCalled();
   });
 });
 
@@ -189,12 +239,16 @@ describe("POST /api/assistant with images", () => {
   it("answers a message with images with a proposal and counts it (RF-14, RF-53)", async () => {
     const response = await post(WITH_IMAGES);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({
-      answer: "He leído 1 evento.",
-      events: [],
-      proposal: PROPOSAL,
-      remaining: 26,
-    });
+    expect(await lines(response)).toEqual([
+      { type: "status", text: "Leyendo la imagen…" },
+      {
+        type: "done",
+        answer: "He leído 1 evento.",
+        events: [],
+        proposal: PROPOSAL,
+        remaining: 26,
+      },
+    ]);
     expect(runAssistant).not.toHaveBeenCalled();
     expect(runProposal.mock.calls[0]![0]).toEqual(WITH_IMAGES.messages);
     expect(runProposal.mock.calls[0]![1]).toBeUndefined();
@@ -202,7 +256,7 @@ describe("POST /api/assistant with images", () => {
   });
 
   it("gives the proposal only the calendars the user can write to (RF-26)", async () => {
-    await post(WITH_IMAGES);
+    await (await post(WITH_IMAGES)).text();
     const deps = runProposal.mock.calls[0]![2];
     expect(deps.proposal.calendars).toEqual([
       { id: "c1", name: "Trabajo", canWrite: true },
@@ -231,9 +285,13 @@ describe("POST /api/assistant with images", () => {
       selected: true,
       duplicate: false,
     };
-    await post({
+    const response = await post({
       messages: [{ role: "user", content: "El martes a las 9" }],
       proposal: [row],
+    });
+    expect((await lines(response))[0]).toEqual({
+      type: "status",
+      text: "Revisando la propuesta…",
     });
     expect(runAssistant).not.toHaveBeenCalled();
     expect(runProposal.mock.calls[0]![1]).toEqual([row]);
@@ -245,7 +303,10 @@ describe("POST /api/assistant with images", () => {
     );
     runProposal.mockRejectedValue(new AssistantUnavailable("status 429"));
     const response = await post(WITH_IMAGES);
-    expect(response.status).toBe(503);
+    expect((await lines(response)).at(-1)).toMatchObject({
+      type: "error",
+      retry: true,
+    });
     expect(insert).not.toHaveBeenCalled();
     for (const spy of spies) {
       for (const call of spy.mock.calls) {

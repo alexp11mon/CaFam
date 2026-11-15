@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -81,6 +82,9 @@ import {
   POP_OUT_MS,
 } from "@/lib/motion/play";
 
+/** How far from its place a new period starts its slide. */
+const PERIOD_ENTER_PX = 56;
+
 /** --motion-base-out: the header picker rolls back up this long. */
 const HEADER_OUT_MS = 176;
 import { WeekendToggle } from "./weekend-toggle";
@@ -100,6 +104,16 @@ export type FilterSection = PersonGroup<PanelCalendar> & { groupId?: string };
 type Group = FilterSection;
 type Result = { error?: string };
 type Direction = "up" | "down";
+
+/**
+ * How the period on screen arrived: by which side (1 = from the end, the
+ * next period; -1 = from the start) and a count that changes on every such
+ * move (spec 024 plan D13).
+ */
+export interface PeriodEnter {
+  from: -1 | 0 | 1;
+  move: number;
+}
 
 export interface SavedOrder {
   people: string[];
@@ -208,6 +222,7 @@ function swap<T>(items: T[], index: number, direction: Direction): T[] {
 export function CalendarWorkspace({
   view,
   date,
+  enter,
   days,
   today,
   timeZone,
@@ -236,6 +251,8 @@ export function CalendarWorkspace({
 }: {
   view: CalendarView;
   date: string;
+  /** Set by the calendar screen when a period comes in without a view transition. */
+  enter?: PeriodEnter;
   days: string[];
   today: string;
   timeZone: string;
@@ -407,25 +424,34 @@ export function CalendarWorkspace({
         return;
       }
       const delta = decision === "forward" ? 1 : -1;
-      const leave = () =>
-        go(view, navigate(view, date, delta), typesOf(periodType(delta)));
-      // Out by its side; the period transition brings the new one in.
-      const out = play(
-        area,
-        [
-          { translate: `${offset}px 0px` },
-          { translate: `${-delta * area.offsetWidth}px 0px` },
-        ],
-        {
-          duration: motionMs("--motion-fast-out", 120),
-          easing: motionToken("--ease-out", EASE_OUT),
-          fill: "forwards",
-        },
-      );
-      if (out) void out.finished.then(leave, leave);
-      else leave();
+      // The new period is already in the browser (spec 024 RF-2): it is
+      // painted right away and the period transition takes the old one out
+      // by its side, from where the finger left it. No animation first.
+      go(view, navigate(view, date, delta), typesOf(periodType(delta)));
     },
   });
+  // A period painted at once slides in from its side, a short way, with
+  // transform and opacity only (spec 024 plan D13).
+  const enterMove = enter?.move ?? 0;
+  const enterFrom = enter?.from ?? 0;
+  useLayoutEffect(() => {
+    const area = swipeArea.current;
+    if (!area || enterMove === 0 || enterFrom === 0) return;
+    play(
+      area,
+      [
+        { translate: `${enterFrom * PERIOD_ENTER_PX}px 0px`, opacity: 0.4 },
+        { translate: "0px 0px", opacity: 1 },
+      ],
+      {
+        duration: motionMs("--motion-fast-in", 150),
+        easing: motionToken("--ease-out", EASE_OUT),
+        fill: "none",
+      },
+    );
+    // Only a new move plays it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enterMove]);
   const filtersInDrawer = isPhone && onCalendarPage ? drawerSlot : null;
   const quickCreate = canCreate && createAction && editableCalendars.length > 0;
 

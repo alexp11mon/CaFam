@@ -59,7 +59,7 @@ beforeEach(() => {
 });
 
 describe("loadCalendarWindow", () => {
-  it("reads the days in the profile's zone and returns view events", async () => {
+  it("reads the days, whatever the zone, and returns view events", async () => {
     const result = await loadCalendarWindow("2027-01-04", "2027-01-31");
     expect(result).toEqual({
       events: [
@@ -70,9 +70,9 @@ describe("loadCalendarWindow", () => {
         }),
       ],
     });
-    // Madrid is UTC+1 in January: the local day starts the evening before.
-    expect(state.ranges[0]![0].toISOString()).toBe("2027-01-03T23:00:00.000Z");
-    expect(state.ranges[0]![1].toISOString()).toBe("2027-02-01T00:00:00.000Z");
+    // No zone asked for: the days with 14 h of slack on each side.
+    expect(state.ranges[0]![0].toISOString()).toBe("2027-01-03T10:00:00.000Z");
+    expect(state.ranges[0]![1].toISOString()).toBe("2027-02-01T14:00:00.000Z");
   });
 
   it("refuses anything that is not two dates in order, at most 124 days", async () => {

@@ -10,6 +10,7 @@ import {
   type ToolDefinition,
 } from "./provider";
 import type { ChatMessage, ProposalRow } from "./schemas";
+import { STATUS, statusFor } from "./stream";
 import { TOOL_DEFINITIONS } from "./tool-definitions";
 import type { CitedEvent } from "./tools";
 
@@ -32,6 +33,8 @@ export interface RunDeps {
   ) => Promise<object>;
   now: Date;
   timeZone: string;
+  /** Told what is being done, step by step, for the person waiting (spec 024 RF-16). */
+  onStatus?: (text: string) => void;
 }
 
 /** Sent before the forced answer: without it gpt-oss still tried a tool (400). */
@@ -83,8 +86,18 @@ export async function runAssistant(
     }
     messages.push(reply.message);
     for (const call of reply.toolCalls) {
-      const result = await deps.runTool(call.name, call.arguments, refs);
-      signal?.throwIfAborted();
+      deps.onStatus?.(statusFor(call.name, call.arguments));
+    }
+    // The tools of one round only read: all at once, answered in the order
+    // they were asked (spec 024 RF-18, plan D8).
+    const results = await Promise.all(
+      reply.toolCalls.map((call) =>
+        deps.runTool(call.name, call.arguments, refs),
+      ),
+    );
+    signal?.throwIfAborted();
+    reply.toolCalls.forEach((call, index) => {
+      const result = results[index]!;
       if ("notice" in result && typeof result.notice === "string") {
         notices.add(result.notice);
       }
@@ -93,7 +106,8 @@ export async function runAssistant(
         tool_call_id: call.id,
         content: JSON.stringify(result),
       });
-    }
+    });
+    deps.onStatus?.(STATUS.writing);
   }
 }
 

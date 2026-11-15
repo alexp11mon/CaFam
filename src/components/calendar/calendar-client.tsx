@@ -2,6 +2,7 @@
 
 import {
   addTransitionType,
+  memo,
   startTransition,
   useCallback,
   useEffect,
@@ -18,16 +19,22 @@ import {
   parseViewParams,
   type CalendarView,
 } from "@/lib/calendar/ranges";
+import { CAL_NEXT, CAL_PREV } from "@/lib/calendar/transition-types";
 import { visibleDays } from "@/lib/calendar/view-options";
 import { useEventWindow } from "@/lib/hooks/use-event-window";
+import { useStableJson, useStableList } from "@/lib/hooks/use-stable-list";
 import { FormAlert } from "@/components/ui/form-alert";
 import { LinkButton } from "@/components/ui/link-button";
 import type { AgendaEvent } from "./agenda-view";
 import { CalendarNavContext, type CalendarGo } from "./calendar-nav";
-import { CalendarWorkspace } from "./calendar-workspace";
+import { CalendarWorkspace, type PeriodEnter } from "./calendar-workspace";
 import { ViewToolbar } from "./view-toolbar";
 
 type WorkspaceProps = ComponentProps<typeof CalendarWorkspace>;
+
+// Reading more days into the window renders this screen again; the workspace
+// only does when what it shows changed (spec 024 RNF-5).
+const Workspace = memo(CalendarWorkspace);
 type Location = { view: CalendarView; date: string };
 
 const CALENDAR_PATH = "/dashboard/calendar";
@@ -85,14 +92,21 @@ export function CalendarClient({
   ) => Promise<{ busy: BusyInput[] } | { error: string }>;
 } & Omit<
   WorkspaceProps,
-  "view" | "date" | "days" | "events" | "monthMarks" | "busyIntervals"
+  "view" | "date" | "days" | "events" | "monthMarks" | "busyIntervals" | "enter"
 >) {
   const { today, timeZone, showWeekends = true, busyPeople = [] } = workspace;
   const [location, setLocation] = useState<{
     seen: EventWindow<AgendaEvent>;
     view: CalendarView;
     date: string;
-  }>({ seen: serverWindow, view: initialView, date: initialDate });
+    /** The side the last period came in by, and a count of those moves. */
+    enter: PeriodEnter;
+  }>({
+    seen: serverWindow,
+    view: initialView,
+    date: initialDate,
+    enter: { from: 0, move: 0 },
+  });
   // A server render (first load, refresh, a link from another screen) is the
   // new starting point; the address wins if a swipe moved on meanwhile.
   if (location.seen !== serverWindow) {
@@ -102,19 +116,41 @@ export function CalendarClient({
       seen: serverWindow,
       view: current?.view ?? initialView,
       date: current?.date ?? initialDate,
+      enter: location.enter,
     });
   }
   const { view, date } = location;
 
   const go = useCallback<CalendarGo>((nextView, nextDate, types) => {
-    startTransition(() => {
-      for (const type of types ?? []) addTransitionType(type);
+    const side =
+      types?.length !== 1
+        ? 0
+        : types[0] === CAL_NEXT
+          ? 1
+          : types[0] === CAL_PREV
+            ? -1
+            : 0;
+    if (side !== 0) {
+      // A new period is the most repeated move: it is painted in this very
+      // update, with no view transition, whose snapshot of the old period
+      // delayed the new one some 60 ms (spec 024 H4, plan D13). The
+      // workspace slides it in.
       setLocation((current) => ({
         ...current,
         view: nextView,
         date: nextDate,
+        enter: { from: side, move: current.enter.move + 1 },
       }));
-    });
+    } else {
+      startTransition(() => {
+        for (const type of types ?? []) addTransitionType(type);
+        setLocation((current) => ({
+          ...current,
+          view: nextView,
+          date: nextDate,
+        }));
+      });
+    }
     // Next keeps its router in step with the address (plan D2): a later
     // refresh reads the window of this date.
     const href = calendarHref(nextView, nextDate);
@@ -155,20 +191,24 @@ export function CalendarClient({
   );
   // A stable array while nothing changes: the optimistic changes of the
   // workspace hang from it (spec 017).
-  const shown = useMemo(
-    () => eventsInRange(events.events, range.from, range.to).sort(byStart),
-    [events.events, range],
+  const shown = useStableList(
+    useMemo(
+      () => eventsInRange(events.events, range.from, range.to).sort(byStart),
+      [events.events, range],
+    ),
   );
   // Dots of the mini month, from the same window (RF-8).
   const month = date.slice(0, 7);
-  const marks = useMemo(() => {
-    const monthRange = getVisibleRange("month", `${month}-01`, timeZone);
-    return monthMarks(
-      eventsInRange(events.events, monthRange.from, monthRange.to),
-      monthRange.days,
-      timeZone,
-    );
-  }, [events.events, month, timeZone]);
+  const marks = useStableJson(
+    useMemo(() => {
+      const monthRange = getVisibleRange("month", `${month}-01`, timeZone);
+      return monthMarks(
+        eventsInRange(events.events, monthRange.from, monthRange.to),
+        monthRange.days,
+        timeZone,
+      );
+    }, [events.events, month, timeZone]),
+  );
 
   // "Ocupado" blocks: the server's for its own week or day, the rest asked
   // for when someone is marked (RF-9, plan D5).
@@ -250,10 +290,11 @@ export function CalendarClient({
         data-loading={events.loading || undefined}
         className="flex min-h-0 flex-1 flex-col transition-opacity duration-(--motion-fast-in) data-loading:opacity-70"
       >
-        <CalendarWorkspace
+        <Workspace
           {...workspace}
           view={view}
           date={date}
+          enter={location.enter}
           days={days}
           events={shown}
           monthMarks={marks}

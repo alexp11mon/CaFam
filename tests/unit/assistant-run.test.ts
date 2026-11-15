@@ -263,4 +263,57 @@ describe("runAssistant", () => {
     ).rejects.toMatchObject({ name: "AbortError" });
     expect(chat).toHaveBeenCalledTimes(1);
   });
+
+  it("tells each step to whoever waits (spec 024 RF-16)", async () => {
+    const onStatus = vi.fn();
+    const { deps: d } = deps(
+      [
+        toolCall("search_events", { query: "dentista" }),
+        text("El dentista es el sábado [e1]."),
+      ],
+      { onStatus },
+    );
+    await runAssistant([{ role: "user", content: "¿Y el dentista?" }], d);
+    expect(onStatus.mock.calls.map(([status]) => status)).toEqual([
+      "Buscando «dentista»…",
+      "Escribiendo la respuesta…",
+    ]);
+  });
+
+  it("runs the tools of one round at once, answered in the order asked (spec 024 RF-18)", async () => {
+    const two: ProviderReply = {
+      content: null,
+      toolCalls: [
+        { id: "slow", name: "list_events", arguments: "{}" },
+        { id: "fast", name: "get_comments", arguments: "{}" },
+      ],
+      message: { role: "assistant", content: null, tool_calls: [] },
+    };
+    const started: string[] = [];
+    let release: () => void = () => {};
+    const { deps: d, chat } = deps([two, text("Listo.")], {
+      runTool: async (name) => {
+        started.push(name);
+        if (name === "list_events") {
+          // The second tool starts while the first one is still reading.
+          await new Promise<void>((resolve) => (release = resolve));
+        } else {
+          release();
+        }
+        return { from: name };
+      },
+    });
+    await runAssistant([{ role: "user", content: "¿Qué hay?" }], d);
+
+    expect(started).toEqual(["list_events", "get_comments"]);
+    const tools = sent(chat, 1).filter((message) => message.role === "tool");
+    expect(tools.map((message) => message.tool_call_id)).toEqual([
+      "slow",
+      "fast",
+    ]);
+    expect(tools.map((message) => message.content)).toEqual([
+      '{"from":"list_events"}',
+      '{"from":"get_comments"}',
+    ]);
+  });
 });

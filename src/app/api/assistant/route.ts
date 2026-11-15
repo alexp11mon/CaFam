@@ -14,9 +14,15 @@ import {
   jsonChat,
   visionChat,
 } from "@/lib/assistant/provider";
-import type { ProposalDeps } from "@/lib/assistant/proposal";
+import type { Proposal, ProposalDeps } from "@/lib/assistant/proposal";
 import { runAssistant, runProposal } from "@/lib/assistant/run";
 import { assistantRequestSchema } from "@/lib/assistant/schemas";
+import {
+  encodeLine,
+  NDJSON,
+  STATUS,
+  type StreamLine,
+} from "@/lib/assistant/stream";
 import { runTool } from "@/lib/assistant/tools";
 import {
   getEventsInRange,
@@ -94,63 +100,112 @@ export async function POST(request: Request) {
     (last?.role === "user" && (last.images?.length ?? 0) > 0) ||
     (proposal?.length ?? 0) > 0;
 
-  let result;
-  try {
-    result = proposing
-      ? await runProposal(
-          messages,
-          proposal,
-          {
-            json: (input, vision, signal) =>
-              vision
-                ? visionChat(input, signal)
-                : jsonChat(input, undefined, signal),
-            proposal: await proposalDeps(supabase, userId, timeZone),
-            now,
-            timeZone,
-          },
-          request.signal,
-        )
-      : await runAssistant(
-          messages,
-          {
-            chat,
-            // RF-29: the tools always act as the session user, whatever the thread says.
-            runTool: (name, args, refs) =>
-              runTool(name, args, {
-                supabase,
-                userId,
-                timeZone,
+  // From here on the answer is a stream of lines (spec 024 RF-16, plan D7):
+  // what is being done, then the answer. The quota and the session were
+  // checked above, with their own status codes.
+  const encoder = new TextEncoder();
+  const body = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      let open = true;
+      const send = (line: StreamLine) => {
+        if (!open) return;
+        try {
+          controller.enqueue(encoder.encode(encodeLine(line)));
+        } catch {
+          // The reader left (cancelled): nothing else to send.
+          open = false;
+        }
+      };
+      const status = (text: string) => send({ type: "status", text });
+      status(
+        !proposing
+          ? STATUS.start
+          : last?.role === "user" && (last.images?.length ?? 0) > 0
+            ? STATUS.image
+            : STATUS.proposal,
+      );
+      try {
+        const result = proposing
+          ? await runProposal(
+              messages,
+              proposal,
+              {
+                json: (input, vision, signal) =>
+                  vision
+                    ? visionChat(input, signal)
+                    : jsonChat(input, undefined, signal),
+                proposal: await proposalDeps(supabase, userId, timeZone),
                 now,
-                refs,
-                excludeSynced: PROVIDER_TRAINS_ON_DATA,
-              }),
-            now,
-            timeZone,
-          },
-          request.signal,
-        );
-  } catch (error) {
-    // The user cancelled (RF-4): nobody reads this answer.
-    if (request.signal.aborted) return new Response(null, { status: 499 });
-    // The reason (status and Groq's code, no user data) shows in Vercel's logs.
-    if (error instanceof AssistantUnavailable) {
-      console.warn(`assistant unavailable: ${error.message}`);
-    } else console.error(error);
-    return Response.json({ error: UNAVAILABLE_TEXT }, { status: 503 });
-  }
+                timeZone,
+              },
+              request.signal,
+            )
+          : await runAssistant(
+              messages,
+              {
+                chat,
+                // RF-29: the tools always act as the session user, whatever the thread says.
+                runTool: (name, args, refs) =>
+                  runTool(name, args, {
+                    supabase,
+                    userId,
+                    timeZone,
+                    now,
+                    refs,
+                    excludeSynced: PROVIDER_TRAINS_ON_DATA,
+                  }),
+                now,
+                timeZone,
+                onStatus: status,
+              },
+              request.signal,
+            );
+        send({
+          type: "done",
+          answer: result.answer,
+          events: result.events,
+          ...("proposal" in result && result.proposal
+            ? { proposal: result.proposal as Proposal }
+            : {}),
+          remaining: DAILY_QUESTIONS - used - 1,
+        });
+        // Only answered questions count (plan D9 of 015). After the answer
+        // is on its way, before the stream closes.
+        const { error: insertError } = await supabase
+          .from("assistant_questions")
+          .insert({ user_id: userId });
+        if (insertError) console.error(insertError);
+      } catch (error) {
+        // The user cancelled (RF-4 of 015): nobody reads this answer.
+        if (!request.signal.aborted) {
+          // The reason (status and Groq's code, no user data) shows in Vercel's logs.
+          if (error instanceof AssistantUnavailable) {
+            console.warn(`assistant unavailable: ${error.message}`);
+          } else console.error(error);
+          send({ type: "error", text: UNAVAILABLE_TEXT, retry: true });
+        }
+      }
+      if (open) controller.close();
+    },
+  });
 
-  const { error: insertError } = await supabase
-    .from("assistant_questions")
-    .insert({ user_id: userId });
-  if (insertError) console.error(insertError);
+  return new Response(body, {
+    headers: {
+      "Content-Type": `${NDJSON}; charset=utf-8`,
+      "Cache-Control": "no-store, no-transform",
+      // Proxies that buffer would hold the progress until the end (plan R4).
+      "X-Accel-Buffering": "no",
+    },
+  });
+}
 
-  return Response.json({
-    answer: result.answer,
-    events: result.events,
-    ...("proposal" in result && result.proposal
-      ? { proposal: result.proposal }
-      : {}),
-    remaining: DAILY_QUESTIONS - used - 1,
+/**
+ * Wakes the function up when the chat opens, so the first question does not
+ * pay the cold start (spec 024 RF-19). No session, no data.
+ */
+export function GET() {
+  return new Response(null, {
+    status: 204,
+    headers: { "Cache-Control": "no-store" },
   });
 }

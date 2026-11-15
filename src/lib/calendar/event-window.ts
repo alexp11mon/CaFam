@@ -108,7 +108,14 @@ export function mergeWindow<T extends { id: string }>(
 ): EventWindow<T> {
   if (mode === "replace") return fetched;
   const byId = new Map(window.events.map((event) => [event.id, event]));
-  for (const event of fetched.events) byId.set(event.id, event);
+  for (const event of fetched.events) {
+    // An event read again and unchanged keeps the object the views already
+    // have, so they are not painted again (RNF-5).
+    const known = byId.get(event.id);
+    if (!known || JSON.stringify(known) !== JSON.stringify(event)) {
+      byId.set(event.id, event);
+    }
+  }
   return {
     range: {
       from: min(window.range.from, fetched.range.from),

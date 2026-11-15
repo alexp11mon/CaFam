@@ -10,9 +10,13 @@ import { createClient } from "@supabase/supabase-js";
 const require = createRequire(import.meta.url);
 const { chromium, devices } = require("playwright");
 const BASE = process.env.PERF_BASE ?? "http://localhost:3100";
-const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+const admin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SECRET_KEY,
+  {
+    auth: { persistSession: false, autoRefreshToken: false },
+  },
+);
 
 const email = `test-${randomUUID()}@cafam.test`;
 const password = "test-password-1234";
@@ -22,7 +26,11 @@ const { data } = await admin.auth.admin.createUser({
   email_confirm: true,
   user_metadata: { display_name: "Paint" },
 });
-const { data: own } = await admin.from("calendars").select("id").eq("owner_id", data.user.id).single();
+const { data: own } = await admin
+  .from("calendars")
+  .select("id")
+  .eq("owner_id", data.user.id)
+  .single();
 const rows = [];
 const day0 = new Date();
 day0.setUTCHours(0, 0, 0, 0);
@@ -58,8 +66,9 @@ try {
     await page.waitForTimeout(800);
     return page.evaluate(async () => {
       const target =
-        [...document.querySelectorAll("[data-grid-scroll]")].find((el) => el.getClientRects().length) ??
-        document.scrollingElement;
+        [...document.querySelectorAll("[data-grid-scroll]")].find(
+          (el) => el.getClientRects().length,
+        ) ?? document.scrollingElement;
       const frames = [];
       let last = performance.now();
       const t0 = last;
@@ -88,10 +97,14 @@ try {
       };
     });
   }
-  const NO_BLUR = "*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}";
+  const NO_BLUR =
+    "*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}";
   const out = {};
   for (const view of ["agenda", "week"]) {
-    out[view] = { asIs: await scrollFrames(view), withoutBlur: await scrollFrames(view, NO_BLUR) };
+    out[view] = {
+      asIs: await scrollFrames(view),
+      withoutBlur: await scrollFrames(view, NO_BLUR),
+    };
   }
   console.log(JSON.stringify(out, null, 2));
 } finally {

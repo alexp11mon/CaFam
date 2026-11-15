@@ -123,6 +123,8 @@ export function EventBlock({
     <Link
       {...anchor}
       href={`/dashboard/events/${event.id}`}
+      // One request per event on screen otherwise: 60 in a month (spec 024 RF-7).
+      prefetch={false}
       onClick={(click) => {
         // Its detail grows out of this block (spec 021 RF-55).
         if (click.button === 0)

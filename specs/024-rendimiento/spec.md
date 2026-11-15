@@ -1,6 +1,6 @@
 # Spec 024 — Rendimiento en el iPhone
 
-> Estado: **En curso** (2026-11-15). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-15): spec, plan, tareas, implementación y cierre, sin aprobación entre fases. Límites: nada sobre producción, sin dependencias nuevas, coste cero. Es la primera de las seis specs del encargo de rediseño (024 rendimiento → 025 sistema de diseño y marca → 026 calendario → 027 Venito y asistente → 028 Notas → 029 resto de pantallas y cierre) y va primero para que el rediseño parta de una base rápida.
+> Estado: **Cerrada** (2026-11-15). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-15): spec, plan, tareas, implementación y cierre, sin aprobación entre fases. Límites: nada sobre producción, sin dependencias nuevas, coste cero. Es la primera de las seis specs del encargo de rediseño (024 rendimiento → 025 sistema de diseño y marca → 026 calendario → 027 Venito y asistente → 028 Notas → 029 resto de pantallas y cierre) y va primero para que el rediseño parta de una base rápida.
 
 ## Contexto y objetivo
 
@@ -80,13 +80,13 @@ Con 30 ms por consulta en local. En producción cada cambio de periodo suma adem
 ### JS
 
 - RF-14 El cliente de Supabase no bloquea la hidratación del calendario: se carga cuando hace falta (tiempo real tras pintar; imágenes al abrirlas).
-- RF-15 Lo que no se ve al abrir el calendario se carga al usarlo: ventana rápida, tarjeta de detalle, menú contextual, "Ir a fecha", ayuda de atajos y, en el asistente, la tarjeta de propuesta.
+- RF-15 Los esquemas de validación (zod) salen de los módulos que carga cada pantalla (tema, acentos, opciones de vista y deshacer), y el JS del chat se descarga en reposo desde el botón del asistente. *Reducido respecto a la primera redacción:* cargar con `lazy()` la ventana rápida, la tarjeta de detalle y el menú contextual se deja para la spec 026, que rehace esas piezas (ver "Diferido").
 
 ### Asistente
 
 - RF-16 `POST /api/assistant` responde **en streaming** (NDJSON): una línea de progreso real por paso ("Mirando tu calendario…", "Buscando «dentista»…", "Calculando huecos libres…", "Leyendo los comentarios…", "Escribiendo la respuesta…") y una línea final con lo mismo que devolvía antes. Los errores conservan sus estados (400, 401, 429) cuando se conocen antes de empezar; los que ocurren después llegan como línea `error`.
 - RF-17 El chat muestra el progreso real en lugar de "Pensando…" fijo, y lo anuncia a los lectores de pantalla.
-- RF-18 Las herramientas de una misma ronda se ejecutan en paralelo, y la ruta lee perfil, cuota y calendarios en paralelo.
+- RF-18 Las herramientas de una misma ronda se ejecutan en paralelo y la respuesta sale antes de anotar la pregunta en la cuota. (La cuota sigue leyéndose después del perfil: necesita su zona horaria.)
 - RF-19 Abrir el chat pinta el campo de escritura sin esperar al servidor; la zona horaria y los calendarios llegan después. Al abrirlo, la app precalienta la función (`GET /api/assistant`, 204, sin datos).
 - RF-20 Se mantienen las garantías: herramientas atadas a la sesión, cuota diaria de 30 (solo cuentan las respondidas), nada se crea sin pulsar "Crear", cancelar aborta, y la conversación no se guarda.
 
@@ -99,6 +99,53 @@ Con 30 ms por consulta en local. En producción cada cambio de periodo suma adem
 - RNF-5 CLS por debajo de 0,01 y ninguna tarea larga (> 50 ms) al cambiar de periodo con datos cargados.
 - RNF-6 JS para pintar el calendario: al menos un 25 % menos de bytes bloqueantes.
 - RNF-7 Consumo de la capa gratuita: menos consultas por interacción que antes; ningún canal de Realtime nuevo.
+
+## Medidas después (2026-11-15, `scripts/perf/results/despues.json`; tres ejecuciones, se da el rango)
+
+Mismas condiciones que "antes": iPhone 13 emulado, CPU 4×, 100 ms de latencia de red, 30 ms por consulta.
+
+| Medida | Antes | Después (CPU 4×) | Después (sin ralentizar) |
+|--------|-------|------------------|--------------------------|
+| Cambio de mes: periodo nuevo en pantalla | 601 ms | **80–110 ms** | 18 ms |
+| Cambio de semana | 481 ms | **61–80 ms** | 15 ms |
+| Cambio de día | 433 ms | **40–82 ms** | 15 ms |
+| Transición terminada (mes / semana / día) | 863 / 746 / 682 ms | 340–460 / 230–275 / 200–230 ms | 230 / 181 / 166 ms |
+| Peticiones a la app por cambio (mes / semana / día) | 85 / 23 / 5 | **1 / 0 / 0** (la del mes es la precarga del siguiente, en reposo) | igual |
+| Consultas a Supabase por cambio | 16 / 20 / 20 | 4 / 0 / 0 (precarga) | igual |
+| CLS | 0,0003 | 0 | 0 |
+| Tareas largas por cambio de mes | 64 ms | 93–185 ms (pintar el mes y la precarga, con la CPU 4×) | 0 |
+| Salto a un periodo sin cargar: vista / datos | 601 ms (todo junto) | 200–735 ms / 745–1.170 ms | 65 ms / 446 ms |
+| Cargar el calendario: consultas a Supabase | 21–30 | **12** | 12 |
+| Cargar el calendario: JS que bloquea | 965 KB (282 KB gzip) | 865 KB (254 KB gzip); 50 KB más llegan en reposo (el chat) | igual |
+| Abrir el chat (primera / siguientes) | 479 / 285 ms | **205–357 / 135–140 ms** | 84 / 63 ms |
+| Cargar `/dashboard/assistant`: JS | 655 KB (198 KB gzip) | 551 KB (170 KB gzip) | igual |
+| Asistente: primera señal | 43 ms ("Pensando…" fijo) | 24–32 ms, y progreso real por pasos desde el servidor | 9 ms |
+| Asistente: respuesta completa (1.800 ms del proveedor simulado) | 2.063 ms | 2.040–2.090 ms | 2.009 ms |
+
+### Objetivos: cumplidos y no cumplidos
+
+| Objetivo | Resultado |
+|----------|-----------|
+| RNF-1 Cambio de periodo con datos < 100 ms, sin peticiones | **Cumplido** en semana y día; en el mes, 80–110 ms con la CPU 4× (18 ms sin ralentizar). Cero peticiones que bloqueen |
+| RNF-2 Periodo sin cargar: vista < 100 ms y datos < 400 ms | **No cumplido** con la CPU 4× (vista 200–735 ms, datos 745–1.170 ms; 65 / 446 ms sin ralentizar). Solo ocurre al saltar más de un mes de golpe ("Ir a fecha", fila de meses); deslizar nunca pasa por aquí porque el periodo contiguo ya está precargado |
+| RNF-3 Abrir el chat < 300 ms | **Cumplido** en las siguientes (135–140 ms) y casi siempre en la primera (205–357 ms). La spec 027 lo convierte en un panel que no navega |
+| RNF-4 Primera señal < 1 s y ≤ 150 ms añadidos | Primera señal **cumplida** (30 ms, y el primer paso real del servidor llega con la primera línea del flujo). Lo que añade la app sigue en 240–290 ms (ida y vuelta de red de 100 ms y 7 consultas): **no cumplido** el segundo punto |
+| RNF-5 CLS < 0,01 y sin tareas largas | CLS **cumplido** (0). Tareas largas: ninguna sin ralentizar; con la CPU 4× pintar un mes con 130 eventos sigue siendo una tarea de 90–180 ms |
+| RNF-6 25 % menos de JS bloqueante | **No cumplido**: −10 % (965 → 865 KB). El cliente de Supabase ya no bloquea, pero zod sigue entrando por otros módulos de formularios |
+| RNF-7 Menos consultas por interacción | **Cumplido**: de 16–20 a 0–4 por cambio de periodo y de 21–30 a 12 por carga. Ningún canal de Realtime nuevo |
+
+Lo que más pesa en lo no cumplido es pintar el mes entero en un solo paso. La spec 026 lo resuelve teniendo ya pintados (ocultos) los periodos contiguos, de modo que deslizar solo los destapa.
+
+## Diferido
+
+| Qué | Por qué | Dónde |
+|-----|---------|-------|
+| Periodos contiguos ya pintados y gesto que arrastra la tira entera | Exige rehacer el reparto del workspace; es el diseño del calendario | Spec 026 |
+| `lazy()` para ventana rápida, tarjeta de detalle y menú contextual | Esas piezas se rehacen en la 026; cargarlas a medias obligaba a cambiar sus tests dos veces | Spec 026 |
+| Sacar zod del todo del JS inicial | Entra por `lib/forms`, `lib/calendar/schemas` y los formularios; hay que separar validación de tipos módulo a módulo | Spec 029 (auditoría final) |
+| Chat como panel sin navegación | Es parte del rediseño del asistente | Spec 027 |
+| Quitar el desenfoque de las superficies grandes | No medible aquí; decisión de diseño | Spec 025 |
+| Lo que añade la app a cada pregunta (240–290 ms) | Leer cuota y perfil en una sola función de base de datos necesita una migración | Sin spec; anotado |
 
 ## Fuera de alcance
 

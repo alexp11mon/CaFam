@@ -78,7 +78,9 @@ async function seed() {
     }
   }
   for (let s = 0; s < 6; s++) {
-    const start = new Date(day0.getTime() - 200 * 864e5 + s * 864e5 + 18 * 36e5);
+    const start = new Date(
+      day0.getTime() - 200 * 864e5 + s * 864e5 + 18 * 36e5,
+    );
     rows.push({
       calendar_id: calendars[s % 3],
       title: `Serie ${s}`,
@@ -90,7 +92,9 @@ async function seed() {
     });
   }
   for (let i = 0; i < rows.length; i += 200) {
-    const { error: e } = await admin.from("events").insert(rows.slice(i, i + 200));
+    const { error: e } = await admin
+      .from("events")
+      .insert(rows.slice(i, i + 200));
     if (e) throw e;
   }
   return { userId, email, password, events: rows.length };
@@ -107,7 +111,13 @@ async function main() {
   const context = await browser.newContext({ ...devices["iPhone 13"] });
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
-  const out = { label, date: new Date().toISOString(), cpu: CPU, net: NET, seededEvents: user.events };
+  const out = {
+    label,
+    date: new Date().toISOString(),
+    cpu: CPU,
+    net: NET,
+    seededEvents: user.events,
+  };
 
   try {
     await page.goto(`${BASE}/login`);
@@ -137,8 +147,16 @@ async function main() {
     });
     page.on("request", (r) => requests.push(r.url()));
     const appRequests = () =>
-      requests.filter((u) => u.startsWith(BASE) && !u.includes("/_next/static/")).length;
+      requests.filter(
+        (u) => u.startsWith(BASE) && !u.includes("/_next/static/"),
+      ).length;
 
+    // PERF_NO_VT=1: without the View Transitions API, to see what it costs.
+    if (process.env.PERF_NO_VT) {
+      await page.addInitScript(() => {
+        delete Document.prototype.startViewTransition;
+      });
+    }
     await page.addInitScript(() => {
       window.__perf = { long: [], cls: 0 };
       new PerformanceObserver((list) => {
@@ -171,6 +189,13 @@ async function main() {
       const ms = Date.now() - t0;
       await page.waitForLoadState("networkidle");
       await cdp.send("Network.setCacheDisabled", { cacheDisabled: false });
+      const firstRequests = appRequests();
+      // Queries on a normal load: without the HTTP cache Next renders twice.
+      await proxyStats(true);
+      await page.goto(`${BASE}${path}`);
+      await ready();
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(1000);
       // Compressed bytes of every script the page asked for.
       const scripts = await page.evaluate(() =>
         performance
@@ -191,8 +216,9 @@ async function main() {
         jsKb: round(raw / 1024),
         jsGzipKb: round(gz / 1024),
         jsFiles: scripts.length,
-        appRequests: appRequests(),
+        appRequests: firstRequests,
         supabaseQueries: (await proxyStats()).total,
+        supabasePaths: (await proxyStats()).paths,
       };
     }
 
@@ -237,14 +263,27 @@ async function main() {
             new Promise((done) => {
               let t0 = null;
               let domAt = null;
-              addEventListener("pointerup", () => (t0 = performance.now()), { once: true, capture: true });
-              addEventListener("touchend", () => (t0 ??= performance.now()), { once: true, capture: true });
+              addEventListener("pointerup", () => (t0 = performance.now()), {
+                once: true,
+                capture: true,
+              });
+              addEventListener("touchend", () => (t0 ??= performance.now()), {
+                once: true,
+                capture: true,
+              });
               const tick = () => {
                 const now = performance.now();
-                if (t0 !== null && domAt === null && eval(sig) !== before && eval(sig) !== "") domAt = now;
+                if (
+                  t0 !== null &&
+                  domAt === null &&
+                  eval(sig) !== before &&
+                  eval(sig) !== ""
+                )
+                  domAt = now;
                 if (domAt !== null && document.getAnimations().length === 0)
                   return done({ dom: domAt - t0, settled: now - t0 });
-                if (t0 !== null && now - t0 > 15000) return done({ dom: null, settled: null });
+                if (t0 !== null && now - t0 > 15000)
+                  return done({ dom: null, settled: null });
                 requestAnimationFrame(tick);
               };
               requestAnimationFrame(tick);
@@ -252,7 +291,10 @@ async function main() {
           [SIGNATURE, before],
         );
         // Week and day: over the day header (the hour grid pans by itself before spec 024).
-        await swipe(-1, view === "month" ? 420 : Number(process.env.PERF_SWIPE_Y ?? 110));
+        await swipe(
+          -1,
+          view === "month" ? 420 : Number(process.env.PERF_SWIPE_Y ?? 110),
+        );
         const result = await waiter;
         // Idle, as a person reading the new period (lets prefetches run).
         await page.waitForTimeout(1500);
@@ -282,7 +324,69 @@ async function main() {
       page.waitForFunction(`${SIGNATURE} !== ""`),
     );
     out.period = {};
-    for (const view of ["month", "week", "day"]) out.period[view] = await periodChange(view);
+    for (const view of ["month", "week", "day"])
+      out.period[view] = await periodChange(view);
+
+    // A period that is not loaded: a jump of some three months, past the window with "Ir a fecha".
+    async function coldJump() {
+      await page.goto(`${BASE}/dashboard/calendar?view=month`);
+      await page.waitForFunction(`${SIGNATURE} !== ""`);
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(1000);
+      const far = new Date(Date.now() + 100 * 864e5).toISOString().slice(0, 10);
+      await page.keyboard.press("g");
+      const field = page.locator('dialog[open] input[type="date"]');
+      await field.fill(far);
+      await proxyStats(true);
+      requests = [];
+      const before = await page.evaluate(SIGNATURE);
+      const waiter = page.evaluate(
+        ([sig, before]) =>
+          new Promise((done) => {
+            let t0 = null;
+            let viewAt = null;
+            addEventListener(
+              "keydown",
+              (e) => e.key === "Enter" && (t0 ??= performance.now()),
+              { capture: true },
+            );
+            const tick = () => {
+              const now = performance.now();
+              if (
+                t0 !== null &&
+                viewAt === null &&
+                eval(sig) !== before &&
+                eval(sig) !== ""
+              )
+                viewAt = now;
+              // Data: no longer busy and there are events on screen.
+              const busy = document.querySelector('[aria-busy="true"]');
+              const events = [
+                ...document.querySelectorAll("[data-event-id]"),
+              ].some((el) => el.getClientRects().length);
+              if (viewAt !== null && !busy && events)
+                return done({ view: viewAt - t0, data: now - t0 });
+              if (t0 !== null && now - t0 > 15000)
+                return done({ view: viewAt && viewAt - t0, data: null });
+              requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          }),
+        [SIGNATURE, before],
+      );
+      await field.press("Enter");
+      const result = await waiter;
+      await page.waitForTimeout(800);
+      return {
+        viewMs: round(result.view),
+        dataMs: round(result.data),
+        appRequests: appRequests(),
+        supabaseQueries: (await proxyStats()).total,
+      };
+    }
+    out.coldJump = await coldJump().catch((error) => ({
+      error: String(error).slice(0, 200),
+    }));
 
     // Opening the chat from the calendar.
     await page.goto(`${BASE}/dashboard/calendar?view=month`);
@@ -291,14 +395,19 @@ async function main() {
     await page.waitForTimeout(1500);
     const open = [];
     for (let i = 0; i < 3; i++) {
-      const button = page.locator('[aria-label="Asistente"], [aria-label*="Venito"]').locator("visible=true").first();
+      const button = page
+        .locator('[aria-label="Asistente"], [aria-label*="Venito"]')
+        .locator("visible=true")
+        .first();
       const t0 = Date.now();
       await button.tap();
       await page.locator("textarea").locator("visible=true").first().waitFor();
       open.push(Date.now() - t0);
       await page.waitForTimeout(800);
       if (i < 2) {
-        const close = page.getByRole("button", { name: /Cerrar el chat|Cerrar el asistente/ }).locator("visible=true");
+        const close = page
+          .getByRole("button", { name: /Cerrar el chat|Cerrar el asistente/ })
+          .locator("visible=true");
         if (await close.count()) await close.first().tap();
         else await page.goBack();
         await page.waitForTimeout(1000);
@@ -315,15 +424,25 @@ async function main() {
         new Promise((done) => {
           const t0 = performance.now();
           const seen = new Set(
-            [...document.querySelectorAll('[role="log"] *')].map((el) => el.textContent),
+            [...document.querySelectorAll('[role="log"] *')].map(
+              (el) => el.textContent,
+            ),
           );
           let first = null;
           const tick = () => {
-            const text = document.querySelector("main")?.textContent ?? document.body.textContent ?? "";
+            const text =
+              document.querySelector("main")?.textContent ??
+              document.body.textContent ??
+              "";
             const now = performance.now();
             // The first sign of life after sending that is not the question.
-            if (first === null && /Pensando|Buscando|Mirando|Consultando|escribiendo/i.test(text)) first = now - t0;
-            if (/Hoy tienes varios eventos/.test(text)) return done({ first, total: now - t0 });
+            if (
+              first === null &&
+              /Pensando|Buscando|Mirando|Consultando|escribiendo/i.test(text)
+            )
+              first = now - t0;
+            if (/Hoy tienes varios eventos/.test(text))
+              return done({ first, total: now - t0 });
             if (now - t0 > 30000) return done({ first, total: null });
             requestAnimationFrame(tick);
           };
@@ -350,7 +469,10 @@ async function main() {
   }
 
   mkdirSync(new URL("./results/", import.meta.url), { recursive: true });
-  writeFileSync(new URL(`./results/${label}.json`, import.meta.url), JSON.stringify(out, null, 2) + "\n");
+  writeFileSync(
+    new URL(`./results/${label}.json`, import.meta.url),
+    JSON.stringify(out, null, 2) + "\n",
+  );
   console.log(JSON.stringify(out, null, 2));
 }
 
