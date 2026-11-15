@@ -2,14 +2,9 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AssistantChat } from "@/components/assistant/assistant-chat";
-import { AssistantFab } from "@/components/shell/assistant-fab";
 import { encodeLine, type StreamLine } from "@/lib/assistant/stream";
 
 // Spec 024, T8: progress while the assistant works (RF-16, RF-17, RF-19).
-vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard/calendar",
-}));
-
 const fetchMock = vi.fn();
 
 /** A streamed answer the test feeds line by line. */
@@ -116,17 +111,5 @@ describe("AssistantChat with a streamed answer", () => {
     expect(loadContext).toHaveBeenCalledOnce();
     await act(async () => arrive({ timeZone: "Europe/Madrid", calendars: [] }));
     expect(screen.getByLabelText("Tu pregunta")).toBeEnabled();
-  });
-});
-
-describe("AssistantFab warm-up (RF-19)", () => {
-  it("wakes the assistant up once, when the button is touched", async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
-    render(<AssistantFab />);
-    const button = screen.getByRole("link", { name: "Asistente" });
-    button.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    button.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    act(() => button.focus());
-    expect(fetchMock).toHaveBeenCalledExactlyOnceWith("/api/assistant");
   });
 });

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata: Metadata = { title: "Notas" };
 
@@ -8,12 +10,11 @@ export default function NotesPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       <h1 className="text-2xl font-bold text-ink max-tab:sr-only">Notas</h1>
-      <div className="surface flex flex-col items-center gap-2 rounded-card px-4 py-10 text-center">
-        <p className="text-lg font-bold text-ink">Notas está en camino</p>
-        <p className="text-muted">
+      <Card>
+        <EmptyState title="Notas está en camino">
           Aquí podrás apuntar listas de tareas y notas. Llega muy pronto.
-        </p>
-      </div>
+        </EmptyState>
+      </Card>
     </main>
   );
 }

@@ -280,7 +280,15 @@ async function main() {
                   eval(sig) !== ""
                 )
                   domAt = now;
-                if (domAt !== null && document.getAnimations().length === 0)
+                if (
+                  domAt !== null &&
+                  document
+                    .getAnimations()
+                    .every(
+                      (a) =>
+                        a.effect?.getComputedTiming().iterations === Infinity,
+                    )
+                )
                   return done({ dom: domAt - t0, settled: now - t0 });
                 if (t0 !== null && now - t0 > 15000)
                   return done({ dom: null, settled: null });
@@ -431,9 +439,7 @@ async function main() {
           let first = null;
           const tick = () => {
             const text =
-              document.querySelector("main")?.textContent ??
-              document.body.textContent ??
-              "";
+              document.body.textContent ?? document.body.textContent ?? "";
             const now = performance.now();
             // The first sign of life after sending that is not the question.
             if (

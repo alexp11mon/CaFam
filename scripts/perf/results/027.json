@@ -1,0 +1,90 @@
+{
+  "label": "027",
+  "date": "2026-11-15T19:27:08.350Z",
+  "cpu": 4,
+  "net": {
+    "latency": 100,
+    "down": 1125000,
+    "up": 250000
+  },
+  "seededEvents": 639,
+  "calendarLoad": {
+    "readyMs": 492,
+    "jsKb": 957,
+    "jsGzipKb": 284,
+    "jsFiles": 17,
+    "appRequests": 1,
+    "supabaseQueries": 12,
+    "supabasePaths": {
+      "/rest/v1/profiles": 2,
+      "/rest/v1/calendar_members": 1,
+      "/rest/v1/calendar_preferences": 1,
+      "/rest/v1/person_preferences": 1,
+      "/rest/v1/calendar_groups": 1,
+      "/rest/v1/event_categories": 1,
+      "/rest/v1/rpc/visible_people": 1,
+      "/rest/v1/rpc/busy_people": 1,
+      "/rest/v1/events": 3
+    }
+  },
+  "period": {
+    "month": {
+      "samples": 6,
+      "newPeriodMs": 85,
+      "newPeriodMaxMs": 107,
+      "settledMs": 360,
+      "appRequests": 1,
+      "supabaseQueries": 4,
+      "longTaskMs": 84,
+      "cls": 0
+    },
+    "week": {
+      "samples": 6,
+      "newPeriodMs": 79,
+      "newPeriodMaxMs": 138,
+      "settledMs": 263,
+      "appRequests": 0,
+      "supabaseQueries": 0,
+      "longTaskMs": 77,
+      "cls": 0
+    },
+    "day": {
+      "samples": 6,
+      "newPeriodMs": 50,
+      "newPeriodMaxMs": 65,
+      "settledMs": 213,
+      "appRequests": 0,
+      "supabaseQueries": 0,
+      "longTaskMs": 0,
+      "cls": 0
+    }
+  },
+  "coldJump": {
+    "viewMs": 252,
+    "dataMs": 698,
+    "appRequests": 3,
+    "supabaseQueries": 12
+  },
+  "chatOpen": {
+    "firstMs": 204,
+    "repeatMs": 148
+  },
+  "assistant": {
+    "mockGroqMsPerCall": 900,
+    "firstFeedbackMs": 39,
+    "answerMs": 2086,
+    "supabaseQueries": 8
+  },
+  "assistantLoad": {
+    "readyMs": 566,
+    "jsKb": 703,
+    "jsGzipKb": 217,
+    "jsFiles": 16,
+    "appRequests": 13,
+    "supabaseQueries": 3,
+    "supabasePaths": {
+      "/rest/v1/profiles": 2,
+      "/rest/v1/calendar_members": 1
+    }
+  }
+}

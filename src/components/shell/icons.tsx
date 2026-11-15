@@ -221,6 +221,26 @@ export function AssistantIcon() {
   );
 }
 
+/** A paper plane: send (spec 027). */
+export function SendIcon() {
+  return (
+    <Icon>
+      <path d="M4 12 20 4l-5 17-3.5-7L4 12Z" />
+      <path d="m11.5 14 4-5" />
+    </Icon>
+  );
+}
+
+/** A sheet with a pencil: a new conversation (spec 027). */
+export function NewChatIcon() {
+  return (
+    <Icon>
+      <path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" />
+      <path d="m18.5 3.5 2 2L13 13l-3 1 1-3 7.5-7.5Z" />
+    </Icon>
+  );
+}
+
 /** A sheet with a ticked list: notes and to-dos (spec 025, 028). */
 export function NotesIcon() {
   return (

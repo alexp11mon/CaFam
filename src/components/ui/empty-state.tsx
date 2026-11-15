@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Venito } from "@/components/brand/venito";
 
 /**
  * Nothing here yet: a drawing (Venito, spec 027), what it means and the one
@@ -7,12 +8,12 @@ import type { ReactNode } from "react";
 export function EmptyState({
   title,
   children,
-  art,
+  art = <Venito mood="idle" className="size-24" />,
   action,
 }: {
   title: string;
   children?: ReactNode;
-  /** Decorative: hidden from screen readers. */
+  /** Decorative: hidden from screen readers. Venito by default (spec 027 RF-7); `null` for none. */
   art?: ReactNode;
   action?: ReactNode;
 }) {

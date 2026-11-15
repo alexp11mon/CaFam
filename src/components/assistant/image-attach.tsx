@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
-import { CloseIcon } from "@/components/shell/icons";
-import { Button } from "@/components/ui/button";
+import { useRef, type RefObject } from "react";
+import { CloseIcon, ImageIcon } from "@/components/shell/icons";
+import { IconButton } from "@/components/ui/icon-button";
 
 export interface Attachment {
   id: string;
@@ -16,54 +16,73 @@ export interface Attachment {
  * (plan D9). The images live only in the chat's memory (RF-13).
  */
 export function ImageAttach({
-  attachments,
-  errors,
   disabled,
   onPick,
+  picker,
+}: {
+  disabled: boolean;
+  onPick: (files: File[]) => void;
+  /** The file input, when something else must open it too (a suggestion). */
+  picker?: RefObject<HTMLInputElement | null>;
+}) {
+  const own = useRef<HTMLInputElement>(null);
+  const input = picker ?? own;
+  return (
+    <>
+      <IconButton
+        label="Adjuntar imagen"
+        disabled={disabled}
+        onClick={() => input.current?.click()}
+      >
+        <ImageIcon />
+      </IconButton>
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        multiple
+        hidden
+        onChange={(event) => {
+          const files = [...(event.target.files ?? [])];
+          // Lets the same file be chosen again after removing it.
+          event.target.value = "";
+          if (files.length > 0) onPick(files);
+        }}
+      />
+    </>
+  );
+}
+
+/** Where the images go, said before the first one is sent (spec 022 RF-58). */
+export function AttachNote() {
+  return (
+    <p className="text-xs text-muted">
+      Si el cuadrante tiene muchas personas, recorta la foto a la fila de las
+      fechas y la tuya. Las imágenes se envían a Groq para leerlas; CaFam no las
+      guarda.{" "}
+      <Link
+        href="/privacy"
+        className="font-semibold text-ink underline decoration-control underline-offset-4"
+      >
+        Privacidad
+      </Link>
+    </p>
+  );
+}
+
+/** The images waiting to be sent, over the input, and why one was refused. */
+export function AttachPreview({
+  attachments,
+  errors,
   onRemove,
 }: {
   attachments: readonly Attachment[];
   errors: readonly string[];
-  disabled: boolean;
-  onPick: (files: File[]) => void;
   onRemove: (id: string) => void;
 }) {
-  const input = useRef<HTMLInputElement>(null);
+  if (attachments.length === 0 && errors.length === 0) return null;
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          variant="secondary"
-          disabled={disabled}
-          onClick={() => input.current?.click()}
-        >
-          Adjuntar imagen
-        </Button>
-        <p className="text-xs text-muted">
-          Si el cuadrante tiene muchas personas, recorta la foto a la fila de
-          las fechas y la tuya. Las imágenes se envían a Groq para leerlas;
-          CaFam no las guarda.{" "}
-          <Link
-            href="/privacy"
-            className="font-semibold text-ink underline decoration-control underline-offset-4"
-          >
-            Privacidad
-          </Link>
-        </p>
-        <input
-          ref={input}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          onChange={(event) => {
-            const files = [...(event.target.files ?? [])];
-            // Lets the same file be chosen again after removing it.
-            event.target.value = "";
-            if (files.length > 0) onPick(files);
-          }}
-        />
-      </div>
       {attachments.length > 0 ? (
         <ul aria-label="Imágenes para enviar" className="flex flex-wrap gap-2">
           {attachments.map((attachment, index) => (

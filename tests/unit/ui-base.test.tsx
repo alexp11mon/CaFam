@@ -4,7 +4,9 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
+import OfflinePage from "@/app/offline/page";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorScreen } from "@/components/ui/error-screen";
 import { IconButton } from "@/components/ui/icon-button";
 import { LinkButton } from "@/components/ui/link-button";
 import { Select } from "@/components/ui/select";
@@ -138,6 +140,35 @@ describe("Card and EmptyState", () => {
     );
     expect(
       screen.getByRole("button", { name: "Crear nota" }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("Venito in the empty and broken moments (spec 027 RF-7)", () => {
+  it("draws Venito in an empty state unless told otherwise", () => {
+    const { container, rerender } = render(<EmptyState title="Nada aquí" />);
+    expect(container.querySelector('[data-venito="idle"]')).not.toBeNull();
+    rerender(<EmptyState title="Nada aquí" art={null} />);
+    expect(container.querySelector("[data-venito]")).toBeNull();
+  });
+
+  it("is confused on an error screen", () => {
+    const { container } = render(
+      <ErrorScreen title="Algo ha fallado" text="Prueba otra vez.">
+        <Button>Reintentar</Button>
+      </ErrorScreen>,
+    );
+    expect(container.querySelector('[data-venito="confused"]')).not.toBeNull();
+    expect(
+      screen.getByRole("heading", { name: "Algo ha fallado" }),
+    ).toBeInTheDocument();
+  });
+
+  it("naps on the offline page", () => {
+    const { container } = render(<OfflinePage />);
+    expect(container.querySelector('[data-venito="sleeping"]')).not.toBeNull();
+    expect(
+      screen.getByRole("heading", { name: "Sin conexión" }),
     ).toBeInTheDocument();
   });
 });

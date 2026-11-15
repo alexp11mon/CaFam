@@ -3,13 +3,17 @@
 import Link from "next/link";
 import {
   useEffect,
+  useId,
   useRef,
   useState,
   type ClipboardEvent,
   type KeyboardEvent,
 } from "react";
 import { Button } from "@/components/ui/button";
-import { TextArea } from "@/components/ui/text-area";
+import { Chip } from "@/components/ui/chip";
+import { IconButton } from "@/components/ui/icon-button";
+import { Venito } from "@/components/brand/venito";
+import { CloseIcon, NewChatIcon, SendIcon } from "@/components/shell/icons";
 import {
   NETWORK_TEXT,
   QUESTION_MESSAGES,
@@ -25,9 +29,19 @@ import {
   type StreamLine,
 } from "@/lib/assistant/stream";
 import type { CitedEvent } from "@/lib/assistant/tools";
+import {
+  suggestionsFor,
+  suggestionText,
+  type Suggestion,
+} from "@/lib/assistant/suggestions";
 import { prepareForAssistant } from "@/lib/images/prepare-image";
 import { CitedEvents } from "./cited-events";
-import { ImageAttach, type Attachment } from "./image-attach";
+import {
+  AttachNote,
+  AttachPreview,
+  ImageAttach,
+  type Attachment,
+} from "./image-attach";
 import { ProposalCard } from "./proposal-card";
 
 // The chat of the assistant (spec 015 plan assistant-ui). The thread lives
@@ -37,6 +51,8 @@ import { ProposalCard } from "./proposal-card";
 interface Message {
   role: "user" | "assistant";
   content: string;
+  /** When it was sent or arrived, for the hour under it (spec 027 RF-4). */
+  at?: number;
   events?: CitedEvent[];
   /** Spec 022 RF-11: the images sent with this message, as data URLs. */
   images?: string[];
@@ -56,11 +72,8 @@ export interface ChatCalendar {
   name: string;
 }
 
-const EXAMPLES = [
-  "¿Qué tengo este fin de semana?",
-  "¿Cuándo es el próximo cumpleaños?",
-  "¿Qué tardes tengo libres la semana que viene?",
-];
+/** When a message was sent or arrived; only ever called from handlers. */
+const clock = () => Date.now();
 
 /** What the chat needs from the account, read after it is on screen. */
 export interface ChatContext {
@@ -72,7 +85,13 @@ export function AssistantChat({
   timeZone: givenTimeZone,
   calendars: givenCalendars,
   loadContext,
+  onClose,
+  onActivity,
 }: {
+  /** In the panel: its "Cerrar" (spec 027 RF-2). The full page has none. */
+  onClose?: () => void;
+  /** Tells the button of Venito that an answer is on its way, or has come. */
+  onActivity?: (state: "thinking" | "answered" | "idle") => void;
   timeZone?: string;
   calendars?: readonly ChatCalendar[];
   /**
@@ -115,6 +134,9 @@ export function AssistantChat({
   const [quotaReached, setQuotaReached] = useState(false);
   const controller = useRef<AbortController | null>(null);
   const field = useRef<HTMLTextAreaElement>(null);
+  const fieldId = useId();
+  // The file input, opened by its button and by a suggestion (spec 027 RF-5).
+  const picker = useRef<HTMLInputElement>(null);
   const end = useRef<HTMLDivElement>(null);
 
   // R6: nobody reads the answer of a question asked from a page that is gone.
@@ -179,6 +201,7 @@ export function AssistantChat({
     const asked: Message = {
       role: "user",
       content: question,
+      at: clock(),
       ...(attached.length ? { images } : {}),
     };
     // Plan D2: images travel only with the last message.
@@ -198,6 +221,8 @@ export function AssistantChat({
     setAttachments([]);
     setStatus(STATUS.start);
     setPending(true);
+    onActivity?.("thinking");
+    let answered = false;
     const abort = new AbortController();
     controller.current = abort;
 
@@ -252,6 +277,7 @@ export function AssistantChat({
         });
         return;
       }
+      answered = true;
       const proposal: Proposal | undefined = body.proposal;
       // Plan D2: the assistant asked something before proposing.
       carried.current = !proposal && images.length ? images : [];
@@ -271,6 +297,7 @@ export function AssistantChat({
         {
           role: "assistant",
           content: body.answer,
+          at: clock(),
           events: body.events,
           ...(proposal
             ? { proposal: { ...proposal, status: "pending" as const } }
@@ -283,6 +310,7 @@ export function AssistantChat({
     } finally {
       if (controller.current === abort) controller.current = null;
       setPending(false);
+      onActivity?.(answered ? "answered" : "idle");
       field.current?.focus();
     }
   }
@@ -312,176 +340,288 @@ export function AssistantChat({
     }
   }
 
+  const hour = (at: number | undefined) =>
+    at === undefined
+      ? null
+      : new Intl.DateTimeFormat("es-ES", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone,
+        }).format(at);
+  const empty = messages.length === 0 && !pending;
+  const chips = suggestionsFor({
+    messages: messages.length,
+    attachments: attachments.length,
+  });
+
+  function pick(suggestion: Suggestion) {
+    if (suggestion.kind === "attach") {
+      picker.current?.click();
+    } else if (suggestion.kind === "fill") {
+      // What needs a name or a date: written, with the cursor after it.
+      const text = suggestionText(suggestion);
+      setDraft(text);
+      setFieldError(undefined);
+      const input = field.current;
+      if (input) {
+        input.focus();
+        requestAnimationFrame(() =>
+          input.setSelectionRange(text.length, text.length),
+        );
+      }
+    } else {
+      void send(suggestionText(suggestion));
+    }
+  }
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-ink max-tab:sr-only">
-          Asistente
-        </h1>
-        <Button variant="secondary" onClick={restart}>
-          Nueva conversación
-        </Button>
-      </div>
-
-      {messages.length === 0 && !pending ? (
-        <section className="surface flex flex-col gap-4 rounded-card p-5">
-          {/* RF-33: say where the data goes before the first question. */}
-          <p className="text-sm text-muted">
-            Pregúntame por tus eventos o por cuándo estáis libres. Tus preguntas
-            y los eventos necesarios para responderlas se envían a Groq, que no
-            los usa para entrenar. Más detalles en la{" "}
-            <Link
-              href="/privacy"
-              className="font-semibold text-ink underline decoration-control underline-offset-4"
-            >
-              política de privacidad
-            </Link>
-            .
-          </p>
-          <ul
-            aria-label="Ejemplos de preguntas"
-            className="flex flex-wrap gap-2"
-          >
-            {EXAMPLES.map((example) => (
-              <li key={example}>
-                <button
-                  type="button"
-                  disabled={quotaReached}
-                  onClick={() => void send(example)}
-                  className="min-h-11 rounded-control border border-control bg-paper px-4 py-2 text-left text-sm font-medium text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
-                >
-                  {example}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <div
-        role="log"
-        aria-live="polite"
-        aria-label="Conversación"
-        className="flex flex-col gap-3"
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* Who you are talking to, as in any chat (spec 027 RF-4). */}
+      <header
+        data-chat-header=""
+        className="flex items-center gap-3 border-b border-line bg-paper py-2 pr-2 pl-4"
       >
-        {messages.map((message, index) =>
-          message.role === "user" ? (
-            <p
-              key={index}
-              className="max-w-[85%] self-end rounded-card rounded-br-block bg-ink px-4 py-2 whitespace-pre-line text-on-ink"
-            >
-              <span className="sr-only">Tú: </span>
-              {message.content}
-              {message.images?.length ? (
-                <span className="mt-2 flex flex-wrap justify-end gap-2">
-                  {message.images.map((url, i) => (
-                    // A data URL kept in memory (RF-13): next/image would not help.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={i}
-                      src={url}
-                      alt={`Imagen adjunta ${i + 1}`}
-                      className="size-20 rounded-control object-cover"
-                    />
-                  ))}
-                </span>
-              ) : null}
-            </p>
-          ) : (
-            <div
-              key={index}
-              className="surface max-w-[92%] self-start rounded-card rounded-bl-block px-4 py-3 text-ink"
-            >
-              <span className="sr-only">Asistente: </span>
-              <p className="whitespace-pre-line">{message.content}</p>
-              <CitedEvents events={message.events ?? []} timeZone={timeZone} />
-              {message.proposal ? (
-                <ProposalCard
-                  proposal={message.proposal}
-                  calendars={calendars}
-                  onChange={(proposal) =>
-                    setMessages((current) =>
-                      current.map((item, i) =>
-                        i === index ? { ...item, proposal } : item,
-                      ),
-                    )
-                  }
-                />
-              ) : null}
-            </div>
-          ),
-        )}
-      </div>
-
-      <div role="status" className="flex items-center gap-3 empty:hidden">
-        {pending ? (
-          <>
-            <span className="text-muted">{status}</span>
-            <Button
-              variant="secondary"
-              onClick={() => controller.current?.abort()}
-            >
-              Cancelar
-            </Button>
-          </>
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-stone">
+          <Venito
+            mood={quotaReached ? "sleeping" : pending ? "thinking" : "idle"}
+            className="size-10"
+          />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-base leading-tight font-bold text-ink">Venito</h1>
+          <p className="truncate text-sm text-muted">
+            {quotaReached
+              ? "descansando hasta mañana"
+              : pending
+                ? "escribiendo…"
+                : "en línea"}
+          </p>
+        </div>
+        <IconButton label="Nueva conversación" onClick={restart}>
+          <NewChatIcon />
+        </IconButton>
+        {onClose ? (
+          <IconButton label="Cerrar el chat" onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
         ) : null}
-      </div>
+      </header>
 
-      {error ? (
+      <div className="bg-chat flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-3 py-4">
+        {empty ? (
+          <section className="mx-auto flex max-w-sm flex-col items-center gap-3 rounded-card surface px-5 py-6 text-center">
+            <Venito mood="wave" className="size-24" />
+            <p className="text-lg font-bold text-ink">¡Hola! Soy Venito</p>
+            {/* RF-33 of spec 015: say where the data goes before the first question. */}
+            <p className="text-sm text-muted">
+              Pregúntame por tus eventos o por cuándo estáis libres. Tus
+              preguntas y los eventos necesarios para responderlas se envían a
+              Groq, que no los usa para entrenar. Más detalles en la{" "}
+              <Link
+                href="/privacy"
+                className="font-semibold text-ink underline decoration-control underline-offset-4"
+              >
+                política de privacidad
+              </Link>
+              .
+            </p>
+          </section>
+        ) : null}
+
         <div
-          role="alert"
-          className="flex flex-wrap items-center gap-3 rounded-control border border-danger bg-paper px-4 py-3 text-danger"
+          role="log"
+          aria-live="polite"
+          aria-label="Conversación"
+          className="flex flex-col gap-3"
         >
-          <span>{error.text}</span>
-          {error.retry ? (
-            <Button variant="secondary" onClick={() => void send(draft)}>
-              Reintentar
-            </Button>
+          {messages.map((message, index) =>
+            message.role === "user" ? (
+              <div
+                key={index}
+                className="flex max-w-[85%] flex-col items-end gap-1 self-end"
+              >
+                <p className="rounded-card rounded-br-block border border-accent-edge bg-accent px-4 py-2 whitespace-pre-line text-on-accent">
+                  <span className="sr-only">Tú: </span>
+                  {message.content}
+                  {message.images?.length ? (
+                    <span className="mt-2 flex flex-wrap justify-end gap-2">
+                      {message.images.map((url, i) => (
+                        // A data URL kept in memory (RF-13): next/image would not help.
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={i}
+                          src={url}
+                          alt={`Imagen adjunta ${i + 1}`}
+                          className="size-20 rounded-control object-cover"
+                        />
+                      ))}
+                    </span>
+                  ) : null}
+                </p>
+                <time className="px-1 text-xs text-muted tabular-nums">
+                  {hour(message.at)}
+                </time>
+              </div>
+            ) : (
+              <div key={index} className="flex max-w-[92%] gap-2 self-start">
+                <Venito className="mt-1 size-8" />
+                <div className="flex min-w-0 flex-col items-start gap-1">
+                  <div className="rounded-card rounded-bl-block surface px-4 py-3 text-ink">
+                    <span className="sr-only">Venito: </span>
+                    <p className="whitespace-pre-line">{message.content}</p>
+                    <CitedEvents
+                      events={message.events ?? []}
+                      timeZone={timeZone}
+                    />
+                    {message.proposal ? (
+                      <ProposalCard
+                        proposal={message.proposal}
+                        calendars={calendars}
+                        onChange={(proposal) =>
+                          setMessages((current) =>
+                            current.map((item, i) =>
+                              i === index ? { ...item, proposal } : item,
+                            ),
+                          )
+                        }
+                      />
+                    ) : null}
+                  </div>
+                  <time className="px-1 text-xs text-muted tabular-nums">
+                    {hour(message.at)}
+                  </time>
+                </div>
+              </div>
+            ),
+          )}
+        </div>
+
+        {/* "Escribiendo…": the real step, as the server tells it (spec 024 RF-17). */}
+        <div role="status" className="flex items-end gap-2 empty:hidden">
+          {pending ? (
+            <>
+              <Venito mood="thinking" className="size-8" />
+              <div className="flex items-center gap-3 rounded-card rounded-bl-block surface px-4 py-2">
+                <span
+                  data-typing=""
+                  aria-hidden="true"
+                  className="flex items-center gap-1"
+                >
+                  <span className="size-1.5 rounded-full bg-muted" />
+                  <span className="size-1.5 rounded-full bg-muted" />
+                  <span className="size-1.5 rounded-full bg-muted" />
+                </span>
+                <span className="text-sm text-muted">{status}</span>
+              </div>
+              <Button
+                variant="quiet"
+                onClick={() => controller.current?.abort()}
+              >
+                Cancelar
+              </Button>
+            </>
           ) : null}
         </div>
-      ) : null}
-      <div ref={end} />
 
+        {error ? (
+          <div
+            role="alert"
+            className="flex items-center gap-3 rounded-card border border-danger bg-paper px-4 py-3 text-danger"
+          >
+            <Venito
+              mood={quotaReached ? "sleeping" : "confused"}
+              className="size-10"
+            />
+            <span className="min-w-0 flex-1">{error.text}</span>
+            {error.retry ? (
+              <Button variant="secondary" onClick={() => void send(draft)}>
+                Reintentar
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+        <div ref={end} />
+      </div>
+
+      {/* Anchored at the bottom; the panel follows the keyboard (plan D6). */}
       <form
         noValidate
-        className="sticky bottom-0 mt-auto flex flex-col gap-2 bg-stone pt-2 pb-2"
+        className="flex flex-col gap-2 border-t border-line bg-paper px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         onSubmit={(event) => {
           event.preventDefault();
           void send(draft);
         }}
       >
-        <TextArea
-          ref={field}
-          label="Tu pregunta"
-          name="question"
-          rows={2}
-          value={draft}
-          error={fieldError}
-          disabled={quotaReached}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={onKeyDown}
-          onPaste={onPaste}
+        <ul
+          aria-label="Sugerencias"
+          className="-mx-3 flex gap-2 overflow-x-auto px-3 [scrollbar-width:none]"
+        >
+          {chips.map((suggestion) => (
+            <li key={suggestion.label} className="shrink-0">
+              <Chip
+                disabled={pending || quotaReached}
+                onClick={() => pick(suggestion)}
+              >
+                {suggestion.label}
+              </Chip>
+            </li>
+          ))}
+        </ul>
+        {empty || attachments.length > 0 ? <AttachNote /> : null}
+        <AttachPreview
+          attachments={attachments}
+          errors={attachErrors}
+          onRemove={(id) =>
+            setAttachments((current) =>
+              current.filter((attachment) => attachment.id !== id),
+            )
+          }
         />
-        <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-end gap-1">
           <ImageAttach
-            attachments={attachments}
-            errors={attachErrors}
+            picker={picker}
             disabled={pending || quotaReached}
             onPick={(files) => void addFiles(files)}
-            onRemove={(id) =>
-              setAttachments((current) =>
-                current.filter((attachment) => attachment.id !== id),
-              )
-            }
           />
-          <Button
+          <div className="flex min-w-0 flex-1 flex-col">
+            <label htmlFor={fieldId} className="sr-only">
+              Tu pregunta
+            </label>
+            <textarea
+              id={fieldId}
+              ref={field}
+              name="question"
+              rows={Math.min(4, Math.max(1, draft.split("\n").length))}
+              value={draft}
+              placeholder="Escribe a Venito…"
+              disabled={quotaReached}
+              aria-invalid={Boolean(fieldError)}
+              aria-describedby={fieldError ? `${fieldId}-error` : undefined}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={onKeyDown}
+              onPaste={onPaste}
+              // 16 px: below it iOS zooms the page in (amendment 10).
+              className="min-h-11 w-full resize-none rounded-card border border-control bg-paper px-4 py-2.5 text-base text-ink outline-none placeholder:text-muted focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20 aria-invalid:border-danger"
+            />
+          </div>
+          <button
             type="submit"
+            aria-label="Enviar"
             disabled={pending || quotaReached}
-            className="ml-auto self-end"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-accent-edge bg-accent text-on-accent press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Enviar
-          </Button>
+            <SendIcon />
+          </button>
         </div>
+        {fieldError ? (
+          <p
+            id={`${fieldId}-error`}
+            aria-live="polite"
+            className="text-sm text-danger"
+          >
+            {fieldError}
+          </p>
+        ) : null}
       </form>
     </div>
   );

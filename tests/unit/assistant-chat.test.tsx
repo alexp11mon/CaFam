@@ -39,16 +39,17 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("AssistantChat", () => {
-  it("starts with the privacy notice and three examples (RF-2, RF-33)", () => {
+  it("starts with Venito's greeting, the privacy notice and its suggestions (RF-2, RF-33; spec 027 RF-5)", () => {
     setup();
     expect(screen.getByText(/se envían a Groq, que no/)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "política de privacidad" }),
     ).toHaveAttribute("href", "/privacy");
+    expect(screen.getByText("¡Hola! Soy Venito")).toBeInTheDocument();
     const examples = within(
-      screen.getByRole("list", { name: "Ejemplos de preguntas" }),
+      screen.getByRole("list", { name: "Sugerencias" }),
     ).getAllByRole("button");
-    expect(examples).toHaveLength(3);
+    expect(examples).toHaveLength(6);
   });
 
   it("sends an example when pressed and shows the answer with its events (RF-2, RF-3, RF-11)", async () => {
@@ -61,7 +62,7 @@ describe("AssistantChat", () => {
     );
     const { user, field } = setup();
     const [first] = within(
-      screen.getByRole("list", { name: "Ejemplos de preguntas" }),
+      screen.getByRole("list", { name: "Sugerencias" }),
     ).getAllByRole("button");
     await user.click(first!);
 

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Logo } from "@/components/brand/logo";
+import { Venito } from "@/components/brand/venito";
 
 /**
  * The screen of a missing page or a failure: the brand, what happened and a
@@ -18,6 +19,8 @@ export function ErrorScreen({
     <main className="flex flex-1 items-center justify-center px-4 py-10">
       <div className="flex w-full max-w-sm flex-col items-center gap-4 text-center">
         <Logo />
+        {/* Venito does not understand it either (spec 027 RF-7). */}
+        <Venito mood="confused" className="size-28" />
         <h1 className="text-2xl font-bold text-ink">{title}</h1>
         <p className="text-muted">{text}</p>
         <div className="flex flex-wrap justify-center gap-3">{children}</div>

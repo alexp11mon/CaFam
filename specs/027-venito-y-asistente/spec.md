@@ -1,6 +1,6 @@
 # Spec 027 — Venito y el chat del asistente
 
-> Estado: **En curso** (2026-11-15). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-15). Cuarta spec del encargo de rediseño. Sin migraciones ni dependencias.
+> Estado: **Cerrada** (2026-11-15). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-15). Cuarta spec del encargo de rediseño. Sin migraciones ni dependencias.
 
 ## Contexto y objetivo
 
