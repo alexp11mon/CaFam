@@ -1,8 +1,8 @@
+import { durationSchema } from "@/lib/calendar/view-options-schema";
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_DURATION,
   DURATIONS,
-  durationSchema,
   parseDuration,
   visibleDays,
 } from "@/lib/calendar/view-options";

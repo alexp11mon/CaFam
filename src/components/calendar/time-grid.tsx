@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { CalendarLink } from "./calendar-nav";
 import { useRef, type PointerEvent as ReactPointerEvent } from "react";
 import {
   moveDraft,
@@ -16,7 +16,6 @@ import {
 } from "@/lib/calendar/layout";
 import { layoutMonthWeek } from "@/lib/calendar/month-lanes";
 import type { Box } from "@/lib/calendar/popover";
-import { calendarHref } from "@/lib/calendar/ranges";
 import type { MinuteRange } from "@/lib/calendar/slots";
 import { fromMinutes } from "@/lib/calendar/time-options";
 import {
@@ -136,14 +135,15 @@ export function TimeGrid({
                     {INITIALS[weekdayIndex(day)]}
                   </span>
                   {linkDays ? (
-                    <Link
-                      href={calendarHref("day", day)}
+                    <CalendarLink
+                      view="day"
+                      date={day}
                       aria-label={formatDateKeyFull(day)}
                       aria-current={isToday ? "date" : undefined}
                       className={`${number} focus-visible:outline-2 focus-visible:outline-ink`}
                     >
                       {Number(day.slice(8))}
-                    </Link>
+                    </CalendarLink>
                   ) : (
                     <span
                       aria-label={formatDateKeyFull(day)}
@@ -216,7 +216,7 @@ export function TimeGrid({
                 : FIRST_VISIBLE_HOUR * hourPx
             }
             // Two fingers zoom the hours, never the page (plan R2).
-            className="min-h-0 flex-1 touch-pan-x touch-pan-y overflow-y-auto"
+            className="min-h-0 flex-1 touch-pan-y overflow-y-auto"
           >
             <div data-testid="time-grid" className="grid" style={columns}>
               <div>

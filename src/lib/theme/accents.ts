@@ -1,7 +1,6 @@
 // The interface accents a user can pick and the neutral colors around them
 // (spec 005 RF-6, RF-10, RF-14; plan "Modelo de datos", D2). globals.css
 // repeats these values as CSS variables and accents.test.ts keeps both equal.
-import { z } from "zod";
 
 export const ACCENT_IDS = [
   "red",
@@ -148,7 +147,3 @@ export const ACCENTS: readonly Accent[] = [
 export function isAccent(value: unknown): value is AccentId {
   return ACCENT_IDS.some((id) => id === value);
 }
-
-export const accentSchema = z.enum(ACCENT_IDS, {
-  error: "Elige uno de los colores disponibles.",
-});

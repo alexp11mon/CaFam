@@ -1,7 +1,7 @@
 "use client";
 
 import { WeekendToggle } from "./weekend-toggle";
-import Link from "next/link";
+import { CalendarLink } from "./calendar-nav";
 import { useLayoutEffect, useRef } from "react";
 import { CaretIcon, ChevronIcon, MenuIcon } from "@/components/shell/icons";
 import {
@@ -11,11 +11,7 @@ import {
 } from "@/lib/hooks/use-sidebar-collapsed";
 import { requestAgendaToday } from "@/lib/calendar/agenda-today";
 import { formatPeriodTitle } from "@/lib/calendar/format";
-import {
-  calendarHref,
-  navigate,
-  type CalendarView,
-} from "@/lib/calendar/ranges";
+import { navigate, type CalendarView } from "@/lib/calendar/ranges";
 import {
   CAL_NEXT,
   CAL_PREV,
@@ -112,32 +108,35 @@ export function ViewToolbar({
           </button>
         ) : (
           <>
-            <Link
-              href={calendarHref(view, today)}
-              transitionTypes={typesOf(todayType(date, today))}
+            <CalendarLink
+              view={view}
+              date={today}
+              types={typesOf(todayType(date, today))}
               aria-keyshortcuts="T"
               className={BUTTON}
             >
               Hoy
-            </Link>
-            <Link
-              href={calendarHref(view, navigate(view, date, -1))}
-              transitionTypes={[CAL_PREV]}
+            </CalendarLink>
+            <CalendarLink
+              view={view}
+              date={navigate(view, date, -1)}
+              types={[CAL_PREV]}
               aria-label={current.previous}
               aria-keyshortcuts="ArrowLeft"
               className={BUTTON}
             >
               <ChevronIcon direction="left" />
-            </Link>
-            <Link
-              href={calendarHref(view, navigate(view, date, 1))}
-              transitionTypes={[CAL_NEXT]}
+            </CalendarLink>
+            <CalendarLink
+              view={view}
+              date={navigate(view, date, 1)}
+              types={[CAL_NEXT]}
               aria-label={current.next}
               aria-keyshortcuts="ArrowRight"
               className={BUTTON}
             >
               <ChevronIcon direction="right" />
-            </Link>
+            </CalendarLink>
             <h2 className="min-w-0 text-lg font-bold text-ink tabular-nums first-letter:uppercase">
               {formatPeriodTitle(view, date)}
             </h2>
@@ -217,10 +216,11 @@ function ViewSwitcher({
       className="relative flex flex-1 gap-1 [view-transition-name:view-switcher] sm:flex-none"
     >
       {VIEWS.map((item) => (
-        <Link
+        <CalendarLink
           key={item.view}
-          href={calendarHref(item.view, date)}
-          transitionTypes={[CAL_VIEW]}
+          view={item.view}
+          date={date}
+          types={[CAL_VIEW]}
           aria-current={item.view === view ? "page" : undefined}
           aria-keyshortcuts={item.key}
           // Fire and forget: failing to remember the view must not block it.
@@ -237,7 +237,7 @@ function ViewSwitcher({
           >
             {item.key}
           </kbd>
-        </Link>
+        </CalendarLink>
       ))}
       {/* The edge, then the accent 1 px inside it: the pill of a selection. */}
       <div

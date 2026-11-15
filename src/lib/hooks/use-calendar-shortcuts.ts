@@ -2,11 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import {
-  calendarHref,
-  navigate,
-  type CalendarView,
-} from "@/lib/calendar/ranges";
+import { useCalendarGo } from "@/components/calendar/calendar-nav";
+import { navigate, type CalendarView } from "@/lib/calendar/ranges";
 import { requestAgendaToday } from "@/lib/calendar/agenda-today";
 import { shortcutFor } from "@/lib/calendar/shortcuts";
 import {
@@ -40,6 +37,7 @@ export function useCalendarShortcuts({
   onHelp?: () => void;
 }) {
   const router = useRouter();
+  const go = useCalendarGo();
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -66,22 +64,16 @@ export function useCalendarShortcuts({
         // The continuous agenda scrolls instead (spec 016 RF-58).
         requestAgendaToday();
       } else if (shortcut === "today") {
-        router.push(calendarHref(view, today), {
-          transitionTypes: typesOf(todayType(date, today)),
-        });
+        go(view, today, typesOf(todayType(date, today)));
       } else if (shortcut === "previous" || shortcut === "next") {
         const delta = shortcut === "next" ? 1 : -1;
-        router.push(calendarHref(view, navigate(view, date, delta)), {
-          transitionTypes: typesOf(periodType(delta)),
-        });
+        go(view, navigate(view, date, delta), typesOf(periodType(delta)));
       } else {
         void saveLastView?.(shortcut);
-        router.push(calendarHref(shortcut, date), {
-          transitionTypes: [CAL_VIEW],
-        });
+        go(shortcut, date, [CAL_VIEW]);
       }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [view, date, today, canCreate, saveLastView, onGoTo, onHelp, router]);
+  }, [view, date, today, canCreate, saveLastView, onGoTo, onHelp, router, go]);
 }

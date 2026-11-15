@@ -13,13 +13,8 @@ import {
   requireActionUser,
 } from "@/lib/calendar/queries";
 import { parseDateKey } from "@/lib/calendar/time-zone";
-import {
-  changeSchema,
-  UNDO_ERRORS,
-  undoTokenSchema,
-  type Change,
-  type UndoToken,
-} from "@/lib/calendar/undo";
+import { UNDO_ERRORS, type Change, type UndoToken } from "@/lib/calendar/undo";
+import { changeSchema, undoTokenSchema } from "@/lib/calendar/undo-schemas";
 import type { ConfirmState } from "@/lib/forms/form-state";
 import { parseEventId } from "@/lib/recurrence/occurrence-id";
 import type { SeriesScope } from "@/lib/recurrence/series-write";

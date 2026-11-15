@@ -4,13 +4,9 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import { requireActionUser } from "@/lib/calendar/queries";
-import { durationSchema } from "@/lib/calendar/view-options";
-import { accentSchema } from "@/lib/theme/accents";
-import {
-  THEME_COOKIE,
-  THEME_COOKIE_OPTIONS,
-  themeSchema,
-} from "@/lib/theme/theme";
+import { durationSchema } from "@/lib/calendar/view-options-schema";
+import { accentSchema, themeSchema } from "@/lib/theme/schemas";
+import { THEME_COOKIE, THEME_COOKIE_OPTIONS } from "@/lib/theme/theme";
 
 type Result = { error?: string };
 

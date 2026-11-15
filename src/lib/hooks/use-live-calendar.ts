@@ -1,6 +1,6 @@
 "use client";
 
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { liveDecision } from "@/lib/calendar/live";
@@ -9,7 +9,6 @@ import {
   markRemoteRefresh,
   onLiveRelease,
 } from "@/lib/calendar/live-hold";
-import { createClient } from "@/lib/supabase/client";
 
 /** Waits for a burst of messages (a sync, a merge) to end: one refresh (RF-41). */
 const GATHER_MS = 400;
@@ -31,7 +30,9 @@ export function useLiveCalendar(
 
   useEffect(() => {
     if (!userId) return;
-    const supabase = createClient();
+    // The Supabase client is a third of the calendar's JS and only this
+    // needs it: it loads after the first paint (spec 024 RF-14).
+    let supabase: SupabaseClient | null = null;
     let channel: RealtimeChannel | null = null;
     let starting = false;
     let disposed = false;
@@ -64,6 +65,7 @@ export function useLiveCalendar(
     async function start() {
       if (channel || starting) return;
       starting = true;
+      supabase ??= (await import("@/lib/supabase/client")).createClient();
       await supabase.realtime.setAuth();
       starting = false;
       if (disposed || document.visibilityState !== "visible") return;
@@ -82,7 +84,7 @@ export function useLiveCalendar(
     }
 
     function stop() {
-      if (!channel) return;
+      if (!channel || !supabase) return;
       void supabase.removeChannel(channel);
       channel = null;
     }

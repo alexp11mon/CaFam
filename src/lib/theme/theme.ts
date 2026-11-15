@@ -1,7 +1,6 @@
 // The light and dark themes a user can pick (spec 011 RF-1, RF-2, RF-6, RF-7;
 // plan theme-core, D3). The choice lives in profiles.theme and, on each
 // device, in the cafam-theme cookie that the boot script reads before paint.
-import { z } from "zod";
 import { DARK_NEUTRALS, NEUTRALS } from "./accents";
 
 export const THEME_IDS = ["light", "dark", "system"] as const;
@@ -26,10 +25,6 @@ export const THEME_OPTIONS: readonly { id: ThemeId; label: string }[] = [
   { id: "dark", label: "Oscuro" },
   { id: "system", label: "Como el sistema" },
 ];
-
-export const themeSchema = z.enum(THEME_IDS, {
-  error: "Elige uno de los temas disponibles.",
-});
 
 export function parseTheme(value: unknown): ThemeId {
   return THEME_IDS.find((id) => id === value) ?? DEFAULT_THEME;

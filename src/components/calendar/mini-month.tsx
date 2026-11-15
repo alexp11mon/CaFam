@@ -1,16 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { CalendarLink } from "./calendar-nav";
 import { useId, useState } from "react";
 import { ChevronIcon } from "@/components/shell/icons";
 import { FormAlert } from "@/components/ui/form-alert";
 import { formatDateKeyFull } from "@/lib/calendar/format";
 import { visibleMarks, type MonthMarks } from "@/lib/calendar/month-marks";
-import {
-  calendarHref,
-  getVisibleRange,
-  type CalendarView,
-} from "@/lib/calendar/ranges";
+import { getVisibleRange, type CalendarView } from "@/lib/calendar/ranges";
 import { parseDateKey } from "@/lib/calendar/time-zone";
 
 type Load = (
@@ -162,8 +158,9 @@ export function MiniMonth({
                 const label = `${formatDateKeyFull(day)}${isToday ? ", hoy" : ""}${dots.length > 0 ? ", con eventos" : ""}`;
                 return (
                   <td key={day} className="p-0">
-                    <Link
-                      href={calendarHref(view, day)}
+                    <CalendarLink
+                      view={view}
+                      date={day}
                       aria-label={label}
                       aria-current={isToday ? "date" : undefined}
                       className={`press-quiet mx-auto flex size-11 flex-col items-center justify-center rounded-xl text-sm tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
@@ -183,7 +180,7 @@ export function MiniMonth({
                           />
                         ))}
                       </span>
-                    </Link>
+                    </CalendarLink>
                   </td>
                 );
               })}

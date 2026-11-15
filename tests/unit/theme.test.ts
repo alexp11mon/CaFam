@@ -1,3 +1,4 @@
+import { themeSchema } from "@/lib/theme/schemas";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   DEFAULT_THEME,
@@ -7,7 +8,6 @@ import {
   THEME_COLOR,
   THEME_COOKIE,
   THEME_SCRIPT,
-  themeSchema,
 } from "@/lib/theme/theme";
 
 // Spec 011, T2: the theme ids, the toggle and the boot script (RF-2, RF-6,

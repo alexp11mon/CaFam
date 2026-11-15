@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { CalendarLink } from "./calendar-nav";
 import { useEffect, useRef, useState } from "react";
 import { formatDateKeyFull } from "@/lib/calendar/format";
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { fitWeek, layoutMonthWeek } from "@/lib/calendar/month-lanes";
 import { boxOf, type Box } from "@/lib/calendar/popover";
-import { calendarHref } from "@/lib/calendar/ranges";
 import { weekdayIndex } from "@/lib/calendar/time-zone";
 import { DraggableEvent } from "./draggable-event";
 
@@ -119,14 +118,15 @@ export function MonthView({
                     className="absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
                   />
                 ) : null}
-                <Link
-                  href={calendarHref("day", day)}
+                <CalendarLink
+                  view="day"
+                  date={day}
                   aria-label={formatDateKeyFull(day)}
                   aria-current={day === today ? "date" : undefined}
                   className={`relative inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums ${day === today ? "border border-accent-edge bg-accent text-on-accent" : day.slice(0, 7) === month ? "text-ink" : "text-muted"}`}
                 >
                   {Number(day.slice(8))}
-                </Link>
+                </CalendarLink>
                 {draft?.day === day ? (
                   <span
                     aria-hidden="true"
@@ -161,15 +161,16 @@ export function MonthView({
               ))}
               {week.hidden.map((count, column) =>
                 count > 0 ? (
-                  <Link
+                  <CalendarLink
                     key={column}
-                    href={calendarHref("day", week.days[column]!)}
+                    view="day"
+                    date={week.days[column]!}
                     aria-label={`+${count} más, ${formatDateKeyFull(week.days[column]!)}`}
                     style={{ gridColumn: column + 1, gridRow: lanes }}
                     className="pointer-events-auto mx-0.5 truncate rounded-md px-1 text-xs leading-[18px] font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink"
                   >
                     +{count}
-                  </Link>
+                  </CalendarLink>
                 ) : null,
               )}
             </div>

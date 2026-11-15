@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   addTransitionType,
   startTransition,
@@ -43,11 +42,7 @@ import {
   type GroupableCalendar,
   type PersonGroup,
 } from "@/lib/calendar/grouping";
-import {
-  calendarHref,
-  navigate,
-  type CalendarView,
-} from "@/lib/calendar/ranges";
+import { navigate, type CalendarView } from "@/lib/calendar/ranges";
 import {
   CAL_FILTER,
   CAL_VIEW,
@@ -64,6 +59,7 @@ import {
   type BusyPersonOption,
 } from "./availability-filter";
 import { CalendarFilters, type FilterCategory } from "./calendar-filters";
+import { CalendarLink, useCalendarGo } from "./calendar-nav";
 import { DayView } from "./day-view";
 import {
   EventInteractionsProvider,
@@ -178,15 +174,16 @@ function DrawerViews({
       <ul aria-label="Vistas" className="flex flex-col gap-1">
         {DRAWER_VIEWS.map((item) => (
           <li key={item.view}>
-            <Link
-              href={calendarHref(item.view, date)}
-              transitionTypes={[CAL_VIEW]}
+            <CalendarLink
+              view={item.view}
+              date={date}
+              types={[CAL_VIEW]}
               aria-current={item.view === view ? "page" : undefined}
               onClick={() => void saveLastView?.(item.view)}
               className={DRAWER_ROW}
             >
               {item.label}
-            </Link>
+            </CalendarLink>
           </li>
         ))}
       </ul>
@@ -329,7 +326,7 @@ export function CalendarWorkspace({
   const closeDraft = useCallback(() => setDraft(null), []);
 
   // The phone header and drawer (spec 016 RF-8, RF-10, RF-13, RF-20, RF-23, plan D3, D15).
-  const router = useRouter();
+  const go = useCalendarGo();
   const isPhone = useIsPhone();
   const onCalendarPage = usePathname() === "/dashboard/calendar";
   const { drawerSlot, pickerOpen, setPickerOpen } = useCalendarHeader();
@@ -359,9 +356,7 @@ export function CalendarWorkspace({
     onToday: () =>
       view === "agenda"
         ? requestAgendaToday()
-        : router.push(calendarHref(view, today), {
-            transitionTypes: typesOf(todayType(date, today)),
-          }),
+        : go(view, today, typesOf(todayType(date, today))),
     picker: view === "month" ? "months" : "mini",
   });
   // Moving, recoloring and deleting without the form (spec 017 plan workspace-interactions).
@@ -412,10 +407,8 @@ export function CalendarWorkspace({
         return;
       }
       const delta = decision === "forward" ? 1 : -1;
-      const go = () =>
-        router.push(calendarHref(view, navigate(view, date, delta)), {
-          transitionTypes: typesOf(periodType(delta)),
-        });
+      const leave = () =>
+        go(view, navigate(view, date, delta), typesOf(periodType(delta)));
       // Out by its side; the period transition brings the new one in.
       const out = play(
         area,
@@ -429,8 +422,8 @@ export function CalendarWorkspace({
           fill: "forwards",
         },
       );
-      if (out) void out.finished.then(go, go);
-      else go();
+      if (out) void out.finished.then(leave, leave);
+      else leave();
     },
   });
   const filtersInDrawer = isPhone && onCalendarPage ? drawerSlot : null;
@@ -935,7 +928,7 @@ export function CalendarWorkspace({
             }
             onGo={(next) => {
               setKeyDialog(null);
-              router.push(calendarHref(view, next));
+              go(view, next);
             }}
           />
         ) : keyDialog === "help" ? (

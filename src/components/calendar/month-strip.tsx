@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { CalendarLink } from "./calendar-nav";
 import { useEffect, useRef } from "react";
 import { monthStrip } from "@/lib/calendar/month-strip";
-import { calendarHref } from "@/lib/calendar/ranges";
 
 /**
  * Row of months under the phone header in the month view, with the visible
@@ -38,13 +37,14 @@ export function MonthStrip({ month }: { month: string }) {
             </li>
           ) : (
             <li key={item.key} className="shrink-0">
-              <Link
-                href={calendarHref("month", `${item.key}-01`)}
+              <CalendarLink
+                view="month"
+                date={`${item.key}-01`}
                 aria-current={item.current ? "date" : undefined}
                 className={`inline-flex min-h-11 min-w-16 items-center justify-center rounded-full px-4 text-base font-semibold press-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${item.current ? "border border-accent-edge bg-accent text-on-accent" : "border border-control text-ink"}`}
               >
                 {item.label}
-              </Link>
+              </CalendarLink>
             </li>
           ),
         )}

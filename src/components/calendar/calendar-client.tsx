@@ -1,0 +1,271 @@
+"use client";
+
+import {
+  addTransitionType,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentProps,
+} from "react";
+import type { BusyInput } from "@/lib/availability/busy";
+import { eventsInRange, type EventWindow } from "@/lib/calendar/event-window";
+import { monthMarks } from "@/lib/calendar/month-marks";
+import {
+  calendarHref,
+  getVisibleRange,
+  parseViewParams,
+  type CalendarView,
+} from "@/lib/calendar/ranges";
+import { visibleDays } from "@/lib/calendar/view-options";
+import { useEventWindow } from "@/lib/hooks/use-event-window";
+import { FormAlert } from "@/components/ui/form-alert";
+import { LinkButton } from "@/components/ui/link-button";
+import type { AgendaEvent } from "./agenda-view";
+import { CalendarNavContext, type CalendarGo } from "./calendar-nav";
+import { CalendarWorkspace } from "./calendar-workspace";
+import { ViewToolbar } from "./view-toolbar";
+
+type WorkspaceProps = ComponentProps<typeof CalendarWorkspace>;
+type Location = { view: CalendarView; date: string };
+
+const CALENDAR_PATH = "/dashboard/calendar";
+
+/** The view and date of the address bar, when it is the calendar's. */
+function readLocation(today: string, fallback: CalendarView): Location | null {
+  if (window.location.pathname !== CALENDAR_PATH) return null;
+  const params = new URLSearchParams(window.location.search);
+  return parseViewParams(
+    {
+      view: params.get("view") ?? undefined,
+      date: params.get("date") ?? undefined,
+    },
+    today,
+    fallback,
+  );
+}
+
+const byStart = (a: AgendaEvent, b: AgendaEvent) =>
+  a.startsAt < b.startsAt
+    ? -1
+    : a.startsAt > b.startsAt
+      ? 1
+      : a.id.localeCompare(b.id);
+
+/**
+ * The calendar screen in the browser (spec 024 RF-1..RF-9, plan D1, D2). The
+ * server sends a wide window of events once; from then on the view and the
+ * date live here, so a new period, another view or "Hoy" paint at once from
+ * what is loaded, and the address changes with `history.pushState`. A refresh
+ * (live change, focus, a write) brings a new window for the address shown.
+ */
+export function CalendarClient({
+  initialView,
+  initialDate,
+  window: serverWindow,
+  initialBusy,
+  loadWindow,
+  loadBusy,
+  ...workspace
+}: {
+  initialView: CalendarView;
+  initialDate: string;
+  /** Events from the weeks of the previous month to those of the next (RF-1). */
+  window: EventWindow<AgendaEvent>;
+  /** Busy times of the server's week or day (spec 020). */
+  initialBusy: BusyInput[];
+  loadWindow?: (
+    from: string,
+    to: string,
+  ) => Promise<{ events: AgendaEvent[] } | { error: string }>;
+  loadBusy?: (
+    from: string,
+    to: string,
+  ) => Promise<{ busy: BusyInput[] } | { error: string }>;
+} & Omit<
+  WorkspaceProps,
+  "view" | "date" | "days" | "events" | "monthMarks" | "busyIntervals"
+>) {
+  const { today, timeZone, showWeekends = true, busyPeople = [] } = workspace;
+  const [location, setLocation] = useState<{
+    seen: EventWindow<AgendaEvent>;
+    view: CalendarView;
+    date: string;
+  }>({ seen: serverWindow, view: initialView, date: initialDate });
+  // A server render (first load, refresh, a link from another screen) is the
+  // new starting point; the address wins if a swipe moved on meanwhile.
+  if (location.seen !== serverWindow) {
+    const current =
+      typeof window === "undefined" ? null : readLocation(today, initialView);
+    setLocation({
+      seen: serverWindow,
+      view: current?.view ?? initialView,
+      date: current?.date ?? initialDate,
+    });
+  }
+  const { view, date } = location;
+
+  const go = useCallback<CalendarGo>((nextView, nextDate, types) => {
+    startTransition(() => {
+      for (const type of types ?? []) addTransitionType(type);
+      setLocation((current) => ({
+        ...current,
+        view: nextView,
+        date: nextDate,
+      }));
+    });
+    // Next keeps its router in step with the address (plan D2): a later
+    // refresh reads the window of this date.
+    const href = calendarHref(nextView, nextDate);
+    if (window.location.pathname + window.location.search !== href) {
+      window.history.pushState(null, "", href);
+    }
+  }, []);
+
+  // Back and forward between periods; never while another screen is shown
+  // (Activity keeps this one mounted, plan R2).
+  useEffect(() => {
+    function onPopState() {
+      const current = readLocation(today, initialView);
+      if (current) setLocation((old) => ({ ...old, ...current }));
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [today, initialView]);
+
+  const events = useEventWindow({
+    initial: serverWindow,
+    view,
+    date,
+    load: loadWindow,
+  });
+
+  const range = useMemo(
+    () => getVisibleRange(view, date, timeZone),
+    [view, date, timeZone],
+  );
+  // The same 7-day reading; only week and month drop the weekends (spec 019 plan D11).
+  const days = useMemo(
+    () =>
+      view === "week" || view === "month"
+        ? visibleDays(range.days, showWeekends)
+        : range.days,
+    [view, range, showWeekends],
+  );
+  // A stable array while nothing changes: the optimistic changes of the
+  // workspace hang from it (spec 017).
+  const shown = useMemo(
+    () => eventsInRange(events.events, range.from, range.to).sort(byStart),
+    [events.events, range],
+  );
+  // Dots of the mini month, from the same window (RF-8).
+  const month = date.slice(0, 7);
+  const marks = useMemo(() => {
+    const monthRange = getVisibleRange("month", `${month}-01`, timeZone);
+    return monthMarks(
+      eventsInRange(events.events, monthRange.from, monthRange.to),
+      monthRange.days,
+      timeZone,
+    );
+  }, [events.events, month, timeZone]);
+
+  // "Ocupado" blocks: the server's for its own week or day, the rest asked
+  // for when someone is marked (RF-9, plan D5).
+  const gridView = view === "week" || view === "day";
+  const busyKey = gridView ? `${view}|${range.days[0]}` : null;
+  const [busy, setBusy] = useState<{
+    seen: BusyInput[];
+    byKey: Map<string, BusyInput[]>;
+  }>(() => ({
+    seen: initialBusy,
+    byKey: new Map([
+      [
+        `${initialView}|${rangeStart(initialView, initialDate, timeZone)}`,
+        initialBusy,
+      ],
+    ]),
+  }));
+  if (busy.seen !== initialBusy) {
+    setBusy({
+      seen: initialBusy,
+      byKey: new Map([[`${view}|${range.days[0]}`, initialBusy]]),
+    });
+  }
+  const anyoneShown = busyPeople.some((person) => person.shown);
+  const busyKnown = busyKey ? busy.byKey.get(busyKey) : undefined;
+  useEffect(() => {
+    if (!busyKey || !loadBusy || !anyoneShown || busyKnown) return;
+    let dropped = false;
+    void loadBusy(range.days[0]!, range.days.at(-1)!)
+      .then((result) => {
+        if (dropped || "error" in result) return;
+        setBusy((current) => ({
+          ...current,
+          byKey: new Map(current.byKey).set(busyKey, result.busy),
+        }));
+      })
+      .catch(() => {});
+    return () => {
+      dropped = true;
+    };
+  }, [busyKey, loadBusy, anyoneShown, busyKnown, range]);
+
+  return (
+    <CalendarNavContext value={go}>
+      {/* On a phone the header, the drawer and "+" do this (spec 016 RF-19). */}
+      {/* Fixed while scrolling, so the views stay at hand (agenda bug, 2026-11-01). */}
+      <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-3xl glass px-4 py-3 max-tab:hidden">
+        <ViewToolbar
+          view={view}
+          date={date}
+          today={today}
+          saveLastView={workspace.saveLastView}
+          showWeekends={showWeekends}
+        />
+        {/* On a phone "+ Evento" lives in the bottom bar (spec 005 RF-22). */}
+        {workspace.canCreate ? (
+          <div className="hidden lg:block">
+            <LinkButton
+              href={`/dashboard/events/new?date=${date}`}
+              // Its address changes with every period (RF-7).
+              prefetch={false}
+              aria-keyshortcuts="N C"
+            >
+              Nuevo evento
+            </LinkButton>
+          </div>
+        ) : null}
+      </div>
+      {/* A period that was not loaded: the view is already there, its events
+          are on their way (RF-4). */}
+      <p role="status" className="sr-only">
+        {events.loading ? "Cargando eventos…" : ""}
+      </p>
+      {events.failed ? (
+        <FormAlert message="No se han podido cargar los eventos de estas fechas. Comprueba tu conexión y cambia de periodo para reintentar." />
+      ) : null}
+      <div
+        aria-busy={events.loading || undefined}
+        data-loading={events.loading || undefined}
+        className="flex min-h-0 flex-1 flex-col transition-opacity duration-(--motion-fast-in) data-loading:opacity-70"
+      >
+        <CalendarWorkspace
+          {...workspace}
+          view={view}
+          date={date}
+          days={days}
+          events={shown}
+          monthMarks={marks}
+          busyIntervals={busyKnown ?? EMPTY_BUSY}
+        />
+      </div>
+    </CalendarNavContext>
+  );
+}
+
+const EMPTY_BUSY: BusyInput[] = [];
+
+function rangeStart(view: CalendarView, date: string, timeZone: string) {
+  return getVisibleRange(view, date, timeZone).days[0];
+}

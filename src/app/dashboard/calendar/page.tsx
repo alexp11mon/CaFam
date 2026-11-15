@@ -1,33 +1,32 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { CalendarClient } from "@/components/calendar/calendar-client";
 import { CalendarSkeleton } from "@/components/calendar/calendar-skeleton";
-import { CalendarWorkspace } from "@/components/calendar/calendar-workspace";
-import { ViewToolbar } from "@/components/calendar/view-toolbar";
 import { LinkButton } from "@/components/ui/link-button";
+import { getBusyIntervals, getBusyPeople } from "@/lib/availability/queries";
+import { eventsInRange, serverWindow } from "@/lib/calendar/event-window";
 import { todayKey } from "@/lib/calendar/format";
-import { organizeGroups } from "@/lib/calendar/organize-groups";
-import { monthMarks } from "@/lib/calendar/month-marks";
 import { nextEventsWindow } from "@/lib/calendar/next-event";
+import { organizeGroups } from "@/lib/calendar/organize-groups";
 import {
-  getCategoriesForCalendars,
+  getCalendarProfile,
   getEventsInRange,
-  getLastView,
-  getMyCalendars,
-  getPeople,
   getGroups,
+  getMyCalendars,
+  getMyCategories,
+  getPeople,
   getPreferences,
-  getProfileTimeZone,
-  getViewOptions,
   requireUser,
 } from "@/lib/calendar/queries";
 import {
+  daysRange,
   getVisibleRange,
   isCalendarView,
   parseViewParams,
 } from "@/lib/calendar/ranges";
 import { toViewEvents } from "@/lib/calendar/to-view-events";
-import { visibleDays } from "@/lib/calendar/view-options";
 import { canWriteEvents } from "@/lib/sync/read-only";
+import { setGroupVisibility } from "../calendars/group-actions";
 import { createEvent } from "../events/actions";
 import { loadAgendaEvents } from "./agenda-actions";
 import { loadMonthMarks } from "./mini-month-actions";
@@ -38,8 +37,7 @@ import {
   setPersonVisibility,
   setShowBusy,
 } from "./preferences-actions";
-import { getBusyIntervals, getBusyPeople } from "@/lib/availability/queries";
-import { setGroupVisibility } from "../calendars/group-actions";
+import { loadBusy, loadCalendarWindow } from "./window-actions";
 
 export const metadata: Metadata = { title: "Calendario" };
 
@@ -53,49 +51,64 @@ async function CalendarContent({
 }) {
   const query = await searchParams;
   const { supabase, userId } = await requireUser();
-  const [timeZone, lastView, viewOptions] = await Promise.all([
-    getProfileTimeZone(supabase, userId),
-    getLastView(supabase, userId),
-    getViewOptions(supabase, userId),
-  ]);
-  const today = todayKey(timeZone);
-  const { view, date } = parseViewParams(query, today, lastView);
-  const range = getVisibleRange(view, date, timeZone);
-  // The same 7-day reading; only week and month drop the weekends (plan D11).
-  const shownDays =
-    view === "week" || view === "month"
-      ? visibleDays(range.days, viewOptions.showWeekends)
-      : range.days;
-  // The mini month shows the weeks of the month of `date` (spec 005 RF-23).
-  const monthRange = getVisibleRange("month", date, timeZone);
+  // Nothing below waits for the profile but the events, which need its zone
+  // (spec 024 RF-10).
+  const profileRead = getCalendarProfile(supabase, userId);
   const upcomingWindow = nextEventsWindow();
 
   const [
+    profile,
     calendars,
-    records,
-    monthRecords,
-    upcoming,
     people,
     preferences,
     userGroups,
     busyPeople,
-    busyIntervals,
+    categories,
+    read,
   ] = await Promise.all([
+    profileRead,
     getMyCalendars(supabase, userId),
-    getEventsInRange(supabase, range.from, range.to),
-    view === "month"
-      ? null
-      : getEventsInRange(supabase, monthRange.from, monthRange.to),
-    getEventsInRange(supabase, upcomingWindow.from, upcomingWindow.to),
     getPeople(supabase),
     getPreferences(supabase, userId),
     getGroups(supabase, userId),
     getBusyPeople(supabase),
-    // Only the week and the day show them (RF-16).
-    view === "week" || view === "day"
-      ? getBusyIntervals(supabase, range.from, range.to)
-      : [],
+    getMyCategories(supabase),
+    profileRead.then(async ({ timeZone, lastView }) => {
+      const today = todayKey(timeZone);
+      const { view, date } = parseViewParams(query, today, lastView);
+      // One wide reading: the browser changes period inside it with no
+      // request (spec 024 RF-1, plan D1, D3).
+      const days = serverWindow(date);
+      const window = daysRange(days.from, days.to, timeZone);
+      const range = getVisibleRange(view, date, timeZone);
+      const covered =
+        window.from <= upcomingWindow.from && upcomingWindow.to <= window.to;
+      const [records, upcoming, busyIntervals] = await Promise.all([
+        getEventsInRange(supabase, window.from, window.to),
+        // "Próximo evento" comes out of the window when today is in it (RF-8).
+        covered
+          ? null
+          : getEventsInRange(supabase, upcomingWindow.from, upcomingWindow.to),
+        // Only the week and the day show them (spec 020 RF-16).
+        view === "week" || view === "day"
+          ? getBusyIntervals(supabase, range.from, range.to)
+          : [],
+      ]);
+      return {
+        today,
+        view,
+        date,
+        days,
+        records,
+        upcoming:
+          upcoming ??
+          eventsInRange(records, upcomingWindow.from, upcomingWindow.to),
+        busyIntervals,
+      };
+    }),
   ]);
+  const { timeZone } = profile;
+  const { today, view, date } = read;
 
   if (calendars.length === 0) {
     return (
@@ -109,9 +122,8 @@ async function CalendarContent({
   }
 
   const names = new Map(calendars.map((c) => [c.id, c.name]));
-  const events = toViewEvents(records, calendars);
   const canCreate = calendars.some(canWriteEvents);
-  const nextEvents = upcoming
+  const nextEvents = read.upcoming
     .filter((record) => !record.allDay)
     .map((record) => ({
       id: record.id,
@@ -123,10 +135,6 @@ async function CalendarContent({
       calendarName: names.get(record.calendarId) ?? "",
     }));
 
-  const categories = await getCategoriesForCalendars(
-    supabase,
-    calendars.map((calendar) => calendar.id),
-  );
   // People, calendars and their saved order and visibility (RF-42, RF-45, RF-46).
   // The user's groups come first, as in "Mis calendarios" (spec 007 RF-36).
   const organized = organizeGroups({
@@ -156,65 +164,40 @@ async function CalendarContent({
   ];
 
   return (
-    <>
-      {/* On a phone the header, the drawer and "+" do this (spec 016 RF-19). */}
-      {/* Fixed while scrolling, so the views stay at hand (agenda bug, 2026-11-01). */}
-      <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-3xl glass px-4 py-3 max-tab:hidden">
-        <ViewToolbar
-          view={view}
-          date={date}
-          today={today}
-          saveLastView={saveLastView}
-          showWeekends={viewOptions.showWeekends}
-        />
-        {/* On a phone "+ Evento" lives in the bottom bar (spec 005 RF-22). */}
-        {canCreate ? (
-          <div className="hidden lg:block">
-            <LinkButton
-              href={`/dashboard/events/new?date=${date}`}
-              aria-keyshortcuts="N C"
-            >
-              Nuevo evento
-            </LinkButton>
-          </div>
-        ) : null}
-      </div>
-      <CalendarWorkspace
-        view={view}
-        date={date}
-        days={shownDays}
-        today={today}
-        timeZone={timeZone}
-        events={events}
-        canCreate={canCreate}
-        groups={groups}
-        categories={categories}
-        setCalendarVisibility={setCalendarVisibility}
-        setPersonVisibility={setPersonVisibility}
-        setGroupVisibility={setGroupVisibility}
-        saveOrder={saveOrder}
-        nextEvents={nextEvents}
-        loadedAt={upcomingWindow.loadedAt}
-        monthMarks={monthMarks(
-          monthRecords ?? records,
-          monthRange.days,
-          timeZone,
-        )}
-        loadMonthMarks={loadMonthMarks}
-        saveLastView={saveLastView}
-        loadAgendaEvents={loadAgendaEvents}
-        editableCalendars={calendars
-          .filter(canWriteEvents)
-          .map(({ id, name, color }) => ({ id, name, color }))}
-        createAction={createEvent}
-        userId={userId}
-        showWeekends={viewOptions.showWeekends}
-        defaultDuration={viewOptions.duration}
-        busyPeople={busyPeople}
-        busyIntervals={busyIntervals}
-        setShowBusy={setShowBusy}
-      />
-    </>
+    <CalendarClient
+      initialView={view}
+      initialDate={date}
+      window={{
+        range: read.days,
+        events: toViewEvents(read.records, calendars),
+      }}
+      initialBusy={read.busyIntervals}
+      loadWindow={loadCalendarWindow}
+      loadBusy={loadBusy}
+      today={today}
+      timeZone={timeZone}
+      canCreate={canCreate}
+      groups={groups}
+      categories={categories}
+      setCalendarVisibility={setCalendarVisibility}
+      setPersonVisibility={setPersonVisibility}
+      setGroupVisibility={setGroupVisibility}
+      saveOrder={saveOrder}
+      nextEvents={nextEvents}
+      loadedAt={upcomingWindow.loadedAt}
+      loadMonthMarks={loadMonthMarks}
+      saveLastView={saveLastView}
+      loadAgendaEvents={loadAgendaEvents}
+      editableCalendars={calendars
+        .filter(canWriteEvents)
+        .map(({ id, name, color }) => ({ id, name, color }))}
+      createAction={createEvent}
+      userId={userId}
+      showWeekends={profile.showWeekends}
+      defaultDuration={profile.duration}
+      busyPeople={busyPeople}
+      setShowBusy={setShowBusy}
+    />
   );
 }
 

@@ -236,6 +236,35 @@ export async function getViewOptions(
   };
 }
 
+export interface CalendarProfile {
+  timeZone: string;
+  lastView: string | null;
+  showWeekends: boolean;
+  duration: Duration;
+}
+
+/**
+ * Everything the calendar page needs from the profile in one query: it was
+ * three (spec 024 RF-10).
+ */
+export async function getCalendarProfile(
+  supabase: Client,
+  userId: string,
+): Promise<CalendarProfile> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("time_zone, last_view, show_weekends, default_event_minutes")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return {
+    timeZone: data?.time_zone ?? DEFAULT_TIME_ZONE,
+    lastView: data?.last_view ?? null,
+    showWeekends: data?.show_weekends ?? true,
+    duration: parseDuration(data?.default_event_minutes),
+  };
+}
+
 export interface CategoryOptionRecord {
   id: string;
   name: string;
@@ -252,6 +281,25 @@ export async function getCategoriesForCalendars(
     .from("event_categories")
     .select("id, name, calendar_id")
     .in("calendar_id", calendarIds)
+    .order("name");
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    calendarId: row.calendar_id,
+  }));
+}
+
+/**
+ * Categories of every calendar the user is a member of. RLS already limits
+ * them to those calendars, so this does not wait for their ids (spec 024 RF-10).
+ */
+export async function getMyCategories(
+  supabase: Client,
+): Promise<CategoryOptionRecord[]> {
+  const { data, error } = await supabase
+    .from("event_categories")
+    .select("id, name, calendar_id")
     .order("name");
   if (error) throw error;
   return (data ?? []).map((row) => ({

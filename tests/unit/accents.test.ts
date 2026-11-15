@@ -1,3 +1,4 @@
+import { accentSchema } from "@/lib/theme/schemas";
 import { describe, expect, it } from "vitest";
 import {
   CALENDAR_COLORS,
@@ -11,7 +12,6 @@ import {
   GLASS,
   NEUTRALS,
   THEME_INKS,
-  accentSchema,
   isAccent,
 } from "@/lib/theme/accents";
 import { composite } from "@/lib/theme/contrast";

@@ -1,15 +1,6 @@
 "use server";
 
-import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
-import {
-  getEventsInRange,
-  getMyCalendars,
-  getProfileTimeZone,
-  requireActionUser,
-} from "@/lib/calendar/queries";
-import { daysBetween, daysRange } from "@/lib/calendar/ranges";
-import { parseDateKey } from "@/lib/calendar/time-zone";
-import { toViewEvents, type AgendaEvent } from "@/lib/calendar/to-view-events";
+import { loadEventsBetween, type RangeResult } from "@/lib/calendar/load-range";
 
 /** At most two of the agenda's 28-day chunks per call (plan D8). */
 const MAX_DAYS = 62;
@@ -21,27 +12,6 @@ const MAX_DAYS = 62;
 export async function loadAgendaEvents(
   from: string,
   to: string,
-): Promise<{ events: AgendaEvent[] } | { error: string }> {
-  if (!parseDateKey(from) || !parseDateKey(to)) {
-    return { error: CALENDAR_MESSAGES.notFound };
-  }
-  const days = daysBetween(from, to) + 1;
-  if (days < 1 || days > MAX_DAYS) return { error: CALENDAR_MESSAGES.notFound };
-
-  const { supabase, userId } = await requireActionUser();
-  try {
-    // Only the events need the zone: the calendars do not wait for it
-    // (spec 023 RF-15).
-    const calendarsRead = getMyCalendars(supabase, userId);
-    const [records, calendars] = await Promise.all([
-      getProfileTimeZone(supabase, userId).then((timeZone) => {
-        const range = daysRange(from, to, timeZone);
-        return getEventsInRange(supabase, range.from, range.to);
-      }),
-      calendarsRead,
-    ]);
-    return { events: toViewEvents(records, calendars) };
-  } catch {
-    return { error: CALENDAR_MESSAGES.connection };
-  }
+): Promise<RangeResult> {
+  return loadEventsBetween(from, to, MAX_DAYS);
 }

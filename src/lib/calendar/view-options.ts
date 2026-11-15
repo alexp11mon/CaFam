@@ -1,16 +1,9 @@
-import { z } from "zod";
 import { weekdayIndex } from "./time-zone";
 
 /** Lengths of a new event offered in Ajustes, in minutes (spec 019 RF-30). */
 export const DURATIONS = [15, 30, 45, 60, 90, 120] as const;
 export type Duration = (typeof DURATIONS)[number];
 export const DEFAULT_DURATION: Duration = 60;
-
-export const durationSchema = z
-  .number()
-  .refine((value): value is Duration => DURATIONS.includes(value as Duration), {
-    message: "Elige una duración de la lista.",
-  });
 
 /** A stored duration, or 60 when it is missing or unknown. */
 export function parseDuration(value: unknown): Duration {

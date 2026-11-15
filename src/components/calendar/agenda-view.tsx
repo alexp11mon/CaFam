@@ -1,16 +1,21 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
+  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
 } from "react";
-import { anchorDay, buildAgendaFeed } from "@/lib/calendar/agenda-feed";
+import {
+  anchorDay,
+  buildAgendaFeed,
+  type AgendaFeedItem,
+} from "@/lib/calendar/agenda-feed";
 import { AGENDA_TODAY_EVENT } from "@/lib/calendar/agenda-today";
-import { calendarHref, daysBetween } from "@/lib/calendar/ranges";
+import { daysBetween } from "@/lib/calendar/ranges";
+import { useCalendarGo } from "./calendar-nav";
 import { addDays } from "@/lib/calendar/time-zone";
 import type { AgendaEvent } from "@/lib/calendar/to-view-events";
 import { todayType, typesOf } from "@/lib/calendar/transition-types";
@@ -82,7 +87,7 @@ export function AgendaView({
   /** The month at the top, for the header title (RF-59). */
   onMonthChange?: (month: string) => void;
 }) {
-  const router = useRouter();
+  const go = useCalendarGo();
   const [chunks, setChunks] = useState<Chunk[]>(() => [
     { first: days[0]!, last: days.at(-1)!, events: null },
   ]);
@@ -149,14 +154,12 @@ export function AgendaView({
         anchorPending.current = true;
         setChunks([{ first: days[0]!, last: days.at(-1)!, events: null }]);
       } else {
-        router.push(calendarHref("agenda", today), {
-          transitionTypes: typesOf(todayType(first, today)),
-        });
+        go("agenda", today, typesOf(todayType(first, today)));
       }
     }
     window.addEventListener(AGENDA_TODAY_EVENT, onToday);
     return () => window.removeEventListener(AGENDA_TODAY_EVENT, onToday);
-  }, [days, first, last, today, router]);
+  }, [days, first, last, today, go]);
 
   const load = useCallback(
     async (direction: "before" | "after") => {
@@ -318,45 +321,7 @@ export function AgendaView({
             </div>
           );
         }
-        return (
-          <section
-            key={item.key}
-            data-testid="agenda-day"
-            data-day={item.key}
-            data-month={item.key.slice(0, 7)}
-            aria-label={item.isToday ? `${item.label}, hoy` : item.label}
-            className="flex scroll-mt-[calc(4rem+env(safe-area-inset-top))] gap-3 px-4 py-1.5 tab:scroll-mt-40"
-          >
-            {/* The day on the left, today in the accent (RF-52, RF-53). */}
-            <div
-              aria-hidden="true"
-              className="flex w-11 shrink-0 flex-col items-center"
-            >
-              <span
-                className={`text-xs font-semibold ${item.isToday ? "text-accent-ink" : "text-muted"}`}
-              >
-                {item.weekday}
-              </span>
-              <span
-                className={`inline-flex size-9 items-center justify-center rounded-full text-xl font-semibold tabular-nums ${item.isToday ? "border border-accent-edge bg-accent text-on-accent" : "text-ink"}`}
-              >
-                {item.number}
-              </span>
-            </div>
-            <ul className="flex min-w-0 flex-1 flex-col gap-1.5 pt-1">
-              {item.entries.map((entry) => (
-                <li key={entry.event.id}>
-                  <EventBlock
-                    event={entry.event}
-                    timeZone={timeZone}
-                    shape="card"
-                    line={entry.line}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        );
+        return <AgendaDay key={item.key} item={item} timeZone={timeZone} />;
       })}
       {error ? (
         <div className="flex flex-col items-center gap-2 py-6">
@@ -381,3 +346,63 @@ export function AgendaView({
     </div>
   );
 }
+
+type DayItem = Extract<AgendaFeedItem<AgendaEvent>, { kind: "day" }>;
+
+/**
+ * One day of the agenda. Memoized on what it draws: a new chunk rebuilds the
+ * whole feed, but the days already on screen keep their events and are not
+ * rendered again (spec 024 RF-13, plan D9).
+ */
+const AgendaDay = memo(
+  function AgendaDay({ item, timeZone }: { item: DayItem; timeZone: string }) {
+    return (
+      <section
+        data-testid="agenda-day"
+        data-day={item.key}
+        data-month={item.key.slice(0, 7)}
+        aria-label={item.isToday ? `${item.label}, hoy` : item.label}
+        className="flex scroll-mt-[calc(4rem+env(safe-area-inset-top))] gap-3 px-4 py-1.5 tab:scroll-mt-40"
+      >
+        {/* The day on the left, today in the accent (RF-52, RF-53). */}
+        <div
+          aria-hidden="true"
+          className="flex w-11 shrink-0 flex-col items-center"
+        >
+          <span
+            className={`text-xs font-semibold ${item.isToday ? "text-accent-ink" : "text-muted"}`}
+          >
+            {item.weekday}
+          </span>
+          <span
+            className={`inline-flex size-9 items-center justify-center rounded-full text-xl font-semibold tabular-nums ${item.isToday ? "border border-accent-edge bg-accent text-on-accent" : "text-ink"}`}
+          >
+            {item.number}
+          </span>
+        </div>
+        <ul className="flex min-w-0 flex-1 flex-col gap-1.5 pt-1">
+          {item.entries.map((entry) => (
+            <li key={entry.event.id}>
+              <EventBlock
+                event={entry.event}
+                timeZone={timeZone}
+                shape="card"
+                line={entry.line}
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  },
+  (before, after) =>
+    before.timeZone === after.timeZone &&
+    before.item.key === after.item.key &&
+    before.item.isToday === after.item.isToday &&
+    before.item.entries.length === after.item.entries.length &&
+    before.item.entries.every(
+      (entry, index) =>
+        entry.event === after.item.entries[index]!.event &&
+        entry.line === after.item.entries[index]!.line,
+    ),
+);
