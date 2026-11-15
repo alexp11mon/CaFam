@@ -64,6 +64,22 @@ export const DARK_NEUTRALS: Record<keyof typeof NEUTRALS, string> = {
  */
 export const BRAND = { tile: "#CF3D25", onTile: "#FFFFFF" } as const;
 
+/** Venito, the mascot (spec 027 RF-1, plan D5): its own colors in each theme. */
+export const VENITO = {
+  light: {
+    seal: "#8DA3B0",
+    light: "#E9EFF2",
+    dark: "#22323F",
+    blush: "#F2A99B",
+  },
+  dark: {
+    seal: "#9FB4C0",
+    light: "#EEF3F5",
+    dark: "#0A1620",
+    blush: "#F2A99B",
+  },
+} as const;
+
 export const THEME_INKS = {
   light: {
     onInk: WHITE,

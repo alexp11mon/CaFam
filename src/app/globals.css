@@ -28,6 +28,11 @@
   --color-on-mark: var(--on-mark);
   /* Behind dialogs: dark in both themes. */
   --color-scrim: #0a1620;
+  /* Venito, the mascot (spec 027): brand colors, never the accent. */
+  --color-seal: var(--seal);
+  --color-seal-light: var(--seal-light);
+  --color-seal-dark: var(--seal-dark);
+  --color-seal-blush: var(--seal-blush);
   /* The user's accent switches with data-accent on the app frame (spec 005 D2). */
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
@@ -60,6 +65,10 @@
   --pastel-ink: #0e2233;
   --mark: #cf3d25;
   --on-mark: #ffffff;
+  --seal: #8da3b0;
+  --seal-light: #e9eff2;
+  --seal-dark: #22323f;
+  --seal-blush: #f2a99b;
   --elevation-soft:
     0 1px 2px rgb(14 34 51 / 0.06), 0 1px 1px rgb(14 34 51 / 0.04);
   --elevation-float:
@@ -108,6 +117,10 @@
   --pastel-ink: #0e2233;
   --mark: #cf3d25;
   --on-mark: #ffffff;
+  --seal: #9fb4c0;
+  --seal-light: #eef3f5;
+  --seal-dark: #0a1620;
+  --seal-blush: #f2a99b;
   --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.4);
   --elevation-float:
     0 18px 40px -8px rgb(0 0 0 / 0.6), 0 4px 12px rgb(0 0 0 / 0.35);
@@ -128,6 +141,10 @@
     --pastel-ink: #0e2233;
     --mark: #cf3d25;
     --on-mark: #ffffff;
+    --seal: #9fb4c0;
+    --seal-light: #eef3f5;
+    --seal-dark: #0a1620;
+    --seal-blush: #f2a99b;
     --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.4);
     --elevation-float:
       0 18px 40px -8px rgb(0 0 0 / 0.6), 0 4px 12px rgb(0 0 0 / 0.35);
@@ -243,6 +260,19 @@ body {
   height: calc(
     100dvh - 11.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)
   );
+}
+
+/* The background of the chat (spec 027 RF-4): a faint pattern of dots made
+   of tokens, so it follows the theme. */
+@utility bg-chat {
+  --gradient-chat: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in srgb, var(--control) 28%, transparent) 1px,
+    transparent 0
+  );
+  background-color: var(--stone);
+  background-image: var(--gradient-chat);
+  background-size: 18px 18px;
 }
 
 @utility bg-backdrop {
@@ -716,5 +746,88 @@ html[data-reveal] [data-view-switcher] {
     [data-toast][data-leaving] {
       translate: none;
     }
+  }
+}
+
+/* Venito's small gestures (spec 027 RF-1): transform and opacity only. Each
+   gesture is short inside a long, calm loop; none with reduced motion. */
+@keyframes venito-blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  97% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes venito-tilt {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-6deg);
+  }
+}
+
+@keyframes venito-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-18deg);
+  }
+}
+
+@keyframes venito-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+[data-venito] [data-part="eyes"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: venito-blink 5s var(--ease-in-out) infinite;
+}
+
+[data-venito="thinking"] [data-part="head"] {
+  transform-box: fill-box;
+  transform-origin: 50% 80%;
+  animation: venito-tilt 2.4s var(--ease-in-out) infinite;
+}
+
+[data-venito="wave"] [data-part="flipper"] {
+  transform-box: fill-box;
+  transform-origin: 20% 90%;
+  animation: venito-wave 1.2s var(--ease-in-out) 3;
+}
+
+[data-typing] > span {
+  animation: venito-dot 1.2s var(--ease-in-out) infinite;
+}
+
+[data-typing] > span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+[data-typing] > span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-venito] [data-part],
+  [data-typing] > span {
+    animation: none;
   }
 }
