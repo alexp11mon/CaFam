@@ -22,7 +22,7 @@ export function CitedEvents({
         <li key={event.id}>
           <Link
             href={`/dashboard/events/${event.id}`}
-            className="flex min-h-11 items-stretch gap-3 rounded-2xl border border-line bg-stone/60 p-2 pr-3 text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="flex min-h-11 items-stretch gap-3 rounded-control border border-line bg-stone/60 p-2 pr-3 text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             {/* The calendar's color is data, so it goes in style (P9). */}
             <span

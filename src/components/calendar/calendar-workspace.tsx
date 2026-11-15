@@ -743,7 +743,7 @@ export function CalendarWorkspace({
                   originFrom(boxOf(trigger), boxOf(picker)),
                 );
             }}
-            className="pop absolute top-0 left-0 z-30 hidden w-84 [--pop-origin:1.5rem_0] rounded-3xl glass-float p-3 shadow-float lg:block"
+            className="pop absolute top-0 left-0 z-30 hidden w-84 [--pop-origin:1.5rem_0] rounded-card surface-float p-3 shadow-float lg:block"
             onClick={(event) => {
               if ((event.target as Element).closest("a"))
                 setSidebarPicker(false);
@@ -826,7 +826,7 @@ export function CalendarWorkspace({
             aria-expanded={panelOpen}
             aria-controls={panelId}
             onClick={() => setPanelOpen((open) => !open)}
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-control bg-paper px-4 text-base font-semibold text-ink transition-colors hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink lg:hidden"
+            className="inline-flex min-h-11 items-center justify-center rounded-control border border-control bg-paper px-4 text-base font-semibold text-ink transition-colors hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink lg:hidden"
           >
             Calendarios y filtros
           </button>

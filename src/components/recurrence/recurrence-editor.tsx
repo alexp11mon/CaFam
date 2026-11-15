@@ -149,7 +149,7 @@ function Editor({
           event.preventDefault();
         }
       }}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl glass-float p-6 text-ink backdrop:bg-scrim/50"
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-control surface-float p-6 text-ink backdrop:bg-scrim/50"
     >
       <div className="flex flex-col gap-5">
         <h2 id={titleId} className="text-lg font-bold">
@@ -200,7 +200,7 @@ function Editor({
               {WEEKDAYS.map((day, index) => (
                 <label
                   key={day}
-                  className="flex min-h-11 items-center gap-1.5 rounded-full border border-control bg-paper px-3 has-checked:border-ink has-checked:bg-ink has-checked:text-on-ink"
+                  className="flex min-h-11 items-center gap-1.5 rounded-control border border-control bg-paper px-3 has-checked:border-ink has-checked:bg-ink has-checked:text-on-ink"
                 >
                   <input
                     type="checkbox"

@@ -14,7 +14,7 @@ export type MenuChoice =
 
 const MARGIN = 16;
 const ITEM =
-  "press-quiet flex min-h-11 w-full items-center gap-3 rounded-full px-4 text-left text-sm font-semibold hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink";
+  "press-quiet flex min-h-11 w-full items-center gap-3 rounded-control px-4 text-left text-sm font-semibold hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink";
 
 /**
  * The event's own context menu (spec 017 RF-32 to RF-43, plan D12): the
@@ -114,7 +114,7 @@ export function EventMenu({
       data-entering=""
       // Placed at the pointer; the layout effect keeps it on screen.
       style={{ left: at.left, top: at.top }}
-      className="pop stagger fixed z-50 flex w-max flex-col gap-1 rounded-3xl glass-float p-2 text-ink"
+      className="pop stagger fixed z-50 flex w-max flex-col gap-1 rounded-card surface-float p-2 text-ink"
     >
       <div className="grid grid-cols-7 gap-1 p-1">
         {CALENDAR_COLORS.map((color) => {

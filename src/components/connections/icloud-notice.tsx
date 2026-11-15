@@ -6,7 +6,7 @@ const LINK =
 /** What an iCloud connection needs and what it opens (spec 018 RF-2 to RF-4). */
 export function IcloudNotice() {
   return (
-    <div className="flex flex-col gap-4 rounded-3xl bg-paper p-4 text-ink sm:p-6">
+    <div className="flex flex-col gap-4 rounded-card bg-paper p-4 text-ink sm:p-6">
       <p>
         Para conectar iCloud hace falta una{" "}
         <strong>contraseña específica de app</strong>, no la contraseña normal

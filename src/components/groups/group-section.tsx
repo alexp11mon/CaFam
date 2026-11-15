@@ -139,7 +139,7 @@ export function GroupSection({
         <form
           action={formAction}
           noValidate
-          className="flex flex-col gap-3 rounded-3xl bg-paper p-4 sm:flex-row sm:items-end"
+          className="flex flex-col gap-3 rounded-card bg-paper p-4 sm:flex-row sm:items-end"
         >
           <div className="flex-1 sm:max-w-sm">
             <FormAlert message={state.formError} />
@@ -166,7 +166,7 @@ export function GroupSection({
         </form>
       ) : null}
       {calendarCount === 0 ? (
-        <p className="rounded-3xl bg-paper px-4 py-6 text-center text-ink">
+        <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
           Este grupo aún no tiene calendarios. Elige el grupo en la ficha de un
           calendario.
         </p>

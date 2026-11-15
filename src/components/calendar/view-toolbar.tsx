@@ -59,7 +59,7 @@ const VIEWS: {
 ];
 
 const BUTTON =
-  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-control bg-paper px-4 text-base font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
+  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-control border border-control bg-paper px-4 text-base font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 /** View switcher, previous / next / today and the period heading (RF-29, RF-37). */
 export function ViewToolbar({
@@ -168,7 +168,7 @@ export function ViewToolbar({
 }
 
 const VIEW_ITEM =
-  "inline-flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-base font-semibold sm:flex-none";
+  "inline-flex min-h-11 flex-1 items-center justify-center rounded-control px-4 text-base font-semibold sm:flex-none";
 
 /**
  * The views, drawn twice in the same box: muted text below and, above it, an

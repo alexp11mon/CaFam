@@ -144,7 +144,7 @@ export function CategoryManager({
     <div className="flex flex-col gap-6">
       {canEdit ? <CreateForm action={createAction} /> : null}
       {categories.length === 0 ? (
-        <p className="rounded-3xl bg-paper px-4 py-6 text-center text-ink">
+        <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
           Este calendario aún no tiene categorías.
         </p>
       ) : (
@@ -152,7 +152,7 @@ export function CategoryManager({
           {categories.map((category) => (
             <li
               key={`${category.id}:${category.name}`}
-              className="rounded-3xl bg-paper p-4"
+              className="rounded-card bg-paper p-4"
             >
               {/* The key includes the name so a saved rename leaves edit mode. */}
               <CategoryRow

@@ -28,7 +28,7 @@ export function OrphanCalendarItem({
   const [state, formAction, pending] = useActionState(keepAction, {});
 
   return (
-    <li className="flex flex-col gap-3 rounded-3xl bg-paper p-4">
+    <li className="flex flex-col gap-3 rounded-card bg-paper p-4">
       <p className="flex min-w-0 items-center gap-2 font-semibold text-ink">
         <span
           aria-hidden="true"

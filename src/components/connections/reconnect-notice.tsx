@@ -14,7 +14,7 @@ export function ReconnectNotice({
   missing?: string[];
 }) {
   return (
-    <section className="flex flex-col gap-3 rounded-3xl border border-control bg-paper p-4 sm:p-6">
+    <section className="flex flex-col gap-3 rounded-card border border-control bg-paper p-4 sm:p-6">
       <p className="text-ink">
         La cuenta <span className="font-semibold break-all">{email}</span> solo
         puede leer. Vuelve a conectarla para crear y cambiar eventos de Google

@@ -20,7 +20,7 @@ export function ShortcutsHelp({ onClose }: { onClose: () => void }) {
       ref={dialog}
       aria-labelledby={titleId}
       onClose={onClose}
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-2xl glass-float p-6 text-ink backdrop:bg-scrim/50"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-control surface-float p-6 text-ink backdrop:bg-scrim/50"
     >
       <h2 id={titleId} className="text-lg font-bold">
         Atajos de teclado

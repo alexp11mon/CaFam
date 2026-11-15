@@ -78,7 +78,7 @@ export function BusyBlock({
           id={noteId}
           role="dialog"
           aria-label={item.name}
-          className="absolute top-full left-0 z-30 mt-1 w-max max-w-56 rounded-2xl glass-float p-3 text-sm text-ink"
+          className="absolute top-full left-0 z-30 mt-1 w-max max-w-56 rounded-control surface-float p-3 text-sm text-ink"
         >
           <p className="font-semibold">{item.name}</p>
           <p className="tabular-nums">

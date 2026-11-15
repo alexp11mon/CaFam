@@ -32,7 +32,7 @@ async function Upload({ params }: { params: Promise<{ id: string }> }) {
   const counts = uploadCounts(events);
 
   return (
-    <section className="flex flex-col gap-4 rounded-3xl bg-paper p-4 sm:p-6">
+    <section className="flex flex-col gap-4 rounded-card bg-paper p-4 sm:p-6">
       <p className="text-ink">
         Se creará en la cuenta que elijas el calendario{" "}
         <span className="font-semibold">«{calendar.name}»</span> con sus

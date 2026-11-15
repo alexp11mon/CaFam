@@ -6,10 +6,9 @@ import {
 } from "@/lib/calendar/palette";
 import {
   ACCENTS,
-  BACKDROP,
+  BRAND,
   DARK_NEUTRALS,
   DEFAULT_ACCENT,
-  GLASS,
   NEUTRALS,
   THEME_INKS,
   isAccent,
@@ -21,27 +20,23 @@ import { composite } from "@/lib/theme/contrast";
 describe("accents", () => {
   it("are the six of the spec, in Spanish, with red by default (RF-6, RF-10)", () => {
     expect(ACCENTS.map((accent) => [accent.id, accent.label])).toEqual([
-      ["red", "Rojo"],
-      ["blue", "Azul"],
-      ["green", "Verde"],
-      ["yellow", "Amarillo"],
-      ["purple", "Morado"],
-      ["gray", "Gris"],
+      // Spec 025 RF-9: new names for the Orilla identity, the same stored ids.
+      ["red", "Coral"],
+      ["blue", "Mar"],
+      ["green", "Alga"],
+      ["yellow", "Sol"],
+      ["purple", "Lavanda"],
+      ["gray", "Roca"],
     ]);
     expect(DEFAULT_ACCENT).toBe("red");
   });
 
-  it("never use the old blue; Azul has its own darker tone (spec 005 RF-58)", () => {
+  it("never use the old blue (spec 005 RF-58)", () => {
     for (const accent of ACCENTS) {
       expect(
         [accent.fill, accent.ink, accent.edge].map((c) => c.toUpperCase()),
       ).not.toContain("#2563EB");
     }
-    expect(ACCENTS.find((accent) => accent.id === "blue")).toMatchObject({
-      fill: "#1D4ED8",
-      ink: "#1E40AF",
-      edge: "#1D4ED8",
-    });
   });
 
   it("accepts only those six", () => {
@@ -96,7 +91,8 @@ const THEMES = [
 ];
 
 describe.each(THEMES)("the $name theme", ({ neutrals, theme }) => {
-  const surfaces = [neutrals.stone, neutrals.paper, ...BACKDROP[theme]];
+  // Spec 025 RF-3: opaque surfaces only, no glass and no gradient backdrop.
+  const surfaces = [neutrals.stone, neutrals.paper];
 
   it("keeps neutral text at 4.5:1 and borders at 3:1 on every surface", () => {
     for (const surface of surfaces) {
@@ -125,28 +121,6 @@ describe.each(THEMES)("the $name theme", ({ neutrals, theme }) => {
     );
     expect(edge).toBe(faint ? ink : accent.fill);
   });
-
-  it("keeps the text on glass at 4.5:1 over the worst background (RF-15, D7)", () => {
-    const behind = [
-      ...surfaces,
-      neutrals.ink,
-      ...ACCENTS.map((accent) => accent.fill),
-      ...CALENDAR_COLORS.map((color) => color.value),
-    ];
-    const texts = [
-      neutrals.ink,
-      neutrals.muted,
-      ...ACCENTS.map((accent) => onSurface(accent, theme).ink),
-    ];
-    for (const back of behind) {
-      const glass = composite(GLASS[theme].bg, GLASS[theme].alpha, back);
-      for (const text of texts) {
-        expect(ratio(text, glass), `${text} on ${back}`).toBeGreaterThanOrEqual(
-          4.5,
-        );
-      }
-    }
-  });
 });
 
 describe("pastel ink (RF-10)", () => {
@@ -165,6 +139,8 @@ describe("pastel ink (RF-10)", () => {
       const { mark, onMark } = THEME_INKS[theme];
       expect(ratio(mark, stones[theme])).toBeGreaterThanOrEqual(3);
       expect(ratio(onMark, mark)).toBeGreaterThanOrEqual(4.5);
+      // Spec 025 RF-7: the coral tile, whatever the accent and the theme.
+      expect(mark).toBe(BRAND.tile);
     }
   });
 });

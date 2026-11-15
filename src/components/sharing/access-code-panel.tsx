@@ -100,7 +100,7 @@ export function AccessCodePanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1 rounded-3xl bg-paper p-4 text-ink">
+      <div className="flex flex-col gap-1 rounded-card bg-paper p-4 text-ink">
         <p className="text-sm text-muted">ID del calendario</p>
         <p className="text-3xl font-extrabold tracking-[0.2em] tabular-nums select-all">
           {code.publicCode}

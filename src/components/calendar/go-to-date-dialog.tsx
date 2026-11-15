@@ -39,7 +39,7 @@ export function GoToDateDialog({
       ref={dialog}
       aria-labelledby={titleId}
       onClose={onClose}
-      className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-2xl glass-float p-6 text-ink backdrop:bg-scrim/50"
+      className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-control surface-float p-6 text-ink backdrop:bg-scrim/50"
     >
       <form
         noValidate

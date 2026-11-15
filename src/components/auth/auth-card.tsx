@@ -11,7 +11,7 @@ interface AuthCardProps {
 export function AuthCard({ title, children, footer }: AuthCardProps) {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm rounded-3xl bg-paper p-6">
+      <div className="w-full max-w-sm rounded-card bg-paper p-6">
         <p className="mb-6">
           <Logo />
         </p>

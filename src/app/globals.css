@@ -27,7 +27,7 @@
   --color-mark: var(--mark);
   --color-on-mark: var(--on-mark);
   /* Behind dialogs: dark in both themes. */
-  --color-scrim: #141414;
+  --color-scrim: #0a1620;
   /* The user's accent switches with data-accent on the app frame (spec 005 D2). */
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
@@ -35,7 +35,10 @@
   --color-accent-edge: var(--accent-edge);
   --shadow-soft: var(--elevation-soft);
   --shadow-float: var(--elevation-float);
-  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  /* The three radii of the identity; the third is rounded-full. */
+  --radius-card: 1.5rem;
+  --radius-control: 1rem;
   /* transition-colors and friends use the motion tokens too (spec 021 RF-1). */
   --default-transition-duration: var(--motion-fast-in);
   --default-transition-timing-function: var(--ease-out);
@@ -44,22 +47,21 @@
 /* Light theme, also the default before the boot script runs (RF-5). */
 :root {
   color-scheme: light;
-  --stone: #e8e5dd;
-  --paper: #f2f0ea;
-  --ink: #141414;
-  --muted: #66635d;
-  --line: #d6d1c4;
-  --control: #857f75;
-  --danger: #b42318;
+  --stone: #eef3f4;
+  --paper: #ffffff;
+  --ink: #0e2233;
+  --muted: #4e6172;
+  --line: #d5dee2;
+  --control: #74858f;
+  --danger: #c4372b;
   --on-ink: #ffffff;
-  --pastel-ink: #141414;
-  --mark: #141414;
-  --on-mark: #e8e5dd;
-  --glass-bg: #f2f0eaed;
-  --glass-edge: rgb(255 255 255 / 0.6);
-  --backdrop: radial-gradient(120% 80% at 50% 0%, #e8e5dd 0%, #e4e0d7 100%);
-  --elevation-soft: 0 1px 2px rgb(20 20 20 / 0.06);
-  --elevation-float: 0 12px 32px rgb(20 20 20 / 0.16);
+  --pastel-ink: #0e2233;
+  --mark: #cf3d25;
+  --on-mark: #ffffff;
+  --elevation-soft:
+    0 1px 2px rgb(14 34 51 / 0.06), 0 1px 1px rgb(14 34 51 / 0.04);
+  --elevation-float:
+    0 18px 40px -8px rgb(14 34 51 / 0.22), 0 4px 12px rgb(14 34 51 / 0.08);
   /* Motion (spec 011 RF-22, spec 021 plan "Modelo de datos"): never more
      than 400 ms, exits in 80 % of their entrance, no curve overshoots.
      motion-tokens.test.ts checks these rules. */
@@ -93,103 +95,99 @@
 /* Dark theme picked by the user (RF-1). */
 [data-theme="dark"] {
   color-scheme: dark;
-  --stone: #171612;
-  --paper: #211f1b;
-  --ink: #f2f0ea;
-  --muted: #a9a59c;
-  --line: #36332d;
-  --control: #7f796f;
-  --danger: #f97066;
-  --on-ink: #141414;
-  --pastel-ink: #141414;
-  --mark: #e8e5dd;
-  --on-mark: #141414;
-  --glass-bg: #211f1beb;
-  --glass-edge: rgb(255 255 255 / 0.06);
-  --backdrop: radial-gradient(120% 80% at 50% 0%, #171612 0%, #0f0e0b 100%);
-  --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.3);
-  --elevation-float: 0 12px 32px rgb(0 0 0 / 0.5);
+  --stone: #0a1620;
+  --paper: #13222e;
+  --ink: #eaf1f4;
+  --muted: #9fb1bd;
+  --line: #243746;
+  --control: #6e8494;
+  --danger: #ff8a7a;
+  --on-ink: #0a1620;
+  --pastel-ink: #0e2233;
+  --mark: #cf3d25;
+  --on-mark: #ffffff;
+  --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.4);
+  --elevation-float:
+    0 18px 40px -8px rgb(0 0 0 / 0.6), 0 4px 12px rgb(0 0 0 / 0.35);
 }
 
 /* "system" (or no cookie) follows the device unless light was picked (RF-5). */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --stone: #171612;
-    --paper: #211f1b;
-    --ink: #f2f0ea;
-    --muted: #a9a59c;
-    --line: #36332d;
-    --control: #7f796f;
-    --danger: #f97066;
-    --on-ink: #141414;
-    --pastel-ink: #141414;
-    --mark: #e8e5dd;
-    --on-mark: #141414;
-    --glass-bg: #211f1beb;
-    --glass-edge: rgb(255 255 255 / 0.06);
-    --backdrop: radial-gradient(120% 80% at 50% 0%, #171612 0%, #0f0e0b 100%);
-    --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.3);
-    --elevation-float: 0 12px 32px rgb(0 0 0 / 0.5);
+    --stone: #0a1620;
+    --paper: #13222e;
+    --ink: #eaf1f4;
+    --muted: #9fb1bd;
+    --line: #243746;
+    --control: #6e8494;
+    --danger: #ff8a7a;
+    --on-ink: #0a1620;
+    --pastel-ink: #0e2233;
+    --mark: #cf3d25;
+    --on-mark: #ffffff;
+    --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.4);
+    --elevation-float:
+      0 18px 40px -8px rgb(0 0 0 / 0.6), 0 4px 12px rgb(0 0 0 / 0.35);
   }
 }
 
-/* Each accent carries its ink and edge for both themes (RF-9); red without a
-   session (spec 005 RF-11). */
+/* Each accent carries its ink and edge for both themes (RF-9); Coral (`red`)
+   without a session (spec 005 RF-11). */
 :root,
 [data-accent="red"] {
-  --accent: #d92d20;
+  --accent: #cf3d25;
   --on-accent: #ffffff;
-  --accent-ink-light: #b42318;
-  --accent-edge-light: #d92d20;
-  --accent-ink-dark: #f97066;
-  --accent-edge-dark: #d92d20;
+  --accent-ink-light: #b8351f;
+  --accent-edge-light: #cf3d25;
+  --accent-ink-dark: #ff8e78;
+  --accent-edge-dark: #cf3d25;
 }
 
 [data-accent="blue"] {
-  --accent: #1d4ed8;
+  --accent: #1668c4;
   --on-accent: #ffffff;
-  --accent-ink-light: #1e40af;
-  --accent-edge-light: #1d4ed8;
-  --accent-ink-dark: #8ab4ff;
-  --accent-edge-dark: #8ab4ff;
+  --accent-ink-light: #1257a6;
+  --accent-edge-light: #1668c4;
+  --accent-ink-dark: #7db7ff;
+  --accent-edge-dark: #7db7ff;
 }
 
 [data-accent="green"] {
-  --accent: #1f7a4a;
+  --accent: #1f7a4d;
   --on-accent: #ffffff;
-  --accent-ink-light: #186a3f;
-  --accent-edge-light: #1f7a4a;
-  --accent-ink-dark: #4fd18b;
-  --accent-edge-dark: #1f7a4a;
+  --accent-ink-light: #1a6a42;
+  --accent-edge-light: #1f7a4d;
+  --accent-ink-dark: #5ad696;
+  --accent-edge-dark: #1f7a4d;
 }
 
-/* Yellow fades into stone (1.3:1), so filled shapes get a dark edge (spec 005 R6). */
+/* Sol fades into the surfaces (1.4:1), so filled shapes get a dark edge. */
 [data-accent="yellow"] {
-  --accent: #f5c518;
-  --on-accent: #141414;
-  --accent-ink-light: #7a5c00;
-  --accent-edge-light: #7a5c00;
-  --accent-ink-dark: #f5c518;
-  --accent-edge-dark: #f5c518;
+  --accent: #ffc83d;
+  --on-accent: #0e2233;
+  --accent-ink-light: #7a5200;
+  --accent-edge-light: #7a5200;
+  --accent-ink-dark: #ffc83d;
+  --accent-edge-dark: #ffc83d;
 }
 
 [data-accent="purple"] {
-  --accent: #7c4dcc;
+  --accent: #6d4bd1;
   --on-accent: #ffffff;
-  --accent-ink-light: #6b3fbf;
-  --accent-edge-light: #7c4dcc;
-  --accent-ink-dark: #b794f6;
-  --accent-edge-dark: #b794f6;
+  --accent-ink-light: #5b3cb8;
+  --accent-edge-light: #6d4bd1;
+  --accent-ink-dark: #b9a3ff;
+  --accent-edge-dark: #b9a3ff;
 }
 
 [data-accent="gray"] {
-  --accent: #5f5c55;
+  --accent: #3d4f5c;
   --on-accent: #ffffff;
-  --accent-ink-light: #5f5c55;
-  --accent-edge-light: #5f5c55;
-  --accent-ink-dark: #b3afa6;
-  --accent-edge-dark: #b3afa6;
+  --accent-ink-light: #3d4f5c;
+  --accent-edge-light: #3d4f5c;
+  --accent-ink-dark: #b4c2cc;
+  --accent-edge-dark: #b4c2cc;
 }
 
 /* var() resolves on the element that declares it, so the pick is repeated on
@@ -216,44 +214,28 @@
 
 body {
   background-color: var(--stone);
-  background-image: var(--backdrop);
   color: var(--ink);
 }
 
-/* Glass at rest (RF-12) and what floats over it; opaque paper where the
-   browser cannot blur (RF-14, plan D6). The edge is an inset shadow so it
-   never changes the layout. */
-@utility glass {
-  background-color: var(--glass-bg);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  backdrop-filter: blur(16px) saturate(1.4);
+/* The two elevations (constitution, amendment 10; spec 025 RF-3): a surface
+   at rest and one that floats. Opaque, with a hairline that is an inset
+   shadow so it never changes the layout. No backdrop-filter anywhere. */
+@utility surface {
+  background-color: var(--paper);
   box-shadow:
-    inset 0 0 0 1px var(--glass-edge),
+    inset 0 0 0 1px var(--line),
     var(--elevation-soft);
-  @supports not (
-    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
-  ) {
-    background-color: var(--paper);
-  }
 }
 
-@utility glass-float {
-  background-color: var(--glass-bg);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  backdrop-filter: blur(16px) saturate(1.4);
+@utility surface-float {
+  background-color: var(--paper);
   box-shadow:
-    inset 0 0 0 1px var(--glass-edge),
+    inset 0 0 0 1px var(--line),
     var(--elevation-float);
-  @supports not (
-    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
-  ) {
-    background-color: var(--paper);
-  }
 }
 
 @utility bg-backdrop {
   background-color: var(--stone);
-  background-image: var(--backdrop);
 }
 
 /* Band that opens each month of the agenda (spec 016 RF-50): the same for every
@@ -520,12 +502,10 @@ body {
   }
 }
 
-/* Opaque while it morphs, since glass over a moving clip is costly (spec 021
-   plan R3). Outside any layer, so it beats the glass-float utility. */
+/* A surface that morphs out of an event stays plain paper (spec 021 plan
+   R3). Outside any layer, so it beats the surface utilities. */
 [data-morph] {
   background-color: var(--paper);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
 }
 
 /* Outside any layer, so it beats every transition while a finger drags

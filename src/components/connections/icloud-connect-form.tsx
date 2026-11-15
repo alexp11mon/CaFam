@@ -28,7 +28,7 @@ export function IcloudConnectForm({
     <form
       action={formAction}
       noValidate
-      className="flex flex-col gap-4 rounded-3xl bg-paper p-4 sm:p-6"
+      className="flex flex-col gap-4 rounded-card bg-paper p-4 sm:p-6"
     >
       <FormAlert message={state.formError} />
       <TextField

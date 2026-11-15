@@ -298,7 +298,7 @@ export function AgendaView({
             <h2
               key={`month-${item.key}`}
               data-month={item.key}
-              className="mt-2 flex h-28 scroll-mt-[calc(4rem+env(safe-area-inset-top))] items-end rounded-3xl bg-agenda-band px-5 pb-4 text-3xl font-bold text-ink first-letter:uppercase max-tab:rounded-none tab:scroll-mt-40"
+              className="mt-2 flex h-28 scroll-mt-[calc(4rem+env(safe-area-inset-top))] items-end rounded-card bg-agenda-band px-5 pb-4 text-3xl font-bold text-ink first-letter:uppercase max-tab:rounded-none tab:scroll-mt-40"
             >
               {item.label}
             </h2>
@@ -331,7 +331,7 @@ export function AgendaView({
           <button
             type="button"
             onClick={() => setError(null)}
-            className="inline-flex min-h-11 items-center rounded-full border border-control bg-paper px-4 font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="inline-flex min-h-11 items-center rounded-control border border-control bg-paper px-4 font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             Reintentar
           </button>

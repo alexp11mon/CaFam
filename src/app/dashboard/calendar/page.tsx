@@ -112,7 +112,7 @@ async function CalendarContent({
 
   if (calendars.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-3xl bg-paper px-4 py-6 text-center text-ink">
+      <div className="flex flex-col items-center gap-4 rounded-card bg-paper px-4 py-6 text-center text-ink">
         <p>Todavía no tienes calendarios.</p>
         <LinkButton href="/dashboard/calendars/new">
           Crear calendario

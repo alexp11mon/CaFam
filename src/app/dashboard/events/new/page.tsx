@@ -16,7 +16,7 @@ async function NewEvent({ searchParams }: { searchParams: SearchParams }) {
 
   if (data.kind === "no-calendar") {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-3xl bg-paper px-4 py-6 text-center text-ink">
+      <div className="flex flex-col items-center gap-4 rounded-card bg-paper px-4 py-6 text-center text-ink">
         <p>No tienes ningún calendario donde puedas crear eventos.</p>
         <LinkButton href="/dashboard/calendars/new">
           Crear calendario

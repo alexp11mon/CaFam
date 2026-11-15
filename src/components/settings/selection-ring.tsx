@@ -36,7 +36,7 @@ export function SelectionRing({ selected }: { selected: string }) {
       ref={ring}
       aria-hidden="true"
       data-selection-ring=""
-      className="pointer-events-none absolute top-0 left-0 hidden rounded-2xl ring-1 ring-ink transition-[translate] duration-(--motion-move) ease-(--ease-in-out) data-ready:block"
+      className="pointer-events-none absolute top-0 left-0 hidden rounded-control ring-1 ring-ink transition-[translate] duration-(--motion-move) ease-(--ease-in-out) data-ready:block"
     />
   );
 }

@@ -86,7 +86,7 @@ async function ConnectionDetail({
 
   return (
     <>
-      <section className="flex flex-col gap-3 rounded-3xl bg-paper p-4 sm:p-6">
+      <section className="flex flex-col gap-3 rounded-card bg-paper p-4 sm:p-6">
         <p className="text-sm font-semibold text-muted">
           {providerName(connection.provider)}
         </p>

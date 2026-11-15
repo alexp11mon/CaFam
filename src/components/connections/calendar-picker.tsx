@@ -116,7 +116,7 @@ export function CalendarPicker({
 
       {dropping ? (
         <fieldset
-          className="flex flex-col gap-2 rounded-2xl border border-control p-4"
+          className="flex flex-col gap-2 rounded-control border border-control p-4"
           aria-describedby={
             state.fieldErrors?.decision ? decisionError : undefined
           }

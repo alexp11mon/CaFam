@@ -1,6 +1,6 @@
 import type { CalendarView } from "@/lib/calendar/ranges";
 
-const BLOCK = "rounded-2xl bg-paper motion-safe:animate-pulse";
+const BLOCK = "rounded-control bg-paper motion-safe:animate-pulse";
 
 /**
  * What the calendar looks like while its events load, instead of an empty

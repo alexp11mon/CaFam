@@ -60,7 +60,7 @@ export function NavDrawer({
         else if ((event.target as Element).closest("a")) close();
       }}
       {...follow}
-      className="m-0 h-full touch-pan-y max-h-none w-[min(20rem,85vw)] max-w-none overflow-y-auto rounded-r-3xl glass-float p-0 text-ink backdrop:bg-scrim/50"
+      className="m-0 h-full touch-pan-y max-h-none w-[min(20rem,85vw)] max-w-none overflow-y-auto rounded-r-3xl surface-float p-0 text-ink backdrop:bg-scrim/50"
     >
       <div className="flex min-h-full flex-col gap-3 p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-between gap-3 pl-3">
@@ -71,7 +71,7 @@ export function NavDrawer({
           <button
             type="button"
             onClick={close}
-            className="min-h-11 rounded-full px-4 font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="min-h-11 rounded-control px-4 font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             Cerrar
           </button>

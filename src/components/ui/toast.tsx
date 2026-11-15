@@ -139,7 +139,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             data-leaving=""
             aria-hidden="true"
             inert
-            className={`${NOTICE} glass-float ${previous.undo ? "py-1 pr-1 pl-5" : "px-5 py-3"}`}
+            className={`${NOTICE} surface-float ${previous.undo ? "py-1 pr-1 pl-5" : "px-5 py-3"}`}
           >
             {previous.text}
           </p>
@@ -149,7 +149,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={toast.id}
             data-toast=""
             data-leaving={toast.leaving ? "" : undefined}
-            className={`${NOTICE} glass-float ${toast.undo ? "py-1 pr-1 pl-5" : "px-5 py-3"}`}
+            className={`${NOTICE} surface-float ${toast.undo ? "py-1 pr-1 pl-5" : "px-5 py-3"}`}
           >
             {toast.text}
             {toast.undo ? (
@@ -157,7 +157,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 type="button"
                 disabled={undoing}
                 onClick={() => runUndo(toast.undo!)}
-                className="press settle pointer-events-auto min-h-11 rounded-full px-4 font-semibold text-accent-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
+                className="press settle pointer-events-auto min-h-11 rounded-control px-4 font-semibold text-accent-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
               >
                 Deshacer
               </button>

@@ -36,7 +36,7 @@ export function ConnectionList({
       </div>
 
       {connections.length === 0 ? (
-        <p className="rounded-3xl bg-paper px-4 py-6 text-center text-ink">
+        <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
           Aún no has conectado ninguna cuenta.
         </p>
       ) : (
@@ -44,7 +44,7 @@ export function ConnectionList({
           {connections.map((connection) => (
             <li
               key={connection.id}
-              className="flex min-w-0 flex-col gap-1 rounded-3xl bg-paper p-4"
+              className="flex min-w-0 flex-col gap-1 rounded-card bg-paper p-4"
             >
               <span className="text-sm font-semibold text-muted">
                 {providerName(connection.provider)}

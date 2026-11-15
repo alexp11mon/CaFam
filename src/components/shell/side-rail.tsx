@@ -26,11 +26,11 @@ export function SideRail({
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-y-0 left-0 z-30 hidden w-20 flex-col items-center gap-6 glass py-5 lg:flex"
+      className="fixed inset-y-0 left-0 z-30 hidden w-20 flex-col items-center gap-6 surface py-5 lg:flex"
     >
       <Link
         href="/dashboard/calendar"
-        className="rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="rounded-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         <LogoMark />
         <span className="sr-only">CaFam</span>

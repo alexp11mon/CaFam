@@ -41,7 +41,7 @@ export function AssistantFab() {
       aria-label="Asistente"
       onPointerDown={warm}
       onFocus={warm}
-      className="fixed right-4 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-20 flex size-14 items-center justify-center rounded-full text-ink glass-float press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink max-tab:group-data-[has-fab]/frame:bottom-[calc(max(1.5rem,env(safe-area-inset-bottom))+4.25rem)] tab:bottom-24 lg:right-6 lg:bottom-6"
+      className="fixed right-4 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-20 flex size-14 items-center justify-center rounded-full text-ink surface-float press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink max-tab:group-data-[has-fab]/frame:bottom-[calc(max(1.5rem,env(safe-area-inset-bottom))+4.25rem)] tab:bottom-24 lg:right-6 lg:bottom-6"
     >
       <AssistantIcon />
     </Link>

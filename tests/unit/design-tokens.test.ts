@@ -3,9 +3,9 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Spec 005, T11 and spec 011, T5: the design guard. Every screen uses only the
-// tokens of globals.css and none of the devices the constitution bans (P9 and
-// amendment 3; spec 005 plan D16, spec 011 RF-12, RF-22, RF-26 and plan D11).
+// The design guard (spec 005 T11, spec 011 T5; rewritten for the Orilla
+// identity in spec 025 RF-4). Every screen uses only the tokens of globals.css
+// and none of the devices the constitution bans (P9, amendment 10).
 const ROOT = join(process.cwd(), "src");
 
 function files(dir: string): string[] {
@@ -66,16 +66,25 @@ const RULES: { name: string; pattern: RegExp; allow?: Set<string> }[] = [
   { name: "bg-white (paper is the light surface)", pattern: /\bbg-white\b/ },
   { name: "monospace", pattern: /\bfont-mono\b/ },
   { name: "a gradient", pattern: /\bbg-(?:linear|radial|conic|gradient)-/ },
-  // Glass is the glass and glass-float utilities of globals.css (plan D6).
-  { name: "a loose blur", pattern: /\bbackdrop-blur/ },
+  // No blur behind any surface (constitution, amendment 10; spec 025 RF-3).
+  { name: "a blur behind a surface", pattern: /\bbackdrop-(?:blur|filter)/ },
+  {
+    name: "the glass utilities (surface and surface-float replace them)",
+    pattern: /(?<![\w-])glass(?:-float)?(?![\w-])/,
+  },
+  // Three radii only: rounded-card, rounded-control and rounded-full.
+  {
+    name: "a loose radius",
+    pattern: /(?<![\w-])rounded(?:-[trblse]{1,2})?-\[/,
+  },
   {
     // box-shadow inside a transition-[…] list is a CSS property, not a class.
     name: "a shadow other than shadow-soft and shadow-float",
     pattern: /(?<![\w-])(?:drop-)?shadow(?!-(?:soft|float)\b)(?:-[a-z0-9]+)?\b/,
   },
   {
-    name: "a floating shadow or glass at rest",
-    pattern: /\b(?:shadow|glass)-float\b/,
+    name: "a floating shadow or surface at rest",
+    pattern: /\b(?:shadow|surface)-float\b/,
     allow: FLOATING,
   },
   // Fixed white or black breaks one of the themes: on-ink, pastel-ink, mark.

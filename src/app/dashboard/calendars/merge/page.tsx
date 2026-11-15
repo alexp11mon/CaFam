@@ -23,7 +23,7 @@ async function Merge() {
 
   if (owned.length < 2) {
     return (
-      <p className="rounded-3xl bg-paper px-4 py-6 text-center text-ink">
+      <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
         Necesitas al menos dos calendarios propios para poder juntarlos.
       </p>
     );

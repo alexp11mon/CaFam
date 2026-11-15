@@ -33,7 +33,7 @@ export function TopBar({
   const section = NAV_ITEMS.find((item) => item.section === current)?.label;
 
   return (
-    <header className="fixed inset-x-0 top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-1 glass px-2 pt-[env(safe-area-inset-top)] tab:hidden">
+    <header className="fixed inset-x-0 top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-1 surface px-2 pt-[env(safe-area-inset-top)] tab:hidden">
       <button
         ref={menu}
         type="button"

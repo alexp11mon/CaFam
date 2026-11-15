@@ -255,7 +255,7 @@ export function CalendarClient({
     <CalendarNavContext value={go}>
       {/* On a phone the header, the drawer and "+" do this (spec 016 RF-19). */}
       {/* Fixed while scrolling, so the views stay at hand (agenda bug, 2026-11-01). */}
-      <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-3xl glass px-4 py-3 max-tab:hidden">
+      <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-card surface px-4 py-3 max-tab:hidden">
         <ViewToolbar
           view={view}
           date={date}

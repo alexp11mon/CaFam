@@ -30,17 +30,10 @@ describe("AccentPicker (RF-6)", () => {
     expect(
       screen.getAllByRole("radio").map((radio) => radio.getAttribute("value")),
     ).toEqual(["red", "blue", "green", "yellow", "purple", "gray"]);
-    for (const name of [
-      "Rojo",
-      "Azul",
-      "Verde",
-      "Amarillo",
-      "Morado",
-      "Gris",
-    ]) {
+    for (const name of ["Coral", "Mar", "Alga", "Sol", "Lavanda", "Roca"]) {
       expect(screen.getByRole("radio", { name })).toBeInTheDocument();
     }
-    expect(screen.getByRole("radio", { name: "Morado" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Lavanda" })).toBeChecked();
   });
 });
 
@@ -52,13 +45,13 @@ describe("choosing an accent (RF-7, RF-8)", () => {
     );
     const { frame } = renderPicker(setAccent);
 
-    await userEvent.click(screen.getByRole("radio", { name: "Verde" }));
+    await userEvent.click(screen.getByRole("radio", { name: "Alga" }));
 
     expect(frame).toHaveAttribute("data-accent", "green");
     expect(setAccent).toHaveBeenCalledWith("green");
     finish({});
     await waitFor(() =>
-      expect(screen.getByRole("radio", { name: "Verde" })).toBeChecked(),
+      expect(screen.getByRole("radio", { name: "Alga" })).toBeChecked(),
     );
     expect(frame).toHaveAttribute("data-accent", "green");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -68,10 +61,10 @@ describe("choosing an accent (RF-7, RF-8)", () => {
     const { setAccent, frame } = renderPicker();
 
     await userEvent.tab();
-    expect(screen.getByRole("radio", { name: "Rojo" })).toHaveFocus();
+    expect(screen.getByRole("radio", { name: "Coral" })).toHaveFocus();
     await userEvent.keyboard("{ArrowRight}");
 
-    expect(screen.getByRole("radio", { name: "Azul" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Mar" })).toBeChecked();
     expect(frame).toHaveAttribute("data-accent", "blue");
     expect(setAccent).toHaveBeenCalledWith("blue");
   });
@@ -84,12 +77,12 @@ describe("when saving fails (RF-12)", () => {
     }));
     const { frame } = renderPicker(setAccent, "blue");
 
-    await userEvent.click(screen.getByRole("radio", { name: "Amarillo" }));
+    await userEvent.click(screen.getByRole("radio", { name: "Sol" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "No se ha podido guardar el color. Inténtalo de nuevo.",
     );
-    expect(screen.getByRole("radio", { name: "Azul" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Mar" })).toBeChecked();
     expect(frame).toHaveAttribute("data-accent", "blue");
   });
 
@@ -99,7 +92,7 @@ describe("when saving fails (RF-12)", () => {
     });
     const { frame } = renderPicker(setAccent);
 
-    await userEvent.click(screen.getByRole("radio", { name: "Gris" }));
+    await userEvent.click(screen.getByRole("radio", { name: "Roca" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "No se ha podido conectar",

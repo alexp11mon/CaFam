@@ -31,7 +31,7 @@ export default function PrivacyPage() {
       <Link href="/" aria-label="CaFam, inicio" className="self-start">
         <Logo />
       </Link>
-      <article className="flex flex-col gap-6 rounded-3xl bg-paper p-4 text-ink sm:p-8">
+      <article className="flex flex-col gap-6 rounded-card bg-paper p-4 text-ink sm:p-8">
         <header className="flex flex-col gap-1">
           <h1 className="text-3xl leading-tight font-extrabold tracking-tight">
             Política de privacidad

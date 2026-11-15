@@ -1,13 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter_Tight } from "next/font/google";
+import { Figtree } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import { THEME_COLOR, THEME_SCRIPT } from "@/lib/theme/theme";
 import "./globals.css";
 
-// One neo-grotesk with tabular figures for every screen (spec 005 plan D1).
-const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
+// One friendly geometric family with tabular figures for every screen
+// (constitution, amendment 10; spec 025 RF-5, plan D5).
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -36,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       // Browser extensions (e.g. Dark Reader) add attributes to <html> before hydration.
       suppressHydrationWarning
-      className={`${interTight.variable} h-full antialiased`}
+      className={`${figtree.variable} h-full antialiased`}
     >
       <head>
         {/* Before the first paint, so the theme never flashes (spec 011 RF-7). */}

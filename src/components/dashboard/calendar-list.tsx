@@ -54,7 +54,7 @@ export function CalendarList({
 }) {
   if (calendars.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-3xl bg-paper px-4 py-6 text-center text-ink">
+      <div className="flex flex-col items-center gap-4 rounded-card bg-paper px-4 py-6 text-center text-ink">
         <p>Todavía no tienes calendarios.</p>
         <LinkButton href="/dashboard/calendars/new">
           Crear calendario
@@ -68,7 +68,7 @@ export function CalendarList({
       {calendars.map((calendar) => (
         <li
           key={calendar.id}
-          className="flex min-w-0 flex-col gap-2 rounded-3xl bg-paper p-4"
+          className="flex min-w-0 flex-col gap-2 rounded-card bg-paper p-4"
         >
           <div className="flex min-w-0 items-center gap-3">
             <span

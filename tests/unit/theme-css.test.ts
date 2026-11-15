@@ -4,9 +4,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   ACCENTS,
-  BACKDROP,
   DARK_NEUTRALS,
-  GLASS,
+  ELEVATION,
   NEUTRALS,
   THEME_INKS,
 } from "@/lib/theme/accents";
@@ -29,13 +28,6 @@ function value(source: string, name: string): string | undefined {
     ?.toUpperCase();
 }
 
-function alphaHex(alpha: number): string {
-  return Math.round(alpha * 255)
-    .toString(16)
-    .padStart(2, "0")
-    .toUpperCase();
-}
-
 const LIGHT = ":root";
 const DARK = '[data-theme="dark"]';
 const SYSTEM_DARK = ':root:not([data-theme="light"])';
@@ -52,7 +44,7 @@ const THEMES = [
 
 describe.each(THEMES)("the $name theme in globals.css", (theme) => {
   it.each(theme.selectors)(
-    "%s has the neutrals, inks, glass and backdrop",
+    "%s has the neutrals, inks and elevations",
     (selector) => {
       const rules = block(selector);
       for (const [name, hex] of Object.entries(theme.neutrals)) {
@@ -63,13 +55,12 @@ describe.each(THEMES)("the $name theme in globals.css", (theme) => {
       expect(value(rules, "pastel-ink")).toBe(inks.pastelInk.toUpperCase());
       expect(value(rules, "mark")).toBe(inks.mark.toUpperCase());
       expect(value(rules, "on-mark")).toBe(inks.onMark.toUpperCase());
-      const glass = GLASS[theme.key];
-      expect(value(rules, "glass-bg")).toBe(
-        `${glass.bg.toUpperCase()}${alphaHex(glass.alpha)}`,
+      // Spec 025 RF-2: the two elevations, as written in accents.ts.
+      const flat = rules.replace(/\s+/g, " ");
+      expect(flat).toContain(`--elevation-soft: ${ELEVATION[theme.key].soft};`);
+      expect(flat).toContain(
+        `--elevation-float: ${ELEVATION[theme.key].float};`,
       );
-      for (const stop of BACKDROP[theme.key]) {
-        expect(rules.toUpperCase()).toContain(stop.toUpperCase());
-      }
     },
   );
 });
@@ -104,7 +95,9 @@ describe("accents in globals.css (RF-9)", () => {
 
 describe("theme mechanics (RF-5)", () => {
   it("keeps the dialog scrim dark in both themes", () => {
-    expect(value(block("@theme inline"), "color-scrim")).toBe(NEUTRALS.ink);
+    expect(value(block("@theme inline"), "color-scrim")).toBe(
+      DARK_NEUTRALS.stone,
+    );
   });
 
   it("follows the system inside prefers-color-scheme: dark", () => {
@@ -119,20 +112,28 @@ describe("theme mechanics (RF-5)", () => {
   });
 });
 
-describe("glass, backdrop and motion utilities", () => {
-  it.each(["glass", "glass-float", "press", "bg-backdrop"])(
+describe("surface and motion utilities", () => {
+  it.each(["surface", "surface-float", "press", "bg-backdrop"])(
     "defines @utility %s",
     (name) => {
       expect(css).toContain(`@utility ${name} {`);
     },
   );
 
-  it("falls back to an opaque surface without backdrop-filter (RF-14)", () => {
-    expect(css).toMatch(/@supports not \(\s*\(backdrop-filter: blur\(1px\)\)/);
+  it("never blurs what is behind a surface (spec 025 RF-3)", () => {
+    expect(css).not.toMatch(/backdrop-filter\s*:/);
+    expect(css).not.toMatch(/@utility glass/);
   });
 
-  it("paints the backdrop behind every page (RF-13)", () => {
-    expect(css).toMatch(/body\s*\{[^}]*background-image:\s*var\(--backdrop\)/);
+  it("paints a flat backdrop behind every page", () => {
+    expect(css).toMatch(/body\s*\{[^}]*background-color:\s*var\(--stone\)/);
+    expect(css).not.toMatch(/--backdrop:/);
+  });
+
+  it("defines the radii of cards and controls (spec 025 RF-2)", () => {
+    const theme = block("@theme inline");
+    expect(theme).toMatch(/--radius-card:\s*1\.5rem/);
+    expect(theme).toMatch(/--radius-control:\s*1rem/);
   });
 
   it("never animates for longer than 400 ms (RF-22)", () => {

@@ -17,7 +17,7 @@ import { banded } from "@/lib/motion/rubber-band";
 import { useImageBlob } from "./use-image-blob";
 
 const LINK_BUTTON =
-  "inline-flex min-h-11 items-center justify-center rounded-full border border-control bg-paper px-5 py-2 text-base font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
+  "inline-flex min-h-11 items-center justify-center rounded-control border border-control bg-paper px-5 py-2 text-base font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 function FullImage({ image, alt }: { image: EventImage; alt: string }) {
   const blob = useImageBlob(objectPath(image.objectId, "full"));
@@ -35,7 +35,7 @@ function FullImage({ image, alt }: { image: EventImage; alt: string }) {
       height={image.height}
       unoptimized
       // A thin paper frame; the padding rounds the photo inside it too.
-      className="max-h-full w-auto max-w-full rounded-2xl bg-paper object-contain p-1.5 ring-1 ring-line"
+      className="max-h-full w-auto max-w-full rounded-control bg-paper object-contain p-1.5 ring-1 ring-line"
     />
   );
 }

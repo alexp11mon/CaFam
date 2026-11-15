@@ -23,7 +23,7 @@ export function BottomBar({
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-x-0 bottom-0 z-30 glass px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] max-tab:hidden lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 surface px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] max-tab:hidden lg:hidden"
     >
       <ul className="mx-auto flex max-w-md items-center justify-between gap-2">
         {NAV_ITEMS.filter((item) => BAR_SECTIONS.includes(item.section)).map(
@@ -48,7 +48,7 @@ export function BottomBar({
         <li>
           <Link
             href="/dashboard/events/new"
-            className="flex min-h-12 items-center gap-1.5 rounded-full bg-ink px-5 text-base font-semibold text-on-ink press hover:bg-ink/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="flex min-h-12 items-center gap-1.5 rounded-control bg-ink px-5 text-base font-semibold text-on-ink press hover:bg-ink/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             <span className="sr-only">+ Evento</span>
             <span aria-hidden="true" className="flex items-center gap-1.5">

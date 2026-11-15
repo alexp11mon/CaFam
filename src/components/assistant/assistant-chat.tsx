@@ -324,7 +324,7 @@ export function AssistantChat({
       </div>
 
       {messages.length === 0 && !pending ? (
-        <section className="glass flex flex-col gap-4 rounded-3xl p-5">
+        <section className="surface flex flex-col gap-4 rounded-card p-5">
           {/* RF-33: say where the data goes before the first question. */}
           <p className="text-sm text-muted">
             Pregúntame por tus eventos o por cuándo estáis libres. Tus preguntas
@@ -348,7 +348,7 @@ export function AssistantChat({
                   type="button"
                   disabled={quotaReached}
                   onClick={() => void send(example)}
-                  className="min-h-11 rounded-full border border-control bg-paper px-4 py-2 text-left text-sm font-medium text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
+                  className="min-h-11 rounded-control border border-control bg-paper px-4 py-2 text-left text-sm font-medium text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
                 >
                   {example}
                 </button>
@@ -368,7 +368,7 @@ export function AssistantChat({
           message.role === "user" ? (
             <p
               key={index}
-              className="max-w-[85%] self-end rounded-3xl rounded-br-lg bg-ink px-4 py-2 whitespace-pre-line text-on-ink"
+              className="max-w-[85%] self-end rounded-card rounded-br-lg bg-ink px-4 py-2 whitespace-pre-line text-on-ink"
             >
               <span className="sr-only">Tú: </span>
               {message.content}
@@ -390,7 +390,7 @@ export function AssistantChat({
           ) : (
             <div
               key={index}
-              className="glass max-w-[92%] self-start rounded-3xl rounded-bl-lg px-4 py-3 text-ink"
+              className="surface max-w-[92%] self-start rounded-card rounded-bl-lg px-4 py-3 text-ink"
             >
               <span className="sr-only">Asistente: </span>
               <p className="whitespace-pre-line">{message.content}</p>
@@ -430,7 +430,7 @@ export function AssistantChat({
       {error ? (
         <div
           role="alert"
-          className="flex flex-wrap items-center gap-3 rounded-2xl border border-danger bg-paper px-4 py-3 text-danger"
+          className="flex flex-wrap items-center gap-3 rounded-control border border-danger bg-paper px-4 py-3 text-danger"
         >
           <span>{error.text}</span>
           {error.retry ? (

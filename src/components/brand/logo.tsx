@@ -7,7 +7,7 @@ export function LogoMark({ className = "size-12" }: { className?: string }) {
       viewBox="0 0 512 512"
       aria-hidden="true"
       focusable="false"
-      className={`shrink-0 rounded-2xl ${className}`}
+      className={`shrink-0 rounded-control ${className}`}
     >
       <rect width="512" height="512" className="fill-mark" />
       <path

@@ -91,7 +91,7 @@ function run(
   fill: "forwards" | "none",
 ): Promise<void> {
   const release = holdLive();
-  // Opaque while it moves: glass over a moving clip is costly (plan R3).
+  // Opaque while it moves: a plain surface under a moving clip (plan R3).
   el.dataset.morph = "";
   const layer = document.createElement("span");
   layer.setAttribute("aria-hidden", "true");

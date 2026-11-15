@@ -93,7 +93,7 @@ export function MonthView({
           </span>
         ))}
       </div>
-      <ol className="flex min-h-0 flex-1 flex-col gap-px overflow-hidden rounded-3xl bg-line max-tab:-mx-4 max-tab:rounded-none">
+      <ol className="flex min-h-0 flex-1 flex-col gap-px overflow-hidden rounded-card bg-line max-tab:-mx-4 max-tab:rounded-none">
         {weeks.map((week, index) => (
           <li
             key={week.days[0]}

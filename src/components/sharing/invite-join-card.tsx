@@ -39,7 +39,7 @@ export function InviteJoinCard({
 
   return (
     <div className="flex flex-col gap-4 text-ink">
-      <dl className="flex flex-col gap-3 rounded-3xl bg-paper p-4">
+      <dl className="flex flex-col gap-3 rounded-card bg-paper p-4">
         <div>
           <dt className="text-sm text-muted">Calendario</dt>
           <dd className="min-w-0 break-words text-lg font-bold">

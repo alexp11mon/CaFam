@@ -211,7 +211,7 @@ function RowFields({
     <fieldset
       disabled={disabled}
       aria-describedby={describedBy.join(" ") || undefined}
-      className="flex flex-col gap-3 rounded-2xl border border-line bg-paper p-3"
+      className="flex flex-col gap-3 rounded-control border border-line bg-paper p-3"
     >
       <legend className="sr-only">{`Evento ${index + 1}`}</legend>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">

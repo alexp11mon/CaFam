@@ -40,7 +40,7 @@ export type CardEvent = CalendarEventItem & {
 };
 
 const ACTION =
-  "inline-flex min-h-11 items-center justify-center rounded-full border border-control bg-paper px-4 text-base font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
+  "inline-flex min-h-11 items-center justify-center rounded-control border border-control bg-paper px-4 text-base font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 function plural(count: number, one: string, many: string) {
   return `${count} ${count === 1 ? one : many}`;
@@ -247,7 +247,7 @@ export function EventCard({
           "--pop-origin": place ? originFrom(anchor, place) : undefined,
         } as React.CSSProperties
       }
-      className="pop fixed z-40 m-0 flex max-h-[calc(100dvh-2rem)] w-90 flex-col gap-3 overflow-y-auto rounded-3xl glass-float p-4 text-ink shadow-float outline-none"
+      className="pop fixed z-40 m-0 flex max-h-[calc(100dvh-2rem)] w-90 flex-col gap-3 overflow-y-auto rounded-card surface-float p-4 text-ink shadow-float outline-none"
     >
       <div className="flex items-start gap-3">
         <span

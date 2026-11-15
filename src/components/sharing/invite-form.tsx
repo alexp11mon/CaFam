@@ -53,7 +53,7 @@ export function InviteForm({ action }: { action: FormAction<InviteState> }) {
         </Button>
       </div>
       {state.inviteUrl ? (
-        <div className="flex flex-col gap-3 rounded-3xl bg-paper p-4">
+        <div className="flex flex-col gap-3 rounded-card bg-paper p-4">
           <p className="text-sm font-medium text-ink">
             Enlace de invitación. Solo se muestra ahora: cópialo antes de salir
             de esta página.

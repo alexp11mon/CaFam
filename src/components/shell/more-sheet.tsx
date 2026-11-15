@@ -56,7 +56,7 @@ export function MoreSheet({
         aria-labelledby={titleId}
         data-sheet=""
         onClose={() => trigger.current?.focus()}
-        className="mx-0 mt-auto mb-0 w-full max-w-full rounded-t-3xl glass-float p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink backdrop:bg-scrim/50"
+        className="mx-0 mt-auto mb-0 w-full max-w-full rounded-t-3xl surface-float p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink backdrop:bg-scrim/50"
       >
         <div className="mb-2 flex items-center justify-between gap-3 px-3">
           <h2 id={titleId} className="text-lg font-bold">
@@ -65,7 +65,7 @@ export function MoreSheet({
           <button
             type="button"
             onClick={close}
-            className="min-h-11 rounded-full px-4 font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="min-h-11 rounded-control px-4 font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             Cerrar
           </button>

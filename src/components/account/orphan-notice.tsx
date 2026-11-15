@@ -13,7 +13,7 @@ export function OrphanNotice({
   }).format(new Date(deadline));
 
   return (
-    <p role="status" className="rounded-2xl bg-paper p-4 text-ink">
+    <p role="status" className="rounded-control bg-paper p-4 text-ink">
       Este calendario no tiene propietario. Sus miembros pueden decidir hasta el{" "}
       {day} si lo conservan.
     </p>

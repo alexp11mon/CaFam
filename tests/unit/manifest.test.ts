@@ -11,8 +11,8 @@ describe("web app manifest (RF-21, RNF-9)", () => {
       name: "CaFam",
       short_name: "CaFam",
       // Stone, the ground of the new identity (spec 005 RF-53).
-      theme_color: "#E8E5DD",
-      background_color: "#E8E5DD",
+      theme_color: "#EEF3F4",
+      background_color: "#EEF3F4",
       display: "standalone",
       // Straight to the calendar, the home screen (spec 005 RF-15).
       start_url: "/dashboard/calendar",
