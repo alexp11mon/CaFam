@@ -87,53 +87,65 @@ Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, 
 
 ## Identidad visual y diseño de interfaz
 
-La interfaz deja de ser la plantilla por defecto (azul sobre blanco) y adopta un estilo propio, sobrio y editorial, inspirado en la imagen de referencia `docs/referencia.jpg`. Esa imagen es **solo local**: está en `.gitignore`, no se sube a GitHub ni se copia en el código, y si falta, esta sección es la fuente de verdad. Se toma de ella el lenguaje visual, no sus pantallas ni sus funciones.
+> **Enmienda 10 (2026-11-15, spec 025).** Esta sección sustituye entera a la identidad anterior (piedra y papel, tinta negra, Inter Tight, píldoras y cristal, specs 005, 011 y 016). El usuario decidió cambiar todo el frontend, con el iPhone primero y una mascota como parte de la marca. Se conservan la interacción del calendario (más abajo), la accesibilidad de P9, los temas claro, oscuro y "como el sistema", y el acento elegido por el usuario.
 
-### Qué se toma de la referencia
+La identidad se llama **Orilla**: una mañana clara en la costa. Bruma pálida, superficies blancas, tinta azul mar profundo y un único color vivo. Amable sin ser infantil; una herramienta de uso diario, no una página de marketing. La mascota es **Venito**, una foca pequeña vista de frente.
 
-- **Fondo piedra cálido y paneles un tono más claros.** La pantalla es un plano de color piedra; la barra lateral y los paneles se separan por un escalón de tono, no por sombras. Tinta casi negra para el texto y gris cálido para lo secundario.
-- **El número del día como protagonista.** Las vistas semana y día ponen el número del día en grande sobre la rejilla, y en la agenda el día se compone como en Google Calendar: abreviatura arriba y número debajo, a la izquierda de los eventos. El día de hoy lleva el número en un círculo relleno del acento (enmienda 4, spec 016; sustituye al número gigante de la agenda de la spec 005).
-- **Eventos como bloques rellenos** (enmienda 4, 2026-10-30, spec 016, aprobada por el usuario; sustituye a "eventos como filas de texto" y a la excepción de la spec 008). En las vistas mes, semana, día y agenda, y en todas las anchuras, cada evento es un bloque relleno con el color pastel del evento o de su calendario, como en Google Calendar. El texto va en tinta y el título en negrita, en los dos temas. Toda la paleta tiene un contraste ≥ 4,5:1 con la tinta (`palette.test.ts`). El título siempre es visible, aunque esté recortado, para que la información no dependa solo del color. Fuera de los bloques de evento, el color del calendario sigue siendo solo una marca (puntos del mini calendario, avatares, listas).
-- **Un único color de acento para "ahora" y "hoy":** el día de hoy en el mini calendario (cuadrado relleno), la línea de la hora actual, las abreviaturas de los días y el elemento seleccionado. En nada más.
-- **Botones de acción en negro**, totalmente redondos (píldora o círculo), con texto blanco; los secundarios, sin relleno o en el tono del panel. El botón flotante "+" (crear evento) es un círculo negro.
-- **Mini calendario mensual** compacto con puntos de color bajo los días que tienen eventos (un punto por calendario, máximo tres).
-- **Personas como avatares circulares** (iniciales sobre un tinte pálido propio de cada persona, porque la app no guarda fotos), usados en el filtro por persona y en la lista de miembros.
-- **Una superficie de color pleno por pantalla como máximo**, para lo más urgente (p. ej. el próximo evento con su cuenta atrás), en lugar de tarjetas iguales. Los bloques de evento rellenos del calendario no cuentan para este límite (enmienda 4).
-- **Escritorio en columnas** (navegación estrecha, panel con mini calendario y listas, área principal de agenda) y **móvil como Google Calendar** (enmienda 4, spec 016; sustituye a la barra inferior). Hasta 768 px hay:
-  - una cabecera superior con el botón de menú, el título de la pantalla (en el calendario, el mes, que se despliega), "Hoy" y el avatar;
-  - un cajón lateral con las vistas, los filtros y el resto de destinos;
-  - el botón flotante "+" en tinta en el calendario, y el contenido a ancho completo.
-- **Banda del mes en la agenda** (enmienda 4): cada mes empieza con una banda alta con su nombre sobre un degradado suave de tokens, igual en todos los meses. Nunca con ilustraciones ni imágenes de Google.
+### Móvil primero
 
-### Qué se ignora de la referencia
-
-Su contenido y sus funciones, que no existen en la app ni están en su alcance: notas de voz, temporizador, documentos, tareas, integraciones con terceros, videollamadas y fotos de perfil. También sus restos de plantilla: emojis como iconos, textos en inglés y la marca "SAI".
+- Cada pantalla se diseña primero a **390 px** y para **una mano**: lo que más se usa queda en la mitad inferior. El escritorio debe ser bueno, pero es secundario.
+- Objetivos táctiles de **48 px** (nunca menos de 44). Margen lateral de 16 px.
+- **Safe areas** de iOS (`env(safe-area-inset-*)`) en todo lo fijo: cabecera, barra inferior, hojas y botones flotantes. Alturas con `dvh`/`svh`, nunca `100vh`.
+- Los campos de texto miden **16 px o más** (por debajo, iOS amplía la página) y el campo activo nunca queda tapado por el teclado.
+- Lo que el dedo arrastra **no espera**: nada que responda a un gesto pasa por una transición con captura previa ni por la red (spec 024).
 
 ### Color
 
-- Tokens orientativos medidos sobre la referencia (el plan de la spec 005 fija los valores finales y comprueba su contraste): fondo `stone` ≈ `#E8E5DD`, panel `paper` ≈ `#F2F0EA`, tinta `ink` ≈ `#141414`, texto secundario `muted` lo bastante oscuro para 4,5:1 sobre `paper` (≈ `#66635D`), líneas `line` ≈ `#DAD6CC`.
-- **Color de acento elegido por el usuario** entre seis: rojo (el de la referencia, por defecto), azul, verde, amarillo, morado y gris. Cada acento define a la vez su relleno, el color del texto que va encima y su variante para texto o líneas sobre el fondo, de modo que los seis cumplen P9 (el amarillo, por ejemplo, nunca se usa como texto sobre fondo claro y lleva tinta encima).
-- El acento de la interfaz y los **colores de los calendarios** (paleta pastel cerrada de la spec 002) son cosas distintas: los calendarios colorean datos (barras, puntos, avatares); el acento marca "hoy", "ahora" y la selección. La información nunca depende solo del color (hoy también va en negrita o con relleno; los estados llevan texto).
-- **Tema claro y tema oscuro** (enmienda 3): el usuario elige claro, oscuro o "como el sistema" desde la interfaz, y la elección se guarda por usuario. Cada token neutro y cada acento tiene su valor en los dos temas, con el contraste de P9 comprobado en un test. Los colores pastel de los calendarios se conservan en los dos temas; en el oscuro, el texto que va sobre ellos sigue en tinta oscura.
+- **Neutros** (tokens `stone`, `paper`, `ink`, `muted`, `line`, `control`, `danger`; se conservan sus nombres, cambia su valor): fondo **bruma** `stone` ≈ `#EEF3F4`, superficie **blanca** `paper` `#FFFFFF`, tinta **mar profundo** `ink` ≈ `#0E2233`, texto secundario `muted` con 4,5:1 sobre las dos superficies, línea fina `line` y borde de control `control` con 3:1. En el tema oscuro: fondo **mar de noche** ≈ `#0A1620` y superficie **pizarra** ≈ `#13222E`, con tinta clara.
+- **Acento elegido por el usuario** entre seis: **Coral** (por defecto), **Mar**, **Alga**, **Sol**, **Lavanda** y **Roca** (identificadores guardados `red`, `blue`, `green`, `yellow`, `purple`, `gray`). Cada uno define relleno, texto encima, variante para texto y líneas, y borde, en los dos temas, con el contraste de P9 comprobado en un test (Sol lleva tinta encima).
+- **El acento es "aquí estás" y "aquí se actúa"**: hoy, la hora actual, la selección, el destino activo de la navegación y la **acción principal de cada pantalla** (botón primario y "+"). Un solo acento en pantalla. Todo lo demás es neutro.
+- Los **colores de los calendarios** (paleta pastel de la spec 002) son datos del usuario y no cambian. Los eventos son **bloques rellenos** de su color con el texto en `pastel-ink` (4,5:1 con cada pastel) y el título siempre visible; fuera de los bloques, el color del calendario es solo una marca (punto, barra). La información nunca depende solo del color.
+- Tema **claro, oscuro o "como el sistema"**, guardado por usuario. El tema cambia las variables, nunca las clases.
 
 ### Tipografía, forma y espacio
 
-- **Una sola familia neo-grotesca** cargada con `next/font` (sin dependencias nuevas), con pesos del 400 al 800 y cifras tabulares (`tabular-nums`) en horas, fechas y contadores. La elige el plan de la spec 005. Sin monoespaciada.
-- Escala corta: pocas tallas visibles (orientativo 12/14/16/20/28) más el número del día gigante. Títulos de pantalla de 20 a 32 px; mayúsculas solo al inicio de frase.
-- Radios decididos una vez: paneles con radio medio (≈ 16 px), controles y botones totalmente redondos.
-- Márgenes laterales de 16 px en móvil y una rejilla única en escritorio; el espacio entre bloques es mayor que el espacio dentro de ellos.
-- **Movimiento** (enmiendas 3 y 8): microinteracciones en botones y controles (pulsar, pasar por encima, foco), apertura y cierre de ventanas, hojas y desplegables, y transiciones al cambiar de vista, de periodo, de calendario visible y de tema. Cada animación dura como mucho 400 ms y solo anima `transform`, `opacity`, `filter` o un recorte (`clip-path`). El recorte solo se usa para revelar contenido o un cambio de color. Ninguna animación de uso diario rebota más allá de su valor final; la única excepción es el pulso que confirma un guardado. Con `prefers-reduced-motion: reduce`, cada animación se sustituye por un cambio inmediato o un fundido.
-- **Transparencias y profundidad** (enmienda 3): los contenedores principales (barra lateral, cabecera superior del móvil, cajón, paneles, ventanas, hojas y avisos) pueden ser superficies translúcidas con desenfoque de fondo (`backdrop-filter`), borde fino y sombra suave, definidas como tokens. Debajo del cristal el contraste del texto se mide contra el peor fondo posible y cumple P9; sin soporte de `backdrop-filter`, la superficie es opaca. Se permiten degradados suaves como fondo de la pantalla o de esas superficies, también como tokens.
+- **Figtree** (400 a 800) cargada con `next/font`, una sola familia; cifras tabulares (`tabular-nums`) en horas, fechas y contadores. Sin monoespaciada.
+- Escala corta: 12, 14, 16 (cuerpo), 20, 24 y 32 px. Títulos en 700 u 800 con interlineado ajustado; mayúsculas solo al inicio de frase.
+- **Tres radios**, como tokens: **tarjeta** 24 px (paneles, hojas, tarjetas), **control** 16 px (botones, campos, filas pulsables) y **círculo** (avatares, "+", Venito, chips y la píldora de una selección). Un botón nunca es una píldora; un chip nunca es un rectángulo.
+- **Dos elevaciones**, como tokens: **reposo** (línea fina y sombra mínima, utilidad `surface`) y **flotante** (sombra amplia y suave, utilidad `surface-float`, solo para lo que flota: hojas, ventanas, menús, avisos, botones flotantes y la barra inferior).
+- **Sin desenfoque de fondo** (`backdrop-filter`) en ninguna parte: las superficies son opacas. No se pudo medir su coste en iOS y es el sospechoso habitual de los tirones (spec 024).
+- El espacio entre bloques es mayor que dentro de ellos; una idea por tarjeta.
+
+### Navegación
+
+- **Hasta 1023 px: barra inferior fija** con cinco huecos: Calendario, Notas, **"+"** en el centro y en acento, Calendarios y Más. Arriba, una cabecera fina con el título de la pantalla y sus acciones. Sin cajón lateral.
+- **Desde 1024 px: barra lateral** con el logo, los destinos con su nombre, el tema y la cuenta.
+- **"+"** crea lo propio de la pantalla (un evento; una nota en Notas). **"Más"** abre una hoja inferior con el resto de destinos, el tema y cerrar sesión.
+- **Venito** (el asistente) vive en la esquina inferior derecha, por encima de la barra, en todas las pantallas del panel salvo dentro del chat.
+- Las ventanas del móvil son **hojas inferiores** con asa: se cierran deslizando, tocando fuera o con su botón.
+
+### Iconos, marca y mascota
+
+- Iconos **SVG propios en línea**, trazo de 1,75 px con extremos redondos sobre rejilla de 24 px; relleno solo para el destino activo.
+- **Marca**: una ficha redondeada en coral con una "C" blanca abierta y el punto de "hoy" en su boca; el nombre "CaFam" en Figtree 800. La marca no cambia con el acento del usuario.
+- **Venito** es un SVG propio, reconocible a 40 px, con expresiones (reposo, saludo, pensando, contenta, confundida, dormida) y animaciones pequeñas de `transform` y `opacity`. Aparece en el botón del asistente, en estados vacíos, en errores y en la pantalla sin conexión. Nunca es decoración repetida.
+
+### Movimiento
+
+- Los tokens de curvas y duraciones de la spec 021 se conservan. Cada animación dura como mucho 400 ms y solo anima `transform`, `opacity` o un recorte (`clip-path`). Ninguna de uso diario rebota, salvo el pulso que confirma un guardado y los gestos de Venito.
+- Con `prefers-reduced-motion: reduce`, cada animación se sustituye por un cambio inmediato o un fundido.
+- Un periodo nuevo del calendario se pinta en la misma actualización, sin transición con captura (spec 024).
 
 ### Prohibido en la interfaz
 
-Colores, sombras, desenfoques o degradados sueltos que no sean tokens; texto sobre cristal o degradado sin contraste comprobado; emojis; iconos dentro de cuadrados o círculos de color; filas de tarjetas idénticas con icono encima; etiquetas pequeñas en mayúsculas con espaciado; etiquetas o "píldoras" encima de un título; textos de relleno (lorem ipsum, "Usuario 1"); el acento en todos los botones o en la navegación; más de un color de acento en pantalla; y paletas violeta/índigo como base (el morado solo existe como acento elegido por el usuario).
+Colores, sombras, radios o degradados sueltos que no sean tokens; `backdrop-filter`; `text-white`, `text-black` y la variante `dark:`; emojis; iconos dentro de cuadrados de color repetidos; filas de tarjetas idénticas con icono encima; etiquetas pequeñas en mayúsculas con espaciado; textos de relleno; más de un color de acento en pantalla; y cualquier campo de texto por debajo de 16 px.
 
 ### Cómo se trabaja la interfaz
 
-- Los componentes de `src/components/ui/` son la única fuente de botones, campos y avisos; una variante nueva se añade ahí, no en la página.
-- Para diseñar o revisar pantallas se usan las skills `design-taste-frontend` (reglas de pantallas de aplicación, `references/app-screens.md`), `frontend-design` y `web-design-guidelines`.
-- Ninguna librería de componentes, iconos o animación sin aprobación en la spec que la introduce (P6); los iconos se dibujan como SVG propios en línea, de trazo fino y un solo estilo.
+- Los componentes de `src/components/ui/` son la única fuente de botones, campos, tarjetas, chips, hojas, estados vacíos y avisos; una variante nueva se añade ahí, no en la página.
+- La guardia `tests/unit/design-tokens.test.ts` hace cumplir esta sección; `accents.test.ts` y `theme-css.test.ts` mantienen iguales los valores y comprueban el contraste.
+- Cada pantalla nueva o rediseñada se revisa con capturas a **390, 768 y 1440 px**, en **claro y oscuro**, con **Coral y Sol**.
+- Ninguna librería de componentes, iconos o animación sin aprobación en la spec que la introduce (P6).
 
 ### Interacción del calendario (spec 008)
 
@@ -146,7 +158,7 @@ El calendario se comporta como Google Calendar para que quien lo conozca lo enti
 - **Horas como combobox**: se escriben o se eligen de una lista de 30 en 30 minutos; la de fin muestra la duración y sigue a la de inicio.
 - **Aviso breve** abajo tras guardar, borrar o duplicar, que se anuncia a los lectores de pantalla. Desde la enmienda 5 (spec 017), el aviso de mover, redimensionar, cambiar el color, pegar o borrar un evento ofrece "Deshacer" durante 10 s, solo para la última acción. Borrar un solo evento ya no pide confirmación.
 - Lo que flota (la ventana de evento, la ventana rápida, la lista de horas, el aviso, los diálogos, el cajón, el botón flotante "+" y los tooltips) lleva la sombra de "flotante"; las superficies en reposo, como mucho la sombra suave de las transparencias. La guardia `design-tokens.test.ts` mantiene los tokens de sombra.
-- **Gestos del móvil** (enmienda 4, spec 016): deslizar a izquierda o derecha en mes, semana y día cambia de periodo; la agenda es una lista continua. Todo lo que se hace deslizando también se puede hacer con un control o un atajo.
+- **Gestos del móvil** (enmienda 4, spec 016; enmienda 10): deslizar a izquierda o derecha en mes, semana y día cambia de periodo, también sobre la rejilla de horas, sin esperar a la red; la agenda es una lista continua. Todo lo que se hace deslizando también se puede hacer con un control o un atajo.
 - **Pellizcar para ampliar** (enmienda 5): en semana y día, pellizcar o Ctrl + rueda cambia la altura de las horas, recordada por dispositivo.
 - Fuera de alcance: arrastrar a otro periodo o a otro calendario, seleccionar varios eventos y deshacer más de una acción.
 
@@ -176,3 +188,4 @@ Checklist que cierra cada tarea (se reporta la salida de cada comando):
 - Enmienda 8 (2026-11-07, aprobada por el usuario con la spec 021): animar recortes (`clip-path`) para revelar contenido y cambios de color, y ninguna animación con rebote salvo el pulso de confirmación.
 - Enmienda 9 (2026-11-11, aprobada de antemano por el usuario con la spec 023): Ctrl/Cmd+Z ejecuta "Deshacer" mientras el aviso lo ofrece, nunca al escribir en un campo. "Deshacer" sustituye a la confirmación de borrado (enmienda 5) y con teclado su botón quedaba al final del orden de tabulación durante 10 s; P9 exige que todo se pueda usar con el teclado.
 - Resuelta en la spec 015: una persona consiente que el asistente use su disponibilidad con un ajuste propio, desactivado por defecto. El proveedor LLM es **Groq** (capa gratuita sin tarjeta, sin entrenamiento con los datos y con retención cero activada), con `openai/gpt-oss-120b` y `qwen/qwen3.8-27b` de reserva, llamado con `fetch` y la clave `GROQ_API_KEY` solo en el servidor; 30 preguntas por usuario y día.
+- Enmienda 10 (2026-11-15, aprobada de antemano por el usuario con el encargo de rediseño, spec 025): identidad visual **Orilla** en lugar de la anterior (colores, tipografía Figtree, tres radios, dos elevaciones, sin desenfoque de fondo), el acento también como acción principal, navegación con barra inferior y "+" central en lugar del cajón y el botón flotante, hojas inferiores en el móvil, marca nueva y la mascota Venito. Motivo: decisión del usuario de cambiar todo el frontend con el iPhone primero; el desenfoque se retira por rendimiento (spec 024).
