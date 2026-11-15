@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CalendarClient } from "@/components/calendar/calendar-client";
 import { CalendarSkeleton } from "@/components/calendar/calendar-skeleton";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LinkButton } from "@/components/ui/link-button";
 import { getBusyIntervals, getBusyPeople } from "@/lib/availability/queries";
 import { eventsInRange, serverWindow } from "@/lib/calendar/event-window";
@@ -112,12 +114,19 @@ async function CalendarContent({
 
   if (calendars.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-card bg-paper px-4 py-6 text-center text-ink">
-        <p>Todavía no tienes calendarios.</p>
-        <LinkButton href="/dashboard/calendars/new">
-          Crear calendario
-        </LinkButton>
-      </div>
+      <Card>
+        <EmptyState
+          title="Todavía no tienes calendarios"
+          action={
+            <LinkButton href="/dashboard/calendars/new">
+              Crear calendario
+            </LinkButton>
+          }
+        >
+          Crea el primero para empezar a apuntar eventos, o únete al de otra
+          persona desde «Más».
+        </EmptyState>
+      </Card>
     );
   }
 
@@ -220,7 +229,7 @@ export default function CalendarPage({
   searchParams: SearchParams;
 }) {
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 max-tab:pt-2 max-tab:pb-0 sm:px-6">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 max-tab:pt-2 max-tab:pb-14 sm:px-6">
       {/* The phone header already names the month (spec 016 RF-8). */}
       <h1 className="text-2xl font-bold text-ink max-tab:sr-only">
         Calendario

@@ -236,6 +236,15 @@ body {
     var(--elevation-float);
 }
 
+/* The free height of the calendar on a phone (spec 026 RF-6): the screen
+   less the header (3.5rem), the calendar's bar (3.25rem), the bottom bar
+   (4rem), a little air and the safe areas of iOS. */
+@utility h-calendar {
+  height: calc(
+    100dvh - 11.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  );
+}
+
 @utility bg-backdrop {
   background-color: var(--stone);
 }

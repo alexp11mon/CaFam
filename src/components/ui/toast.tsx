@@ -130,7 +130,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-4 bottom-[calc(4rem+env(safe-area-inset-bottom)+5rem)] z-50 grid justify-items-center lg:bottom-6"
+        className="pointer-events-none fixed inset-x-4 bottom-[calc(4rem+env(safe-area-inset-bottom)+5rem)] max-tab:group-data-[has-dock]/frame:bottom-[calc(7.25rem+env(safe-area-inset-bottom)+5rem)] z-50 grid justify-items-center lg:bottom-6"
       >
         {previous ? (
           <p

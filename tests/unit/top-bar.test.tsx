@@ -63,7 +63,7 @@ describe("TopBar", () => {
     expect(screen.queryByRole("button", { name: /^Hoy/ })).toBeNull();
   });
 
-  it("shows the calendar's month, unfolds its picker and goes to today", async () => {
+  it("shows the calendar's month and unfolds its picker; Hoy is down in the calendar's bar (spec 026 RF-5)", async () => {
     navigation.pathname = "/dashboard/calendar";
     const onToday = vi.fn();
     renderBar(<Calendar onToday={onToday} />);
@@ -75,9 +75,7 @@ describe("TopBar", () => {
     await userEvent.click(title);
     expect(title).toHaveAttribute("aria-expanded", "true");
 
-    const today = screen.getByRole("button", { name: /^Hoy, viernes, 30/ });
-    expect(today).toHaveTextContent("30");
-    await userEvent.click(today);
-    expect(onToday).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("button", { name: /^Hoy/ })).toBeNull();
+    expect(onToday).not.toHaveBeenCalled();
   });
 });

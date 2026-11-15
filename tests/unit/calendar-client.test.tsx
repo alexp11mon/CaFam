@@ -8,6 +8,9 @@ import type { AgendaEvent } from "@/components/calendar/agenda-view";
 
 // Spec 024, T4: the view and the date live in the browser (RF-2, RF-4, RF-5).
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("@/components/calendar/calendar-dock", () => ({
+  CalendarDock: () => null,
+}));
 vi.mock("@/components/calendar/view-toolbar", () => ({
   ViewToolbar: ({ view, date }: { view: string; date: string }) => (
     <p data-testid="toolbar">{`${view} ${date}`}</p>
@@ -184,9 +187,12 @@ describe("CalendarClient", () => {
     const loadWindow = vi.fn(async () => ({ error: "x" }));
     render(client({ loadWindow }));
     await userEvent.click(screen.getByRole("button", { name: "lejos" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "No se han podido cargar los eventos",
-    );
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("No se han podido cargar los eventos");
+    // Spec 026 RF-8: asking again is one tap.
+    expect(loadWindow).toHaveBeenCalledOnce();
+    await userEvent.click(screen.getByRole("button", { name: "Reintentar" }));
+    await vi.waitFor(() => expect(loadWindow).toHaveBeenCalledTimes(2));
   });
 
   it("takes a server refresh as the new start, at the address shown (RF-5)", async () => {

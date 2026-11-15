@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 
 /** What the calendar puts in the phone header (spec 016 RF-8, RF-10, RF-20, RF-23). */
@@ -26,9 +27,15 @@ interface HeaderContext {
   publish: (state: CalendarHeaderState | null) => void;
   pickerOpen: boolean;
   setPickerOpen: (open: boolean) => void;
-  /** Where the calendar mounts its filters inside the drawer (plan D3). */
+  /** Where the calendar mounts its filters inside the sheet (spec 016 plan D3). */
   drawerSlot: HTMLElement | null;
   setDrawerSlot: (slot: HTMLElement | null) => void;
+  /** The sheet of calendars and filters of the phone (spec 026 RF-4). */
+  sheet: RefObject<HTMLDialogElement | null>;
+  /** Opens it; the focus goes back to `opener` when it closes. */
+  openSheet: (opener?: HTMLElement | null) => void;
+  /** For the sheet: gives the focus back. */
+  sheetClosed: () => void;
 }
 
 const Context = createContext<HeaderContext | null>(null);
@@ -37,6 +44,8 @@ export function CalendarHeaderProvider({ children }: { children: ReactNode }) {
   const [state, publish] = useState<CalendarHeaderState | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [drawerSlot, setDrawerSlot] = useState<HTMLElement | null>(null);
+  const sheet = useRef<HTMLDialogElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
   const value = useMemo(
     () => ({
       state,
@@ -45,6 +54,12 @@ export function CalendarHeaderProvider({ children }: { children: ReactNode }) {
       setPickerOpen,
       drawerSlot,
       setDrawerSlot,
+      sheet,
+      openSheet: (from?: HTMLElement | null) => {
+        opener.current = from ?? null;
+        sheet.current?.showModal();
+      },
+      sheetClosed: () => opener.current?.focus(),
     }),
     [state, pickerOpen, drawerSlot],
   );
@@ -58,6 +73,9 @@ const OUTSIDE: HeaderContext = {
   setPickerOpen: () => {},
   drawerSlot: null,
   setDrawerSlot: () => {},
+  sheet: { current: null },
+  openSheet: () => {},
+  sheetClosed: () => {},
 };
 
 export function useCalendarHeader(): HeaderContext {

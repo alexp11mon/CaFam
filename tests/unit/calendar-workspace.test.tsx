@@ -13,7 +13,10 @@ import {
   CalendarWorkspace,
   type PanelCalendar,
 } from "@/components/calendar/calendar-workspace";
-import { CalendarHeaderProvider } from "@/components/shell/calendar-header";
+import {
+  CalendarHeaderProvider,
+  useCalendarHeader,
+} from "@/components/shell/calendar-header";
 import { TopBar } from "@/components/shell/top-bar";
 import { ToastProvider } from "@/components/ui/toast";
 import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
@@ -137,9 +140,20 @@ function setup(
 }
 
 // The phone header around the calendar, as AppFrame puts it.
+/** Stands in for the "Hoy" of the calendar's bar (spec 026). */
+function PublishedToday() {
+  const { state } = useCalendarHeader();
+  return (
+    <button type="button" onClick={() => state?.onToday?.()}>
+      hoy publicado
+    </button>
+  );
+}
+
 const withHeader = (node: ReactNode) => (
   <CalendarHeaderProvider>
     <TopBar displayName="Ana López" />
+    <PublishedToday />
     {node}
   </CalendarHeaderProvider>
 );
@@ -246,30 +260,37 @@ describe("CalendarWorkspace on a phone", () => {
         name: /noviembre/,
       }),
     ).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /^Hoy/ }));
+    // "Hoy" lives in the calendar's bar (spec 026): it calls what is published.
+    await userEvent.click(
+      screen.getByRole("button", { name: "hoy publicado" }),
+    );
     expect(push).toHaveBeenCalledWith(
       "/dashboard/calendar?view=month&date=2026-10-21",
       expect.anything(),
     );
   });
 
-  it("moves the views and the filters into the sheet of the header (spec 025 RF-8)", () => {
+  it("moves the filters into the sheet of calendars, without the views (spec 026 RF-4)", () => {
     phone(true);
     setup(true, withHeader);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Vista y calendarios" }),
-    );
     const drawer = document.querySelector("dialog[data-sheet]")!;
     expect(
-      within(drawer as HTMLElement).getByRole("link", { name: "Mes" }),
-    ).toHaveAttribute("aria-current", "page");
-    expect(
-      within(drawer as HTMLElement).getByRole("checkbox", { name: "Familia" }),
+      within(drawer as HTMLElement).getByRole("checkbox", {
+        name: "Familia",
+        hidden: true,
+      }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("checkbox", { name: "Familia" })).toHaveLength(
-      1,
-    );
+    expect(
+      screen.getAllByRole("checkbox", { name: "Familia", hidden: true }),
+    ).toHaveLength(1);
+    // The views live in the calendar's bar now.
+    expect(
+      within(drawer as HTMLElement).queryByRole("link", {
+        name: "Mes",
+        hidden: true,
+      }),
+    ).toBeNull();
   });
 
   it("keeps the filters in the panel on a wider screen", () => {

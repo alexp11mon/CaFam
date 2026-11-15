@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   mergeWindow,
   planLoad,
@@ -116,7 +116,14 @@ export function useEventWindow<T extends WindowEvent>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planKey, load, initial, failed, cold === null]);
 
+  // Asks again for a period whose read failed (spec 026 RF-8).
+  const retry = useCallback(
+    () => setState((current) => ({ ...current, failed: null })),
+    [],
+  );
+
   return {
+    retry,
     events: window.events,
     range: window.range,
     /** The visible period is still being read (RF-4). */

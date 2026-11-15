@@ -46,7 +46,6 @@ import {
 import { navigate, type CalendarView } from "@/lib/calendar/ranges";
 import {
   CAL_FILTER,
-  CAL_VIEW,
   periodType,
   todayType,
   typesOf,
@@ -60,7 +59,7 @@ import {
   type BusyPersonOption,
 } from "./availability-filter";
 import { CalendarFilters, type FilterCategory } from "./calendar-filters";
-import { CalendarLink, useCalendarGo } from "./calendar-nav";
+import { useCalendarGo } from "./calendar-nav";
 import { DayView } from "./day-view";
 import {
   EventInteractionsProvider,
@@ -160,50 +159,8 @@ function swapSection(
   return next;
 }
 
-const DRAWER_VIEWS: { view: CalendarView; label: string }[] = [
-  { view: "agenda", label: "Agenda" },
-  { view: "day", label: "Día" },
-  { view: "week", label: "Semana" },
-  { view: "month", label: "Mes" },
-];
-
-const DRAWER_ROW =
-  "flex min-h-12 w-full items-center rounded-control px-3 text-base font-medium text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:border aria-[current=page]:border-accent-edge aria-[current=page]:bg-accent aria-[current=page]:text-on-accent";
-
-/** The views at the top of the phone drawer, the current one as the selection (spec 016 RF-13). */
-function DrawerViews({
-  view,
-  date,
-  saveLastView,
-  showWeekends,
-}: {
-  view: CalendarView;
-  date: string;
-  saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
-  showWeekends: boolean;
-}) {
-  return (
-    <>
-      <ul aria-label="Vistas" className="flex flex-col gap-1">
-        {DRAWER_VIEWS.map((item) => (
-          <li key={item.view}>
-            <CalendarLink
-              view={item.view}
-              date={date}
-              types={[CAL_VIEW]}
-              aria-current={item.view === view ? "page" : undefined}
-              onClick={() => void saveLastView?.(item.view)}
-              className={DRAWER_ROW}
-            >
-              {item.label}
-            </CalendarLink>
-          </li>
-        ))}
-      </ul>
-      {showWeekends ? null : <WeekendToggle className={DRAWER_ROW} />}
-    </>
-  );
-}
+const SHEET_ROW =
+  "flex min-h-12 w-full items-center rounded-control border border-control px-4 text-base font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 function swap<T>(items: T[], index: number, direction: Direction): T[] {
   const target = direction === "up" ? index - 1 : index + 1;
@@ -766,12 +723,8 @@ export function CalendarWorkspace({
         {filtersInDrawer
           ? createPortal(
               <div className="flex flex-col gap-3">
-                <DrawerViews
-                  view={view}
-                  date={date}
-                  saveLastView={saveLastView}
-                  showWeekends={showWeekends}
-                />
+                {/* The views are in the calendar's bar (spec 026 RF-4). */}
+                {showWeekends ? null : <WeekendToggle className={SHEET_ROW} />}
                 {filters}
               </div>,
               filtersInDrawer,

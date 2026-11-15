@@ -23,9 +23,10 @@ import { CAL_NEXT, CAL_PREV } from "@/lib/calendar/transition-types";
 import { visibleDays } from "@/lib/calendar/view-options";
 import { useEventWindow } from "@/lib/hooks/use-event-window";
 import { useStableJson, useStableList } from "@/lib/hooks/use-stable-list";
-import { FormAlert } from "@/components/ui/form-alert";
+import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/ui/link-button";
 import type { AgendaEvent } from "./agenda-view";
+import { CalendarDock } from "./calendar-dock";
 import { CalendarNavContext, type CalendarGo } from "./calendar-nav";
 import { CalendarWorkspace, type PeriodEnter } from "./calendar-workspace";
 import { ViewToolbar } from "./view-toolbar";
@@ -277,13 +278,27 @@ export function CalendarClient({
           </div>
         ) : null}
       </div>
+      <CalendarDock
+        view={view}
+        date={date}
+        today={today}
+        saveLastView={workspace.saveLastView}
+      />
       {/* A period that was not loaded: the view is already there, its events
           are on their way (RF-4). */}
       <p role="status" className="sr-only">
         {events.loading ? "Cargando eventos…" : ""}
       </p>
       {events.failed ? (
-        <FormAlert message="No se han podido cargar los eventos de estas fechas. Comprueba tu conexión y cambia de periodo para reintentar." />
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-danger bg-paper px-4 py-3 text-danger"
+        >
+          <span>No se han podido cargar los eventos de estas fechas.</span>
+          <Button variant="secondary" onClick={events.retry}>
+            Reintentar
+          </Button>
+        </div>
       ) : null}
       <div
         aria-busy={events.loading || undefined}

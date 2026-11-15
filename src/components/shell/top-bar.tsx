@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef } from "react";
 import { initials, PERSON_TINTS } from "@/lib/people/avatar";
 import { activeSection, NAV_ITEMS } from "@/lib/shell/nav";
-import { formatDateKeyFull } from "@/lib/calendar/format";
 import { useCalendarHeader } from "./calendar-header";
 import { CalendarSheet } from "./calendar-sheet";
-import { CaretIcon, FiltersIcon, TodayIcon } from "./icons";
+import { CaretIcon } from "./icons";
 import { CrossfadeText } from "@/components/ui/crossfade-text";
 
 const ICON_BUTTON =
@@ -17,14 +15,13 @@ const ICON_BUTTON =
 /**
  * The phone header (≤ 768 px): the title of the screen and its own actions,
  * never navigation, which lives in the bottom bar (constitution, amendment
- * 10; spec 025 RF-8). The calendar fills the title, "Hoy" and the sheet with
- * its views and filters (spec 016 RF-8..RF-12, RF-20, RF-23).
+ * 10; spec 025 RF-8). The calendar fills the title, which unfolds its months
+ * (spec 016 RF-8, RF-20, RF-23); "Hoy", the views and the filters are down in
+ * the calendar's bar, by the thumb (spec 026 RF-5).
  */
 export function TopBar({ displayName }: { displayName: string }) {
   const current = activeSection(usePathname());
   const { state, pickerOpen, setPickerOpen } = useCalendarHeader();
-  const sheet = useRef<HTMLDialogElement>(null);
-  const filters = useRef<HTMLButtonElement>(null);
   const section = NAV_ITEMS.find((item) => item.section === current)?.label;
 
   return (
@@ -46,29 +43,6 @@ export function TopBar({ displayName }: { displayName: string }) {
         </p>
       )}
       <span className="flex-1" />
-      {state?.onToday ? (
-        <button
-          type="button"
-          aria-label={`Hoy, ${formatDateKeyFull(state.today)}`}
-          aria-keyshortcuts="T"
-          onClick={state.onToday}
-          className={ICON_BUTTON}
-        >
-          <TodayIcon day={Number(state.today.slice(8))} />
-        </button>
-      ) : null}
-      {state ? (
-        <button
-          ref={filters}
-          type="button"
-          aria-label="Vista y calendarios"
-          aria-haspopup="dialog"
-          onClick={() => sheet.current?.showModal()}
-          className={ICON_BUTTON}
-        >
-          <FiltersIcon />
-        </button>
-      ) : null}
       <Link
         href="/dashboard/settings"
         aria-label={`Ajustes de ${displayName}`}
@@ -83,7 +57,7 @@ export function TopBar({ displayName }: { displayName: string }) {
           {initials(displayName)}
         </span>
       </Link>
-      <CalendarSheet dialog={sheet} onClose={() => filters.current?.focus()} />
+      <CalendarSheet />
     </header>
   );
 }
