@@ -1,0 +1,69 @@
+{
+  "label": "antes",
+  "date": "2026-11-15T13:23:03.473Z",
+  "cpu": 4,
+  "net": {
+    "latency": 100,
+    "down": 1125000,
+    "up": 250000
+  },
+  "seededEvents": 639,
+  "calendarLoad": {
+    "readyMs": 465,
+    "jsKb": 965,
+    "jsGzipKb": 282,
+    "jsFiles": 13,
+    "appRequests": 5,
+    "supabaseQueries": 30
+  },
+  "period": {
+    "month": {
+      "samples": 6,
+      "newPeriodMs": 601,
+      "newPeriodMaxMs": 725,
+      "settledMs": 863,
+      "appRequests": 85,
+      "supabaseQueries": 16,
+      "longTaskMs": 64,
+      "cls": 0.0003
+    },
+    "week": {
+      "samples": 6,
+      "newPeriodMs": 481,
+      "newPeriodMaxMs": 487,
+      "settledMs": 746,
+      "appRequests": 23,
+      "supabaseQueries": 20,
+      "longTaskMs": 0,
+      "cls": 0.0001
+    },
+    "day": {
+      "samples": 6,
+      "newPeriodMs": 433,
+      "newPeriodMaxMs": 465,
+      "settledMs": 682,
+      "appRequests": 5,
+      "supabaseQueries": 20,
+      "longTaskMs": 0,
+      "cls": 0
+    }
+  },
+  "chatOpen": {
+    "firstMs": 479,
+    "repeatMs": 285
+  },
+  "assistant": {
+    "mockGroqMsPerCall": 900,
+    "firstFeedbackMs": 43,
+    "answerMs": 2063,
+    "supabaseQueries": 7
+  },
+  "assistantLoad": {
+    "readyMs": 261,
+    "jsKb": 655,
+    "jsGzipKb": 198,
+    "jsFiles": 13,
+    "appRequests": 6,
+    "supabaseQueries": 3
+  }
+}
