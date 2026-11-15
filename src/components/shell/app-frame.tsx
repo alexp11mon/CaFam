@@ -11,8 +11,9 @@ import { ThemeSync } from "./theme-sync";
 import { TopBar } from "./top-bar";
 
 /**
- * Frame of every screen with a session: the side rail from 1024 px, the
- * bottom bar from 769 px and the top bar with its drawer on a phone (spec 016 RF-6, RF-7). The accent comes from the profile on the server, so the
+ * Frame of every screen with a session (constitution, amendment 10; spec 025
+ * RF-8): the side bar from 1024 px; below it, the bottom bar with "+", and on
+ * a phone also a thin header. The accent comes from the profile on the server, so the
  * first HTML already has it (spec 005 RF-9, RF-16, RF-18, plan D2, D3, D7).
  */
 export function AppFrame({
@@ -39,7 +40,7 @@ export function AppFrame({
       {/* First stop of the keyboard: past the navigation (spec 023 RF-18). */}
       <a
         href="#contenido"
-        className="sr-only rounded-full bg-ink px-4 py-2 font-semibold text-on-ink focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
+        className="sr-only rounded-control bg-ink px-4 py-2 font-semibold text-on-ink focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
       >
         Saltar al contenido
       </a>
@@ -48,11 +49,13 @@ export function AppFrame({
         <EventClipboardProvider>
           <CalendarHeaderProvider>
             <SideRail signOutAction={signOutAction} />
-            <TopBar displayName={displayName} signOutAction={signOutAction} />
+            <TopBar displayName={displayName} />
             <div
               id="contenido"
               tabIndex={-1}
-              className="flex flex-1 flex-col pt-[calc(3.5rem+env(safe-area-inset-top))] outline-none tab:pt-0 tab:pb-24 lg:pb-0 lg:pl-20"
+              // Room for the phone header above and for the bottom bar below, with
+              // the safe areas of iOS (spec 025 RF-8).
+              className="flex flex-1 flex-col pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(4rem+env(safe-area-inset-bottom))] outline-none tab:pt-0 lg:pb-0 lg:pl-20 xl:pl-60"
             >
               {children}
             </div>

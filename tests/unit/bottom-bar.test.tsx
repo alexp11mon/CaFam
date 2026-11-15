@@ -3,10 +3,17 @@ import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { BottomBar } from "@/components/shell/bottom-bar";
 
-// Spec 005, T6: the bottom bar and the "Más" sheet of the phone frame
-// (RF-18, RF-20, RF-22; plan D9).
-const navigation = vi.hoisted(() => ({ pathname: "/dashboard/calendar" }));
-vi.mock("next/navigation", () => ({ usePathname: () => navigation.pathname }));
+// The bottom bar and the "Más" sheet (spec 005 T6: RF-18, RF-20, RF-22, plan
+// D9), rewritten for the frame of spec 025 (RF-8, plan D7): two destinations
+// on each side of "+".
+const navigation = vi.hoisted(() => ({
+  pathname: "/dashboard/calendar",
+  push: vi.fn(),
+}));
+vi.mock("next/navigation", () => ({
+  usePathname: () => navigation.pathname,
+  useRouter: () => ({ push: navigation.push }),
+}));
 const actions = vi.hoisted(() => ({ setTheme: vi.fn(async () => ({})) }));
 vi.mock("@/app/dashboard/settings/actions", () => actions);
 
@@ -23,6 +30,8 @@ beforeAll(() => {
 
 beforeEach(() => {
   navigation.pathname = "/dashboard/calendar";
+  navigation.push.mockReset();
+  history.replaceState(null, "", "/dashboard/calendar");
 });
 
 function renderBar(signOut = vi.fn(async () => {})) {
@@ -34,23 +43,74 @@ function renderBar(signOut = vi.fn(async () => {})) {
 }
 
 describe("BottomBar (RF-18, RF-22)", () => {
-  it("offers the calendar, the list, a new event and more", () => {
+  it("offers the calendar, the notes, +, the calendars and more, in that order", () => {
     const { nav } = renderBar();
 
+    // A list item is named by its "+" label or by what it reads.
+    const names = within(nav)
+      .getAllByRole("listitem")
+      .slice(0, 5)
+      .map(
+        (item) =>
+          item.querySelector("[aria-label]")?.getAttribute("aria-label") ??
+          item.querySelector("a, button")?.textContent,
+      );
+    expect(names).toEqual([
+      "Calendario",
+      "Notas",
+      "Nuevo evento",
+      "Calendarios",
+      "Más",
+    ]);
     expect(
       within(nav).getByRole("link", { name: "Calendario" }),
     ).toHaveAttribute("href", "/dashboard/calendar");
-    expect(
-      within(nav).getByRole("link", { name: "Mis calendarios" }),
-    ).toHaveAttribute("href", "/dashboard/calendars");
-    expect(within(nav).getByRole("link", { name: "+ Evento" })).toHaveAttribute(
+    expect(within(nav).getByRole("link", { name: "Notas" })).toHaveAttribute(
       "href",
-      "/dashboard/events/new",
+      "/dashboard/notes",
     );
+    expect(
+      within(nav).getByRole("link", { name: "Calendarios" }),
+    ).toHaveAttribute("href", "/dashboard/calendars");
     expect(within(nav).getByRole("button", { name: "Más" })).toHaveAttribute(
       "aria-haspopup",
       "dialog",
     );
+  });
+
+  it("+ creates an event on the date the calendar shows (spec 025 plan D7)", async () => {
+    history.replaceState(
+      null,
+      "",
+      "/dashboard/calendar?view=week&date=2027-03-04",
+    );
+    const { nav } = renderBar();
+    const plus = within(nav).getByRole("link", { name: "Nuevo evento" });
+    expect(plus).toHaveAttribute("href", "/dashboard/events/new");
+    // The accent marks the main action of the screen (amendment 10).
+    expect(plus.className).toMatch(/\bbg-accent\b/);
+
+    await userEvent.click(plus);
+
+    expect(navigation.push).toHaveBeenCalledExactlyOnceWith(
+      "/dashboard/events/new?date=2027-03-04",
+    );
+  });
+
+  it("+ creates a note in Notas", async () => {
+    navigation.pathname = "/dashboard/notes";
+    const { nav } = renderBar();
+    await userEvent.click(
+      within(nav).getByRole("link", { name: "Nueva nota" }),
+    );
+    expect(navigation.push).toHaveBeenCalledExactlyOnceWith(
+      "/dashboard/notes/new",
+    );
+  });
+
+  it("keeps clear of the home indicator of iOS", () => {
+    const { nav } = renderBar();
+    expect(nav.className).toContain("pb-[env(safe-area-inset-bottom)]");
   });
 
   it("is hidden from 1024 px", () => {

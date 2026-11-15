@@ -221,8 +221,31 @@ export function AssistantIcon() {
   );
 }
 
+/** A sheet with a ticked list: notes and to-dos (spec 025, 028). */
+export function NotesIcon() {
+  return (
+    <Icon>
+      <path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+      <path d="M14 3v5h5M8.5 12.5l1.5 1.5 3-3M8.5 17.5h7" />
+    </Icon>
+  );
+}
+
+/** Three sliders: what the calendar shows (views and filters). */
+export function FiltersIcon() {
+  return (
+    <Icon>
+      <path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1" />
+      <circle cx="15" cy="7" r="2" />
+      <circle cx="9" cy="12" r="2" />
+      <circle cx="17" cy="17" r="2" />
+    </Icon>
+  );
+}
+
 export const SECTION_ICONS = {
   calendar: CalendarIcon,
+  notes: NotesIcon,
   calendars: CalendarsIcon,
   assistant: AssistantIcon,
   join: JoinIcon,

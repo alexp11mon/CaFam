@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Fab } from "@/components/calendar/fab";
 import { AssistantFab } from "@/components/shell/assistant-fab";
 
 // Spec 015, T16: the round assistant button on every screen of the panel but
@@ -32,16 +31,12 @@ describe("AssistantFab (RF-39)", () => {
     expect(screen.queryByRole("link", { name: "Asistente" })).toBeNull();
   });
 
-  it("goes above the new event button, which marks the frame while shown", () => {
-    const frame = document.createElement("div");
-    frame.setAttribute("data-app-frame", "");
-    document.body.append(frame);
-    const { unmount } = render(<Fab href="/dashboard/events/new" />, {
-      container: frame.appendChild(document.createElement("div")),
-    });
-    expect(frame).toHaveAttribute("data-has-fab");
-    unmount();
-    expect(frame).not.toHaveAttribute("data-has-fab");
-    frame.remove();
+  it("sits above the bottom bar, in the corner that is its own (spec 025 plan D7)", () => {
+    render(<AssistantFab />);
+    const link = screen.getByRole("link", { name: "Asistente" });
+    expect(link.className).toContain(
+      "bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)]",
+    );
+    expect(link).toHaveClass("lg:bottom-6");
   });
 });

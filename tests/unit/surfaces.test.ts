@@ -6,8 +6,9 @@ import { describe, expect, it } from "vitest";
 // Spec 011, T9: the containers of RF-12 are surface, and what floats takes the
 // floating surface (RF-12, RF-13, RF-14; plan surface-surfaces, D6).
 const SURFACES: [file: string, utility: "surface" | "surface-float"][] = [
-  ["src/components/shell/side-rail.tsx", "surface"],
-  ["src/components/shell/bottom-bar.tsx", "surface"],
+  // Spec 025: the bar floats over the content; the side bar is plain paper.
+  ["src/components/shell/bottom-bar.tsx", "surface-float"],
+  ["src/components/shell/calendar-sheet.tsx", "surface-float"],
   ["src/components/calendar/next-event-card.tsx", "surface"],
   ["src/components/calendar/mini-month.tsx", "surface"],
   ["src/components/calendar/calendar-filters.tsx", "surface"],

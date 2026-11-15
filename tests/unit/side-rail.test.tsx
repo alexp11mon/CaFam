@@ -46,16 +46,17 @@ describe("SideRail (RF-16)", () => {
     ).toBeInTheDocument();
   });
 
-  it("grows each tooltip from its icon at 95 % (spec 021 RF-7, RF-8)", () => {
+  it("names each destination: a tooltip that grows from its icon below 1280 px, a row from there (spec 021 RF-7, RF-8; spec 025 RF-8)", () => {
     const { nav } = renderRail();
     const tooltip = within(nav).getByText("Ajustes");
 
     expect(tooltip).toHaveClass(
-      "origin-left",
-      "scale-(--pop-scale)",
-      "group-hover:scale-100",
-      "duration-(--motion-pop-out)",
-      "group-hover:duration-(--motion-pop-in)",
+      "max-xl:origin-left",
+      "max-xl:scale-(--pop-scale)",
+      "max-xl:group-hover:scale-100",
+      "max-xl:duration-(--motion-pop-out)",
+      "max-xl:group-hover:duration-(--motion-pop-in)",
+      "xl:truncate",
     );
   });
 

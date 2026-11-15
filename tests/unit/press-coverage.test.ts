@@ -13,7 +13,6 @@ describe("press coverage", () => {
   it.each([
     ["calendar/event-menu.tsx", /const ITEM =\s*"press-quiet /],
     ["shell/more-sheet.tsx", /const ROW =\s*"press-quiet /],
-    ["shell/nav-drawer.tsx", /const ROW =\s*"press-quiet /],
     ["ui/time-field.tsx", /role="option"[\s\S]*?className=\{`press-quiet /],
     [
       "calendar/mini-month.tsx",

@@ -38,7 +38,7 @@ function Calendar({ onToday }: { onToday: () => void }) {
 function renderBar(children?: ReactNode) {
   render(
     <CalendarHeaderProvider>
-      <TopBar displayName="Ana López" signOutAction={vi.fn(async () => {})} />
+      <TopBar displayName="Ana López" />
       {children}
     </CalendarHeaderProvider>,
   );
@@ -50,7 +50,12 @@ describe("TopBar", () => {
     renderBar();
 
     expect(screen.getByRole("banner")).toHaveTextContent("Ajustes");
-    expect(screen.getByRole("button", { name: "Menú" })).toBeInTheDocument();
+    // Spec 025 RF-8: no menu here; navigation lives in the bottom bar, and
+    // the sheet of views and filters only exists on the calendar.
+    expect(screen.queryByRole("button", { name: "Menú" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Vista y calendarios" }),
+    ).toBeNull();
     expect(
       screen.getByRole("link", { name: "Ajustes de Ana López" }),
     ).toHaveAttribute("href", "/dashboard/settings");

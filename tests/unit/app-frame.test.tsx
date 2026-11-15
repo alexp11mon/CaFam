@@ -6,6 +6,7 @@ import { AppFrame, FrameSkeleton } from "@/components/shell/app-frame";
 // accent from the first HTML (RF-9; plan D3), with the rail and the bottom bar (T6).
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/calendar",
+  useRouter: () => ({ push: vi.fn() }),
 }));
 describe("AppFrame (RF-9)", () => {
   it("wraps the page in the user's accent", () => {
@@ -29,7 +30,7 @@ describe("AppFrame (RF-9)", () => {
     ).toHaveLength(2);
   });
 
-  it("shows the phone header and leaves the bottom bar to tablets (spec 016 RF-6, RF-7)", () => {
+  it("shows the header on a phone and the bottom bar up to 1023 px (spec 025 RF-8)", () => {
     render(
       <AppFrame
         accent="red"
@@ -43,7 +44,16 @@ describe("AppFrame (RF-9)", () => {
 
     expect(screen.getByRole("banner")).toHaveClass("tab:hidden");
     const [, bar] = screen.getAllByRole("navigation", { name: "Principal" });
-    expect(bar).toHaveClass("max-tab:hidden", "lg:hidden");
+    expect(bar).toHaveClass("lg:hidden");
+    expect(bar).not.toHaveClass("max-tab:hidden");
+    // The content keeps clear of both, with the safe areas of iOS.
+    const content = document.querySelector("#contenido")!;
+    expect(content.className).toContain(
+      "pb-[calc(4rem+env(safe-area-inset-bottom))]",
+    );
+    expect(content.className).toContain(
+      "pt-[calc(3.5rem+env(safe-area-inset-top))]",
+    );
   });
 });
 

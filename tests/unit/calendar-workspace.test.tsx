@@ -139,7 +139,7 @@ function setup(
 // The phone header around the calendar, as AppFrame puts it.
 const withHeader = (node: ReactNode) => (
   <CalendarHeaderProvider>
-    <TopBar displayName="Ana López" signOutAction={vi.fn(async () => {})} />
+    <TopBar displayName="Ana López" />
     {node}
   </CalendarHeaderProvider>
 );
@@ -253,12 +253,14 @@ describe("CalendarWorkspace on a phone", () => {
     );
   });
 
-  it("moves the views and the filters into the drawer", () => {
+  it("moves the views and the filters into the sheet of the header (spec 025 RF-8)", () => {
     phone(true);
     setup(true, withHeader);
 
-    fireEvent.click(screen.getByRole("button", { name: "Menú" }));
-    const drawer = document.querySelector("dialog[data-drawer]")!;
+    fireEvent.click(
+      screen.getByRole("button", { name: "Vista y calendarios" }),
+    );
+    const drawer = document.querySelector("dialog[data-sheet]")!;
     expect(
       within(drawer as HTMLElement).getByRole("link", { name: "Mes" }),
     ).toHaveAttribute("aria-current", "page");
@@ -273,7 +275,7 @@ describe("CalendarWorkspace on a phone", () => {
   it("keeps the filters in the panel on a wider screen", () => {
     setup(true, withHeader);
 
-    const drawer = document.querySelector("dialog[data-drawer]")!;
+    const drawer = document.querySelector("dialog[data-sheet]")!;
     expect(
       within(drawer as HTMLElement).queryByRole("checkbox", {
         name: "Familia",
@@ -351,16 +353,8 @@ describe("CalendarWorkspace on a phone", () => {
     act(() => setSidebarCollapsed(false));
   });
 
-  it("shows the floating + only to who can create", () => {
+  it("leaves + to the bottom bar: no floating button of its own (spec 025 plan D7)", () => {
     setup(true);
-    expect(screen.getByRole("link", { name: "Nuevo evento" })).toHaveAttribute(
-      "href",
-      "/dashboard/events/new?date=2026-11-02",
-    );
-  });
-
-  it("hides the floating + from a reader", () => {
-    setup(false);
     expect(screen.queryByRole("link", { name: "Nuevo evento" })).toBeNull();
   });
 

@@ -66,7 +66,6 @@ import {
   EventInteractionsProvider,
   useEventInteractionsState,
 } from "./event-interactions";
-import { Fab } from "./fab";
 import type { CalendarOption, EventFormValues } from "./event-form";
 import { GoToDateDialog } from "./go-to-date-dialog";
 import { MiniMonth } from "./mini-month";
@@ -926,7 +925,6 @@ export function CalendarWorkspace({
             )}
           </div>
         </ViewTransition>
-        {canCreate ? <Fab href={`/dashboard/events/new?date=${date}`} /> : null}
         {draft && quickCreate && defaultCalendarId ? (
           <QuickCreate
             // A new slot starts a new window.

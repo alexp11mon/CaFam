@@ -50,7 +50,6 @@ describe("staggered lists (RF-16)", () => {
   it.each([
     "calendar/event-menu.tsx",
     "ui/time-field.tsx",
-    "shell/nav-drawer.tsx",
     "shell/more-sheet.tsx",
   ])("%s staggers each time it opens", (file) => {
     const code = source(file);
