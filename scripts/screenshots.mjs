@@ -1,5 +1,5 @@
 // Screenshots for the design review of P9 (constitution, amendment 10): each
-// route at 390, 768 and 1440 px, light and dark, with the Coral and Sol accents.
+// route at 390, 768 and 1440 px, light and dark, with the Violeta and Ámbar accents.
 //
 //   npx next start -p 3100 &
 //   node --env-file=.env.test.local scripts/screenshots.mjs <outDir> [route ...]
@@ -25,12 +25,12 @@ const ACCENTS = list("SHOTS_ACCENTS", "red,yellow");
 const ROUTES = routes.length ? routes : ["/dashboard/calendar?view=month"];
 const HEIGHT = { 390: 844, 768: 1024, 1440: 900 };
 const ACCENT_NAME = {
-  red: "coral",
-  yellow: "sol",
-  blue: "mar",
-  green: "alga",
-  purple: "lavanda",
-  gray: "roca",
+  red: "violeta",
+  yellow: "ambar",
+  blue: "azul",
+  green: "verde",
+  purple: "rosa",
+  gray: "grafito",
 };
 
 const admin = createClient(

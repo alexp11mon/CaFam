@@ -42,7 +42,13 @@ page.on("pageerror", (error) => errors.push(error.message));
 const visible = (locator) => locator.locator("visible=true");
 const bar = () =>
   visible(page.getByRole("navigation", { name: "Principal" })).first();
-const dock = () => page.getByRole("navigation", { name: "Calendario" });
+const heading = () =>
+  visible(page.getByRole("navigation", { name: "Calendario" })).first();
+const pickView = (name) =>
+  heading()
+    .getByRole("list", { name: "Vistas" })
+    .getByRole("link", { name })
+    .tap();
 
 try {
   await step("Registrarse", async () => {
@@ -55,7 +61,7 @@ try {
   });
 
   await step("Crear un calendario", async () => {
-    await bar().getByRole("link", { name: "Calendarios" }).tap();
+    await bar().getByRole("link", { name: "Calendarios", exact: true }).tap();
     await visible(page.getByRole("link", { name: "Nuevo calendario" })).tap();
     await visible(page.getByLabel("Nombre")).fill("Clase");
     await visible(page.getByRole("button", { name: "Crear calendario" })).tap();
@@ -63,14 +69,8 @@ try {
   });
 
   await step("Crear un evento tocando un hueco", async () => {
-    await bar().getByRole("link", { name: "Calendario" }).tap();
-    await dock()
-      .getByRole("button", { name: /^Vista/ })
-      .tap();
-    await page
-      .getByRole("list", { name: "Vistas" })
-      .getByRole("link", { name: "Día" })
-      .tap();
+    await bar().getByRole("link", { name: "Calendario", exact: true }).tap();
+    await pickView("Día");
     await visible(page.locator("[data-time-col]"))
       .first()
       .tap({ position: { x: 120, y: 180 } });
@@ -96,19 +96,13 @@ try {
   });
 
   await step("Cambiar de vista y de periodo", async () => {
-    await dock()
-      .getByRole("button", { name: /^Vista/ })
-      .tap();
-    await page
-      .getByRole("list", { name: "Vistas" })
-      .getByRole("link", { name: "Mes" })
-      .tap();
+    await pickView("Mes");
     await page.waitForURL(/view=month/);
     const first = page.url();
-    await dock().getByRole("button", { name: "Mes siguiente" }).tap();
+    await heading().getByRole("button", { name: "Mes siguiente" }).tap();
     await page.waitForFunction((url) => location.href !== url, first);
     const next = page.url().split("date=")[1];
-    await dock().getByRole("button", { name: /^Hoy/ }).tap();
+    await heading().getByRole("button", { name: /^Hoy/ }).tap();
     await page.waitForTimeout(400);
     return `siguiente ${next}, hoy ${page.url().split("date=")[1]}`;
   });
@@ -126,6 +120,8 @@ try {
         .waitFor({ timeout: 20000 })
         .then(() => "respuesta"),
       page
+        // Only the chat's own alert: Next keeps a route announcer with that role.
+        .getByRole("dialog", { name: "Chat con Venito" })
         .getByRole("alert")
         .first()
         .waitFor({ timeout: 20000 })
@@ -136,8 +132,10 @@ try {
   });
 
   await step("Crear una nota y marcar tareas", async () => {
-    await bar().getByRole("link", { name: "Notas" }).tap();
-    await bar().getByRole("link", { name: "Nueva nota" }).tap();
+    await bar().getByRole("link", { name: "Notas", exact: true }).tap();
+    await visible(page.getByRole("link", { name: "Nueva nota" }))
+      .first()
+      .tap();
     await visible(page.getByLabel("Título (opcional)")).fill("Deberes");
     await visible(page.getByRole("button", { name: "Crear nota" })).tap();
     await page.waitForURL(/notes\/[0-9a-f-]{36}/);

@@ -298,11 +298,8 @@ async function main() {
             }),
           [SIGNATURE, before],
         );
-        // Week and day: over the day header (the hour grid pans by itself before spec 024).
-        await swipe(
-          -1,
-          view === "month" ? 420 : Number(process.env.PERF_SWIPE_Y ?? 110),
-        );
+        // Over the grid: since spec 024 the hour grid leaves the sideways gesture to the app.
+        await swipe(-1, Number(process.env.PERF_SWIPE_Y ?? 420));
         const result = await waiter;
         // Idle, as a person reading the new period (lets prefetches run).
         await page.waitForTimeout(1500);

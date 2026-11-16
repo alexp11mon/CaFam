@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-12, al cerrar la spec 023 (auditoría y correcciones).
+> Última actualización: 2026-11-16, al cerrar las specs 024 a 030 (rendimiento, rediseño completo, Venito y Notas).
 
 ## 1. Qué es
 
@@ -51,6 +51,13 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 021-animaciones-y-microinteracciones | Movimiento con intención en toda la app: curvas y duraciones como tokens, desplegables que nacen del disparador, listas escalonadas, interruptor, pulso de guardado, regreso en arco, evento → detalle, seguir al dedo con goma, selector de vista y revelado del tema | **Cerrada** (2026-11-08), T1–T19 hechas; sin migraciones ni dependencias nuevas. Pendientes del usuario la prueba en el iPhone (plan R2) y la medida con la CPU ralentizada |
 | 022-eventos-desde-imagen | Adjuntar hasta 3 imágenes (un horario de trabajo) al asistente, que devuelve una propuesta de eventos sueltos editable y corregible por chat; nada se crea hasta pulsar "Crear", en cualquier calendario escribible (también Google e iCloud) | **Cerrada** (2026-11-09), T1–T12 hechas; sin migraciones ni dependencias. Pendiente la prueba del usuario en el iPhone en producción |
 | 023-auditoria-y-correcciones | Auditoría completa (seguridad, lógica, rendimiento, accesibilidad, diseño y repositorio) y corrección de 25 hallazgos: `restore_event` y `assistant_busy` acotados, `join_with_code` serializado, cabeceras de seguridad, secreto en tiempo constante, series movidas de fecha y con cambio de hora, eventos de las 23:46–23:59, comentarios al convertir en serie, lectura de más de 1.000 eventos, lecturas en paralelo, páginas de error en español, accesibilidad con teclado, Ctrl/⌘+Z (enmienda 9) y coherencia visual de las pantallas secundarias | **Cerrada** (2026-11-12), T1–T16 hechas; 3 migraciones aplicadas solo en dev (pendiente `db push` a prod), sin dependencias. Aprobada de antemano por el usuario en el prompt de arranque |
+| 024-rendimiento | Medir y arreglar: el calendario lee una ventana ancha de eventos y cambia de periodo en el navegador sin red (`pushState`), precarga de los periodos contiguos, sin precargas de enlaces, deslizar sobre la rejilla, asistente en streaming con progreso real y herramientas en paralelo | **Cerrada** (2026-11-15), T1–T9; sin migraciones. Medidas antes y después en la spec (mes 601 → 80–110 ms con la CPU 4×) |
+| 025-sistema-de-diseno-y-marca | Identidad "Orilla" (enmienda 10), sin `backdrop-filter`, radios y elevaciones como tokens, componentes base nuevos (`IconButton`, `Card`, `Chip`, `Sheet`, `EmptyState`), marca nueva. **Su identidad la sustituyó la 030**; quedan sus componentes y sus guardias | **Cerrada** (2026-11-15), T1–T7 |
+| 026-calendario-movil-primero | Hoja inferior de calendarios (filtros), alto libre de las vistas, estado vacío y "Reintentar". Su barra fija del calendario la sustituyó la cabecera de la 030 | **Cerrada** (2026-11-15), T1–T4 |
+| 027-venito-y-asistente | Venito, la mascota (SVG propio con seis expresiones); chat como conversación (burbujas, hora, "escribiendo…", barra de entrada, sugerencias contextuales) en un panel que se abre sin navegar | **Cerrada** (2026-11-15), T1–T6; sin migraciones. `eval:assistant` y `eval:schedule` no ejecutados (prompt y herramientas sin cambios) |
+| 028-notas | Sección Notas: listas de tareas y notas de texto, personales o compartidas por calendario con sus roles, edición optimista, "Deshacer", búsqueda, fijar, archivar, fecha límite y tiempo real | **Cerrada** (2026-11-15), T1–T6; **2 migraciones aplicadas solo en un Supabase local** (pendiente `db push` a dev y a prod) |
+| 029-pantallas-restantes-y-cierre | Revisión de las pantallas secundarias, recorrido completo en móvil (`scripts/e2e-phone.mjs`), capturas y esta documentación | **Cerrada** (2026-11-16), T1–T4 |
+| 030-estilo-nexo | Identidad "Nexo" pedida por el usuario con su prototipo (enmienda 11): lavanda, violeta con degradado, Inter, navegación en píldora (flotante abajo en el móvil con "+" y Venito flotantes; arriba en escritorio), cabecera del calendario en el contenido, tarjeta de saludo y Venito secretario con gafas | **Cerrada** (2026-11-16), T1–T6; sin migraciones |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -256,6 +263,39 @@ Añadido por la spec 023 (cerrada el 2026-11-12; migraciones `restore_event_guar
 - **Pantallas secundarias**: el `h1` pasa a `max-tab:sr-only` donde la cabecera del móvil ya muestra el mismo título (`PageShell` lo decide comparando con `NAV_ITEMS`); radios en tinta del tamaño de las casillas; botones de Ajustes con su ancho; títulos de sección en `font-semibold`; avatares en la lista de miembros; etiquetas en `text-muted`; tarjetas de lista `rounded-3xl p-4`; `ChevronIcon` admite `up` y `down` y sustituye a los glifos ↑ ↓ ←, y `CloseIcon` a ×; contorno único `ring-pastel-ink/20` para el punto de color de un calendario en las listas.
 - **Diferido** (ver la tabla de la spec 023): lo más importante es que la sincronización borra los eventos creados en CaFam fuera de la ventana de 12 meses; también `events.created_by` elegido por el cliente, la carrera en la cuota del asistente, la CSP completa y el timeout de los helpers de `test:db`.
 
+Añadido por la spec 024 (rendimiento; sin migraciones):
+
+- **El calendario cambia de periodo en el navegador.** `page.tsx` lee una vez una **ventana ancha** (`serverWindow`: de la primera semana del mes anterior a la última del siguiente) y `CalendarClient` (`components/calendar/calendar-client.tsx`) es dueño de `{view, date}`: `go()` cambia el estado y escribe la dirección con `window.history.pushState` (Next la integra en su router: `router.refresh()` usa la dirección nueva); `popstate` y las props nuevas del servidor lo vuelven a sincronizar. `useEventWindow` (`lib/hooks/use-event-window.ts`, lógica pura en `lib/calendar/event-window.ts`) lee con `loadCalendarWindow` lo que falta (al instante si el periodo no está cargado, en reposo el contiguo) y descarta respuestas viejas. Un refresco (tiempo real, foco, escritura) trae una ventana nueva que sustituye la del navegador.
+- **`CalendarLink` y `useCalendarGo`** (`calendar-nav.tsx`): todo enlace o salto a una vista y fecha del calendario pasa por ahí. Dentro del calendario navega sin red; fuera, es un `Link` con `prefetch={false}`. Los enlaces de evento tampoco precargan (eran 85 peticiones por mes).
+- Anterior, siguiente y deslizar pintan el periodo **sin View Transition** (retrasaba 60 ms) y con un deslizamiento corto de `transform`; cambiar de vista conserva la transición. La lista del periodo conserva su identidad entre precargas (`useStableList`, `memo` del workspace).
+- La rejilla de horas lleva `touch-pan-y` (antes `touch-pan-x touch-pan-y` impedía deslizar sobre ella). Días de la agenda memorizados.
+- Perfil del calendario en una consulta (`getCalendarProfile`), categorías sin cascada (`getMyCategories`): 12 consultas al cargar (antes 21–30). Los "Ocupado" se piden aparte (`loadBusy`) y solo con alguien marcado.
+- El cliente de Supabase se importa con `import()` en `useLiveCalendar`; los esquemas zod de tema, acentos, opciones de vista y deshacer viven en módulos aparte (`lib/theme/schemas.ts`, `view-options-schema.ts`, `undo-schemas.ts`).
+- **Asistente en streaming**: `POST /api/assistant` responde NDJSON (`lib/assistant/stream.ts`): líneas `status` con el paso real ("Buscando «dentista»…"), `done` con la respuesta o `error`. 400, 401 y 429 siguen siendo respuestas JSON previas al flujo; un fallo del proveedor llega como línea `error` (ya no 503) y cancelar termina el flujo (ya no 499). `GET /api/assistant` (204) precalienta la función. Las herramientas de una ronda van en paralelo.
+- **Medición**: `scripts/perf/` (proxy con latencia, Groq simulado, `measure.mjs`, `paint.mjs`, resultados y README).
+
+Añadido por las specs 025, 026 y 030 (identidad y marco; la 030 sustituye la identidad de la 025):
+
+- **Identidad Nexo** (constitución, enmienda 11; ver §6 "Identidad visual"). Sin `backdrop-filter`: las utilidades son `surface` y `surface-float`.
+- **Marco** (`components/shell/`): en el móvil (≤ 768 px), `TopBar` (marca, título o mes, tema y avatar), `BottomBar` (píldora flotante con Calendario, Notas, Calendarios y "Más") y dos botones flotantes a la derecha: `CreateButton` ("+", degradado) y encima `AssistantFab` (Venito). Desde 769 px, `TopNav` (marca, pestañas en píldora, "Nuevo evento"/"Nueva nota", tema y avatar); Venito flota en la esquina inferior derecha. No hay barra lateral ni cajón. `createHref` (`lib/shell/nav.ts`) decide qué crea "+".
+- **Calendario en el móvil**: `CalendarHeading` (pestañas de vista, "Calendarios" y "Hoy ‹ ›", fija bajo la cabecera) y `CalendarSheet` (hoja inferior con los filtros, que el workspace monta con `createPortal` en `drawerSlot`; se abre con `openSheet` del contexto de la cabecera). Las vistas miden `h-calendar`. `NextEventCard` es la tarjeta de saludo con degradado: en el panel de escritorio y, en el móvil, sobre el primer día desde hoy de la agenda (`todayBanner`).
+- **Componentes base** (`components/ui/`): `button-styles.ts` (primario con `bg-accent-gradient`, secundario, discreto, peligro), `IconButton`, `Card`, `Chip`/`ChipLink`, `Sheet` (`<dialog>` desde abajo en el móvil, centrado desde 769 px), `EmptyState` (con Venito por defecto).
+- **Marca**: `LogoMark` y `public/icons/icon.svg` (ficha violeta con la "C" y el punto); `node scripts/make-icons.mjs` regenera los PNG; `CACHE_NAME` `cafam-v5`.
+
+Añadido por la spec 027 (Venito y el chat; sin migraciones):
+
+- **`Venito`** (`components/brand/venito.tsx`): un SVG con `mood` (`idle`, `wave`, `thinking`, `happy`, `confused`, `sleeping`), colores `seal*` propios, gestos en `globals.css` (`venito-*`, anulados con `prefers-reduced-motion`). Desde la 030 lleva gafas, cuello y corbata.
+- **El chat es un panel del marco**: `AssistantFab` pinta el botón y un `<dialog>` modal con `AssistantChat` (cargado con `lazy()` y montado en reposo; su contexto se pide con `loadAssistantContext` al abrirlo). Ocupa la pantalla en el móvil (su alto sigue a `visualViewport` para que el teclado no tape el campo) y flota en la esquina desde 769 px. Se cierra con su botón, Escape, tocando fuera o arrastrando la cabecera hacia abajo. La conversación vive en memoria mientras la app esté abierta. `/dashboard/assistant` muestra el mismo chat a página completa.
+- **Chat**: cabecera con Venito y su estado, burbujas con hora, "escribiendo…" con el paso real, barra de entrada con adjuntar y enviar, y **sugerencias** (`lib/assistant/suggestions.ts`): se envían, rellenan el campo o abren el selector de imagen. `ImageAttach` se partió en botón, `AttachNote` y `AttachPreview`.
+
+Añadido por la spec 028 (Notas; migraciones `notes` y `notes_calendar_functions`, aplicadas solo en local):
+
+- **Rutas**: `/dashboard/notes` (lista con buscador, filtros y tarjetas), `/dashboard/notes/new` y `/dashboard/notes/[id]`.
+- **Modelo**: `notes` (`kind` `list|text`, título, cuerpo, color, `pinned`, `archived`, `due_date`, `owner_id`, `calendar_id`) y `note_items` (texto, `done`, `done_at`, `position`). Una nota sin calendario es **personal** (solo su autor); con calendario es **compartida**: la leen los miembros y la escriben Propietario y Editores (`can_read_note`, `can_write_note`). Permisos por columna: el cliente no escribe `owner_id`, fechas ni `done_at`. `CF429` con mensaje `notes` (500 por autor) o `items` (200 por lista).
+- **Triggers**: `notes_rules`, `note_items_rules`, `note_items_touch` (un cambio en un elemento actualiza la nota), `live_notes_changed` (`live_notify(calendar_id, owner_id)`), `notes_member_left` (al salir del calendario sus notas de allí quedan sin autor) y `notes_profile_deleted` (borra las personales antes del perfil). `merge_calendars` mueve las notas y `copy_calendar_for_owner` las copia.
+- **Código**: `lib/notes/` (puro: `order`, `search`, `progress`, `permissions`, `schemas`, `error-messages`; `queries.ts`), `app/dashboard/notes/actions.ts` (una escritura por acción; los elementos no revalidan) y `components/notes/` (`NotesBoard`, `NoteCard`, `NoteForm`, `NoteEditor`, `Checklist`, `TextNote`). `NoteEditor` es dueño de la nota en pantalla: cada cambio se ve al instante y se revierte con aviso si falla; los ids de los elementos los crea el navegador.
+
+
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 
 - **Flujo SDD (P7):** no se escribe código sin `spec.md` → `plan.md` → `tasks.md` aprobados explícitamente por el usuario, en ese orden. Cada spec vive en `specs/NNN-nombre/`. Se implementa **una tarea `Tn` cada vez y con el test primero** (rojo → verde). Cada commit cita su tarea.
@@ -271,7 +311,7 @@ La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen d
 - **Stack cerrado (P6):** solo las dependencias de la sección 4. Cualquier otra exige aprobación del usuario registrada en la spec que la introduce (incluidas la librería de vistas de calendario de la 002 y la de parseo `.ics` de la 004).
 - **Prohibido:** servicios de pago, SDK de analítica/tracking/telemetría (GA, Sentry…), librerías PWA (`next-pwa`, Serwist, Workbox), ORMs (Prisma, Drizzle), backends paralelos, y otro gestor de paquetes que no sea npm.
 - **Aprobaciones del usuario:** pasar de fase (spec → plan → tareas → implementación) y cerrar una spec exigen su aprobación explícita. No la des por supuesta.
-- **Identidad visual (P9):** toda pantalla nueva o rediseñada sigue la sección "Identidad visual y diseño de interfaz" de la constitución (estilo de `docs/referencia.jpg`, solo local), usa solo tokens (la guardia `design-tokens.test.ts` lo comprueba) y se revisa con capturas a 390, 768 y 1440 px con el acento rojo y el amarillo. Para diseñar usa las skills `design-taste-frontend` (pantallas de aplicación), `frontend-design` y `web-design-guidelines`. Ver §6 "Identidad visual".
+- **Identidad visual (P9, enmienda 11):** toda pantalla nueva o rediseñada sigue la sección "Identidad visual y diseño de interfaz" de la constitución (identidad **Nexo**), usa solo tokens y componentes de `components/ui` (la guardia `design-tokens.test.ts` lo comprueba) y se revisa con capturas a 390, 768 y 1440 px, en claro y oscuro, con Violeta y Ámbar (`scripts/screenshots.mjs`). Móvil primero. Ver §6 "Identidad visual".
 - **Enmienda 3 (2026-10-29):** la constitución ya permite tema oscuro, transparencias con desenfoque, sombras suaves, degradados suaves (siempre como tokens) y animaciones de hasta 400 ms con alternativa para `prefers-reduced-motion`; Supabase Storage; `ical.js` también para repeticiones; y un proveedor LLM gratuito sin tarjeta para el asistente, llamado con `fetch` y sin SDK. La 011 ya actualizó la guardia de diseño (`design-tokens.test.ts`): solo `shadow-soft`/`shadow-float`, cristal y sombra de flotar solo en lo que flota, sin `text-white`, `text-black` ni `dark:`, y duraciones de 400 ms como mucho.
 - **Acciones externas:** el usuario ejecuta él mismo (con `!` en Claude Code) las acciones sobre producción: `supabase db push` a prod, `git push` y merges a `main`. Prepárale los comandos exactos.
 
@@ -430,7 +470,8 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/manifest.webmanifest`, `/sw.js`, `/icons/*` | pública | PWA |
 | `/api/images/purge` | `Authorization: Bearer ${CRON_SECRET}` (POST) | Spec 012: borra en Storage los objetos de la cola de purga; `maxDuration` 60 |
 | `/api/cron/keep-alive` | `Authorization: Bearer ${CRON_SECRET}` | `200 {"ok":true}` / `401` / `500` |
-| `/dashboard/assistant` | con sesión | Asistente de chat (spec 015) |
+| `/dashboard/assistant` | con sesión | El chat de Venito a página completa (specs 015 y 027); día a día se abre como panel desde su botón |
+| `/dashboard/notes`, `/dashboard/notes/new`, `/dashboard/notes/[id]` | con sesión (`[id]` ajeno o inexistente → 404) | Notas (spec 028) |
 | `/api/assistant` | con sesión (POST; sin sesión → `401`) | Una pregunta del asistente (spec 015): `200`, `400`, `429` (cuota), `499` (cancelada), `503` (proveedor) |
 | `/api/sync/google-push` | pública (POST) | Avisos de Google (spec 020): marca el calendario con `sync_push`; siempre `200` sin cuerpo, sin leer el cuerpo |
 
@@ -552,16 +593,18 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 
 ### Identidad visual
 
-Reglas completas en la constitución ("Identidad visual y diseño de interfaz", P9), inspiradas en `docs/referencia.jpg` (solo local, en `.gitignore`). Lo que hay en el código:
+Reglas completas en la constitución ("Identidad visual y diseño de interfaz", enmienda 11, identidad **Nexo**). Lo que hay en el código:
 
-- **Tokens** en `src/app/globals.css`, con los valores de `src/lib/theme/accents.ts` (`accents.test.ts` los mantiene iguales):
-  - Neutros (`@theme inline` sobre variables crudas): `stone #E8E5DD` (fondo), `paper #F2F0EA` (paneles), `ink #141414` (texto), `muted #66635D` (secundario, 4,5:1), `line #D6D1C4` (separadores), `control #857F75` (bordes de campos, 3:1) y `danger #B42318`, más `on-ink`, `pastel-ink`, `mark`/`on-mark` y `scrim`. El tema oscuro redefine las variables en `[data-theme="dark"]` y en `prefers-color-scheme: dark` sin `data-theme="light"` (valores en `DARK_NEUTRALS` y `THEME_INKS`).
-  - Acento (`@theme inline`): `accent` (relleno), `on-accent` (texto encima), `accent-ink` (texto y líneas sobre piedra o papel) y `accent-edge` (borde de un relleno; en amarillo es oscuro porque el relleno no se distingue del fondo). Cada `[data-accent=…]` redefine las variables; `:root` es rojo para las páginas sin sesión.
-- **El acento** lo pinta `AppFrame` con `data-accent` (y `data-app-frame`, que usa el selector de Ajustes para repintar sin recargar). Úsalo solo para hoy, la hora actual, los días de la semana, la selección y el próximo evento. Texto y líneas, siempre `accent-ink`; sobre un relleno `bg-accent`, siempre `text-on-accent` y `border-accent-edge`.
-- **Colores de calendario** (paleta pastel de la spec 002): solo como marca (barra `border-l-4`, punto o barra de 4 px con contorno `ink/15`); el texto del evento siempre en tinta.
-- **Tipografía**: Inter Tight (`next/font`, cifras tabulares comprobadas) para todo; `tabular-nums` en horas, fechas y contadores; sin monoespaciada.
-- **Forma**: superficies separadas por tono (piedra/papel), paneles `rounded-3xl`, botones y controles `rounded-full`; `shadow-soft` en el cristal y `shadow-float`/`glass-float` solo en lo que flota (diálogos, hoja "Más", avisos, tooltips de la barra).
-- **Componentes base**: `Button`/`LinkButton` primario en tinta (negro en claro, claro en oscuro, texto `on-ink`), secundario papel con borde `control`; campos `bg-paper` con borde `control`. Iconos: SVG propios en `components/shell/icons.tsx`.
+- **Tokens** en `src/app/globals.css`, con los valores de `src/lib/theme/accents.ts` (`theme-css.test.ts` los mantiene iguales y `accents.test.ts` comprueba el contraste):
+  - Neutros: `stone #F3F2FA` (fondo lavanda), `paper #FFFFFF` (tarjetas), `ink #1D1B2E`, `muted #6F6C86`, `line #E9E7F5` (bordes finos), `control #8B88A6` (bordes de campos, 3:1) y `danger`, más `on-ink`, `pastel-ink`, `mark`/`on-mark` (la ficha de la marca), `scrim` y los `seal*` de Venito. El tema oscuro redefine las variables en `[data-theme="dark"]` y en `prefers-color-scheme: dark` sin `data-theme="light"`.
+  - Acento: `accent` (relleno), `accent-to` (fin del degradado), `on-accent`, `accent-ink` (texto y líneas), `accent-edge` y `accent-soft` (fondo suave de lo activo). Seis acentos con los ids guardados de siempre: `red` = Violeta (por defecto), `blue` = Azul, `green` = Verde, `yellow` = Ámbar, `purple` = Rosa, `gray` = Grafito.
+  - Radios: `rounded-card` (20 px), `rounded-control` (12 px), `rounded-block` (8 px) y `rounded-full`. La guardia prohíbe cualquier otro.
+  - Elevación: `surface` (borde fino y sombra mínima) y `surface-float` (lo que flota). Nunca `backdrop-filter`.
+- **`bg-accent-gradient`**: la acción principal y la pestaña activa (degradado de `accent` a `accent-to` con su brillo). Es el único degradado de un control; la guardia prohíbe `bg-linear-*` sueltos.
+- **El acento** lo pinta `AppFrame` con `data-accent`. Texto y líneas, siempre `accent-ink`; sobre un relleno o el degradado, `text-on-accent`; lo activo en reposo, `bg-accent-soft text-accent-ink`.
+- **Colores de calendario** (paleta pastel de la spec 002): bloques de evento rellenos con el texto en `pastel-ink`; fuera de ellos, solo como marca. Un color que viene de datos va en `style`.
+- **Tipografía**: Inter (`next/font`); títulos `font-semibold tracking-tight`; `tabular-nums` en horas, fechas y contadores. Se permiten etiquetas pequeñas en mayúsculas con espaciado para cabeceras.
+- **Componentes base**: `Button`/`LinkButton` (`primary` con degradado, `secondary`, `quiet`, `danger`; 44 px), `IconButton`, `TextField`/`TextArea`/`Select` (16 px de texto), `Card`, `Chip`/`ChipLink`, `Sheet`, `EmptyState`, `Switch`, `FormAlert`, `Toast` (oscuro). Iconos: SVG propios en `components/shell/icons.tsx`.
 - **Nunca** `text-white`, `text-black` ni la variante `dark:`: el tema cambia las variables, no las clases.
 
 ## 7. Entornos, despliegue y variables
@@ -673,6 +716,12 @@ npm run eval:schedule  # spec 022: 12 horarios sintéticos al modelo con visión
 - **Tarjeta de detalle (spec 019):** `EventBlock` es `"use client"` y abre la tarjeta con `openCard` si hay contexto de interacciones y no es móvil; fuera de las vistas sigue siendo un enlace. Lo que pinta la tarjeta y no tiene la vista sale de `loadEventCard`.
 - **Sincronización rápida (spec 020):** un proveedor nuevo implementa `calendarVersion` (barata, sin eventos); `watchCalendar`/`stopChannel` son opcionales y solo los tiene Google. Lo que diga si hay que leer todo va en `needsFullRead` (pura). Una ruta que llame al motor pasa `pushUrl: process.env.SYNC_PUSH_URL`, o no se crearán canales. Un fallo de canal nunca tumba la actualización.
 - **Movimiento (spec 021):** las duraciones y curvas salen siempre de los tokens (`motionMs`, `motionToken`), nunca de números sueltos. Una animación de script va con `play()`, que parte de donde esté la anterior; algo que deba animarse tras un cambio y un nuevo pintado (pulso, regreso) se marca con `marks.ts` y lo recoge el bloque. Una superficie que crece desde un evento usa `setMorphOrigin` al pulsar y `morphIn`/`morphOut` al abrir y cerrar. Lo que sigue al dedo usa `useFollowDrag` con `offset: banded(...)` en los límites.
+- **Navegar por el calendario (spec 024):** nunca `router.push(calendarHref(...))` ni `<Link href={calendarHref(...)}>` dentro del calendario: usa `useCalendarGo()` y `CalendarLink`. Lo que dependa de la vista o la fecha se calcula en el navegador a partir de `CalendarClient`, no en `page.tsx`. Un dato nuevo del calendario que deba cambiar con el periodo sale de la ventana (`useEventWindow`) o de una acción perezosa como `loadBusy`.
+- **Enlaces con muchas instancias** (días, eventos, tarjetas): `prefetch={false}`. Next precarga cada `<Link>` visible.
+- **Ventanas del móvil:** usa `Sheet` (`components/ui/sheet.tsx`). Cierra el `<dialog>` en la limpieza del efecto (Activity).
+- **Edición optimista (spec 028):** el componente es dueño del dato en pantalla, cada acción escribe una sola cosa y devuelve `{ error? }`; si falla, se revierte ese cambio y se avisa con `useToast()`. Adopta las props nuevas del servidor solo cuando no hay nada guardándose ni un campo con el foco (`useHoldLive`).
+- **Tiempo real fuera del calendario:** una pantalla que deba refrescarse con cambios ajenos llama a `useLiveCalendar(userId)`; su tabla necesita un trigger con `live_notify`.
+- **Asistente:** el servidor manda líneas NDJSON; cualquier estado nuevo del progreso va en `STATUS`/`statusFor` (`lib/assistant/stream.ts`), no en el componente.
 - **Commits:** Conventional Commits en español con la tarea: `feat: registro de usuario (T7)`.
 
 ## 10. Trampas conocidas
@@ -763,11 +812,30 @@ npm run eval:schedule  # spec 022: 12 horarios sintéticos al modelo con visión
 - **Cabeceras en `next.config.ts`** (spec 023): cuando varias reglas ponen la misma cabecera, gana la **última** que coincide; por eso la regla global va primera y `/invite/*` y `/sw.js` después.
 - **El panel del navegador oculto** no llega a pintar muchas capturas ("Screenshot timed out"): comprueba con `javascript_tool` (estilos calculados, foco) y repite la captura una vez.
 
+- **Sesiones en la nube sin Supabase dev** (specs 024–030): se levantó un Supabase local con Docker (`npx supabase start -x studio,logflare,vector,imgproxy,edge-runtime,mailpit,supavisor`), `.env.local` y `.env.test.local` apuntando a él y `cron_secret`/`sync_app_url` creados en su Vault. `test:db` pasa entero ahí. Los tipos se regeneran con `npx supabase gen types typescript --local > src/types/database.ts`.
+- **`pushState` y Next (spec 024):** funciona porque Next parchea `history.pushState`; no pases un `state` con claves `__NA` o `_N`. Tras un `pushState`, `router.refresh()` y las Server Actions usan la dirección nueva.
+- **Un `insert` de varias filas con claves distintas** pone `null` en las que faltan (PostgREST): en una columna `not null` falla todo el lote. Manda siempre las mismas claves.
+- **Animaciones en bucle** (Venito): `document.getAnimations()` nunca queda vacío; para saber si una transición terminó, ignora las de `iterations === Infinity` (lo hace `scripts/perf/measure.mjs`).
+- **`waitForLoadState("networkidle")` tras iniciar sesión** puede no llegar nunca (el canal de tiempo real): en los scripts de Playwright espera a un elemento o un tiempo fijo.
+- **Next deja un `role="alert"` propio** (anunciador de rutas): en Playwright busca los avisos dentro de su contenedor.
+- **La palabra "glass"** en `src/` hace fallar la guardia de diseño, también en un comentario.
+- **El prototipo de la 030** carga Tailwind desde un CDN: sin red a ese CDN no se pinta; se interpretó leyendo su código.
+
 ## 11. Fuera de alcance hasta su spec
 
-Vistas de año y de 4 días, búsqueda, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. El asistente (015) está hecho: crear o cambiar eventos desde el asistente, guardar conversaciones o responder por voz necesitan otra spec.
+Vistas de año y de 4 días, búsqueda de eventos, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. El asistente (015) está hecho: crear o cambiar eventos desde el asistente, guardar conversaciones o responder por voz necesitan otra spec. Las notas (028) están hechas: fecha límite por elemento, reordenar arrastrando, vencimientos en el calendario, notas de un evento y notas desde el asistente necesitan la suya.
 
 ## 12. Cómo continuar
+
+**Lo más reciente (2026-11-16): encargo de rediseño, specs 024 a 030**, en la rama `claude/clever-feynman-lx0v5m`. Pendiente del usuario:
+
+1. Revisar el resultado (capturas en `specs/030-estilo-nexo/capturas/` y `specs/029-pantallas-restantes-y-cierre/capturas/`).
+2. Aplicar las dos migraciones de la 028 (`notes`, `notes_calendar_functions`) a **dev** (`npm run db:push` con el link en dev) y regenerar tipos allí si difieren; después a **prod** junto con las tres de la 023, que seguían pendientes.
+3. Merge a `main` y prueba en el iPhone (Safari y PWA). El icono de una PWA ya instalada no cambia hasta volver a añadirla a la pantalla de inicio.
+4. No se han ejecutado `eval:assistant` ni `eval:schedule` (el prompt y las herramientas no cambiaron).
+
+Siguientes trabajos recomendados: (a) periodos contiguos ya pintados para bajar el cambio de mes por debajo de 80 ms con CPU lenta (diferido de la 024 y la 026); (b) sacar zod del JS inicial; (c) rediseñar la organización de los formularios largos (evento completo, repetición) con el estilo Nexo; (d) la spec pendiente de la 023 (la sincronización borra los eventos creados en CaFam fuera de la ventana).
+
 
 La 006 y la 008 están cerradas y en producción (2026-10-23 y 2026-10-24). La 008 añadió la migración `profile_last_view`, ya aplicada en prod.
 

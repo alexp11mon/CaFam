@@ -1,6 +1,6 @@
 # Spec 030 — Estilo y usabilidad "Nexo" y Venito secretario
 
-> Estado: **En curso** (2026-11-16). Pedida por el usuario en mitad del encargo de rediseño (mensaje del 2026-11-16 con el prototipo `prototipo_DiseñoVisualYUsabilidad.html` adjunto): "cambiar totalmente el estilo visual y de usabilidad de la aplicación para que se parezca más a este" y "cambiar la mascota: una foca con gafas, como si fuera una foca secretario; no hace falta que sea adorable". El cambio de estilo es el prioritario. La aprobación de las fases es la del encargo (sin preguntas de diseño; se documentan las decisiones). Sin migraciones ni dependencias.
+> Estado: **Cerrada** (2026-11-16). Pedida por el usuario en mitad del encargo de rediseño (mensaje del 2026-11-16 con el prototipo `prototipo_DiseñoVisualYUsabilidad.html` adjunto): "cambiar totalmente el estilo visual y de usabilidad de la aplicación para que se parezca más a este" y "cambiar la mascota: una foca con gafas, como si fuera una foca secretario; no hace falta que sea adorable". El cambio de estilo es el prioritario. La aprobación de las fases es la del encargo (sin preguntas de diseño; se documentan las decisiones). Sin migraciones ni dependencias.
 
 ## Contexto
 
