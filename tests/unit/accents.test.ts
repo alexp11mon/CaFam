@@ -20,13 +20,13 @@ import { composite } from "@/lib/theme/contrast";
 describe("accents", () => {
   it("are the six of the spec, in Spanish, with red by default (RF-6, RF-10)", () => {
     expect(ACCENTS.map((accent) => [accent.id, accent.label])).toEqual([
-      // Spec 025 RF-9: new names for the Orilla identity, the same stored ids.
-      ["red", "Coral"],
-      ["blue", "Mar"],
-      ["green", "Alga"],
-      ["yellow", "Sol"],
-      ["purple", "Lavanda"],
-      ["gray", "Roca"],
+      // Spec 030 RF-3: the names of the Nexo identity, the same stored ids.
+      ["red", "Violeta"],
+      ["blue", "Azul"],
+      ["green", "Verde"],
+      ["yellow", "Ámbar"],
+      ["purple", "Rosa"],
+      ["gray", "Grafito"],
     ]);
     expect(DEFAULT_ACCENT).toBe("red");
   });
@@ -50,6 +50,8 @@ describe("accents", () => {
 
   it.each(ACCENTS)("$id reaches 4.5:1 for text (RF-14)", (accent) => {
     expect(ratio(accent.onFill, accent.fill)).toBeGreaterThanOrEqual(4.5);
+    // Also at the far end of its gradient (spec 030 RF-2).
+    expect(ratio(accent.onFill, accent.to)).toBeGreaterThanOrEqual(4.5);
     for (const surface of [NEUTRALS.stone, NEUTRALS.paper]) {
       expect(ratio(accent.ink, surface)).toBeGreaterThanOrEqual(4.5);
     }

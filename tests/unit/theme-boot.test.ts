@@ -23,7 +23,7 @@ vi.mock("next/headers", () => ({
 }));
 
 vi.mock("next/font/google", () => ({
-  Figtree: () => ({ variable: "font" }),
+  Inter: () => ({ variable: "font" }),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({

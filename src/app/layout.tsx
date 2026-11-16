@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Figtree } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import { THEME_COLOR, THEME_SCRIPT } from "@/lib/theme/theme";
 import "./globals.css";
 
-// One friendly geometric family with tabular figures for every screen
-// (constitution, amendment 10; spec 025 RF-5, plan D5).
-const figtree = Figtree({
-  variable: "--font-figtree",
+// Inter, with tabular figures, for every screen (constitution, amendment 11;
+// spec 030 RF-4).
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
@@ -38,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       // Browser extensions (e.g. Dark Reader) add attributes to <html> before hydration.
       suppressHydrationWarning
-      className={`${figtree.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
       <head>
         {/* Before the first paint, so the theme never flashes (spec 011 RF-7). */}

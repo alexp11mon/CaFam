@@ -69,6 +69,7 @@ describe("accents in globals.css (RF-9)", () => {
   it.each(ACCENTS)("$id has its fill and both theme inks", (accent) => {
     const rules = block(`[data-accent="${accent.id}"]`);
     expect(value(rules, "accent")).toBe(accent.fill);
+    expect(value(rules, "accent-to")).toBe(accent.to);
     expect(value(rules, "on-accent")).toBe(accent.onFill);
     expect(value(rules, "accent-ink-light")).toBe(accent.ink);
     expect(value(rules, "accent-edge-light")).toBe(accent.edge);
@@ -130,10 +131,16 @@ describe("surface and motion utilities", () => {
     expect(css).not.toMatch(/--backdrop:/);
   });
 
-  it("defines the radii of cards and controls (spec 025 RF-2)", () => {
+  it("draws the gradient of the main action from the two accent tokens only (spec 030 RF-2)", () => {
+    expect(css).toMatch(
+      /@utility bg-accent-gradient \{[^}]*linear-gradient\(135deg, var\(--accent\), var\(--accent-to\)\)/,
+    );
+  });
+
+  it("defines the radii of cards and controls (spec 030 RF-2)", () => {
     const theme = block("@theme inline");
-    expect(theme).toMatch(/--radius-card:\s*1\.5rem/);
-    expect(theme).toMatch(/--radius-control:\s*1rem/);
+    expect(theme).toMatch(/--radius-card:\s*1\.25rem/);
+    expect(theme).toMatch(/--radius-control:\s*0\.75rem/);
   });
 
   it("never animates for longer than 400 ms (RF-22)", () => {

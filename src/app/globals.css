@@ -27,7 +27,7 @@
   --color-mark: var(--mark);
   --color-on-mark: var(--on-mark);
   /* Behind dialogs: dark in both themes. */
-  --color-scrim: #0a1620;
+  --color-scrim: #0f0e1a;
   /* Venito, the mascot (spec 027): brand colors, never the accent. */
   --color-seal: var(--seal);
   --color-seal-light: var(--seal-light);
@@ -38,12 +38,14 @@
   --color-on-accent: var(--on-accent);
   --color-accent-ink: var(--accent-ink);
   --color-accent-edge: var(--accent-edge);
+  --color-accent-to: var(--accent-to);
+  --color-accent-soft: var(--accent-soft);
   --shadow-soft: var(--elevation-soft);
   --shadow-float: var(--elevation-float);
-  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   /* The three radii of the identity; the third is rounded-full. */
-  --radius-card: 1.5rem;
-  --radius-control: 1rem;
+  --radius-card: 1.25rem;
+  --radius-control: 0.75rem;
   /* Event blocks and small marks. */
   --radius-block: 0.5rem;
   /* transition-colors and friends use the motion tokens too (spec 021 RF-1). */
@@ -54,25 +56,25 @@
 /* Light theme, also the default before the boot script runs (RF-5). */
 :root {
   color-scheme: light;
-  --stone: #eef3f4;
+  --stone: #f3f2fa;
   --paper: #ffffff;
-  --ink: #0e2233;
-  --muted: #4e6172;
-  --line: #d5dee2;
-  --control: #74858f;
-  --danger: #c4372b;
+  --ink: #1d1b2e;
+  --muted: #6f6c86;
+  --line: #e9e7f5;
+  --control: #8b88a6;
+  --danger: #c8233f;
   --on-ink: #ffffff;
-  --pastel-ink: #0e2233;
-  --mark: #cf3d25;
+  --pastel-ink: #1d1b2e;
+  --mark: #6d5bf0;
   --on-mark: #ffffff;
   --seal: #8da3b0;
   --seal-light: #e9eff2;
   --seal-dark: #22323f;
   --seal-blush: #f2a99b;
   --elevation-soft:
-    0 1px 2px rgb(14 34 51 / 0.06), 0 1px 1px rgb(14 34 51 / 0.04);
+    0 1px 2px rgb(60 40 140 / 0.05), 0 1px 1px rgb(60 40 140 / 0.03);
   --elevation-float:
-    0 18px 40px -8px rgb(14 34 51 / 0.22), 0 4px 12px rgb(14 34 51 / 0.08);
+    0 16px 36px -10px rgb(60 40 140 / 0.28), 0 4px 12px rgb(60 40 140 / 0.08);
   /* Motion (spec 011 RF-22, spec 021 plan "Modelo de datos"): never more
      than 400 ms, exits in 80 % of their entrance, no curve overshoots.
      motion-tokens.test.ts checks these rules. */
@@ -106,20 +108,20 @@
 /* Dark theme picked by the user (RF-1). */
 [data-theme="dark"] {
   color-scheme: dark;
-  --stone: #0a1620;
-  --paper: #13222e;
-  --ink: #eaf1f4;
-  --muted: #9fb1bd;
-  --line: #243746;
-  --control: #6e8494;
-  --danger: #ff8a7a;
-  --on-ink: #0a1620;
-  --pastel-ink: #0e2233;
-  --mark: #cf3d25;
+  --stone: #0f0e1a;
+  --paper: #18172a;
+  --ink: #efeefa;
+  --muted: #a09db8;
+  --line: #2a2842;
+  --control: #6a6786;
+  --danger: #ff8fa3;
+  --on-ink: #0f0e1a;
+  --pastel-ink: #1d1b2e;
+  --mark: #6d5bf0;
   --on-mark: #ffffff;
   --seal: #9fb4c0;
   --seal-light: #eef3f5;
-  --seal-dark: #0a1620;
+  --seal-dark: #0f0e1a;
   --seal-blush: #f2a99b;
   --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.4);
   --elevation-float:
@@ -130,20 +132,20 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --stone: #0a1620;
-    --paper: #13222e;
-    --ink: #eaf1f4;
-    --muted: #9fb1bd;
-    --line: #243746;
-    --control: #6e8494;
-    --danger: #ff8a7a;
-    --on-ink: #0a1620;
-    --pastel-ink: #0e2233;
-    --mark: #cf3d25;
+    --stone: #0f0e1a;
+    --paper: #18172a;
+    --ink: #efeefa;
+    --muted: #a09db8;
+    --line: #2a2842;
+    --control: #6a6786;
+    --danger: #ff8fa3;
+    --on-ink: #0f0e1a;
+    --pastel-ink: #1d1b2e;
+    --mark: #6d5bf0;
     --on-mark: #ffffff;
     --seal: #9fb4c0;
     --seal-light: #eef3f5;
-    --seal-dark: #0a1620;
+    --seal-dark: #0f0e1a;
     --seal-blush: #f2a99b;
     --elevation-soft: 0 1px 2px rgb(0 0 0 / 0.4);
     --elevation-float:
@@ -151,62 +153,68 @@
   }
 }
 
-/* Each accent carries its ink and edge for both themes (RF-9); Coral (`red`)
+/* Each accent carries its ink and edge for both themes (RF-9); Violeta (`red`)
    without a session (spec 005 RF-11). */
 :root,
 [data-accent="red"] {
-  --accent: #cf3d25;
+  --accent: #6d5bf0;
+  --accent-to: #4371d0;
   --on-accent: #ffffff;
-  --accent-ink-light: #b8351f;
-  --accent-edge-light: #cf3d25;
-  --accent-ink-dark: #ff8e78;
-  --accent-edge-dark: #cf3d25;
+  --accent-ink-light: #5442d6;
+  --accent-edge-light: #6d5bf0;
+  --accent-ink-dark: #c2baff;
+  --accent-edge-dark: #6d5bf0;
 }
 
 [data-accent="blue"] {
-  --accent: #1668c4;
+  --accent: #2f6fe0;
+  --accent-to: #217cad;
   --on-accent: #ffffff;
-  --accent-ink-light: #1257a6;
-  --accent-edge-light: #1668c4;
-  --accent-ink-dark: #7db7ff;
-  --accent-edge-dark: #7db7ff;
+  --accent-ink-light: #2459be;
+  --accent-edge-light: #2f6fe0;
+  --accent-ink-dark: #9cc2ff;
+  --accent-edge-dark: #2f6fe0;
 }
 
 [data-accent="green"] {
-  --accent: #1f7a4d;
+  --accent: #1a8458;
+  --accent-to: #2b827e;
   --on-accent: #ffffff;
-  --accent-ink-light: #1a6a42;
-  --accent-edge-light: #1f7a4d;
-  --accent-ink-dark: #5ad696;
-  --accent-edge-dark: #1f7a4d;
+  --accent-ink-light: #167049;
+  --accent-edge-light: #1a8458;
+  --accent-ink-dark: #6fe0ae;
+  --accent-edge-dark: #1a8458;
 }
 
-/* Sol fades into the surfaces (1.4:1), so filled shapes get a dark edge. */
+/* Ámbar fades into the surfaces, so filled shapes get a dark edge. */
 [data-accent="yellow"] {
-  --accent: #ffc83d;
-  --on-accent: #0e2233;
-  --accent-ink-light: #7a5200;
-  --accent-edge-light: #7a5200;
-  --accent-ink-dark: #ffc83d;
-  --accent-edge-dark: #ffc83d;
+  --accent: #f4a62a;
+  --accent-to: #f47f3c;
+  --on-accent: #1d1b2e;
+  --accent-ink-light: #8a5300;
+  --accent-edge-light: #8a5300;
+  --accent-ink-dark: #f7b84a;
+  --accent-edge-dark: #f4a62a;
 }
 
 [data-accent="purple"] {
-  --accent: #6d4bd1;
+  --accent: #d6336c;
+  --accent-to: #c84a2a;
   --on-accent: #ffffff;
-  --accent-ink-light: #5b3cb8;
-  --accent-edge-light: #6d4bd1;
-  --accent-ink-dark: #b9a3ff;
-  --accent-edge-dark: #b9a3ff;
+  --accent-ink-light: #b8255a;
+  --accent-edge-light: #d6336c;
+  --accent-ink-dark: #ffa6c8;
+  --accent-edge-dark: #d6336c;
 }
 
 [data-accent="gray"] {
-  --accent: #3d4f5c;
+  --accent: #4b4963;
+  --accent-to: #5e6b85;
   --on-accent: #ffffff;
-  --accent-ink-light: #3d4f5c;
-  --accent-edge-light: #3d4f5c;
-  --accent-ink-dark: #b4c2cc;
-  --accent-edge-dark: #b4c2cc;
+  --accent-ink-light: #4b4963;
+  --accent-edge-light: #4b4963;
+  --accent-ink-dark: #c3c1d6;
+  --accent-edge-dark: #c3c1d6;
 }
 
 /* var() resolves on the element that declares it, so the pick is repeated on
@@ -215,6 +223,8 @@
 [data-accent] {
   --accent-ink: var(--accent-ink-light);
   --accent-edge: var(--accent-edge-light);
+  /* The soft side of the accent: what is active in the navigation, chips. */
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--paper));
 }
 
 [data-theme="dark"],
@@ -273,6 +283,15 @@ body {
   background-color: var(--stone);
   background-image: var(--gradient-chat);
   background-size: 18px 18px;
+}
+
+/* The main action and what is chosen (constitution, amendment 11; spec 030
+   RF-2): the accent running into its second tone, with a glow of its own.
+   The only gradient of a control, always from these two tokens. */
+@utility bg-accent-gradient {
+  background-color: var(--accent);
+  background-image: linear-gradient(135deg, var(--accent), var(--accent-to));
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 @utility bg-backdrop {

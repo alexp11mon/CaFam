@@ -87,64 +87,63 @@ Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, 
 
 ## Identidad visual y diseño de interfaz
 
-> **Enmienda 10 (2026-11-15, spec 025).** Esta sección sustituye entera a la identidad anterior (piedra y papel, tinta negra, Inter Tight, píldoras y cristal, specs 005, 011 y 016). El usuario decidió cambiar todo el frontend, con el iPhone primero y una mascota como parte de la marca. Se conservan la interacción del calendario (más abajo), la accesibilidad de P9, los temas claro, oscuro y "como el sistema", y el acento elegido por el usuario.
+> **Enmienda 11 (2026-11-16, spec 030).** Esta sección sustituye a la identidad "Orilla" de la enmienda 10 (spec 025), que a su vez había sustituido a la original. El usuario vio Orilla y pidió "cambiar totalmente el estilo visual y de usabilidad" para que se parezca a su prototipo "Nexo", y una mascota con gafas, "foca secretario". Se conservan la interacción del calendario (más abajo), la accesibilidad de P9, los temas claro, oscuro y "como el sistema", el acento elegible y las reglas de rendimiento de la spec 024.
 
-La identidad se llama **Orilla**: una mañana clara en la costa. Bruma pálida, superficies blancas, tinta azul mar profundo y un único color vivo. Amable sin ser infantil; una herramienta de uso diario, no una página de marketing. La mascota es **Venito**, una foca pequeña vista de frente.
+La identidad se llama **Nexo**: fondo lavanda, tarjetas blancas con sombra suave teñida, tinta casi negra con un punto violeta y un acento violeta que se vuelve **degradado** en la acción principal. Limpia, luminosa, de aplicación de productividad. La mascota es **Venito**, una foca vista de frente con gafas, cuello y corbata: el secretario de la casa.
 
 ### Móvil primero
 
-- Cada pantalla se diseña primero a **390 px** y para **una mano**: lo que más se usa queda en la mitad inferior. El escritorio debe ser bueno, pero es secundario.
-- Objetivos táctiles de **48 px** (nunca menos de 44). Margen lateral de 16 px.
-- **Safe areas** de iOS (`env(safe-area-inset-*)`) en todo lo fijo: cabecera, barra inferior, hojas y botones flotantes. Alturas con `dvh`/`svh`, nunca `100vh`.
+- Cada pantalla se diseña primero a **390 px**. El escritorio debe ser bueno, pero es secundario.
+- Objetivos táctiles de **44 px** o más en el móvil. Margen lateral de 16 px.
+- **Safe areas** de iOS (`env(safe-area-inset-*)`) en todo lo fijo. Alturas con `dvh`/`svh`, nunca `100vh`.
 - Los campos de texto miden **16 px o más** (por debajo, iOS amplía la página) y el campo activo nunca queda tapado por el teclado.
 - Lo que el dedo arrastra **no espera**: nada que responda a un gesto pasa por una transición con captura previa ni por la red (spec 024).
 
 ### Color
 
-- **Neutros** (tokens `stone`, `paper`, `ink`, `muted`, `line`, `control`, `danger`; se conservan sus nombres, cambia su valor): fondo **bruma** `stone` ≈ `#EEF3F4`, superficie **blanca** `paper` `#FFFFFF`, tinta **mar profundo** `ink` ≈ `#0E2233`, texto secundario `muted` con 4,5:1 sobre las dos superficies, línea fina `line` y borde de control `control` con 3:1. En el tema oscuro: fondo **mar de noche** ≈ `#0A1620` y superficie **pizarra** ≈ `#13222E`, con tinta clara.
-- **Acento elegido por el usuario** entre seis: **Coral** (por defecto), **Mar**, **Alga**, **Sol**, **Lavanda** y **Roca** (identificadores guardados `red`, `blue`, `green`, `yellow`, `purple`, `gray`). Cada uno define relleno, texto encima, variante para texto y líneas, y borde, en los dos temas, con el contraste de P9 comprobado en un test (Sol lleva tinta encima).
-- **El acento es "aquí estás" y "aquí se actúa"**: hoy, la hora actual, la selección, el destino activo de la navegación y la **acción principal de cada pantalla** (botón primario y "+"). Un solo acento en pantalla. Todo lo demás es neutro.
-- Los **colores de los calendarios** (paleta pastel de la spec 002) son datos del usuario y no cambian. Los eventos son **bloques rellenos** de su color con el texto en `pastel-ink` (4,5:1 con cada pastel) y el título siempre visible; fuera de los bloques, el color del calendario es solo una marca (punto, barra). La información nunca depende solo del color.
+- **Neutros** (tokens `stone`, `paper`, `ink`, `muted`, `line`, `control`, `danger`; se conservan sus nombres): fondo lavanda `stone` `#F3F2FA`, tarjetas `paper` `#FFFFFF`, tinta `ink` `#1D1B2E`, texto secundario `muted` `#6F6C86` (4,5:1), línea fina `line` `#E9E7F5` y borde de control `control` con 3:1. En oscuro: fondo `#0F0E1A` y tarjetas `#18172A`, con tinta clara.
+- **Acento elegido por el usuario** entre seis: **Violeta** (por defecto), **Azul**, **Verde**, **Ámbar**, **Rosa** y **Grafito** (identificadores guardados `red`, `blue`, `green`, `yellow`, `purple`, `gray`). Cada uno define relleno, **segundo tono del degradado** (`accent-to`), texto encima, variante para texto y líneas, borde y su versión suave (`accent-soft`), en los dos temas. El texto cumple 4,5:1 sobre los dos extremos del degradado (test).
+- **El acento es "aquí estás" y "aquí se actúa"**: hoy, la hora actual, la selección, el destino activo y la acción principal. La acción principal y la pestaña activa llevan el **degradado del acento** (`bg-accent-gradient`), el único degradado de un control. Lo activo en reposo (navegación del móvil, chips, avatar) lleva `accent-soft`.
+- Los **colores de los calendarios** (paleta pastel de la spec 002) son datos del usuario y no cambian. Los eventos son bloques rellenos de su color con el texto en `pastel-ink`. La información nunca depende solo del color.
 - Tema **claro, oscuro o "como el sistema"**, guardado por usuario. El tema cambia las variables, nunca las clases.
 
 ### Tipografía, forma y espacio
 
-- **Figtree** (400 a 800) cargada con `next/font`, una sola familia; cifras tabulares (`tabular-nums`) en horas, fechas y contadores. Sin monoespaciada.
-- Escala corta: 12, 14, 16 (cuerpo), 20, 24 y 32 px. Títulos en 700 u 800 con interlineado ajustado; mayúsculas solo al inicio de frase.
-- **Tres radios**, como tokens: **tarjeta** 24 px (paneles, hojas, tarjetas), **control** 16 px (botones, campos, filas pulsables) y **círculo** (avatares, "+", Venito, chips y la píldora de una selección). Un radio menor, **bloque** 8 px, queda para los bloques de evento y las marcas pequeñas. Un botón nunca es una píldora; un chip nunca es un rectángulo.
-- **Dos elevaciones**, como tokens: **reposo** (línea fina y sombra mínima, utilidad `surface`) y **flotante** (sombra amplia y suave, utilidad `surface-float`, solo para lo que flota: hojas, ventanas, menús, avisos, botones flotantes y la barra inferior).
-- **Sin desenfoque de fondo** (`backdrop-filter`) en ninguna parte: las superficies son opacas. No se pudo medir su coste en iOS y es el sospechoso habitual de los tirones (spec 024).
-- El espacio entre bloques es mayor que dentro de ellos; una idea por tarjeta.
+- **Inter** cargada con `next/font`, una sola familia; cifras tabulares en horas, fechas y contadores. Títulos en **semibold** con interlineado ajustado (`tracking-tight`); cuerpo en 400–500. Sin monoespaciada.
+- Se permiten **etiquetas pequeñas en mayúsculas con espaciado** para cabeceras de columna y de sección (iniciales de los días, "PENDIENTES"), nunca para texto de lectura.
+- **Radios** como tokens: **tarjeta** 20 px (tarjetas, hojas, la navegación flotante), **control** 12 px (botones, campos, filas), **bloque** 8 px (bloques de evento y marcas) y **círculo** (avatares, botones flotantes, pestañas, chips y casillas de las listas).
+- **Elevación** como tokens: **reposo** (borde fino y sombra mínima teñida, `surface`) y **flotante** (sombra amplia teñida, `surface-float`: hojas, ventanas, menús, avisos, la navegación del móvil y los botones flotantes).
+- **Sin desenfoque de fondo** (`backdrop-filter`) en ninguna parte.
 
 ### Navegación
 
-- **Hasta 1023 px: barra inferior fija** con cinco huecos: Calendario, Notas, **"+"** en el centro y en acento, Calendarios y Más. Arriba, una cabecera fina con el título de la pantalla y sus acciones. Sin cajón lateral.
-- **Desde 1024 px: barra lateral** con el logo, los destinos con su nombre, el tema y la cuenta.
-- **"+"** crea lo propio de la pantalla (un evento; una nota en Notas). **"Más"** abre una hoja inferior con el resto de destinos, el tema y cerrar sesión.
-- **Venito** (el asistente) vive en la esquina inferior derecha, por encima de la barra, en todas las pantallas del panel salvo dentro del chat.
-- Las ventanas del móvil son **hojas inferiores** con asa: se cierran deslizando, tocando fuera o con su botón.
+- **Hasta 768 px**: cabecera fina con la marca (en el calendario, el mes), el tema y el avatar; **píldora flotante** abajo con Calendario, Notas, Calendarios y Más (icono y nombre; la activa con `accent-soft`); y **botones flotantes** a la derecha, sobre la píldora: Venito (44 px) encima de **"+"** (56 px, degradado).
+- **Desde 769 px**: **barra superior** con la marca, las pestañas en píldora centradas (la activa con degradado), "Nuevo evento" o "Nueva nota", Venito, el tema y el avatar. Sin barra lateral.
+- **"+"** crea lo propio de la pantalla (un evento; una nota en Notas). **"Más"** reúne el resto de destinos y cerrar sesión.
+- Cada vista lleva **su cabecera dentro del contenido**: título grande, subtítulo y sus controles (en el calendario, "Hoy ‹ ›" y el selector de vista en píldora).
+- Las ventanas del móvil son **hojas inferiores**; en escritorio, ventanas centradas.
 
 ### Iconos, marca y mascota
 
-- Iconos **SVG propios en línea**, trazo de 1,75 px con extremos redondos sobre rejilla de 24 px; relleno solo para el destino activo.
-- **Marca**: una ficha redondeada en coral con una "C" blanca abierta y el punto de "hoy" en su boca; el nombre "CaFam" en Figtree 800. La marca no cambia con el acento del usuario.
-- **Venito** es un SVG propio, reconocible a 40 px, con expresiones (reposo, saludo, pensando, contenta, confundida, dormida) y animaciones pequeñas de `transform` y `opacity`. Aparece en el botón del asistente, en estados vacíos, en errores y en la pantalla sin conexión. Nunca es decoración repetida.
+- Iconos **SVG propios en línea**, trazo de 1,75 px con extremos redondos sobre rejilla de 24 px.
+- **Marca**: ficha redondeada violeta con una "C" blanca abierta y el punto de "hoy" en su boca; el nombre "CaFam" en Inter semibold. La marca no cambia con el acento del usuario.
+- **Venito** es un SVG propio, reconocible a 40 px: foca de frente con **gafas redondas, cuello y corbata**, gesto serio (no hace falta que sea adorable). Expresiones: reposo, saludo, pensando, conforme, confundido y dormido. Colores propios (`seal*`), nunca el acento. Aparece en el botón del asistente, el chat, los estados vacíos, los errores y la pantalla sin conexión.
 
 ### Movimiento
 
-- Los tokens de curvas y duraciones de la spec 021 se conservan. Cada animación dura como mucho 400 ms y solo anima `transform`, `opacity` o un recorte (`clip-path`). Ninguna de uso diario rebota, salvo el pulso que confirma un guardado y los gestos de Venito.
-- Con `prefers-reduced-motion: reduce`, cada animación se sustituye por un cambio inmediato o un fundido.
+- Los tokens de curvas y duraciones de la spec 021 se conservan. Cada animación dura como mucho 400 ms y solo anima `transform`, `opacity` o un recorte. Con `prefers-reduced-motion: reduce`, cada animación se sustituye por un cambio inmediato o un fundido.
+- Marcar un elemento de una lista hace un "pop" breve de la casilla y tacha el texto con una línea que avanza.
 - Un periodo nuevo del calendario se pinta en la misma actualización, sin transición con captura (spec 024).
 
 ### Prohibido en la interfaz
 
-Colores, sombras, radios o degradados sueltos que no sean tokens; `backdrop-filter`; `text-white`, `text-black` y la variante `dark:`; emojis; iconos dentro de cuadrados de color repetidos; filas de tarjetas idénticas con icono encima; etiquetas pequeñas en mayúsculas con espaciado; textos de relleno; más de un color de acento en pantalla; y cualquier campo de texto por debajo de 16 px.
+Colores, sombras, radios o degradados sueltos que no sean tokens; `backdrop-filter`; `text-white`, `text-black` y la variante `dark:`; emojis; textos de relleno; más de un color de acento en pantalla; y cualquier campo de texto por debajo de 16 px.
 
 ### Cómo se trabaja la interfaz
 
-- Los componentes de `src/components/ui/` son la única fuente de botones, campos, tarjetas, chips, hojas, estados vacíos y avisos; una variante nueva se añade ahí, no en la página.
+- Los componentes de `src/components/ui/` son la única fuente de botones, campos, tarjetas, chips, hojas, estados vacíos y avisos.
 - La guardia `tests/unit/design-tokens.test.ts` hace cumplir esta sección; `accents.test.ts` y `theme-css.test.ts` mantienen iguales los valores y comprueban el contraste.
-- Cada pantalla nueva o rediseñada se revisa con capturas a **390, 768 y 1440 px**, en **claro y oscuro**, con **Coral y Sol**.
+- Cada pantalla nueva o rediseñada se revisa con capturas a **390, 768 y 1440 px**, en **claro y oscuro**, con **Violeta y Ámbar**.
 - Ninguna librería de componentes, iconos o animación sin aprobación en la spec que la introduce (P6).
 
 ### Interacción del calendario (spec 008)
@@ -189,3 +188,4 @@ Checklist que cierra cada tarea (se reporta la salida de cada comando):
 - Enmienda 9 (2026-11-11, aprobada de antemano por el usuario con la spec 023): Ctrl/Cmd+Z ejecuta "Deshacer" mientras el aviso lo ofrece, nunca al escribir en un campo. "Deshacer" sustituye a la confirmación de borrado (enmienda 5) y con teclado su botón quedaba al final del orden de tabulación durante 10 s; P9 exige que todo se pueda usar con el teclado.
 - Resuelta en la spec 015: una persona consiente que el asistente use su disponibilidad con un ajuste propio, desactivado por defecto. El proveedor LLM es **Groq** (capa gratuita sin tarjeta, sin entrenamiento con los datos y con retención cero activada), con `openai/gpt-oss-120b` y `qwen/qwen3.8-27b` de reserva, llamado con `fetch` y la clave `GROQ_API_KEY` solo en el servidor; 30 preguntas por usuario y día.
 - Enmienda 10 (2026-11-15, aprobada de antemano por el usuario con el encargo de rediseño, spec 025): identidad visual **Orilla** en lugar de la anterior (colores, tipografía Figtree, tres radios, dos elevaciones, sin desenfoque de fondo), el acento también como acción principal, navegación con barra inferior y "+" central en lugar del cajón y el botón flotante, hojas inferiores en el móvil, marca nueva y la mascota Venito. Motivo: decisión del usuario de cambiar todo el frontend con el iPhone primero; el desenfoque se retira por rendimiento (spec 024).
+- Enmienda 11 (2026-11-16, pedida por el usuario con su prototipo, spec 030): identidad visual **Nexo** en lugar de Orilla (lavanda, violeta con degradado, Inter, radios de 20 y 12 px, sombras teñidas), navegación en píldora (flotante abajo en el móvil con "+" y Venito como botones flotantes; arriba en escritorio, sin barra lateral), cabecera de cada vista dentro del contenido, etiquetas pequeñas en mayúsculas permitidas y Venito como foca secretario con gafas. Motivo: el usuario vio la identidad de la enmienda 10 y prefirió la de su prototipo.

@@ -105,10 +105,6 @@ const RULES: { name: string; pattern: RegExp; allow?: Set<string> }[] = [
     pattern:
       /\bduration-(?:[5-9]\d\d|\d{4,})\b|\bduration-\[(?:(?:4\d[1-9]|4[1-9]\d|[5-9]\d\d|\d{4,})ms|\d+(?:\.\d+)?s)\]/,
   },
-  {
-    name: "tracked uppercase labels",
-    pattern: /\buppercase\b[^"]*\btracking-(?:wide|wider|widest)\b/,
-  },
   // Motion comes from the tokens of globals.css (spec 021 RF-1, RF-3, plan D5, D6).
   { name: "a loose easing curve", pattern: /(?<![\w-])ease-\[/ },
   { name: "a numeric duration class", pattern: /(?<![\w-])duration-\d/ },
