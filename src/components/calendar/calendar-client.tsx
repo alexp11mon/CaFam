@@ -24,9 +24,8 @@ import { visibleDays } from "@/lib/calendar/view-options";
 import { useEventWindow } from "@/lib/hooks/use-event-window";
 import { useStableJson, useStableList } from "@/lib/hooks/use-stable-list";
 import { Button } from "@/components/ui/button";
-import { LinkButton } from "@/components/ui/link-button";
 import type { AgendaEvent } from "./agenda-view";
-import { CalendarDock } from "./calendar-dock";
+import { CalendarHeading } from "./calendar-heading";
 import { CalendarNavContext, type CalendarGo } from "./calendar-nav";
 import { CalendarWorkspace, type PeriodEnter } from "./calendar-workspace";
 import { ViewToolbar } from "./view-toolbar";
@@ -256,7 +255,7 @@ export function CalendarClient({
     <CalendarNavContext value={go}>
       {/* On a phone the header, the drawer and "+" do this (spec 016 RF-19). */}
       {/* Fixed while scrolling, so the views stay at hand (agenda bug, 2026-11-01). */}
-      <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-card surface px-4 py-3 max-tab:hidden">
+      <div className="sticky top-[4.5rem] z-20 flex flex-wrap items-center justify-between gap-3 rounded-card surface px-4 py-3 max-tab:hidden">
         <ViewToolbar
           view={view}
           date={date}
@@ -264,21 +263,8 @@ export function CalendarClient({
           saveLastView={workspace.saveLastView}
           showWeekends={showWeekends}
         />
-        {/* On a phone "+ Evento" lives in the bottom bar (spec 005 RF-22). */}
-        {workspace.canCreate ? (
-          <div className="hidden lg:block">
-            <LinkButton
-              href={`/dashboard/events/new?date=${date}`}
-              // Its address changes with every period (RF-7).
-              prefetch={false}
-              aria-keyshortcuts="N C"
-            >
-              Nuevo evento
-            </LinkButton>
-          </div>
-        ) : null}
       </div>
-      <CalendarDock
+      <CalendarHeading
         view={view}
         date={date}
         today={today}

@@ -1,5 +1,6 @@
-// Venito, the mascot of CaFam (constitution, amendment 10; spec 027 RF-1): a
-// small seal seen from the front. One drawing with a mood: the head is
+// Venito, the mascot of CaFam (constitution, amendment 11; spec 027 RF-1,
+// spec 030 RF-10): a seal seen from the front, the secretary of the house,
+// with round glasses, a collar and a tie. Serious rather than cute. One drawing with a mood: the head is
 // shared, and the eyes, the mouth and the flippers change (plan D7). Its
 // colors are the `seal` tokens, never the accent (plan D5); its gestures are
 // in globals.css and stop with prefers-reduced-motion.
@@ -18,14 +19,14 @@ function Eyes({ mood }: { mood: VenitoMood }) {
   if (mood === "happy") {
     return (
       <g className="stroke-seal-dark" {...LINE}>
-        <path d="M35 60q7-8 14 0M71 60q7-8 14 0" />
+        <path d="M36 59q6-5 12 0M72 59q6-5 12 0" />
       </g>
     );
   }
   if (mood === "sleeping") {
     return (
       <g className="stroke-seal-dark" {...LINE}>
-        <path d="M35 58q7 5 14 0M71 58q7 5 14 0" />
+        <path d="M36 58q6 4 12 0M72 58q6 4 12 0" />
       </g>
     );
   }
@@ -33,23 +34,23 @@ function Eyes({ mood }: { mood: VenitoMood }) {
   const look = mood === "thinking" ? { x: 2, y: -2.5 } : { x: 0, y: 0 };
   return (
     <g data-part="eyes">
-      <circle cx="42" cy="58" r="7" className="fill-seal-dark" />
+      <circle cx="42" cy="58" r="4.6" className="fill-seal-dark" />
       {mood === "confused" ? (
-        <path d="M71 58h14" className="stroke-seal-dark" {...LINE} />
+        <path d="M72 58h12" className="stroke-seal-dark" {...LINE} />
       ) : (
-        <circle cx="78" cy="58" r="7" className="fill-seal-dark" />
+        <circle cx="78" cy="58" r="4.6" className="fill-seal-dark" />
       )}
       <circle
-        cx={44.5 + look.x}
-        cy={55.5 + look.y}
-        r="2.2"
+        cx={43.4 + look.x}
+        cy={56.6 + look.y}
+        r="1.3"
         className="fill-seal-light"
       />
       {mood === "confused" ? null : (
         <circle
-          cx={80.5 + look.x}
-          cy={55.5 + look.y}
-          r="2.2"
+          cx={79.4 + look.x}
+          cy={56.6 + look.y}
+          r="1.3"
           className="fill-seal-light"
         />
       )}
@@ -60,12 +61,12 @@ function Eyes({ mood }: { mood: VenitoMood }) {
 function Mouth({ mood }: { mood: VenitoMood }) {
   const path =
     mood === "happy"
-      ? "M60 77v3M60 80q-8 9-15 1M60 80q8 9 15 1"
+      ? "M60 77v3M52 82q8 5 16 0"
       : mood === "confused"
         ? "M60 77v3M51 84q4-4 9 0t9 0"
         : mood === "sleeping"
           ? "M60 77v3M55 83q5 3 10 0"
-          : "M60 77v3M60 80q-6 6-12 2M60 80q6 6 12 2";
+          : "M60 77v3M53 82h14";
   return <path d={path} className="stroke-seal-dark" {...LINE} />;
 }
 
@@ -131,13 +132,13 @@ export function Venito({
           ry="2.6"
           className="fill-seal-light"
         />
-        {mood === "happy" ? (
-          <g className="fill-seal-blush">
-            <ellipse cx="31" cy="72" rx="7" ry="4.5" />
-            <ellipse cx="89" cy="72" rx="7" ry="4.5" />
-          </g>
-        ) : null}
         <Eyes mood={mood} />
+        {/* Round glasses: what makes it the secretary (spec 030 RF-10). */}
+        <g data-part="glasses" className="stroke-seal-dark" {...LINE}>
+          <circle cx="42" cy="58" r="12" className="fill-seal-light/35" />
+          <circle cx="78" cy="58" r="12" className="fill-seal-light/35" />
+          <path d="M54 56q6-4 12 0M30 55l-9-4M90 55l9-4" />
+        </g>
         <ellipse cx="60" cy="72" rx="6.5" ry="4.6" className="fill-seal-dark" />
         <Mouth mood={mood} />
         {/* Whiskers, as dots: they survive at 40 px. */}
@@ -147,6 +148,14 @@ export function Venito({
           <circle cx="75" cy="80" r="1.4" />
           <circle cx="71" cy="85" r="1.4" />
         </g>
+      </g>
+      {/* A collar and a tie, at the foot of the drawing. */}
+      <g data-part="collar">
+        <path
+          d="M40 101l20 10-9 9Z M80 101l-20 10 9 9Z"
+          className="fill-seal-light"
+        />
+        <path d="M60 109l-4.5 5 4.5 6 4.5-6Z" className="fill-seal-dark" />
       </g>
       {mood === "confused" ? (
         <path

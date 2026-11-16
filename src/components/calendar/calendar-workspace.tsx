@@ -763,7 +763,7 @@ export function CalendarWorkspace({
         {/* On a phone the drawer and the header take the panel's place (RF-19). */}
         <div
           id="calendar-side-panel"
-          className={`flex flex-col gap-3 max-tab:hidden lg:sticky lg:top-40 lg:w-84 lg:shrink-0 ${sidebar.collapsed ? "lg:hidden" : ""}`}
+          className={`flex flex-col gap-3 max-tab:hidden lg:sticky lg:top-56 lg:w-84 lg:shrink-0 ${sidebar.collapsed ? "lg:hidden" : ""}`}
         >
           {nextEvents && loadedAt !== undefined ? (
             <NextEventCard
@@ -826,6 +826,16 @@ export function CalendarWorkspace({
                 today={today}
                 loadEvents={loadAgendaEvents}
                 onMonthChange={onAgendaMonth}
+                todayBanner={
+                  nextEvents && loadedAt !== undefined ? (
+                    <NextEventCard
+                      events={nextEvents}
+                      visibleCalendarIds={visibleCalendars}
+                      timeZone={timeZone}
+                      loadedAt={loadedAt}
+                    />
+                  ) : undefined
+                }
               />
             ) : view === "month" ? (
               <MonthView

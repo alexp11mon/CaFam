@@ -1,12 +1,14 @@
 "use client";
 
 import {
+  Fragment,
   memo,
   useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import {
   anchorDay,
@@ -75,6 +77,7 @@ export function AgendaView({
   isShown = () => true,
   loadEvents,
   onMonthChange,
+  todayBanner,
 }: {
   /** The days the server read, with their events. */
   days: string[];
@@ -86,6 +89,8 @@ export function AgendaView({
   loadEvents?: LoadEvents;
   /** The month at the top, for the header title (RF-59). */
   onMonthChange?: (month: string) => void;
+  /** Drawn over the first day from today on, on a phone (spec 030 RF-8). */
+  todayBanner?: ReactNode;
 }) {
   const go = useCalendarGo();
   const [chunks, setChunks] = useState<Chunk[]>(() => [
@@ -125,6 +130,10 @@ export function AgendaView({
     if (!root) return;
     // Without events from today on, the week of today (RF-58).
     const target =
+      // On a phone the greeting is what the agenda opens on.
+      [...root.querySelectorAll<HTMLElement>("[data-today-banner]")].find(
+        (banner) => banner.getClientRects().length > 0,
+      ) ??
       (anchor ? root.querySelector(`[data-day="${anchor}"]`) : null) ??
       [...root.querySelectorAll<HTMLElement>("[data-week]")]
         .filter((week) => week.dataset.week! <= today)
@@ -298,7 +307,7 @@ export function AgendaView({
             <h2
               key={`month-${item.key}`}
               data-month={item.key}
-              className="mt-2 flex h-28 scroll-mt-[calc(4rem+env(safe-area-inset-top))] items-end rounded-card bg-agenda-band px-5 pb-4 text-3xl font-semibold text-ink first-letter:uppercase max-tab:rounded-none tab:scroll-mt-40"
+              className="mt-2 flex h-28 scroll-mt-[calc(10.5rem+env(safe-area-inset-top))] items-end rounded-card bg-agenda-band px-5 pb-4 text-3xl font-semibold text-ink first-letter:uppercase max-tab:rounded-none tab:scroll-mt-40"
             >
               {item.label}
             </h2>
@@ -310,7 +319,7 @@ export function AgendaView({
               key={`week-${item.key}`}
               data-week={item.key}
               data-month={item.key.slice(0, 7)}
-              className="scroll-mt-[calc(4rem+env(safe-area-inset-top))] px-4 pt-5 pb-2 tab:scroll-mt-40"
+              className="scroll-mt-[calc(10.5rem+env(safe-area-inset-top))] px-4 pt-5 pb-2 tab:scroll-mt-40"
             >
               <p className="pl-14 text-sm font-semibold text-muted">
                 {item.label}
@@ -321,7 +330,21 @@ export function AgendaView({
             </div>
           );
         }
-        return <AgendaDay key={item.key} item={item} timeZone={timeZone} />;
+        return (
+          <Fragment key={item.key}>
+            {/* The greeting sits right over the first day from today on, so
+                opening the agenda lands on it (spec 030 RF-8). */}
+            {todayBanner && item.key === anchor ? (
+              <div
+                data-today-banner=""
+                className="scroll-mt-[calc(10.5rem+env(safe-area-inset-top))] px-4 pt-2 pb-1 tab:hidden"
+              >
+                {todayBanner}
+              </div>
+            ) : null}
+            <AgendaDay item={item} timeZone={timeZone} />
+          </Fragment>
+        );
       })}
       {error ? (
         <div className="flex flex-col items-center gap-2 py-6">
@@ -362,7 +385,7 @@ const AgendaDay = memo(
         data-day={item.key}
         data-month={item.key.slice(0, 7)}
         aria-label={item.isToday ? `${item.label}, hoy` : item.label}
-        className="flex scroll-mt-[calc(4rem+env(safe-area-inset-top))] gap-3 px-4 py-1.5 tab:scroll-mt-40"
+        className="flex scroll-mt-[calc(10.5rem+env(safe-area-inset-top))] gap-3 px-4 py-1.5 tab:scroll-mt-40"
       >
         {/* The day on the left, today in the accent (RF-52, RF-53). */}
         <div

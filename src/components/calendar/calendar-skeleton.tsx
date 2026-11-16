@@ -38,7 +38,7 @@ export function CalendarSkeleton({ view }: { view: CalendarView }) {
             </div>
           ) : view === "month" ? (
             // The month's full height, as the view it stands for (spec 016 RF-30).
-            <div className="grid h-calendar grid-cols-7 grid-rows-5 gap-1 tab:h-[max(32rem,calc(100dvh-14rem))]">
+            <div className="grid h-calendar grid-cols-7 grid-rows-5 gap-1 tab:h-[max(32rem,calc(100dvh-18rem))]">
               {Array.from({ length: 35 }, (_, index) => (
                 <div
                   key={index}
@@ -48,7 +48,7 @@ export function CalendarSkeleton({ view }: { view: CalendarView }) {
               ))}
             </div>
           ) : (
-            <div className="flex h-calendar gap-1 tab:h-[max(32rem,calc(100dvh-14rem))]">
+            <div className="flex h-calendar gap-1 tab:h-[max(32rem,calc(100dvh-18rem))]">
               {Array.from({ length: view === "week" ? 7 : 1 }, (_, index) => (
                 <div
                   key={index}

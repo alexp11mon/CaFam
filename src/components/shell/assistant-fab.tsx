@@ -153,9 +153,9 @@ export function AssistantFab() {
         onPointerDown={warm}
         onFocus={warm}
         onClick={show}
-        className="fixed right-4 bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] z-20 flex size-14 items-center justify-center rounded-full surface-float press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink max-tab:group-data-[has-dock]/frame:bottom-[calc(7.25rem+env(safe-area-inset-bottom)+0.75rem)] lg:right-6 lg:bottom-6"
+        className="fixed right-5.5 bottom-[calc(9.75rem+env(safe-area-inset-bottom))] z-30 flex size-11 items-center justify-center rounded-full surface-float press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink tab:right-6 tab:bottom-6 tab:size-14"
       >
-        <Venito mood={mood} className="size-12" />
+        <Venito mood={mood} className="size-9 tab:size-12" />
         {activity === "idle" ? null : (
           <span
             aria-hidden="true"

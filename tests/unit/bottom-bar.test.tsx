@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { BottomBar } from "@/components/shell/bottom-bar";
+import { CreateButton } from "@/components/shell/create-fab";
 
 // The bottom bar and the "Más" sheet (spec 005 T6: RF-18, RF-20, RF-22, plan
 // D9), rewritten for the frame of spec 025 (RF-8, plan D7): two destinations
@@ -42,26 +43,15 @@ function renderBar(signOut = vi.fn(async () => {})) {
   };
 }
 
-describe("BottomBar (RF-18, RF-22)", () => {
-  it("offers the calendar, the notes, +, the calendars and more, in that order", () => {
+describe("BottomBar (spec 030 RF-5)", () => {
+  it("offers the calendar, the notes, the calendars and more, in that order", () => {
     const { nav } = renderBar();
 
-    // A list item is named by its "+" label or by what it reads.
     const names = within(nav)
       .getAllByRole("listitem")
-      .slice(0, 5)
-      .map(
-        (item) =>
-          item.querySelector("[aria-label]")?.getAttribute("aria-label") ??
-          item.querySelector("a, button")?.textContent,
-      );
-    expect(names).toEqual([
-      "Calendario",
-      "Notas",
-      "Nuevo evento",
-      "Calendarios",
-      "Más",
-    ]);
+      .slice(0, 4)
+      .map((item) => item.querySelector("a, button")?.textContent);
+    expect(names).toEqual(["Calendario", "Notas", "Calendarios", "Más"]);
     expect(
       within(nav).getByRole("link", { name: "Calendario" }),
     ).toHaveAttribute("href", "/dashboard/calendar");
@@ -69,63 +59,67 @@ describe("BottomBar (RF-18, RF-22)", () => {
       "href",
       "/dashboard/notes",
     );
-    expect(
-      within(nav).getByRole("link", { name: "Calendarios" }),
-    ).toHaveAttribute("href", "/dashboard/calendars");
     expect(within(nav).getByRole("button", { name: "Más" })).toHaveAttribute(
       "aria-haspopup",
       "dialog",
     );
+    // "+" is a floating button of its own (plan D3).
+    expect(within(nav).queryByRole("link", { name: /^Nuev/ })).toBeNull();
   });
 
-  it("+ creates an event on the date the calendar shows (spec 025 plan D7)", async () => {
+  it("floats as a pill over the content, only on a phone, clear of the home indicator", () => {
+    const { nav } = renderBar();
+    expect(nav).toHaveClass("fixed", "inset-x-3", "rounded-card", "tab:hidden");
+    expect(nav).toHaveClass("surface-float");
+    expect(nav.className).toContain(
+      "bottom-[calc(0.75rem+env(safe-area-inset-bottom))]",
+    );
+  });
+
+  it("marks the current section on the soft accent (RF-20)", () => {
+    navigation.pathname = "/dashboard/events/new";
+    const { nav } = renderBar();
+
+    const current = within(nav).getByRole("link", { name: "Calendario" });
+    expect(current).toHaveAttribute("aria-current", "page");
+    expect(current.className).toContain("aria-[current=page]:bg-accent-soft");
+  });
+});
+
+// Spec 030 (RF-5, RF-6, plan D3): "+" on its own.
+describe("CreateButton", () => {
+  it("floats over the navigation on a phone and creates an event on the calendar's date", async () => {
     history.replaceState(
       null,
       "",
       "/dashboard/calendar?view=week&date=2027-03-04",
     );
-    const { nav } = renderBar();
-    const plus = within(nav).getByRole("link", { name: "Nuevo evento" });
+    render(<CreateButton floating />);
+    const plus = screen.getByRole("link", { name: "Nuevo evento" });
     expect(plus).toHaveAttribute("href", "/dashboard/events/new");
-    // The accent marks the main action of the screen (amendment 10).
-    expect(plus.className).toMatch(/\bbg-accent\b/);
+    expect(plus).toHaveClass(
+      "fixed",
+      "size-14",
+      "rounded-full",
+      "bg-accent-gradient",
+      "tab:hidden",
+    );
 
     await userEvent.click(plus);
-
     expect(navigation.push).toHaveBeenCalledExactlyOnceWith(
       "/dashboard/events/new?date=2027-03-04",
     );
   });
 
-  it("+ creates a note in Notas", async () => {
+  it("creates a note in Notas, and has its name in the top bar", async () => {
     navigation.pathname = "/dashboard/notes";
-    const { nav } = renderBar();
-    await userEvent.click(
-      within(nav).getByRole("link", { name: "Nueva nota" }),
-    );
+    render(<CreateButton floating={false} />);
+    const button = screen.getByRole("link", { name: "Nueva nota" });
+    expect(button).not.toHaveClass("fixed");
+    await userEvent.click(button);
     expect(navigation.push).toHaveBeenCalledExactlyOnceWith(
       "/dashboard/notes/new",
     );
-  });
-
-  it("keeps clear of the home indicator of iOS", () => {
-    const { nav } = renderBar();
-    expect(nav.className).toContain("pb-[env(safe-area-inset-bottom)]");
-  });
-
-  it("is hidden from 1024 px", () => {
-    const { nav } = renderBar();
-
-    expect(nav.className).toMatch(/lg:hidden/);
-  });
-
-  it("marks the current section (RF-20)", () => {
-    navigation.pathname = "/dashboard/events/new";
-    const { nav } = renderBar();
-
-    expect(
-      within(nav).getByRole("link", { name: "Calendario" }),
-    ).toHaveAttribute("aria-current", "page");
   });
 });
 

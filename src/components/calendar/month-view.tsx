@@ -75,7 +75,7 @@ export function MonthView({
 
   return (
     // Fills the screen under the header: the rows grow, never the cells (RF-30, RF-36).
-    <div className="flex h-calendar flex-col gap-2 tab:h-[max(32rem,calc(100dvh-14rem))]">
+    <div className="flex h-calendar flex-col gap-2 tab:h-[max(32rem,calc(100dvh-18rem))]">
       <div
         aria-hidden="true"
         data-testid="weekday-initials"

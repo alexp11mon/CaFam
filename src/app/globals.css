@@ -263,26 +263,14 @@ body {
     var(--elevation-float);
 }
 
-/* The free height of the calendar on a phone (spec 026 RF-6): the screen
-   less the header (3.5rem), the calendar's bar (3.25rem), the bottom bar
-   (4rem), a little air and the safe areas of iOS. */
+/* The free height of the calendar on a phone (spec 026 RF-6, spec 030
+   RF-7): the screen less the header (3.25rem), the calendar's own heading
+   (6.5rem), the floating navigation (5.5rem), a little air and the safe areas
+   of iOS. */
 @utility h-calendar {
   height: calc(
-    100dvh - 11.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    100dvh - 16.25rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)
   );
-}
-
-/* The background of the chat (spec 027 RF-4): a faint pattern of dots made
-   of tokens, so it follows the theme. */
-@utility bg-chat {
-  --gradient-chat: radial-gradient(
-    circle at 1px 1px,
-    color-mix(in srgb, var(--control) 28%, transparent) 1px,
-    transparent 0
-  );
-  background-color: var(--stone);
-  background-image: var(--gradient-chat);
-  background-size: 18px 18px;
 }
 
 /* The main action and what is chosen (constitution, amendment 11; spec 030

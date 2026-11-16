@@ -9,7 +9,6 @@ const SURFACES: [file: string, utility: "surface" | "surface-float"][] = [
   // Spec 025: the bar floats over the content; the side bar is plain paper.
   ["src/components/shell/bottom-bar.tsx", "surface-float"],
   ["src/components/shell/calendar-sheet.tsx", "surface-float"],
-  ["src/components/calendar/next-event-card.tsx", "surface"],
   ["src/components/calendar/mini-month.tsx", "surface"],
   ["src/components/calendar/calendar-filters.tsx", "surface"],
   ["src/app/dashboard/settings/page.tsx", "surface"],

@@ -8,8 +8,8 @@ import type { AgendaEvent } from "@/components/calendar/agenda-view";
 
 // Spec 024, T4: the view and the date live in the browser (RF-2, RF-4, RF-5).
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock("@/components/calendar/calendar-dock", () => ({
-  CalendarDock: () => null,
+vi.mock("@/components/calendar/calendar-heading", () => ({
+  CalendarHeading: () => null,
 }));
 vi.mock("@/components/calendar/view-toolbar", () => ({
   ViewToolbar: ({ view, date }: { view: string; date: string }) => (

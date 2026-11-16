@@ -51,17 +51,15 @@ const venito = () =>
   screen.getByRole("button", { name: /^Venito, tu asistente/ });
 
 describe("Venito's button (RF-2)", () => {
-  it("is Venito's face, named, in the corner above the bottom bar", () => {
+  it("is Venito's face, named, floating over the + on a phone and in the corner from 769 px (spec 030 RF-5)", () => {
     render(<AssistantFab />);
     const button = venito();
     expect(button.querySelector("[data-venito]")).not.toBeNull();
     expect(button).toHaveAttribute("aria-haspopup", "dialog");
     expect(button.className).toContain(
-      "bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)]",
+      "bottom-[calc(9.75rem+env(safe-area-inset-bottom))]",
     );
-    // Above the calendar's own bar while it is on screen (spec 026 RF-7).
-    expect(button.className).toContain("group-data-[has-dock]/frame:bottom-");
-    expect(button).toHaveClass("size-14", "lg:bottom-6");
+    expect(button).toHaveClass("size-11", "tab:size-14", "tab:bottom-6");
   });
 
   it("is on other screens too, but not on the assistant's own page", () => {

@@ -76,7 +76,10 @@ describe("ViewToolbar (RF-29, RF-37)", () => {
       expect(layer).toHaveClass(
         "[clip-path:inset(0_var(--r)_0_var(--l)_round_9999px)]",
       );
-      expect(layer.querySelector(".bg-accent.text-on-accent")).not.toBeNull();
+      // The chosen view carries the gradient of the accent (spec 030 RF-7).
+      expect(
+        layer.querySelector(".bg-accent-gradient.text-on-accent"),
+      ).not.toBeNull();
       // The links, their state and their keys stay as they were.
       expect(week).toHaveAttribute("aria-current", "page");
       expect(week).toHaveAttribute("aria-keyshortcuts", "S");

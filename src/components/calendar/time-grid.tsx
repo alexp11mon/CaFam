@@ -113,7 +113,7 @@ export function TimeGrid({
     // The screen height under the header, never under 28 rem on a larger screen.
     <div
       ref={root}
-      className="flex h-calendar flex-col gap-3 tab:h-[max(32rem,calc(100dvh-14rem))]"
+      className="flex h-calendar flex-col gap-3 tab:h-[max(32rem,calc(100dvh-18rem))]"
     >
       {/* The grid scrolls on its own; the day header and the strip stay on top (RF-38). */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-card bg-paper max-tab:-mx-4 max-tab:rounded-none">

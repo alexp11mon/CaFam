@@ -243,9 +243,9 @@ function ViewSwitcher({
       <div
         ref={layer}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-full bg-accent-edge opacity-0 transition-[clip-path] duration-(--motion-move) ease-(--ease-in-out) [clip-path:inset(0_var(--r)_0_var(--l)_round_9999px)] data-ready:opacity-100"
+        className="pointer-events-none absolute inset-0 rounded-full bg-accent opacity-0 transition-[clip-path] duration-(--motion-move) ease-(--ease-in-out) [clip-path:inset(0_var(--r)_0_var(--l)_round_9999px)] data-ready:opacity-100"
       >
-        <div className="absolute inset-0 flex gap-1 bg-accent text-on-accent transition-[clip-path] duration-(--motion-move) ease-(--ease-in-out) [clip-path:inset(1px_calc(var(--r)+1px)_1px_calc(var(--l)+1px)_round_9999px)]">
+        <div className="absolute inset-0 flex gap-1 bg-accent-gradient text-on-accent transition-[clip-path] duration-(--motion-move) ease-(--ease-in-out) [clip-path:inset(1px_calc(var(--r)+1px)_1px_calc(var(--l)+1px)_round_9999px)]">
           {VIEWS.map((item) => (
             <span key={item.view} className={VIEW_ITEM}>
               {item.label}

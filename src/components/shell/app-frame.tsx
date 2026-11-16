@@ -6,14 +6,15 @@ import type { ThemeId } from "@/lib/theme/theme";
 import { AssistantFab } from "./assistant-fab";
 import { BottomBar } from "./bottom-bar";
 import { CalendarHeaderProvider } from "./calendar-header";
-import { SideRail } from "./side-rail";
 import { ThemeSync } from "./theme-sync";
+import { CreateButton } from "./create-fab";
 import { TopBar } from "./top-bar";
+import { TopNav } from "./top-nav";
 
 /**
- * Frame of every screen with a session (constitution, amendment 10; spec 025
- * RF-8): the side bar from 1024 px; below it, the bottom bar with "+", and on
- * a phone also a thin header. The accent comes from the profile on the server, so the
+ * Frame of every screen with a session (constitution, amendment 11; spec 030
+ * RF-5, RF-6): on a phone, a thin header, a floating bar and the floating "+"
+ * and Venito; from 769 px, a top bar with the tabs. The accent comes from the profile on the server, so the
  * first HTML already has it (spec 005 RF-9, RF-16, RF-18, plan D2, D3, D7).
  */
 export function AppFrame({
@@ -48,17 +49,18 @@ export function AppFrame({
       <ToastProvider>
         <EventClipboardProvider>
           <CalendarHeaderProvider>
-            <SideRail signOutAction={signOutAction} />
+            <TopNav displayName={displayName} signOutAction={signOutAction} />
             <TopBar displayName={displayName} />
             <div
               id="contenido"
               tabIndex={-1}
-              // Room for the phone header above and for the bottom bar below, with
-              // the safe areas of iOS (spec 025 RF-8).
-              className="flex flex-1 flex-col pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(4rem+env(safe-area-inset-bottom))] outline-none tab:pt-0 lg:pb-0 lg:pl-20 xl:pl-60"
+              // Room for the phone header above and for the floating bar
+              // below, with the safe areas of iOS (spec 030 RF-5).
+              className="flex flex-1 flex-col pt-[calc(3.25rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] outline-none tab:pt-0 tab:pb-0"
             >
               {children}
             </div>
+            <CreateButton floating />
             <AssistantFab />
             <BottomBar signOutAction={signOutAction} />
           </CalendarHeaderProvider>

@@ -57,18 +57,71 @@ export function NextEventCard({
       ? null
       : pickNextEvent(events, new Date(now), visibleCalendarIds);
 
+  // "Buenos días" by the hour of the profile's zone (spec 030 RF-8).
+  const hour =
+    now === null
+      ? null
+      : Number(
+          new Intl.DateTimeFormat("es-ES", {
+            hour: "numeric",
+            hourCycle: "h23",
+            timeZone,
+          }).format(now),
+        );
+  const greeting =
+    hour === null
+      ? ""
+      : hour < 6
+        ? "Buenas noches"
+        : hour < 13
+          ? "Buenos días"
+          : hour < 21
+            ? "Buenas tardes"
+            : "Buenas noches";
+  const day =
+    now === null
+      ? ""
+      : new Intl.DateTimeFormat("es-ES", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          timeZone,
+        }).format(now);
+
+  const frame =
+    "relative flex min-h-36 flex-col justify-between gap-3 overflow-hidden rounded-card bg-accent-gradient px-5 py-4 text-on-accent";
+  const head = (
+    <>
+      {/* Two soft circles, as decoration only. */}
+      <span
+        aria-hidden="true"
+        className="absolute -top-12 -right-10 size-40 rounded-full bg-on-accent/10"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute right-24 -bottom-16 size-32 rounded-full bg-on-accent/10"
+      />
+      <span className="relative flex flex-col">
+        <span className="text-xs font-medium first-letter:uppercase">
+          {day}
+        </span>
+        <span className="text-2xl font-semibold tracking-tight">
+          {greeting}
+        </span>
+      </span>
+    </>
+  );
+
   if (now === null || !next) {
     return (
-      <section
-        aria-label="Próximo evento"
-        className="flex min-h-24 flex-col justify-center gap-1 rounded-card surface px-5 py-4"
-      >
-        <h2 className="text-sm font-semibold text-muted">Próximo evento</h2>
-        {now === null ? null : (
-          <p className="font-semibold text-ink">
-            Nada en las próximas 24 horas
-          </p>
-        )}
+      <section aria-label="Próximo evento" className={frame}>
+        {head}
+        <span className="relative flex flex-col">
+          <h2 className="text-xs font-medium">Próximo evento</h2>
+          {now === null ? null : (
+            <p className="font-semibold">Nada en las próximas 24 horas</p>
+          )}
+        </span>
       </section>
     );
   }
@@ -76,19 +129,22 @@ export function NextEventCard({
   return (
     <Link
       href={`/dashboard/events/${next.id}`}
-      className="flex flex-col gap-3 rounded-card border border-accent-edge bg-accent px-5 py-4 text-on-accent transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+      className={`${frame} transition-opacity hover:opacity-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink`}
     >
-      <span className="flex flex-col gap-0.5">
-        <span className="text-sm font-semibold">Próximo evento</span>
-        <span className="line-clamp-2 text-lg leading-tight font-semibold break-words">
-          {next.title}
+      {head}
+      <span className="relative flex items-end justify-between gap-3">
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-xs font-medium">Próximo evento</span>
+          <span className="line-clamp-2 text-lg leading-tight font-semibold break-words">
+            {next.title}
+          </span>
+          <span className="text-sm tabular-nums">
+            {formatTime(next.startsAt, timeZone)} · {next.calendarName}
+          </span>
         </span>
-        <span className="text-sm tabular-nums">
-          {formatTime(next.startsAt, timeZone)} · {next.calendarName}
+        <span className="shrink-0 rounded-full bg-on-accent/15 px-3 py-1 text-sm font-semibold tabular-nums">
+          {formatCountdown(Date.parse(next.startsAt) - now)}
         </span>
-      </span>
-      <span className="text-3xl leading-none font-bold tracking-tight tabular-nums">
-        {formatCountdown(Date.parse(next.startsAt) - now)}
       </span>
     </Link>
   );

@@ -30,7 +30,7 @@ describe("AppFrame (RF-9)", () => {
     ).toHaveLength(2);
   });
 
-  it("shows the header on a phone and the bottom bar up to 1023 px (spec 025 RF-8)", () => {
+  it("shows the header and the floating bar on a phone, and the top bar from 769 px (spec 030 RF-5, RF-6)", () => {
     render(
       <AppFrame
         accent="red"
@@ -42,17 +42,25 @@ describe("AppFrame (RF-9)", () => {
       </AppFrame>,
     );
 
-    expect(screen.getByRole("banner")).toHaveClass("tab:hidden");
-    const [, bar] = screen.getAllByRole("navigation", { name: "Principal" });
-    expect(bar).toHaveClass("lg:hidden");
-    expect(bar).not.toHaveClass("max-tab:hidden");
+    const [desktop, phone] = screen.getAllByRole("banner");
+    expect(desktop).toHaveClass("max-tab:hidden");
+    expect(phone).toHaveClass("tab:hidden");
+    const [tabs, bar] = screen.getAllByRole("navigation", {
+      name: "Principal",
+    });
+    expect(desktop).toContainElement(tabs!);
+    expect(bar).toHaveClass("tab:hidden");
+    // "+" is in both: with its name in the top bar, floating on a phone.
+    expect(screen.getAllByRole("link", { name: "Nuevo evento" })).toHaveLength(
+      2,
+    );
     // The content keeps clear of both, with the safe areas of iOS.
     const content = document.querySelector("#contenido")!;
     expect(content.className).toContain(
-      "pb-[calc(4rem+env(safe-area-inset-bottom))]",
+      "pb-[calc(5.5rem+env(safe-area-inset-bottom))]",
     );
     expect(content.className).toContain(
-      "pt-[calc(3.5rem+env(safe-area-inset-top))]",
+      "pt-[calc(3.25rem+env(safe-area-inset-top))]",
     );
   });
 });

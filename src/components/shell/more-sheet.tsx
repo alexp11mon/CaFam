@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useId, useRef } from "react";
 import { NAV_ITEMS, SHEET_SECTIONS, type Section } from "@/lib/shell/nav";
-import { BAR_ICON, BAR_ITEM } from "./bar-styles";
+import { BAR_ICON, BAR_ITEM, TAB_ITEM } from "./bar-styles";
 import { MoreIcon, SECTION_ICONS, SignOutIcon } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -18,9 +18,12 @@ const ROW =
 export function MoreSheet({
   current,
   signOutAction,
+  variant = "bar",
 }: {
   current: Section | null;
   signOutAction: () => Promise<void>;
+  /** In the phone's floating bar, or as a tab of the desktop navigation. */
+  variant?: "bar" | "tab";
 }) {
   const sheet = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -37,19 +40,21 @@ export function MoreSheet({
           current && SHEET_SECTIONS.includes(current) ? "page" : undefined
         }
         onClick={() => sheet.current?.showModal()}
-        className={BAR_ITEM}
+        className={variant === "tab" ? TAB_ITEM : BAR_ITEM}
       >
         <span className={BAR_ICON}>
           <MoreIcon />
         </span>
-        Más
+        <span className={variant === "tab" ? "max-lg:sr-only" : undefined}>
+          Más
+        </span>
       </button>
       <dialog
         ref={sheet}
         aria-labelledby={titleId}
         data-sheet=""
         onClose={() => trigger.current?.focus()}
-        className="mx-0 mt-auto mb-0 w-full max-w-full rounded-t-card surface-float p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink backdrop:bg-scrim/50"
+        className="mx-0 mt-auto mb-0 w-full max-w-full rounded-t-card surface-float p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink backdrop:bg-scrim/50 tab:m-auto tab:max-w-sm tab:rounded-card"
       >
         <div className="mb-2 flex items-center justify-between gap-3 px-3">
           <h2 id={titleId} className="text-lg font-semibold">
