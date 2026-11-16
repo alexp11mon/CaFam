@@ -1,20 +1,46 @@
 import type { Metadata } from "next";
-import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Suspense } from "react";
+import { NotesBoard } from "@/components/notes/notes-board";
+import { LinkButton } from "@/components/ui/link-button";
+import { todayKey } from "@/lib/calendar/format";
+import { getProfileTimeZone, requireUser } from "@/lib/calendar/queries";
+import { getNotes } from "@/lib/notes/queries";
 
 export const metadata: Metadata = { title: "Notas" };
 
-// Spec 025 RF-8: the destination exists in the navigation from now on; the
-// screen itself arrives with spec 028.
+// Reads the session, so it streams behind <Suspense> (cacheComponents).
+async function Notes() {
+  const { supabase, userId } = await requireUser();
+  const [notes, timeZone] = await Promise.all([
+    getNotes(supabase),
+    getProfileTimeZone(supabase, userId),
+  ]);
+  return (
+    <NotesBoard notes={notes} today={todayKey(timeZone)} userId={userId} />
+  );
+}
+
+/** The list of notes (spec 028 RF-1 to RF-3). */
 export default function NotesPage() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
-      <h1 className="text-2xl font-bold text-ink max-tab:sr-only">Notas</h1>
-      <Card>
-        <EmptyState title="Notas está en camino">
-          Aquí podrás apuntar listas de tareas y notas. Llega muy pronto.
-        </EmptyState>
-      </Card>
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-4 py-4 sm:px-6 tab:py-6">
+      <div className="flex items-center justify-between gap-3 max-tab:hidden">
+        <h1 className="text-2xl font-bold text-ink">Notas</h1>
+        {/* On a phone "+" in the bottom bar does this (spec 025 plan D7). */}
+        <div className="hidden lg:block">
+          <LinkButton href="/dashboard/notes/new">Nueva nota</LinkButton>
+        </div>
+      </div>
+      <h1 className="sr-only tab:hidden">Notas</h1>
+      <Suspense
+        fallback={
+          <p role="status" className="text-muted">
+            Cargando tus notas…
+          </p>
+        }
+      >
+        <Notes />
+      </Suspense>
     </main>
   );
 }

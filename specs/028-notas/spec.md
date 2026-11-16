@@ -1,6 +1,6 @@
 # Spec 028 — Notas
 
-> Estado: **En curso** (2026-11-15). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-15). Quinta spec del encargo de rediseño. Migraciones nuevas, aplicadas solo en el Supabase local de esta sesión (ver "No probado").
+> Estado: **Cerrada** (2026-11-15). Aprobada de antemano por el usuario en el prompt de arranque (2026-11-15). Quinta spec del encargo de rediseño. Migraciones nuevas, aplicadas solo en el Supabase local de esta sesión (ver "No probado").
 
 ## Contexto y objetivo
 

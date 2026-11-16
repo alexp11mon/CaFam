@@ -221,6 +221,48 @@ export function AssistantIcon() {
   );
 }
 
+/** A pin: a note kept at the top (spec 028). */
+export function PinIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <Icon>
+      <path
+        d="M9 4h6l-1 6 3 3H7l3-3-1-6Z"
+        fill={filled ? "currentColor" : "none"}
+      />
+      <path d="M12 13v7" />
+    </Icon>
+  );
+}
+
+/** A box: archive (spec 028). */
+export function ArchiveIcon() {
+  return (
+    <Icon>
+      <rect x="3" y="4" width="18" height="5" rx="1" />
+      <path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4" />
+    </Icon>
+  );
+}
+
+/** A bin: delete (spec 028). */
+export function TrashIcon() {
+  return (
+    <Icon>
+      <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" />
+    </Icon>
+  );
+}
+
+/** A lens: search (spec 028). */
+export function SearchIcon() {
+  return (
+    <Icon>
+      <circle cx="11" cy="11" r="6" />
+      <path d="m16 16 4 4" />
+    </Icon>
+  );
+}
+
 /** A paper plane: send (spec 027). */
 export function SendIcon() {
   return (

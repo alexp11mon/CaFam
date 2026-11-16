@@ -248,6 +248,23 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
+        <Section title="Notas">
+          <p>
+            Las notas que escribes (su título, su texto, los elementos de sus
+            listas, su color y su fecha límite) se guardan en la base de datos
+            de CaFam, igual que tus eventos. Por defecto una nota es personal y
+            solo la ves tú.
+          </p>
+          <p>
+            Si vinculas una nota a un calendario, la ven todos sus miembros; el
+            propietario y los editores pueden cambiarla y los lectores solo
+            leerla. Si sales de ese calendario, la nota se queda en él y dejas
+            de verla. Al borrar tu cuenta se borran tus notas personales; las
+            compartidas se quedan en su calendario, sin tu nombre.
+          </p>
+          <p>Las notas no se envían a Google, a iCloud ni al asistente.</p>
+        </Section>
+
         <Section title="Contacto">
           <p>
             Para cualquier duda, escribe al correo de asistencia que muestra

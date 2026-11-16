@@ -128,4 +128,17 @@ describe("/privacy: images in the assistant (spec 022)", () => {
       screen.getByText(/CaFam no guarda las imágenes/),
     ).toBeInTheDocument();
   });
+
+  // Spec 028 (RF-15).
+  it("says what is kept of the notes and who sees them", () => {
+    render(<PrivacyPage />);
+    const section = screen
+      .getByRole("heading", { name: "Notas" })
+      .closest("section")!;
+    expect(section).toHaveTextContent("solo la ves tú");
+    expect(section).toHaveTextContent("la ven todos sus miembros");
+    expect(section).toHaveTextContent(
+      "no se envían a Google, a iCloud ni al asistente",
+    );
+  });
 });
