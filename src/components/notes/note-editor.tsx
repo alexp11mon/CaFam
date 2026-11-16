@@ -312,11 +312,11 @@ export function NoteEditor({
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.currentTarget.blur();
               }}
-              className="min-h-12 w-full rounded-block bg-transparent text-2xl font-bold text-ink outline-none placeholder:text-muted focus-visible:ring-2 focus-visible:ring-ink/20"
+              className="min-h-12 w-full rounded-block bg-transparent text-2xl font-semibold text-ink outline-none placeholder:text-muted focus-visible:ring-2 focus-visible:ring-ink/20"
             />
           </>
         ) : (
-          <h1 className="text-2xl font-bold text-ink">
+          <h1 className="text-2xl font-semibold text-ink">
             {note.title || "Sin título"}
           </h1>
         )}

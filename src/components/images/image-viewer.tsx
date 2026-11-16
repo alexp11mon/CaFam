@@ -157,7 +157,7 @@ export function ImageViewer({
     >
       <header className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <h2 id={titleId} className="truncate text-lg font-bold">
+          <h2 id={titleId} className="truncate text-lg font-semibold">
             {title}
           </h2>
           <p className="text-sm text-muted">

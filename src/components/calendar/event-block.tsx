@@ -163,7 +163,7 @@ export function EventBlock({
       {shape === "card" ? (
         <>
           <span className="truncate">
-            <span className="font-bold">{event.title}</span>
+            <span className="font-semibold">{event.title}</span>
             <RepeatMark series={Boolean(event.seriesId)} icon={icons} />
             <ImageMark count={event.imageCount} icon={icons} />
             <CommentMark count={event.commentCount} icon={icons} />
@@ -172,7 +172,7 @@ export function EventBlock({
         </>
       ) : (
         <>
-          <span className="font-bold">{event.title}</span>
+          <span className="font-semibold">{event.title}</span>
           <RepeatMark series={Boolean(event.seriesId)} icon={icons} />
           <ImageMark count={event.imageCount} icon={icons} />
           <CommentMark count={event.commentCount} icon={icons} />

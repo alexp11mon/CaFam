@@ -106,7 +106,7 @@ export function MiniMonth({
         <h2
           id={titleId}
           aria-live="polite"
-          className="pl-2 text-base font-bold text-ink first-letter:uppercase"
+          className="pl-2 text-base font-semibold text-ink first-letter:uppercase"
         >
           {monthTitle.format(new Date(`${month}-01T00:00:00Z`))}
         </h2>
@@ -165,7 +165,7 @@ export function MiniMonth({
                       aria-current={isToday ? "date" : undefined}
                       className={`press-quiet mx-auto flex size-11 flex-col items-center justify-center rounded-control text-sm tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
                         isToday
-                          ? "border border-accent-edge bg-accent font-extrabold text-on-accent"
+                          ? "border border-accent-edge bg-accent font-bold text-on-accent"
                           : `hover:bg-stone ${inMonth ? "font-medium text-ink" : "text-muted"}`
                       }`}
                     >

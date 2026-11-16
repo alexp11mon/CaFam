@@ -18,7 +18,6 @@ const SURFACES: [file: string, utility: "surface" | "surface-float"][] = [
   ["src/components/calendar/quick-create.tsx", "surface-float"],
   ["src/components/calendar/confirm-dialog.tsx", "surface-float"],
   ["src/components/calendar/merge-form.tsx", "surface-float"],
-  ["src/components/ui/toast.tsx", "surface-float"],
 ];
 
 function source(file: string) {

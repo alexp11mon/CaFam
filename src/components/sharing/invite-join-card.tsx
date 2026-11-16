@@ -42,7 +42,7 @@ export function InviteJoinCard({
       <dl className="flex flex-col gap-3 rounded-card bg-paper p-4">
         <div>
           <dt className="text-sm text-muted">Calendario</dt>
-          <dd className="min-w-0 break-words text-lg font-bold">
+          <dd className="min-w-0 break-words text-lg font-semibold">
             {preview.calendarName}
           </dd>
         </div>

@@ -850,3 +850,23 @@ html[data-reveal] [data-view-switcher] {
     animation: none;
   }
 }
+
+/* Ticking an item: the box pops once (constitution, amendment 11; spec 030
+   RF-9). Scale only; none with reduced motion. */
+@keyframes check-pop {
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+@utility check-pop {
+  &[data-checked] {
+    animation: check-pop var(--motion-pulse) var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .check-pop[data-checked] {
+    animation: none;
+  }
+}

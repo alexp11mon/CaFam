@@ -205,7 +205,7 @@ export function EventComments({
       aria-labelledby={headingId}
       className="flex flex-col gap-4 border-t border-line pt-4"
     >
-      <h3 id={headingId} className="text-lg font-bold text-ink">
+      <h3 id={headingId} className="text-lg font-semibold text-ink">
         Comentarios
       </h3>
       {/* New comments of others are heard without moving the focus (RNF accesibilidad). */}

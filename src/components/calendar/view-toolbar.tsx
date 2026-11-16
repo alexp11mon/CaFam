@@ -137,7 +137,7 @@ export function ViewToolbar({
             >
               <ChevronIcon direction="right" />
             </CalendarLink>
-            <h2 className="min-w-0 text-lg font-bold text-ink tabular-nums first-letter:uppercase">
+            <h2 className="min-w-0 text-lg font-semibold text-ink tabular-nums first-letter:uppercase">
               {formatPeriodTitle(view, date)}
             </h2>
             {/* Folded, the mini month opens from the title (RF-19). */}

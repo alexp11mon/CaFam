@@ -32,7 +32,7 @@ export function NoteCard({ note, today }: { note: Note; today: string }) {
         className={`absolute inset-y-0 left-0 w-1.5 ${note.color ? "" : "bg-line"}`}
       />
       <span className="flex items-start gap-2">
-        <span className="min-w-0 flex-1 text-lg leading-snug font-bold text-ink">
+        <span className="min-w-0 flex-1 text-lg leading-snug font-semibold text-ink">
           {title}
         </span>
         {note.pinned ? (

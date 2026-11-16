@@ -21,7 +21,7 @@ export function Chip({
     <button
       type={type}
       aria-pressed={selected}
-      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-control bg-paper px-4 text-sm font-semibold whitespace-nowrap text-ink press-quiet hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60 aria-pressed:border-accent-edge aria-pressed:bg-accent aria-pressed:text-on-accent ${className}`}
+      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-paper px-4 text-sm font-medium whitespace-nowrap text-muted press-quiet hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60 aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent-ink ${className}`}
       {...props}
     />
   );
@@ -34,7 +34,7 @@ export function ChipLink({
 }: LinkProps & { children: ReactNode; className?: string }) {
   return (
     <Link
-      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-control bg-paper px-4 text-sm font-semibold whitespace-nowrap text-ink press-quiet hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${className}`}
+      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-paper px-4 text-sm font-medium whitespace-nowrap text-muted press-quiet hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${className}`}
       {...props}
     />
   );

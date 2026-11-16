@@ -78,7 +78,7 @@ export function EventDetail({
           className="mt-2 size-4 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
           style={{ backgroundColor: event.color ?? event.calendarColor }}
         />
-        <h2 className="min-w-0 break-words text-xl font-bold text-ink">
+        <h2 className="min-w-0 break-words text-xl font-semibold text-ink">
           {event.title}
         </h2>
       </header>

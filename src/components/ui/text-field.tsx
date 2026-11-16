@@ -34,7 +34,7 @@ export function TextField({
         name={name}
         aria-invalid={Boolean(error)}
         aria-describedby={describedBy || undefined}
-        className="min-h-12 w-full rounded-control border border-control bg-paper px-4 py-2.5 text-base text-ink outline-none transition-[border-color,box-shadow] placeholder:text-muted focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20 aria-invalid:border-danger"
+        className="min-h-11 w-full rounded-control border border-control bg-paper px-3.5 py-2 text-base text-ink outline-none transition-[border-color,box-shadow] placeholder:text-muted focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20 aria-invalid:border-danger"
         {...inputProps}
       />
       {hint ? (

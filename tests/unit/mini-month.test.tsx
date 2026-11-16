@@ -66,7 +66,7 @@ describe("MiniMonth (RF-23)", () => {
     const today = dayLink(/^jueves, 22 de octubre de 2026, hoy/);
     expect(today).toHaveAttribute("aria-current", "date");
     expect(today.className).toMatch(/bg-accent/);
-    expect(today.className).toMatch(/font-extrabold/);
+    expect(today.className).toMatch(/font-bold/);
   });
 
   it("goes to that date in the current view (RF-25)", () => {

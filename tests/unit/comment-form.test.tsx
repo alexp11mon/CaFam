@@ -26,8 +26,8 @@ const UUID = /^[0-9a-f-]{36}$/;
 describe("CommentForm", () => {
   it("has a visible label and a Comentar button", () => {
     const { button } = setup();
-    // 48 px to touch (spec 025 RF-6, RNF-2).
-    expect(button).toHaveClass("min-h-12");
+    // 44 px to touch (spec 030 RNF-2).
+    expect(button).toHaveClass("min-h-11");
   });
 
   it("sends the text with a new client id and empties the field", async () => {

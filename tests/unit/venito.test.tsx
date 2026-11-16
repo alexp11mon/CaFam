@@ -75,11 +75,8 @@ describe("Venito", () => {
         properties.every((p) => p === "transform" || p === "opacity"),
       ).toBe(true);
     }
-    const reduced = css.slice(
-      css.lastIndexOf("@media (prefers-reduced-motion: reduce)"),
-    );
-    expect(reduced).toMatch(
-      /\[data-venito\] \[data-part\][\s\S]*animation: none/,
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\) \{\s*\[data-venito\] \[data-part\][\s\S]*?animation: none/,
     );
   });
 });

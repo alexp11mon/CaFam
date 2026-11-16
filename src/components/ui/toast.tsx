@@ -39,7 +39,7 @@ let lastId = 0;
 
 // Both notices share one cell, so the new one enters over the old one.
 const NOTICE =
-  "flex items-center gap-3 rounded-full text-sm font-semibold text-ink [grid-area:1/1]";
+  "flex items-center gap-3 rounded-control text-sm font-medium text-on-ink [grid-area:1/1]";
 
 export function useToast() {
   return useContext(ToastContext);
@@ -139,7 +139,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             data-leaving=""
             aria-hidden="true"
             inert
-            className={`${NOTICE} surface-float ${previous.undo ? "py-1 pr-1 pl-5" : "px-5 py-3"}`}
+            className={`${NOTICE} bg-ink shadow-float ${previous.undo ? "py-0.5 pr-1 pl-4" : "px-4 py-2.5"}`}
           >
             {previous.text}
           </p>
@@ -149,7 +149,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={toast.id}
             data-toast=""
             data-leaving={toast.leaving ? "" : undefined}
-            className={`${NOTICE} surface-float ${toast.undo ? "py-1 pr-1 pl-5" : "px-5 py-3"}`}
+            className={`${NOTICE} bg-ink shadow-float ${toast.undo ? "py-0.5 pr-1 pl-4" : "px-4 py-2.5"}`}
           >
             {toast.text}
             {toast.undo ? (
@@ -157,7 +157,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 type="button"
                 disabled={undoing}
                 onClick={() => runUndo(toast.undo!)}
-                className="press settle pointer-events-auto min-h-11 rounded-control px-4 font-semibold text-accent-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
+                className="press settle pointer-events-auto min-h-11 rounded-control px-4 font-semibold text-on-ink underline decoration-on-ink/50 underline-offset-4 hover:decoration-on-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-ink disabled:opacity-60"
               >
                 Deshacer
               </button>

@@ -31,14 +31,14 @@ export function TopBar({ displayName }: { displayName: string }) {
           type="button"
           aria-expanded={pickerOpen}
           onClick={() => setPickerOpen(!pickerOpen)}
-          className="-ml-2 flex min-h-11 min-w-0 items-center gap-1 rounded-control px-2 text-xl font-bold text-ink press-quiet first-letter:uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          className="-ml-2 flex min-h-11 min-w-0 items-center gap-1 rounded-control px-2 text-xl font-semibold text-ink press-quiet first-letter:uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
           {/* The month cross-fades as the agenda scrolls (spec 021 RF-52). */}
           <CrossfadeText text={state.title} />
           <CaretIcon open={pickerOpen} />
         </button>
       ) : (
-        <p className="min-w-0 truncate text-xl font-bold text-ink">
+        <p className="min-w-0 truncate text-xl font-semibold text-ink">
           {state?.title ?? section ?? "CaFam"}
         </p>
       )}
@@ -52,7 +52,7 @@ export function TopBar({ displayName }: { displayName: string }) {
         <span
           aria-hidden="true"
           style={{ backgroundColor: PERSON_TINTS[0] }}
-          className="flex size-8 items-center justify-center rounded-full text-xs font-bold text-pastel-ink"
+          className="flex size-8 items-center justify-center rounded-full text-xs font-semibold text-pastel-ink"
         >
           {initials(displayName)}
         </span>

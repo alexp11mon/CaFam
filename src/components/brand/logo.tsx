@@ -28,9 +28,7 @@ export function Logo() {
   return (
     <span className="inline-flex items-center gap-3">
       <LogoMark className="size-10" />
-      <span className="text-2xl font-extrabold tracking-tight text-ink">
-        CaFam
-      </span>
+      <span className="text-2xl font-bold tracking-tight text-ink">CaFam</span>
     </span>
   );
 }

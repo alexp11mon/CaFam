@@ -31,7 +31,7 @@ export default function HomePage() {
           </span>
           {/* Venito says hello: the mascot is part of the brand (spec 027). */}
           <Venito mood="wave" className="size-32 self-center" />
-          <h1 className="text-3xl leading-tight font-extrabold tracking-tight text-ink sm:text-4xl">
+          <h1 className="text-3xl leading-tight font-bold tracking-tight text-ink sm:text-4xl">
             El calendario de tu familia, en un solo sitio
           </h1>
           <p className="text-lg text-muted">

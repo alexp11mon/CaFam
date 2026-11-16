@@ -80,14 +80,14 @@ export function NextEventCard({
     >
       <span className="flex flex-col gap-0.5">
         <span className="text-sm font-semibold">Próximo evento</span>
-        <span className="line-clamp-2 text-lg leading-tight font-bold break-words">
+        <span className="line-clamp-2 text-lg leading-tight font-semibold break-words">
           {next.title}
         </span>
         <span className="text-sm tabular-nums">
           {formatTime(next.startsAt, timeZone)} · {next.calendarName}
         </span>
       </span>
-      <span className="text-3xl leading-none font-extrabold tracking-tight tabular-nums">
+      <span className="text-3xl leading-none font-bold tracking-tight tabular-nums">
         {formatCountdown(Date.parse(next.startsAt) - now)}
       </span>
     </Link>

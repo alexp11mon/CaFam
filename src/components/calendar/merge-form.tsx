@@ -211,7 +211,7 @@ export function MergeForm({
         className="m-auto w-[calc(100%-2rem)] max-w-md rounded-control surface-float p-6 text-ink backdrop:bg-scrim/50"
       >
         <div className="flex flex-col gap-4">
-          <h2 id={titleId} className="text-lg font-bold">
+          <h2 id={titleId} className="text-lg font-semibold">
             {`¿Juntar en «${targetName}»?`}
           </h2>
           <p>Desaparecerán: {listNames(disappearing.map((c) => c.name))}.</p>

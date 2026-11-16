@@ -33,7 +33,7 @@ export default function PrivacyPage() {
       </Link>
       <article className="flex flex-col gap-6 rounded-card bg-paper p-4 text-ink sm:p-8">
         <header className="flex flex-col gap-1">
-          <h1 className="text-3xl leading-tight font-extrabold tracking-tight">
+          <h1 className="text-3xl leading-tight font-bold tracking-tight">
             Política de privacidad
           </h1>
           <p className="text-sm text-muted">Última actualización: {UPDATED}</p>

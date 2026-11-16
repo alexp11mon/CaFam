@@ -56,7 +56,7 @@ export function GoToDateDialog({
           onGo(value);
         }}
       >
-        <h2 id={titleId} className="text-lg font-bold">
+        <h2 id={titleId} className="text-lg font-semibold">
           Ir a una fecha
         </h2>
         <TextField

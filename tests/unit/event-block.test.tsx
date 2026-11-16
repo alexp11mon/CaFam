@@ -57,7 +57,7 @@ describe("EventBlock", () => {
       expect(link()).toHaveStyle({ backgroundColor: "#FFADAD" });
       expect(link()).toHaveClass("text-pastel-ink");
       expect(screen.getByText("Examen de Electrónica")).toHaveClass(
-        "font-bold",
+        "font-semibold",
       );
       expect(link()).toHaveTextContent("Con imágenes");
     },

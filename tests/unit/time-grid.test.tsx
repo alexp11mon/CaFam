@@ -92,7 +92,7 @@ describe("TimeGrid", () => {
     const block = screen.getByRole("link", { name: /Clase/ });
     expect(block).toHaveStyle({ backgroundColor: "#A0C4FF" });
     expect(block).toHaveClass("break-words", "overflow-hidden");
-    expect(within(block).getByText("Clase")).toHaveClass("font-bold");
+    expect(within(block).getByText("Clase")).toHaveClass("font-semibold");
     expect(within(block).getByText("Academia")).toBeInTheDocument();
     expect(within(block).getByText("09:15,")).toHaveClass("sr-only");
   });

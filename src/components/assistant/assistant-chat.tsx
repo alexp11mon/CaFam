@@ -388,7 +388,9 @@ export function AssistantChat({
           />
         </span>
         <div className="min-w-0 flex-1">
-          <h1 className="text-base leading-tight font-bold text-ink">Venito</h1>
+          <h1 className="text-base leading-tight font-semibold text-ink">
+            Venito
+          </h1>
           <p className="truncate text-sm text-muted">
             {quotaReached
               ? "descansando hasta mañana"
@@ -411,7 +413,7 @@ export function AssistantChat({
         {empty ? (
           <section className="mx-auto flex max-w-sm flex-col items-center gap-3 rounded-card surface px-5 py-6 text-center">
             <Venito mood="wave" className="size-24" />
-            <p className="text-lg font-bold text-ink">¡Hola! Soy Venito</p>
+            <p className="text-lg font-semibold text-ink">¡Hola! Soy Venito</p>
             {/* RF-33 of spec 015: say where the data goes before the first question. */}
             <p className="text-sm text-muted">
               Pregúntame por tus eventos o por cuándo estáis libres. Tus

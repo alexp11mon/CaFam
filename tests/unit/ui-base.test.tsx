@@ -26,14 +26,13 @@ beforeAll(() => {
 });
 
 describe("buttons", () => {
-  it("the primary one is the accent, 48 px tall and never a pill", () => {
+  it("the primary one carries the gradient of the accent, 44 px tall and never a pill (spec 030 RF-9)", () => {
     render(<Button>Guardar</Button>);
     const button = screen.getByRole("button", { name: "Guardar" });
     expect(button).toHaveClass(
-      "bg-accent",
+      "bg-accent-gradient",
       "text-on-accent",
-      "border-accent-edge",
-      "min-h-12",
+      "min-h-11",
       "rounded-control",
     );
     expect(button).not.toHaveClass("rounded-full");
@@ -52,7 +51,7 @@ describe("buttons", () => {
     );
     expect(screen.getByRole("button", { name: "Cancelar" })).toHaveClass(
       "bg-paper",
-      "border-control",
+      "border-line",
     );
     expect(screen.getByRole("button", { name: "Ahora no" })).not.toHaveClass(
       "border",
@@ -61,7 +60,7 @@ describe("buttons", () => {
       "text-danger",
     );
     expect(screen.getByRole("link", { name: "Volver" })).toHaveClass(
-      "min-h-12",
+      "min-h-11",
       "rounded-control",
     );
   });
@@ -80,7 +79,7 @@ describe("buttons", () => {
 });
 
 describe("fields", () => {
-  it("never go below 16 px, so iOS does not zoom in (amendment 10)", () => {
+  it("never go below 16 px, so iOS does not zoom in (amendment 11)", () => {
     render(
       <>
         <TextField label="Título" name="title" />
@@ -95,7 +94,7 @@ describe("fields", () => {
       expect(field).toHaveClass("text-base", "rounded-control");
       expect(field.className).not.toMatch(/\btext-(?:xs|sm)\b/);
     }
-    expect(screen.getByLabelText("Título")).toHaveClass("min-h-12");
+    expect(screen.getByLabelText("Título")).toHaveClass("min-h-11");
   });
 });
 

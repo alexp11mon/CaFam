@@ -53,7 +53,7 @@ export function Sheet({
     >
       <div className="flex max-h-[90dvh] flex-col">
         <div className="flex items-center justify-between gap-3 py-2 pr-2 pl-5">
-          <h2 id={titleId} className="text-lg font-bold">
+          <h2 id={titleId} className="text-lg font-semibold">
             {title}
           </h2>
           <IconButton label="Cerrar" onClick={onClose}>

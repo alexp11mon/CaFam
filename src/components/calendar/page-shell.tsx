@@ -28,7 +28,7 @@ export function PageShell({
           {backLabel}
         </Link>
         <h1
-          className={`text-2xl font-bold text-ink ${inTopBar ? "max-tab:sr-only" : ""}`}
+          className={`text-2xl font-semibold text-ink ${inTopBar ? "max-tab:sr-only" : ""}`}
         >
           {title}
         </h1>

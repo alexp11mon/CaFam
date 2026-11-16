@@ -266,7 +266,7 @@ export function EventModal({
       <header className="flex items-center gap-2 border-b border-line px-4 py-2 sm:px-6">
         <h2
           id={titleId}
-          className="min-w-0 flex-1 truncate text-lg font-bold text-ink"
+          className="min-w-0 flex-1 truncate text-lg font-semibold text-ink"
         >
           {title}
         </h2>

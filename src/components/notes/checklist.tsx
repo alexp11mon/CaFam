@@ -73,11 +73,12 @@ export function Checklist({
           aria-label={item.text}
           disabled={!canWrite}
           onClick={() => handlers.onToggle(item)}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full press-quiet focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed"
+          className="group flex size-11 shrink-0 items-center justify-center rounded-full press-quiet focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed"
         >
           <span
             aria-hidden="true"
-            className={`flex size-6 items-center justify-center rounded-block border transition-colors [&_svg]:size-4 ${item.done ? "border-accent-edge bg-accent text-on-accent" : "border-control bg-paper text-transparent"}`}
+            data-checked={item.done || undefined}
+            className={`check-pop flex size-5.5 items-center justify-center rounded-full border-[1.5px] transition-colors [&_svg]:size-3.5 ${item.done ? "border-accent bg-accent text-on-accent" : "border-control bg-paper text-transparent group-hover:border-accent"}`}
           >
             <CheckIcon />
           </span>
@@ -97,11 +98,11 @@ export function Checklist({
             onKeyDown={(event) => {
               if (event.key === "Enter") event.currentTarget.blur();
             }}
-            className={`min-h-11 min-w-0 flex-1 rounded-block bg-transparent px-1 text-base outline-none focus-visible:bg-paper focus-visible:ring-2 focus-visible:ring-ink/20 ${item.done ? "text-muted line-through" : "text-ink"}`}
+            className={`min-h-11 min-w-0 flex-1 rounded-block bg-transparent px-1 text-base outline-none focus-visible:bg-paper focus-visible:ring-2 focus-visible:ring-ink/20 ${item.done ? "text-muted line-through decoration-muted/70" : "text-ink"}`}
           />
         ) : (
           <span
-            className={`min-w-0 flex-1 px-1 py-2 ${item.done ? "text-muted line-through" : "text-ink"}`}
+            className={`min-w-0 flex-1 px-1 py-2 ${item.done ? "text-muted line-through decoration-muted/70" : "text-ink"}`}
           >
             {item.text}
           </span>

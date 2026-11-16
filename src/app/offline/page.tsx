@@ -13,7 +13,7 @@ export default function OfflinePage() {
         <Logo />
         {/* Nothing to do without a network: Venito naps (spec 027 RF-7). */}
         <Venito mood="sleeping" className="size-28" />
-        <h1 className="text-2xl font-bold text-ink">Sin conexión</h1>
+        <h1 className="text-2xl font-semibold text-ink">Sin conexión</h1>
         <p className="text-muted">
           No hay conexión a internet. Comprueba tu red y vuelve a intentarlo.
         </p>

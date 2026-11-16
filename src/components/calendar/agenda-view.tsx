@@ -298,7 +298,7 @@ export function AgendaView({
             <h2
               key={`month-${item.key}`}
               data-month={item.key}
-              className="mt-2 flex h-28 scroll-mt-[calc(4rem+env(safe-area-inset-top))] items-end rounded-card bg-agenda-band px-5 pb-4 text-3xl font-bold text-ink first-letter:uppercase max-tab:rounded-none tab:scroll-mt-40"
+              className="mt-2 flex h-28 scroll-mt-[calc(4rem+env(safe-area-inset-top))] items-end rounded-card bg-agenda-band px-5 pb-4 text-3xl font-semibold text-ink first-letter:uppercase max-tab:rounded-none tab:scroll-mt-40"
             >
               {item.label}
             </h2>

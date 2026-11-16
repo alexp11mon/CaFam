@@ -52,7 +52,7 @@ export function MoreSheet({
         className="mx-0 mt-auto mb-0 w-full max-w-full rounded-t-card surface-float p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-ink backdrop:bg-scrim/50"
       >
         <div className="mb-2 flex items-center justify-between gap-3 px-3">
-          <h2 id={titleId} className="text-lg font-bold">
+          <h2 id={titleId} className="text-lg font-semibold">
             Más
           </h2>
           <button

@@ -21,7 +21,7 @@ export function ErrorScreen({
         <Logo />
         {/* Venito does not understand it either (spec 027 RF-7). */}
         <Venito mood="confused" className="size-28" />
-        <h1 className="text-2xl font-bold text-ink">{title}</h1>
+        <h1 className="text-2xl font-semibold text-ink">{title}</h1>
         <p className="text-muted">{text}</p>
         <div className="flex flex-wrap justify-center gap-3">{children}</div>
       </div>

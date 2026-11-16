@@ -25,7 +25,7 @@ export default function NotesPage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-4 py-4 sm:px-6 tab:py-6">
       <div className="flex items-center justify-between gap-3 max-tab:hidden">
-        <h1 className="text-2xl font-bold text-ink">Notas</h1>
+        <h1 className="text-2xl font-semibold text-ink">Notas</h1>
         {/* On a phone "+" in the bottom bar does this (spec 025 plan D7). */}
         <div className="hidden lg:block">
           <LinkButton href="/dashboard/notes/new">Nueva nota</LinkButton>

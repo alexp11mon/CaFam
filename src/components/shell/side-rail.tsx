@@ -35,7 +35,7 @@ export function SideRail({
         className="flex items-center gap-3 self-center rounded-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink xl:self-start xl:px-1"
       >
         <LogoMark className="size-11" />
-        <span className="text-xl font-extrabold tracking-tight text-ink max-xl:sr-only">
+        <span className="text-xl font-bold tracking-tight text-ink max-xl:sr-only">
           CaFam
         </span>
       </Link>

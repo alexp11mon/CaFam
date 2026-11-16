@@ -28,7 +28,7 @@ export function CalendarSheet() {
     >
       <div className="flex flex-col gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-between gap-3 pl-1">
-          <h2 id={titleId} className="text-lg font-bold">
+          <h2 id={titleId} className="text-lg font-semibold">
             Calendarios
           </h2>
           <button

@@ -22,7 +22,7 @@ export function ShortcutsHelp({ onClose }: { onClose: () => void }) {
       onClose={onClose}
       className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-control surface-float p-6 text-ink backdrop:bg-scrim/50"
     >
-      <h2 id={titleId} className="text-lg font-bold">
+      <h2 id={titleId} className="text-lg font-semibold">
         Atajos de teclado
       </h2>
       <dl className="mt-4 grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">

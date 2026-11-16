@@ -257,7 +257,7 @@ export function EventCard({
         />
         <h2
           id={titleId}
-          className="min-w-0 flex-1 break-words text-lg font-bold"
+          className="min-w-0 flex-1 break-words text-lg font-semibold"
         >
           {event.title}
         </h2>

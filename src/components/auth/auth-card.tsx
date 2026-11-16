@@ -15,7 +15,7 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
         <p className="mb-6">
           <Logo />
         </p>
-        <h1 className="mb-6 text-2xl font-bold text-ink">{title}</h1>
+        <h1 className="mb-6 text-2xl font-semibold text-ink">{title}</h1>
         {children}
         <p className="mt-6 text-sm text-ink">
           {footer.text}{" "}
