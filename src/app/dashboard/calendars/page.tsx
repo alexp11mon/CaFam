@@ -9,6 +9,7 @@ import {
 import { GroupForm } from "@/components/groups/group-form";
 import { GroupList } from "@/components/groups/group-list";
 import { ReconnectNotice } from "@/components/connections/reconnect-notice";
+import { ChipLink } from "@/components/ui/chip";
 import { LinkButton } from "@/components/ui/link-button";
 import { daysLeftNow } from "@/lib/account/orphan";
 import { getNotices, getOrphanCalendars } from "@/lib/account/queries";
@@ -89,24 +90,35 @@ async function Calendars() {
       {readOnlyAccounts.map((account) => (
         <ReconnectNotice key={account.id} email={account.email} />
       ))}
-      <div className="flex flex-wrap gap-3">
+      {/* One main action; the other ways in a row that scrolls sideways on a
+          phone instead of a pile of buttons (spec 029 RF-2). */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <LinkButton href="/dashboard/calendars/new">
           Nuevo calendario
         </LinkButton>
-        <LinkButton href="/dashboard/import" variant="secondary">
-          Importar calendario
-        </LinkButton>
-        <LinkButton href="/dashboard/join" variant="secondary">
-          Unirme con código
-        </LinkButton>
-        <LinkButton href="/dashboard/connections" variant="secondary">
-          Cuentas conectadas
-        </LinkButton>
-        {ownedCount >= 2 ? (
-          <LinkButton href="/dashboard/calendars/merge" variant="secondary">
-            Juntar calendarios
-          </LinkButton>
-        ) : null}
+        <ul
+          aria-label="Más formas de añadir calendarios"
+          className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
+        >
+          <li>
+            <ChipLink href="/dashboard/import">Importar calendario</ChipLink>
+          </li>
+          <li>
+            <ChipLink href="/dashboard/join">Unirme con código</ChipLink>
+          </li>
+          <li>
+            <ChipLink href="/dashboard/connections">
+              Cuentas conectadas
+            </ChipLink>
+          </li>
+          {ownedCount >= 2 ? (
+            <li>
+              <ChipLink href="/dashboard/calendars/merge">
+                Juntar calendarios
+              </ChipLink>
+            </li>
+          ) : null}
+        </ul>
       </div>
       <GroupForm action={createGroup} />
       <GroupList

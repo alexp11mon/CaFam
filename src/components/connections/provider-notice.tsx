@@ -1,8 +1,10 @@
+import { BUTTON_BASE, BUTTON_VARIANTS } from "@/components/ui/button-styles";
 import Link from "next/link";
 
 // The link goes to a Route Handler, so it is a plain <a> styled as LinkButton.
-const PRIMARY =
-  "inline-flex min-h-11 items-center justify-center rounded-control bg-ink px-5 py-2 text-base font-semibold text-on-ink press hover:bg-ink/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
+// The same look as every primary action (spec 025 RF-6); an <a> because it
+// leaves the app for Google.
+const PRIMARY = `${BUTTON_BASE} ${BUTTON_VARIANTS.primary}`;
 
 /** What Google will show before the user goes there (RF-48, plan R6; spec 009 RF-40, R7). */
 export function ProviderNotice() {

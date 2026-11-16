@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { IosInstallHint } from "@/components/pwa/ios-install-hint";
 import { Logo } from "@/components/brand/logo";
+import { Venito } from "@/components/brand/venito";
 import { LinkButton } from "@/components/ui/link-button";
 import { createClient } from "@/lib/supabase/server";
 
@@ -28,6 +29,8 @@ export default function HomePage() {
           <span className="self-center">
             <Logo />
           </span>
+          {/* Venito says hello: the mascot is part of the brand (spec 027). */}
+          <Venito mood="wave" className="size-32 self-center" />
           <h1 className="text-3xl leading-tight font-extrabold tracking-tight text-ink sm:text-4xl">
             El calendario de tu familia, en un solo sitio
           </h1>

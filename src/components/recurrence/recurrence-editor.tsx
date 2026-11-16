@@ -200,7 +200,7 @@ function Editor({
               {WEEKDAYS.map((day, index) => (
                 <label
                   key={day}
-                  className="flex min-h-11 items-center gap-1.5 rounded-control border border-control bg-paper px-3 has-checked:border-ink has-checked:bg-ink has-checked:text-on-ink"
+                  className="flex min-h-11 items-center gap-1.5 rounded-control border border-control bg-paper px-3 has-checked:border-accent-edge has-checked:bg-accent has-checked:text-on-accent"
                 >
                   <input
                     type="checkbox"

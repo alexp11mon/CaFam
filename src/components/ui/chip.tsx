@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes, Ref } from "react";
+import Link, { type LinkProps } from "next/link";
+import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 
 interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** A chip that is a choice says so; one that only acts leaves it out. */
@@ -21,6 +22,19 @@ export function Chip({
       type={type}
       aria-pressed={selected}
       className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-control bg-paper px-4 text-sm font-semibold whitespace-nowrap text-ink press-quiet hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60 aria-pressed:border-accent-edge aria-pressed:bg-accent aria-pressed:text-on-accent ${className}`}
+      {...props}
+    />
+  );
+}
+
+/** A chip that goes somewhere: the secondary ways of a screen, in one row. */
+export function ChipLink({
+  className = "",
+  ...props
+}: LinkProps & { children: ReactNode; className?: string }) {
+  return (
+    <Link
+      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-control bg-paper px-4 text-sm font-semibold whitespace-nowrap text-ink press-quiet hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${className}`}
       {...props}
     />
   );
