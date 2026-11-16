@@ -155,7 +155,7 @@ export function AssistantFab() {
         onClick={show}
         className="fixed right-5.5 bottom-[calc(9.75rem+env(safe-area-inset-bottom))] z-30 flex size-11 items-center justify-center rounded-full surface-float press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink tab:right-6 tab:bottom-6 tab:size-14"
       >
-        <Venito mood={mood} className="size-9 tab:size-12" />
+        <Venito mood={mood} className="size-9 tab:size-12" compact />
         {activity === "idle" ? null : (
           <span
             aria-hidden="true"

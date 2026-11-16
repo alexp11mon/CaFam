@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { Venito, type VenitoMood } from "@/components/brand/venito";
 import { VENITO } from "@/lib/theme/accents";
 
-// Spec 027, T1: the mascot (RF-1).
+// Spec 027, T1: the mascot (RF-1); a walrus since spec 031.
 const MOODS: VenitoMood[] = [
   "idle",
   "wave",
@@ -38,12 +38,32 @@ describe("Venito", () => {
     ).not.toHaveAttribute("aria-hidden");
   });
 
+  it("is a walrus with glasses, tusks and whiskers, without a collar (spec 031 RF-1)", () => {
+    const { container } = render(<Venito />);
+    for (const part of ["glasses", "tusks", "whiskers", "flipper", "eyes"]) {
+      expect(container.querySelector(`[data-part="${part}"]`)).not.toBeNull();
+    }
+    expect(container.querySelector('[data-part="collar"]')).toBeNull();
+  });
+
+  it("drops the whiskers and draws thicker when compact (spec 031 RF-4)", () => {
+    const big = render(<Venito />).container;
+    const { container } = render(<Venito compact />);
+    expect(container.querySelector('[data-part="whiskers"]')).toBeNull();
+    const width = (root: Element) =>
+      Number(
+        root.querySelector('[data-part="body"]')!.getAttribute("stroke-width"),
+      );
+    expect(width(container)).toBeGreaterThan(width(big));
+  });
+
   it("is drawn with its own tokens, never a loose color nor the accent", () => {
     const { container } = render(<Venito mood="happy" />);
     const html = container.innerHTML;
-    expect(html).toMatch(/fill-seal\b/);
+    expect(html).toMatch(/stroke-walrus-line\b/);
+    expect(html).toMatch(/fill-walrus-body\b/);
     expect(html).not.toMatch(/#[0-9a-f]{3,8}/i);
-    expect(html).not.toMatch(/accent/);
+    expect(html).not.toMatch(/accent|seal/);
   });
 
   it.each(["light", "dark"] as const)(
@@ -55,10 +75,9 @@ describe("Venito", () => {
           ? css.indexOf(":root {")
           : css.indexOf('[data-theme="dark"] {');
       const block = css.slice(start, css.indexOf("}", start));
-      expect(block).toContain(`--seal: ${values.seal.toLowerCase()};`);
-      expect(block).toContain(`--seal-light: ${values.light.toLowerCase()};`);
-      expect(block).toContain(`--seal-dark: ${values.dark.toLowerCase()};`);
-      expect(block).toContain(`--seal-blush: ${values.blush.toLowerCase()};`);
+      expect(block).toContain(`--walrus-line: ${values.line.toLowerCase()};`);
+      expect(block).toContain(`--walrus-body: ${values.body.toLowerCase()};`);
+      expect(block).not.toContain("--seal");
     },
   );
 

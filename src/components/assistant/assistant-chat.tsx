@@ -385,6 +385,7 @@ export function AssistantChat({
           <Venito
             mood={quotaReached ? "sleeping" : pending ? "thinking" : "idle"}
             className="size-10"
+            compact
           />
         </span>
         <div className="min-w-0 flex-1">
@@ -466,7 +467,7 @@ export function AssistantChat({
               </div>
             ) : (
               <div key={index} className="flex max-w-[92%] gap-2 self-start">
-                <Venito className="mt-1 size-8" />
+                <Venito className="mt-1 size-8" compact />
                 <div className="flex min-w-0 flex-col items-start gap-1">
                   <div className="rounded-card rounded-bl-block surface px-4 py-3 text-ink">
                     <span className="sr-only">Venito: </span>
@@ -502,7 +503,7 @@ export function AssistantChat({
         <div role="status" className="flex items-end gap-2 empty:hidden">
           {pending ? (
             <>
-              <Venito mood="thinking" className="size-8" />
+              <Venito mood="thinking" className="size-8" compact />
               <div className="flex items-center gap-3 rounded-card rounded-bl-block surface px-4 py-2">
                 <span
                   data-typing=""
@@ -533,6 +534,7 @@ export function AssistantChat({
             <Venito
               mood={quotaReached ? "sleeping" : "confused"}
               className="size-10"
+              compact
             />
             <span className="min-w-0 flex-1">{error.text}</span>
             {error.retry ? (

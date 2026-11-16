@@ -58,6 +58,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 028-notas | Sección Notas: listas de tareas y notas de texto, personales o compartidas por calendario con sus roles, edición optimista, "Deshacer", búsqueda, fijar, archivar, fecha límite y tiempo real | **Cerrada** (2026-11-15), T1–T6; **2 migraciones aplicadas solo en un Supabase local** (pendiente `db push` a dev y a prod) |
 | 029-pantallas-restantes-y-cierre | Revisión de las pantallas secundarias, recorrido completo en móvil (`scripts/e2e-phone.mjs`), capturas y esta documentación | **Cerrada** (2026-11-16), T1–T4 |
 | 030-estilo-nexo | Identidad "Nexo" pedida por el usuario con su prototipo (enmienda 11): lavanda, violeta con degradado, Inter, navegación en píldora (flotante abajo en el móvil con "+" y Venito flotantes; arriba en escritorio), cabecera del calendario en el contenido, tarjeta de saludo y Venito secretario con gafas | **Cerrada** (2026-11-16), T1–T6; sin migraciones |
+| 031-venito-morsa | Venito pasa de foca a morsa de línea con gafas, colmillos y bigotes, como la referencia del usuario (enmienda 12) | **Cerrada** (2026-11-16), T1; sin migraciones |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -284,7 +285,7 @@ Añadido por las specs 025, 026 y 030 (identidad y marco; la 030 sustituye la id
 
 Añadido por la spec 027 (Venito y el chat; sin migraciones):
 
-- **`Venito`** (`components/brand/venito.tsx`): un SVG con `mood` (`idle`, `wave`, `thinking`, `happy`, `confused`, `sleeping`), colores `seal*` propios, gestos en `globals.css` (`venito-*`, anulados con `prefers-reduced-motion`). Desde la 030 lleva gafas, cuello y corbata.
+- **`Venito`** (`components/brand/venito.tsx`): un SVG con `mood` (`idle`, `wave`, `thinking`, `happy`, `confused`, `sleeping`), colores `walrus-line` y `walrus-body` propios, gestos en `globals.css` (`venito-*`, anulados con `prefers-reduced-motion`). Desde la 031 es una **morsa** de línea con gafas, colmillos y bigotes (enmienda 12); con `compact` (48 px o menos: botón flotante y chat) pierde los bigotes y engorda el trazo.
 - **El chat es un panel del marco**: `AssistantFab` pinta el botón y un `<dialog>` modal con `AssistantChat` (cargado con `lazy()` y montado en reposo; su contexto se pide con `loadAssistantContext` al abrirlo). Ocupa la pantalla en el móvil (su alto sigue a `visualViewport` para que el teclado no tape el campo) y flota en la esquina desde 769 px. Se cierra con su botón, Escape, tocando fuera o arrastrando la cabecera hacia abajo. La conversación vive en memoria mientras la app esté abierta. `/dashboard/assistant` muestra el mismo chat a página completa.
 - **Chat**: cabecera con Venito y su estado, burbujas con hora, "escribiendo…" con el paso real, barra de entrada con adjuntar y enviar, y **sugerencias** (`lib/assistant/suggestions.ts`): se envían, rellenan el campo o abren el selector de imagen. `ImageAttach` se partió en botón, `AttachNote` y `AttachPreview`.
 
@@ -596,7 +597,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 Reglas completas en la constitución ("Identidad visual y diseño de interfaz", enmienda 11, identidad **Nexo**). Lo que hay en el código:
 
 - **Tokens** en `src/app/globals.css`, con los valores de `src/lib/theme/accents.ts` (`theme-css.test.ts` los mantiene iguales y `accents.test.ts` comprueba el contraste):
-  - Neutros: `stone #F3F2FA` (fondo lavanda), `paper #FFFFFF` (tarjetas), `ink #1D1B2E`, `muted #6F6C86`, `line #E9E7F5` (bordes finos), `control #8B88A6` (bordes de campos, 3:1) y `danger`, más `on-ink`, `pastel-ink`, `mark`/`on-mark` (la ficha de la marca), `scrim` y los `seal*` de Venito. El tema oscuro redefine las variables en `[data-theme="dark"]` y en `prefers-color-scheme: dark` sin `data-theme="light"`.
+  - Neutros: `stone #F3F2FA` (fondo lavanda), `paper #FFFFFF` (tarjetas), `ink #1D1B2E`, `muted #6F6C86`, `line #E9E7F5` (bordes finos), `control #8B88A6` (bordes de campos, 3:1) y `danger`, más `on-ink`, `pastel-ink`, `mark`/`on-mark` (la ficha de la marca), `scrim` y los `walrus-*` de Venito. El tema oscuro redefine las variables en `[data-theme="dark"]` y en `prefers-color-scheme: dark` sin `data-theme="light"`.
   - Acento: `accent` (relleno), `accent-to` (fin del degradado), `on-accent`, `accent-ink` (texto y líneas), `accent-edge` y `accent-soft` (fondo suave de lo activo). Seis acentos con los ids guardados de siempre: `red` = Violeta (por defecto), `blue` = Azul, `green` = Verde, `yellow` = Ámbar, `purple` = Rosa, `gray` = Grafito.
   - Radios: `rounded-card` (20 px), `rounded-control` (12 px), `rounded-block` (8 px) y `rounded-full`. La guardia prohíbe cualquier otro.
   - Elevación: `surface` (borde fino y sombra mínima) y `surface-float` (lo que flota). Nunca `backdrop-filter`.

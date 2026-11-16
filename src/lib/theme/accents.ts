@@ -68,18 +68,8 @@ export const BRAND = { tile: "#6D5BF0", onTile: "#FFFFFF" } as const;
 
 /** Venito, the mascot (spec 027 RF-1, plan D5): its own colors in each theme. */
 export const VENITO = {
-  light: {
-    seal: "#8DA3B0",
-    light: "#E9EFF2",
-    dark: "#22323F",
-    blush: "#F2A99B",
-  },
-  dark: {
-    seal: "#9FB4C0",
-    light: "#EEF3F5",
-    dark: "#0F0E1A",
-    blush: "#F2A99B",
-  },
+  light: { line: "#22364F", body: "#FFFFFF" },
+  dark: { line: "#DCE3EE", body: "#232139" },
 } as const;
 
 export const THEME_INKS = {
