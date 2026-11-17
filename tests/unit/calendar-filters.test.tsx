@@ -423,3 +423,14 @@ describe("group of calendars without owner (spec 006 RF-22)", () => {
     expect(order.calendars[ORPHAN_GROUP_ID]).toEqual(["o2", "o1"]);
   });
 });
+
+describe("side panel (spec 032 RF-1)", () => {
+  it("scrolls by itself under the header when it does not fit", () => {
+    setup();
+
+    const panel = document.getElementById("calendar-side-panel")!;
+    expect(panel.className).toMatch(/lg:max-h-\[calc\(100dvh-15rem\)\]/);
+    expect(panel.className).toContain("lg:overflow-y-auto");
+    expect(panel.className).toContain("lg:overscroll-contain");
+  });
+});

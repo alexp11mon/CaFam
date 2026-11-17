@@ -760,10 +760,12 @@ export function CalendarWorkspace({
             ) : null}
           </div>
         ) : null}
-        {/* On a phone the drawer and the header take the panel's place (RF-19). */}
+        {/* On a phone the drawer and the header take the panel's place (RF-19).
+          From 1024 px it stays under the header and scrolls by itself when it
+          does not fit; the page only scrolls the view (spec 032 RF-1, D1). */}
         <div
           id="calendar-side-panel"
-          className={`flex flex-col gap-3 max-tab:hidden lg:sticky lg:top-56 lg:w-84 lg:shrink-0 ${sidebar.collapsed ? "lg:hidden" : ""}`}
+          className={`flex flex-col gap-3 max-tab:hidden lg:sticky lg:top-56 lg:-mx-2 lg:max-h-[calc(100dvh-15rem)] lg:w-88 lg:shrink-0 lg:overflow-y-auto lg:overscroll-contain lg:px-2 lg:pb-4 ${sidebar.collapsed ? "lg:hidden" : ""}`}
         >
           {nextEvents && loadedAt !== undefined ? (
             <NextEventCard
