@@ -49,7 +49,8 @@ Además, `npm run test:db` en las tareas que tocan acceso a datos (T4, T5) y pru
 
   Cubre: RF-36, RF-41, RF-50 a RF-55 | Módulo: conflict, limits
 
-- [ ] T4 Leer la copia completa en el servidor (`loadOfflineSnapshot`)
+- [x] T4 Leer la copia completa en el servidor (`loadOfflineSnapshot`)
+  Evidencia: `npm run test:db -- offline-snapshot` en verde (3 tests: copia de Ana con su rol de Editor en el calendario de Luis, repeticiones calculadas con descripción y resumen, nada del calendario de Sam ni emails, imágenes, comentarios u "Ocupado"); `offline-actions.test.ts` comprueba `unauthenticated` sin redirigir. `test:db` completo: 50 archivos, 555 tests en verde. typecheck, lint (solo el aviso previo de `event-form.tsx`), format:check, `npm test` y build en verde.
   Hecho cuando: `npm run test:db -- offline-snapshot` en verde. Los tests cubren:
   - devuelve perfil, calendarios con rol y sincronización, categorías, grupos, personas, preferencias, eventos del rango (repeticiones calculadas, descripción, autor y resumen) y notas con elementos, solo de lo que el usuario ve por RLS;
   - no incluye imágenes, comentarios, "Ocupado", emails ni credenciales;
