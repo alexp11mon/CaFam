@@ -76,7 +76,8 @@ Además, `npm run test:db` en las tareas que tocan acceso a datos (T4, T5) y pru
 
   Cubre: RF-19, RF-21, RF-23, RF-31 a RF-34, RF-41, RF-46, RF-47, RF-50 a RF-55, RF-58, RF-63, RNF-5 | Módulo: offline-actions, event-writes, note-writes
 
-- [ ] T6 Guardar en IndexedDB y detectar la conexión (`db.ts`, `connection.ts`, `useConnection`)
+- [x] T6 Guardar en IndexedDB y detectar la conexión (`db.ts`, `connection.ts`, `useConnection`)
+  Evidencia: `offline-db` (5 tests con un IndexedDB en memoria escrito en el test) y `offline-connection` (6 tests con relojes simulados) en verde. La cola se guarda entera bajo una clave (`enqueue` la funde entera), y `conflicts` y `rejected` por `changeId`. El anuncio es `ConnectionAnnouncer` (`components/offline/`), que no dice nada al pintar y anuncia cada cambio. typecheck, lint (aviso previo), format:check, `npm test` (2840/2840) y build en verde.
   Hecho cuando: `npm test -- offline-db offline-connection` en verde. Los tests cubren:
   - almacenes `meta`, `snapshot`, `outbox`, `conflicts` y `rejected` con un IndexedDB en memoria escrito en el test (R9);
   - borrar todo;
