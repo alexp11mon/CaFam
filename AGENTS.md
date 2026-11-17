@@ -59,6 +59,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 029-pantallas-restantes-y-cierre | Revisión de las pantallas secundarias, recorrido completo en móvil (`scripts/e2e-phone.mjs`), capturas y esta documentación | **Cerrada** (2026-11-16), T1–T4 |
 | 030-estilo-nexo | Identidad "Nexo" pedida por el usuario con su prototipo (enmienda 11): lavanda, violeta con degradado, Inter, navegación en píldora (flotante abajo en el móvil con "+" y Venito flotantes; arriba en escritorio), cabecera del calendario en el contenido, tarjeta de saludo y Venito secretario con gafas | **Cerrada** (2026-11-16), T1–T6; sin migraciones |
 | 031-venito-morsa | Venito pasa de foca a morsa de línea con gafas, colmillos y bigotes, como la referencia del usuario (enmienda 12) | **Cerrada** (2026-11-16), T1; sin migraciones |
+| 032-calendarios-plegables | Panel lateral del calendario que se desplaza por sí mismo (fallo: con muchos calendarios no se llegaba a los de abajo), grupos y personas plegables en los filtros con modo "Ordenar", y "Mis calendarios" con grupos plegables, opciones tras "⋯", calendarios en filas que se despliegan y "Nuevo grupo" en una hoja | **Cerrada** (2026-11-17), T1–T5; sin migraciones. Spec, plan y tareas aprobados de antemano por el usuario |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -296,6 +297,13 @@ Añadido por la spec 028 (Notas; migraciones `notes` y `notes_calendar_functions
 - **Triggers**: `notes_rules`, `note_items_rules`, `note_items_touch` (un cambio en un elemento actualiza la nota), `live_notes_changed` (`live_notify(calendar_id, owner_id)`), `notes_member_left` (al salir del calendario sus notas de allí quedan sin autor) y `notes_profile_deleted` (borra las personales antes del perfil). `merge_calendars` mueve las notas y `copy_calendar_for_owner` las copia.
 - **Código**: `lib/notes/` (puro: `order`, `search`, `progress`, `permissions`, `schemas`, `error-messages`; `queries.ts`), `app/dashboard/notes/actions.ts` (una escritura por acción; los elementos no revalidan) y `components/notes/` (`NotesBoard`, `NoteCard`, `NoteForm`, `NoteEditor`, `Checklist`, `TextNote`). `NoteEditor` es dueño de la nota en pantalla: cada cambio se ve al instante y se revierte con aviso si falla; los ids de los elementos los crea el navegador.
 
+
+Añadido por la spec 032 (sin migraciones):
+
+- **Panel lateral** (`#calendar-side-panel`, desde 1024 px): `sticky` con alto máximo `calc(100dvh-15rem)` y desplazamiento propio (`overscroll-contain`).
+- **Plegado recordado en el dispositivo**: `lib/calendar/folded.ts` (puro; `foldId` da las ids compartidas `group:<id>`, `person:<id>`, `section:calendars`, `section:ungrouped`, `categories:<calendarId>`) y `useFolded(id, porDefecto)` (`lib/hooks/use-folded.ts`, `localStorage` `cafam-folded`, solo elecciones explícitas). Las categorías empiezan plegadas; lo demás, desplegado. `tests/setup-unit.ts` limpia el almacén tras cada test.
+- **Filtros** (`CalendarFilters`): título plegable con "N de M visibles", flecha "Plegar/Desplegar <grupo>" y "2/3" por grupo o persona, categorías bajo "Mostrar las categorías de <calendario>" con "1 categoría oculta", y las flechas Subir/Bajar solo tras "Ordenar" (que despliega todo sin guardarlo) hasta "Hecho".
+- **"Mis calendarios"**: `GroupSection` se pliega con la misma id que en los filtros y guarda Renombrar, Borrar, Subir y Bajar tras "Opciones de <grupo>"; "Sin grupo" es un `FoldSection`; `CalendarList` (ahora cliente) pinta filas que despliegan detalles y acciones, una a la vez; "Nuevo grupo" es un chip que abre `GroupForm` en una `Sheet` (`NewGroupButton`; el campo se llama "Nombre del grupo"). `FoldChevron` (`components/ui/fold-chevron.tsx`) es la flecha de todo lo plegable.
 
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 

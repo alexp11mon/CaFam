@@ -1,6 +1,6 @@
 # Spec 032 — Panel lateral desplazable y calendarios plegables
 
-> Estado: **Aprobada** por el usuario el 2026-11-17, con el plan y las tareas aprobados de antemano ("Aprobada, plan y tareas incluidos"). Petición del 2026-11-17: "En la pestaña de Agenda (…) no se puede bajar, solamente el deslizable de la página sirve para bajar la agenda, y no los elementos de la izquierda", "en los calendarios, me gustaría que fuera un desplegable (…) que el usuario pudiera seleccionar cuándo ver los calendarios, cuándo ver los calendarios de un grupo" y "lo mismo para la configuración de los calendarios (…) aparece mucha información de golpe (…) sobre todo en un dispositivo móvil".
+> Estado: **Cerrada** (2026-11-17). **Aprobada** por el usuario el 2026-11-17, con el plan y las tareas aprobados de antemano ("Aprobada, plan y tareas incluidos"). Petición del 2026-11-17: "En la pestaña de Agenda (…) no se puede bajar, solamente el deslizable de la página sirve para bajar la agenda, y no los elementos de la izquierda", "en los calendarios, me gustaría que fuera un desplegable (…) que el usuario pudiera seleccionar cuándo ver los calendarios, cuándo ver los calendarios de un grupo" y "lo mismo para la configuración de los calendarios (…) aparece mucha información de golpe (…) sobre todo en un dispositivo móvil".
 
 ## Contexto
 
