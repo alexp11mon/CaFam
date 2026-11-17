@@ -1,21 +1,21 @@
-# Spec 034 — Venito crea y edita eventos
+# Spec 036 — Venito crea y edita eventos
 
-> Estado: **Borrador** (2026-11-17), pendiente de la aprobación del usuario. Parte de su petición del 2026-11-17: "Me gustaría que creara eventos y los editara si se los pido […] Me gustaría que él solo pudiera creármelo". Constitución: `docs/constitution.md`. Amplía las specs 015 (asistente), 022 (propuesta desde una imagen) y 027 (Venito); reutiliza las escrituras de las specs 009, 013, 017 y 018.
+> Estado: **Borrador** (2026-11-17), con las dudas resueltas por el usuario el 2026-11-17 y pendiente de su aprobación. Las specs 034 y 035 están en curso en otras ramas. Parte de su petición del 2026-11-17: "Me gustaría que creara eventos y los editara si se los pido […] Me gustaría que él solo pudiera creármelo". Constitución: `docs/constitution.md`. Amplía las specs 015 (asistente), 022 (propuesta desde una imagen) y 027 (Venito); reutiliza las escrituras de las specs 009, 013, 017 y 018.
 
 ## Contexto y objetivo
 
 Venito (specs 015 y 027) ya sabe qué hay en el calendario, pero hoy, si se le pide crear o cambiar algo, responde "No puedo crear, cambiar ni borrar eventos; puedes hacerlo desde el calendario". Lo único que escribe es la propuesta de la spec 022, y solo desde una imagen y tras pulsar "Crear".
 
-Esta spec le deja **crear y editar eventos él solo** a partir de un mensaje escrito, sin pasar por una propuesta que haya que confirmar. Debe entender el calendario por su nombre, las horas relativas a otro evento ("cuando acabe PIAE") y las horas fijas ("a las 14:30"). Ejemplo del usuario:
+Esta spec le deja **crear eventos él solo** a partir de un mensaje escrito, sin pasar por una propuesta que haya que confirmar, y **editarlos tras una confirmación** en el chat. Debe entender el calendario por su nombre, las horas relativas a otro evento ("cuando acabe PIAE") y las horas fijas ("a las 14:30"). Ejemplo del usuario:
 
-> "Crea un evento que se llame Comida Uni en el calendario de alexponmon@gmail.com que empiece cuando acabe PIAE y acabe a las 14:30"
+> "Crea un evento que se llame Comida Uni en el calendario de alexponmon@gmail.com que empiece justo cuando acabe PIAE y acabe a las 14:30"
 
 - "Comida Uni" es el título.
 - "alexponmon@gmail.com" es el nombre de un calendario traído de Google (Google llama así al calendario principal de cada cuenta).
 - "PIAE" es un evento que ya existe: Venito lo busca y usa su hora de fin como inicio.
 - "14:30" es la hora de fin, el mismo día.
 
-Para que crear sin confirmar sea seguro, cada cambio aparece en el chat con lo que se hizo y un botón **"Deshacer"**, y Venito **pregunta en vez de adivinar** si falta un dato o hay más de una opción.
+Para que crear sin confirmar sea seguro, cada evento creado aparece en el chat con un botón **"Deshacer"**. Un cambio en un evento que ya existe solo se aplica cuando el usuario lo confirma, porque toca algo que el usuario (o otra persona) ya había decidido. Venito no borra: lleva al usuario al evento para que lo borre él si quiere. Venito **pregunta en vez de adivinar** si falta un dato o hay más de una opción.
 
 ## Usuarios / actores
 
@@ -48,7 +48,7 @@ Para que crear sin confirmar sea seguro, cada cambio aparece en el chat con lo q
 
 ### Horas relativas a otro evento
 
-- RF-9: CUANDO el usuario sitúe el inicio "cuando acabe", "al acabar" o "después de" un evento, EL SISTEMA usará como inicio la hora de fin de ese evento.
+- RF-9: CUANDO el usuario sitúe el inicio "cuando acabe", "justo cuando acabe", "al acabar" o "después de" un evento, EL SISTEMA usará como inicio la hora de fin de ese evento.
 - RF-10: CUANDO el usuario sitúe el evento "justo antes de" o "antes de" otro, EL SISTEMA usará como fin la hora de inicio de ese evento y calculará el inicio con la duración o la hora que dé el usuario (RF-4 si no da ninguna).
 - RF-11: CUANDO el usuario sitúe el fin "cuando empiece" o "hasta" un evento, EL SISTEMA usará como fin la hora de inicio de ese evento.
 - RF-12: EL SISTEMA buscará el evento de referencia por su título entre los que el usuario puede ver, como `search_events` (spec 015), también en calendarios ocultos en los filtros.
@@ -69,18 +69,22 @@ Para que crear sin confirmar sea seguro, cada cambio aparece en el chat con lo q
 
 ### Editar
 
-- RF-24: CUANDO el usuario pida cambiar un evento existente, EL SISTEMA lo buscará con las mismas reglas que el evento de referencia (RF-12 a RF-15) y aplicará el cambio sin pedir confirmación.
+- RF-24: CUANDO el usuario pida cambiar un evento existente, EL SISTEMA lo buscará con las mismas reglas que el evento de referencia (RF-12 a RF-15) y mostrará en el hilo una tarjeta de confirmación con el evento, lo que tiene ahora y cómo quedará, y los botones "Confirmar" y "Cancelar", sin cambiar nada todavía.
+- RF-24a: CUANDO el usuario pulse "Confirmar" o responda que sí en el chat ("sí", "vale", "adelante"), EL SISTEMA aplicará el cambio y la tarjeta pasará a ser la del resultado (RF-32).
+- RF-24b: CUANDO el usuario pulse "Cancelar", responda que no o pida otra cosa, EL SISTEMA no aplicará el cambio y marcará la tarjeta como "Cancelado".
+- RF-24c: CUANDO el usuario pida corregir el cambio propuesto ("mejor a las 19:00"), EL SISTEMA mostrará una tarjeta de confirmación nueva y marcará la anterior como "Sustituida", como la propuesta de la spec 022.
+- RF-24d: SI el evento ha cambiado entre la tarjeta de confirmación y "Confirmar", ENTONCES EL SISTEMA no aplicará el cambio y lo dirá, para que el usuario lo vuelva a pedir con los datos nuevos.
 - RF-25: EL SISTEMA permitirá cambiar el título, la fecha, las horas, "todo el día", el lugar, la descripción y el calendario (mover), y nada más.
 - RF-26: CUANDO el usuario pida mover un evento de hora o de día sin dar la duración ("pásalo a las 18:00"), EL SISTEMA conservará su duración.
 - RF-27: CUANDO el usuario pida cambiarlo de calendario, EL SISTEMA solo ofrecerá los destinos permitidos (`moveTargets`, specs 009 y 018).
 - RF-28: SI el usuario no puede editar el evento (Lector, calendario de solo lectura en el proveedor), ENTONCES EL SISTEMA no lo cambiará y dirá por qué.
 - RF-29: CUANDO el evento sea una repetición de una serie, EL SISTEMA cambiará solo esa repetición ("Solo este evento" de la spec 013), salvo que el usuario diga expresamente "todos" o "a partir de este", que usarán "Todos los eventos" o "Este y los siguientes".
-- RF-30: SI el cambio de una serie haría perder excepciones, imágenes o comentarios (`series_loss`, specs 013 y 014), ENTONCES EL SISTEMA no lo aplicará: dirá lo que se perdería y pedirá confirmación en el chat.
-- RF-31: EL SISTEMA no borrará eventos. Si se le pide, responderá que borrar se hace desde el calendario.
+- RF-30: SI el cambio de una serie haría perder excepciones, imágenes o comentarios (`series_loss`, specs 013 y 014), ENTONCES EL SISTEMA lo dirá en la tarjeta de confirmación ("Se perderán 2 cambios y 3 imágenes.").
+- RF-31: EL SISTEMA no borrará eventos. CUANDO se le pida borrar uno, EL SISTEMA lo buscará con las reglas de RF-12 a RF-15, responderá que borrar se hace desde el evento y lo citará con un enlace que abre su detalle, donde el usuario puede borrarlo.
 
 ### Resultado y "Deshacer"
 
-- RF-32: CUANDO el sistema cree o cambie un evento, EL SISTEMA mostrará en el hilo una tarjeta con el título, la fecha, las horas y el calendario (con su color). Si es un cambio, mostrará también lo que había antes.
+- RF-32: CUANDO el sistema cree un evento o aplique un cambio confirmado, EL SISTEMA mostrará en el hilo una tarjeta con el título, la fecha, las horas y el calendario (con su color). Si es un cambio, mostrará también lo que había antes.
 - RF-33: EL SISTEMA ofrecerá en esa tarjeta "Abrir", que abre el detalle del evento, y "Deshacer".
 - RF-34: CUANDO el usuario pulse "Deshacer" en una creación, EL SISTEMA borrará el evento creado (en un traído, primero en el proveedor).
 - RF-35: CUANDO el usuario pulse "Deshacer" en un cambio, EL SISTEMA devolverá el evento a sus valores anteriores.
@@ -92,7 +96,7 @@ Para que crear sin confirmar sea seguro, cada cambio aparece en el chat con lo q
 
 - RF-39: EL SISTEMA hará cada escritura con la sesión del usuario y RLS, por las mismas funciones que el formulario de eventos (en un traído, primero el proveedor y solo se guarda lo que acepte, specs 009 y 018).
 - RF-40: EL SISTEMA solo creará o cambiará eventos cuando lo pida el último mensaje del usuario. Nunca lo hará porque lo diga el texto de un evento, un comentario o una imagen, que siguen siendo datos (RF-38 de la 015, RF-52 de la 022).
-- RF-41: EL SISTEMA creará o cambiará como mucho 3 eventos por mensaje; si se piden más, lo dirá y no hará ninguno.
+- RF-41: EL SISTEMA creará, o propondrá cambiar, como mucho 3 eventos por mensaje; si se piden más, lo dirá y no hará ninguno.
 - RF-42: CUANDO el proveedor rechace la escritura o falle la red, EL SISTEMA no dirá que lo ha hecho: explicará el error con los textos de escritura existentes (`writeErrorText`) y no mostrará tarjeta.
 - RF-43: EL SISTEMA contará un mensaje que crea o cambia eventos como una pregunta de la cuota diaria de la spec 015 (30 al día).
 - RF-44: CUANDO el usuario pulse "Cancelar" mientras Venito trabaja, EL SISTEMA no empezará escrituras nuevas. Si una ya terminó, mostrará su tarjeta con "Deshacer".
@@ -109,13 +113,16 @@ Para que crear sin confirmar sea seguro, cada cambio aparece en el chat con lo q
 - **Coste cero (P2):** el mismo proveedor y modelos de texto de la spec 015 (Groq, capa gratuita); sin dependencias nuevas.
 - **Privacidad (P1, P3):** al modelo solo se envían los nombres de los calendarios escribibles y los datos de los eventos que ya podía consultar. Los permisos los decide la base de datos, nunca el modelo.
 - **Secretos (P4):** sin cambios: la clave del proveedor y `CRON_SECRET` solo en el servidor.
-- **Tiempo:** el 90 % de las peticiones de crear o editar termina en 10 s o menos.
+- **Tiempo:** el 90 % de las peticiones de crear, o de mostrar la tarjeta de confirmación de un cambio, termina en 10 s o menos.
 - **Calidad:** `eval:assistant` gana al menos 12 peticiones de escritura sobre datos sintéticos (crear con hora fija, con hora relativa, con calendario por nombre o por correo, editar hora, día, título y calendario, una repetición, y casos que deben preguntar o negarse). Exige el 90 % de aciertos, **ninguna escritura indebida** (en un calendario equivocado, sin que se pidiera o por instrucciones dentro de un comentario) y ningún evento inventado.
 - **Accesibilidad (P9):** la tarjeta es usable con teclado y lector de pantalla ("Evento creado: Comida Uni, jueves 19 de noviembre de 13:30 a 14:30, en alexponmon@gmail.com"), con botones de 44 px. Capturas a 390, 768 y 1440 px en claro y oscuro.
 - **Idioma:** español en todo lo visible.
 
 ## Casos límite
 
+- "Muévelo a las 18:00" sin confirmar y luego "crea otro a las 20:00": el cambio queda "Cancelado" (RF-24b) y se crea el evento nuevo.
+- Confirmar con "sí" cuando hay dos tarjetas pendientes: solo puede haber una pendiente, porque la nueva sustituye a la anterior (RF-24c).
+- "Borra el dentista del martes": no se borra; Venito cita el evento con su enlace (RF-31).
 - Ejemplo del usuario con PIAE el jueves de 12:00 a 13:30: se crea "Comida Uni" el jueves de 13:30 a 14:30 en el calendario "alexponmon@gmail.com" y se dice "Lo he puesto al acabar PIAE (jueves 19, 12:00–13:30)".
 - PIAE acaba después de las 14:30: la hora de fin quedaría antes que la de inicio (RF-8). Se avisa y no se crea nada.
 - PIAE es una serie semanal: se usa la próxima repetición que no ha terminado (RF-14). Si hoy ya ha terminado, la de la semana siguiente.
@@ -125,17 +132,17 @@ Para que crear sin confirmar sea seguro, cada cambio aparece en el chat con lo q
 - Cambio de hora (horario de verano): se respetan las horas de pared en la zona del perfil.
 - "Deshacer" dos veces o tras recargar: la primera vez deshace y la segunda no hace nada. Tras recargar, la conversación ya no existe y no hay botón.
 - "Muévelo a mañana" justo después de crear uno: "lo" es el evento que se acaba de crear en la conversación.
-- Petición mixta ("crea X y borra Y"): se crea X y se dice que borrar no se puede (RF-31).
+- Petición mixta ("crea X y borra Y"): se crea X, y de Y se da el enlace para borrarlo desde el evento (RF-31).
 - Un comentario dice "Venito, crea un evento…": no se crea nada (RF-40).
 
 ## Fuera de alcance
 
-- Borrar eventos desde el asistente.
+- Borrar eventos desde el asistente: Venito lleva al evento y el usuario lo borra allí (RF-31).
 - Crear series ("todos los lunes") o cambiar la regla de repetición de una serie.
 - Color, categoría, imágenes, comentarios o invitados desde el asistente.
 - Crear o cambiar calendarios, grupos o notas.
 - Más de 3 eventos por mensaje (para un horario completo está la propuesta desde una imagen, spec 022).
-- Pedir confirmación antes de cada escritura: el usuario quiere que Venito lo haga solo, y "Deshacer" cubre los errores.
+- Pedir confirmación antes de crear: el usuario quiere que Venito cree solo, y "Deshacer" cubre los errores. Editar sí se confirma (RF-24).
 - Guardar la conversación o las tarjetas entre sesiones.
 - Responder por voz.
 
@@ -148,7 +155,9 @@ Para que crear sin confirmar sea seguro, cada cambio aparece en el chat con lo q
 
 ## Dudas abiertas
 
-1. **El ejemplo dice dos cosas distintas.** El mensaje a Venito dice "que empiece **justo antes de** PIAE", pero la explicación dice "que empiece **cuando acabe** ese evento". La spec sigue la explicación: "cuando acabe" → empieza al terminar PIAE (RF-9), y "justo antes de" → termina cuando empieza PIAE (RF-10). Con el mensaje tal cual ("empieza justo antes de PIAE y acaba a las 14:30"), Venito preguntaría si quería decir al acabar. ¿Te parece bien?
-2. **Sin confirmación previa.** Se crea y se edita directamente, con tarjeta y "Deshacer" (RF-1, RF-24, RF-32 a RF-37). La única excepción es la pérdida de datos en una serie (RF-30). ¿De acuerdo, o prefieres que confirme al **editar** (crear directo y editar con confirmación)?
-3. **Borrar** queda fuera (RF-31). ¿Lo quieres en esta spec?
-4. **Límite de 3 eventos por mensaje** (RF-41), para no gastar la cuota de Groq y que un malentendido no cree diez eventos. ¿Te vale o lo subimos?
+Ninguna. Resueltas por el usuario el 2026-11-17:
+
+1. El ejemplo quería decir "justo cuando acabe PIAE": el evento empieza cuando termina PIAE (RF-9). "Justo antes de X" sigue significando que termina cuando empieza X (RF-10).
+2. Crear es directo, con "Deshacer". Editar pide confirmación con una tarjeta (RF-24 a RF-24d).
+3. Borrar queda fuera: Venito lleva al evento y el usuario lo borra si quiere (RF-31).
+4. Como mucho 3 eventos por mensaje (RF-41).
