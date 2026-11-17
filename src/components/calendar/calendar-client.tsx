@@ -11,7 +11,13 @@ import {
   type ComponentProps,
 } from "react";
 import type { BusyInput } from "@/lib/availability/busy";
-import { eventsInRange, type EventWindow } from "@/lib/calendar/event-window";
+import {
+  eventsInRange,
+  type DayRange,
+  type EventWindow,
+} from "@/lib/calendar/event-window";
+import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
+import { coversRange } from "@/lib/offline/range";
 import { monthMarks } from "@/lib/calendar/month-marks";
 import {
   calendarHref,
@@ -77,8 +83,11 @@ export function CalendarClient({
   initialBusy,
   loadWindow,
   loadBusy,
+  availableRange,
   ...workspace
 }: {
+  /** The days the offline copy holds; others are not shown (spec 034 RF-11). */
+  availableRange?: DayRange;
   initialView: CalendarView;
   initialDate: string;
   /** Events from the weeks of the previous month to those of the next (RF-1). */
@@ -189,9 +198,14 @@ export function CalendarClient({
     [events.events, queue, calendars],
   );
   // A window the server read again keeps the device's copy fresh (RF-5, D9).
+  // Not in the offline app, whose window is the copy itself. Again once the
+  // copy is read from the device, which comes after the page.
+  const hasCopy = copy !== null;
   useEffect(() => {
-    void mergeIntoCopy(serverWindow).catch(() => {});
-  }, [serverWindow]);
+    if (!availableRange && hasCopy) {
+      void mergeIntoCopy(serverWindow).catch(() => {});
+    }
+  }, [serverWindow, availableRange, hasCopy]);
 
   const range = useMemo(
     () => getVisibleRange(view, date, timeZone),
@@ -291,6 +305,18 @@ export function CalendarClient({
       <p role="status" className="sr-only">
         {events.loading ? "Cargando eventos…" : ""}
       </p>
+      {availableRange &&
+      !coversRange(availableRange, {
+        from: range.days[0]!,
+        to: range.days.at(-1)!,
+      }) ? (
+        <p
+          role="alert"
+          className="rounded-control border border-line bg-paper px-4 py-3 text-ink"
+        >
+          {OFFLINE_MESSAGES.outOfRange}
+        </p>
+      ) : null}
       {events.failed ? (
         <div
           role="alert"

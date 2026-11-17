@@ -14,7 +14,9 @@ import * as db from "@/lib/offline/db";
 import { flush } from "@/lib/offline/flush";
 import { loadQueue } from "@/lib/offline/queue-store";
 import { getSnapshot, setSnapshot } from "@/lib/offline/snapshot-store";
+import { loadPage } from "@/lib/offline/navigate";
 import { ConnectionAnnouncer } from "./connection-announcer";
+import { useLinkCapture } from "./offline-router";
 
 /** The copy is read again after this long with the tab visible (RF-6). */
 export const COPY_MAX_AGE_MS = 15 * 60_000;
@@ -37,7 +39,14 @@ function refreshOfflineApp() {
  * sends what waits when the network is back (RF-4, RF-6, RF-38, RF-39,
  * RF-45, RF-64). One per app frame; nothing is drawn but the announcer.
  */
-export function OfflineProvider({ userId }: { userId: string }) {
+export function OfflineProvider({
+  userId,
+  offlineApp = false,
+}: {
+  userId: string;
+  /** In the offline app, whose own router takes the links. */
+  offlineApp?: boolean;
+}) {
   const router = useRouter();
   const { show } = useToast();
   const online = useConnection();
@@ -46,6 +55,10 @@ export function OfflineProvider({ userId }: { userId: string }) {
   const reading = useRef(false);
 
   useEffect(() => startWatching(), []);
+
+  // Without the network a Next navigation could hang: a link loads the page,
+  // which the service worker turns into the offline app (plan R10).
+  useLinkCapture(!online && !offlineApp, loadPage);
 
   // The device's data, after dropping another account's (RF-64).
   useEffect(() => {

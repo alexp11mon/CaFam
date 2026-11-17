@@ -9,7 +9,7 @@ import { getBusyIntervals, getBusyPeople } from "@/lib/availability/queries";
 import { eventsInRange, serverWindow } from "@/lib/calendar/event-window";
 import { todayKey } from "@/lib/calendar/format";
 import { nextEventsWindow } from "@/lib/calendar/next-event";
-import { organizeGroups } from "@/lib/calendar/organize-groups";
+import { calendarProps } from "@/lib/calendar/calendar-props";
 import {
   getCalendarProfile,
   getEventsInRange,
@@ -27,7 +27,6 @@ import {
   parseViewParams,
 } from "@/lib/calendar/ranges";
 import { toViewEvents } from "@/lib/calendar/to-view-events";
-import { canWriteEvents } from "@/lib/sync/read-only";
 import { setGroupVisibility } from "../calendars/group-actions";
 import { createEvent } from "../events/actions";
 import { loadAgendaEvents } from "./agenda-actions";
@@ -130,47 +129,14 @@ async function CalendarContent({
     );
   }
 
-  const names = new Map(calendars.map((c) => [c.id, c.name]));
-  const canCreate = calendars.some(canWriteEvents);
-  const nextEvents = read.upcoming
-    .filter((record) => !record.allDay)
-    .map((record) => ({
-      id: record.id,
-      title: record.title,
-      startsAt: record.startsAt,
-      endsAt: record.endsAt,
-      allDay: record.allDay,
-      calendarId: record.calendarId,
-      calendarName: names.get(record.calendarId) ?? "",
-    }));
-
-  // People, calendars and their saved order and visibility (RF-42, RF-45, RF-46).
-  // The user's groups come first, as in "Mis calendarios" (spec 007 RF-36).
-  const organized = organizeGroups({
-    currentUserId: userId,
+  const { canCreate, nextEvents, groups, editableCalendars } = calendarProps({
+    userId,
+    calendars,
     people,
     groups: userGroups,
-    calendars: calendars.map(({ id, name, ownerId, createdAt, color }) => ({
-      id,
-      name,
-      ownerId,
-      createdAt,
-      color,
-    })),
-    ...preferences,
+    preferences,
+    upcoming: read.upcoming,
   });
-  const groups = [
-    ...organized.groups.map((section) => ({
-      person: {
-        id: section.group.id,
-        displayName: section.group.name,
-        isMe: false,
-      },
-      groupId: section.group.id,
-      calendars: section.calendars,
-    })),
-    ...organized.people,
-  ];
 
   return (
     <CalendarClient
@@ -197,9 +163,7 @@ async function CalendarContent({
       loadMonthMarks={loadMonthMarks}
       saveLastView={saveLastView}
       loadAgendaEvents={loadAgendaEvents}
-      editableCalendars={calendars
-        .filter(canWriteEvents)
-        .map(({ id, name, color }) => ({ id, name, color }))}
+      editableCalendars={editableCalendars}
       createAction={createEvent}
       userId={userId}
       showWeekends={profile.showWeekends}

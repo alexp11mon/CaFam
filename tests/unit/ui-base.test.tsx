@@ -163,12 +163,13 @@ describe("Venito in the empty and broken moments (spec 027 RF-7)", () => {
     ).toBeInTheDocument();
   });
 
-  it("naps on the offline page", () => {
+  // Without a copy on the device (spec 034 RF-12).
+  it("naps on the offline page", async () => {
     const { container } = render(<OfflinePage />);
-    expect(container.querySelector('[data-venito="sleeping"]')).not.toBeNull();
     expect(
-      screen.getByRole("heading", { name: "Sin conexión" }),
+      await screen.findByRole("heading", { name: "Sin conexión" }),
     ).toBeInTheDocument();
+    expect(container.querySelector('[data-venito="sleeping"]')).not.toBeNull();
   });
 });
 
