@@ -14,7 +14,8 @@ Además, `npm run test:db` en las tareas que tocan acceso a datos (T4, T5) y pru
 
 ## Tareas
 
-- [ ] T1 Calcular el rango y fundir la copia (`range.ts`, `snapshot.ts`, puros)
+- [x] T1 Calcular el rango y fundir la copia (`range.ts`, `snapshot.ts`, puros)
+  Evidencia: `offline-range` y `offline-snapshot` en verde (15 tests con `to-view-events`, que gana `ownColor`). typecheck, lint (solo el aviso previo de `event-form.tsx`), format:check y build en verde. `npm test`: 2794 tests, 2 fallos intermitentes en `assistant-fab` (carga perezosa con la máquina ocupada) que pasan al repetirlo solo.
   Hecho cuando: `npm test -- offline-range offline-snapshot` en verde. Los tests cubren:
   - rango de hoy −1 mes a hoy +3 meses en la zona del perfil, y fin de mes y cambio de año;
   - si una fecha cae dentro;
