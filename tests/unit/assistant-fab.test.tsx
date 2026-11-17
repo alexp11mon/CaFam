@@ -21,14 +21,16 @@ vi.mock("@/app/dashboard/assistant/context-actions", () => ({
   }),
 }));
 
-// The chat is loaded with lazy(): its first import takes over a second when
-// the whole suite runs in parallel.
+// The chat is loaded with lazy(): its first import takes seconds when the
+// whole suite runs in parallel, so it is imported once before the tests.
 const LAZY = { timeout: 5000 };
 const fetchMock = vi.fn();
 const json = (body: unknown) =>
   new Response(JSON.stringify(body), {
     headers: { "Content-Type": "application/json" },
   });
+
+beforeAll(() => import("@/components/assistant/assistant-chat"), 60_000);
 
 // jsdom does not implement the modal methods of <dialog>.
 beforeAll(() => {
