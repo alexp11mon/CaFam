@@ -25,7 +25,8 @@ Además, `npm run test:db` en las tareas que tocan acceso a datos (T4, T5) y pru
 
   Cubre: RF-1, RF-5, RF-11, RF-13, RNF-4 | Módulo: range, snapshot
 
-- [ ] T2 Fundir y aplicar la cola de cambios (`outbox.ts`, `overlay.ts`, puros)
+- [x] T2 Fundir y aplicar la cola de cambios (`outbox.ts`, `overlay.ts`, puros)
+  Evidencia: `offline-outbox` y `offline-overlay` en verde (16 tests). typecheck, lint, format:check y build en verde; `npm test` 2809/2810, con el mismo fallo intermitente de `assistant-fab` (ajeno a esta spec).
   Hecho cuando: `npm test -- offline-outbox offline-overlay` en verde. Los tests cubren:
   - orden;
   - fusión de varios cambios de la misma entidad (base del primero, datos del último);
