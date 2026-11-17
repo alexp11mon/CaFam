@@ -22,6 +22,9 @@ import {
 import { CAL_NEXT, CAL_PREV } from "@/lib/calendar/transition-types";
 import { visibleDays } from "@/lib/calendar/view-options";
 import { useEventWindow } from "@/lib/hooks/use-event-window";
+import { useOfflineQueue, useOfflineSnapshot } from "@/lib/hooks/use-offline";
+import { pendingView } from "@/lib/offline/describe";
+import { mergeIntoCopy } from "@/lib/offline/snapshot-store";
 import { useStableJson, useStableList } from "@/lib/hooks/use-stable-list";
 import { Button } from "@/components/ui/button";
 import type { AgendaEvent } from "./agenda-view";
@@ -177,6 +180,19 @@ export function CalendarClient({
     load: loadWindow,
   });
 
+  // What waits on the device is drawn as it will be (spec 034 RF-26, RF-28).
+  const { queue } = useOfflineQueue();
+  const copy = useOfflineSnapshot();
+  const calendars = copy?.calendars ?? NO_CALENDARS;
+  const withPending = useMemo(
+    () => pendingView(events.events, queue, calendars),
+    [events.events, queue, calendars],
+  );
+  // A window the server read again keeps the device's copy fresh (RF-5, D9).
+  useEffect(() => {
+    void mergeIntoCopy(serverWindow).catch(() => {});
+  }, [serverWindow]);
+
   const range = useMemo(
     () => getVisibleRange(view, date, timeZone),
     [view, date, timeZone],
@@ -193,8 +209,8 @@ export function CalendarClient({
   // workspace hang from it (spec 017).
   const shown = useStableList(
     useMemo(
-      () => eventsInRange(events.events, range.from, range.to).sort(byStart),
-      [events.events, range],
+      () => eventsInRange(withPending, range.from, range.to).sort(byStart),
+      [withPending, range],
     ),
   );
   // Dots of the mini month, from the same window (RF-8).
@@ -203,11 +219,11 @@ export function CalendarClient({
     useMemo(() => {
       const monthRange = getVisibleRange("month", `${month}-01`, timeZone);
       return monthMarks(
-        eventsInRange(events.events, monthRange.from, monthRange.to),
+        eventsInRange(withPending, monthRange.from, monthRange.to),
         monthRange.days,
         timeZone,
       );
-    }, [events.events, month, timeZone]),
+    }, [withPending, month, timeZone]),
   );
 
   // "Ocupado" blocks: the server's for its own week or day, the rest asked
@@ -307,6 +323,7 @@ export function CalendarClient({
 }
 
 const EMPTY_BUSY: BusyInput[] = [];
+const NO_CALENDARS: { id: string; name: string; color: string }[] = [];
 
 function rangeStart(view: CalendarView, date: string, timeZone: string) {
   return getVisibleRange(view, date, timeZone).days[0];

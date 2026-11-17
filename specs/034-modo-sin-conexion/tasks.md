@@ -99,7 +99,9 @@ Además, `npm run test:db` en las tareas que tocan acceso a datos (T4, T5) y pru
 
   Cubre: RF-30, RF-38, RF-40, RF-44, RF-46, RF-47, RF-49, RF-56, RF-63 | Módulo: with-outbox, flush
 
-- [ ] T8 Conectar la app con red al modo sin conexión
+- [x] T8 Conectar la app con red al modo sin conexión
+  Evidencia: `offline-provider` (4), `connection-badge` (4), `pending-mark` (2), `offline-event-form` (2), `offline-note-editor` (1) y `offline-describe` (5) en verde, y `event-form` y `notes-ui` sin cambios. typecheck, lint (aviso previo), format:check, `npm test` (305 archivos, 2872 tests) y build en verde. La prueba manual en el navegador se hizo en el recorrido de la T9 (ver allí).
+  Cómo quedó: `describe.ts` (puro) convierte cada escritura en un cambio con la base de la copia; `snapshot-store.ts` guarda la copia en memoria (base de los cambios y fusión de las ventanas que relee la página, D9); `event-actions.ts` y `note-actions.ts` envuelven las acciones de siempre (`quickChange`, `deleteForUndo`, `pasteEvent`, `deleteFromDetail`, el formulario y la ventana rápida, y todas las de Notas) con `withOutbox`; sin red, lo que necesita red responde "Necesita conexión" en vez de colgarse. `CalendarClient` y `NotesBoard` pintan la cola encima (`pendingView`, `pendingNotes`); el token de deshacer `offline` lo atiende `useUndoToast`; `router.refresh()` solo con red. `AppFrame` recibe `userId` para `OfflineProvider`. La navegación completa sin red va por `loadPage` (`lib/offline/navigate.ts`), para que la vea el service worker.
   Incluye `OfflineProvider` en `AppFrame`, `ConnectionBadge`, `PendingMark`, las escrituras de eventos y notas envueltas en `withOutbox`, y el "Deshacer" `offline`.
   Hecho cuando: `npm test -- offline-provider connection-badge pending-mark event-form note-editor` en verde. Prueba manual en el navegador, abriendo el calendario y cortando la red con la herramienta: arrastrar, editar y borrar un evento y marcar un elemento de una lista se ven al instante con "Pendiente de enviar". Al volver la red llegan a dev, sale "N cambios sincronizados" y la copia se relee cada 15 min o al abrir.
 

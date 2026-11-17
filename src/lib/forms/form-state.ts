@@ -16,6 +16,8 @@ export interface FormState<Field extends string> {
   eventId?: string;
   /** What a change to a series would lose, before it is confirmed (spec 013 RF-19, RF-24b). */
   loss?: Loss;
+  /** "Deshacer" of a change saved on the device without a connection (spec 034 RF-30). */
+  undo?: UndoToken;
 }
 
 export interface Loss {

@@ -20,6 +20,8 @@ import {
 } from "@/lib/calendar/time-options";
 import type { EventFormField, EventFormValues } from "@/lib/calendar/schemas";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
+import { eventFormOrQueue } from "@/lib/offline/event-actions";
+import { loadPage } from "@/lib/offline/navigate";
 import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
 import type { SeriesScope } from "@/lib/recurrence/series-write";
 import { ColorPicker } from "./color-picker";
@@ -59,8 +61,11 @@ export function EventForm({
   focusTitle = false,
   withImages = false,
   series,
+  eventId,
 }: {
   action: FormAction<EventFormState>;
+  /** The event being edited, to queue the change offline (spec 034 RF-20). */
+  eventId?: string;
   initial: EventFormValues;
   /** Only calendars where the user can write (RF-27). */
   calendars: CalendarOption[];
@@ -75,7 +80,9 @@ export function EventForm({
   /** Editing an occurrence: saving asks the scope first (spec 013 RF-15, RF-32). */
   series?: { limitReached: boolean };
 }) {
-  const [state, formAction, pending] = useActionState(action, {
+  // Offline it waits on the device (spec 034 plan D17).
+  const [queued] = useState(() => eventFormOrQueue(action, eventId));
+  const [state, formAction, pending] = useActionState(queued, {
     values: initial,
   });
   const modal = useEventModal();
@@ -106,7 +113,12 @@ export function EventForm({
   useEffect(() => {
     if (!state.done || handled.current === state) return;
     handled.current = state;
-    if (!state.eventId) return modal?.finish(state.done);
+    if (!state.eventId) {
+      if (modal) return modal.finish(state.done, state.undo);
+      // A full page saved offline goes back to the calendar (spec 034 RF-19).
+      if (state.undo) loadPage("/dashboard/calendar");
+      return;
+    }
     const id = state.eventId;
     void upload(id).then(() => setUploadedFor(id));
   }, [state, modal, upload]);

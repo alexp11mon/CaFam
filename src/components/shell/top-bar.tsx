@@ -9,6 +9,7 @@ import { CalendarSheet } from "./calendar-sheet";
 import { LogoMark } from "@/components/brand/logo";
 import { CaretIcon } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
+import { ConnectionBadge } from "@/components/offline/connection-badge";
 import { CrossfadeText } from "@/components/ui/crossfade-text";
 
 const ICON_BUTTON =
@@ -46,6 +47,7 @@ export function TopBar({ displayName }: { displayName: string }) {
         </p>
       )}
       <span className="flex-1" />
+      <ConnectionBadge />
       <ThemeToggle className={ICON_BUTTON} labelClassName="sr-only" />
       <Link
         href="/dashboard/settings"

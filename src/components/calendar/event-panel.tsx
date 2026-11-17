@@ -32,6 +32,9 @@ import { useToast } from "@/components/ui/toast";
 import { useEventClipboard } from "./event-clipboard";
 import { DONE_MESSAGES, useEventModal } from "./event-modal";
 import { useUndoToast } from "./use-undo-toast";
+import { deleteFromDetailOrQueue } from "@/lib/offline/event-actions";
+import { useOfflineQueue } from "@/lib/hooks/use-offline";
+import { entityOf } from "@/lib/offline/outbox";
 import { useHoldLive } from "@/lib/hooks/use-hold-live";
 
 /**
@@ -81,6 +84,14 @@ export function EventPanel({
   const { show } = useToast();
   const clipboard = useEventClipboard();
   const root = useRef<HTMLDivElement>(null);
+  const { queue } = useOfflineQueue();
+  const waiting = queue.some(
+    (entry) => entityOf(entry.change) === `event:${detail.id}`,
+  );
+  // Offline the delete waits on the device (spec 034 RF-22).
+  const [deleteFromDetail] = useState(() =>
+    deleteFromDetailOrQueue(detail.id, deleteAction),
+  );
 
   // E, Supr and Ctrl/⌘+C with the detail open (spec 017 RF-54, RF-55,
   // RF-57); never while typing or with another window over it (RF-63).
@@ -127,6 +138,7 @@ export function EventPanel({
           </Button>
           <EventForm
             action={updateAction}
+            eventId={detail.id}
             initial={editInitial}
             calendars={calendars}
             categories={categories}
@@ -144,10 +156,10 @@ export function EventPanel({
     <ViewTransition key="detail">
       <div ref={root} className="contents">
         <EventDetail
-          event={detail}
+          event={waiting ? { ...detail, pending: true } : detail}
           timeZone={timeZone}
           canEdit={canEdit}
-          deleteAction={deleteAction}
+          deleteAction={deleteFromDetail}
           onDeleted={
             modal?.finish ??
             // A full page goes back to the calendar with the notice (spec 017 RF-25).

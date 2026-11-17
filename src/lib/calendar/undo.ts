@@ -18,7 +18,9 @@ export type UndoToken =
   /** A deleted event, from its snapshot (RF-28). */
   | { kind: "restore"; trashId: string }
   /** A pasted copy: undoing deletes it (RF-58). */
-  | { kind: "unpaste"; id: string };
+  | { kind: "unpaste"; id: string }
+  /** A change still waiting on this device: undoing takes it out of the queue (spec 034 RF-30). */
+  | { kind: "offline"; changeId: string };
 
 /** The notices of RF-24, RF-25, RF-57 and RF-58. */
 export const UNDO_NOTICES = {

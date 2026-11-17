@@ -15,6 +15,7 @@ describe("AppFrame (RF-9)", () => {
         accent="blue"
         theme="system"
         displayName="Ana López"
+        userId="u1"
         signOutAction={vi.fn(async () => {})}
       >
         <p>Contenido</p>
@@ -36,6 +37,7 @@ describe("AppFrame (RF-9)", () => {
         accent="red"
         theme="system"
         displayName="Ana López"
+        userId="u1"
         signOutAction={vi.fn(async () => {})}
       >
         <p>Contenido</p>
@@ -83,6 +85,7 @@ describe("AppFrame skip link", () => {
         accent="red"
         theme="system"
         displayName="Ana López"
+        userId="u1"
         signOutAction={vi.fn(async () => {})}
       >
         <p>Contenido</p>

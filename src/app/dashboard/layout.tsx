@@ -12,6 +12,7 @@ async function AccentFrame({ children }: { children: ReactNode }) {
       accent={accent}
       theme={theme}
       displayName={displayName}
+      userId={userId}
       signOutAction={signOut}
     >
       {children}

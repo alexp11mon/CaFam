@@ -203,4 +203,6 @@ export interface CalendarEventItem extends LayoutEventInput {
   location?: string | null;
   /** Series of an occurrence: the views mark it as repeating (spec 013 RF-10). */
   seriesId?: string | null;
+  /** Changed on this device and not sent yet (spec 034 RF-28). */
+  pending?: boolean;
 }

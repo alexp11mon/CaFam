@@ -31,6 +31,7 @@ import { EASE_IN_OUT, motionMs, motionToken, play } from "@/lib/motion/play";
 import { banded } from "@/lib/motion/rubber-band";
 import { goneText } from "@/lib/sync/write-errors";
 import { useUndoToast } from "./use-undo-toast";
+import { isOnline } from "@/lib/offline/connection";
 
 const ICON_BUTTON =
   "inline-flex size-11 shrink-0 items-center justify-center rounded-full text-ink transition-colors hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
@@ -166,7 +167,7 @@ export function EventModal({
         show(DONE_MESSAGES[done], undo);
         router.back();
         // The router cache may still hold the calendar without the change (plan R2).
-        router.refresh();
+        if (isOnline()) router.refresh();
       },
     }),
     [requestClose, router, show],

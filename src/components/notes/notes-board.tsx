@@ -1,6 +1,8 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import { useOfflineQueue } from "@/lib/hooks/use-offline";
+import { pendingNotes, type PendingNote } from "@/lib/offline/overlay";
 import { SearchIcon } from "@/components/shell/icons";
 import { Chip } from "@/components/ui/chip";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -24,7 +26,7 @@ const FILTERS: { id: NoteFilter; label: string }[] = [
  * one made on another device, comes in by the calendar's live channel (RF-12).
  */
 export function NotesBoard({
-  notes,
+  notes: fromServer,
   today,
   userId,
 }: {
@@ -37,6 +39,15 @@ export function NotesBoard({
   const [filter, setFilter] = useState<NoteFilter>("all");
   const searchId = useId();
   useLiveCalendar(userId);
+  // What waits on the device, as it will be (spec 034 RF-37).
+  const { queue } = useOfflineQueue();
+  const notes: PendingNote[] = useMemo(
+    () =>
+      queue.length === 0
+        ? fromServer
+        : pendingNotes(fromServer, queue, new Date().toISOString(), userId),
+    [fromServer, queue, userId],
+  );
 
   const shown = sortNotes(filterNotes(notes, filter, query));
   const nothingYet = notes.length === 0;

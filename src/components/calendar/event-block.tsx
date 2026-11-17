@@ -9,6 +9,7 @@ import { setMorphOrigin } from "@/lib/motion/morph";
 import { CommentIcon, ImageIcon, RepeatIcon } from "@/components/shell/icons";
 import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
 import { useEventInteractions } from "./event-interactions";
+import { PendingMark } from "@/components/offline/pending-mark";
 
 /**
  * Mark of an event with images (spec 012 RF-12). The words always reach
@@ -164,6 +165,7 @@ export function EventBlock({
         <>
           <span className="truncate">
             <span className="font-semibold">{event.title}</span>
+            <PendingMark pending={event.pending} icon={icons} />
             <RepeatMark series={Boolean(event.seriesId)} icon={icons} />
             <ImageMark count={event.imageCount} icon={icons} />
             <CommentMark count={event.commentCount} icon={icons} />
@@ -173,6 +175,7 @@ export function EventBlock({
       ) : (
         <>
           <span className="font-semibold">{event.title}</span>
+          <PendingMark pending={event.pending} icon={icons} />
           <RepeatMark series={Boolean(event.seriesId)} icon={icons} />
           <ImageMark count={event.imageCount} icon={icons} />
           <CommentMark count={event.commentCount} icon={icons} />
