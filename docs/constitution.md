@@ -30,6 +30,21 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 016-calendario-estilo-google | Calendario como Google Calendar en el móvil: eventos como bloques rellenos, cabecera con cajón y botón flotante, deslizar para cambiar de periodo, agenda continua y fila de meses. Se hace antes de la 013 |
 | 017-mover-eventos-y-menu | Mover y redimensionar eventos arrastrando (dedo y ratón), menú contextual en el ordenador (color, duplicar, borrar), "Deshacer" en los avisos, detalle en hoja inferior en el móvil, pellizcar para ampliar las horas y más atajos. Va después de la 016 y antes de la 013 |
 | 018-sincronizacion-icloud | Sincronización en los dos sentidos con los calendarios de iCloud (iPhone) por CalDAV, con contraseña específica de app y el mismo alcance que Google en la 007 y la 009. Enmienda 6 (iCloud como servicio aceptado y `tsdav` como dependencia) |
+| 019-escritorio-movil-tiempo-real | Tarjeta de detalle junto al evento en el ordenador, panel plegable, ocultar fines de semana, duración de un evento nuevo y calendario en tiempo real con Supabase Realtime (enmienda 7) |
+| 020-disponibilidad-y-sincronizacion-rapida | Bloques "Ocupado" de otras personas con su consentimiento, avisos de Google en minutos e iCloud cada 15 minutos |
+| 021-animaciones-y-microinteracciones | Movimiento con intención en toda la app, con tokens de curvas y duraciones (enmienda 8) |
+| 022-eventos-desde-imagen | Crear eventos desde la foto de un horario con el asistente, con una propuesta editable |
+| 023-auditoria-y-correcciones | Auditoría completa y corrección de 25 hallazgos (enmienda 9) |
+| 024-rendimiento | Calendario que cambia de periodo sin red, precargas y asistente en streaming |
+| 025-sistema-de-diseno-y-marca | Identidad "Orilla" y componentes base (enmienda 10; su identidad la sustituyó la 030) |
+| 026-calendario-movil-primero | Hoja inferior de calendarios, alto libre de las vistas y estado vacío |
+| 027-venito-y-asistente | Venito, la mascota, y el chat como conversación en un panel |
+| 028-notas | Listas de tareas y notas, personales o compartidas por calendario |
+| 029-pantallas-restantes-y-cierre | Revisión de las pantallas secundarias y recorrido completo en móvil |
+| 030-estilo-nexo | Identidad "Nexo" con el prototipo del usuario (enmienda 11) |
+| 031-venito-morsa | Venito pasa a ser una morsa (enmienda 12) |
+| 032-calendarios-plegables | Panel lateral que se desplaza solo, grupos plegables en los filtros y "Mis calendarios" más ligero |
+| 033-vulnerabilidades | Next.js 16.4.6 y herramientas sin vulnerabilidades conocidas (`npm audit` a cero) |
 | Futura (sin número) | Recordatorios con notificaciones push (Web Push, gratis; en iOS solo con la app instalada) |
 | Futura (sin número) | Búsqueda de eventos por título, lugar y descripción |
 | Futura (sin número) | Compartir e integrar con el sistema: compartir un evento, recibir `.ics` o fotos compartidas, accesos directos y número de eventos de hoy en el icono |
@@ -178,7 +193,7 @@ Checklist que cierra cada tarea (se reporta la salida de cada comando):
 ## Dudas abiertas
 
 - Las decisiones de stack de esta versión (Next.js 16 + Supabase Free + Vercel Hobby + Tailwind CSS 4) fueron confirmadas por el usuario en la spec 001.
-- Resueltas en la spec 005: la tipografía es Inter Tight; los valores de los seis acentos y de los neutros están en `src/lib/theme/accents.ts` (con su contraste comprobado en `accents.test.ts`); y el acento se guarda por usuario en `profiles.accent`, así que se ve igual en todos sus dispositivos.
+- Resueltas en la spec 005 (la tipografía la cambiaron después las enmiendas 10 y 11: hoy es Inter): la tipografía era Inter Tight; los valores de los seis acentos y de los neutros están en `src/lib/theme/accents.ts` (con su contraste comprobado en `accents.test.ts`); y el acento se guarda por usuario en `profiles.accent`, así que se ve igual en todos sus dispositivos.
 - Enmienda 3 (2026-10-29, aprobada por el usuario): nombre CaFam en todas partes, tema oscuro, transparencias, sombras, degradados y animaciones, Supabase Storage, `ical.js` para repeticiones, asistente de chat con un proveedor LLM gratuito y excepción de cambio de nombre en las specs cerradas. Las enmiendas 1 y 2 están en la spec 007.
 - Enmienda 4 (2026-10-30, aprobada por el usuario con la spec 016): eventos como bloques rellenos en todas las vistas, composición del móvil al estilo Google Calendar (cabecera, cajón y botón flotante, sin barra inferior), día de la agenda al estilo Google y banda del mes con degradado.
 - Enmienda 5 (2026-10-30, aprobada por el usuario con la spec 017): mover y redimensionar eventos arrastrando, menú contextual en el ordenador, "Deshacer" en los avisos (y borrar un evento sin confirmación), detalle en hoja inferior en el móvil, pellizcar para ampliar y atajos nuevos (E, G, Supr, ?, Ctrl/Cmd+C/V y Alt + flechas).

@@ -4,13 +4,13 @@
 
 **Calendario compartido, mobile-first e instalable para familia y amigos.**
 
-Registro, eventos recurrentes, imágenes, comentarios, sincronización con Google e iCloud, asistente de chat con LLM gratuito y tiempo real con Supabase Realtime.
+Eventos recurrentes, imágenes, comentarios, notas y listas compartidas, sincronización con Google e iCloud, Venito (un asistente de chat con LLM gratuito) y tiempo real con Supabase Realtime.
 
 <br/>
 
 [![Producción en Vercel](https://img.shields.io/badge/Producción-Vercel-000000?style=for-the-badge&logo=vercel)](https://calendario-familia-five.vercel.app)
 [![Base de datos Supabase](https://img.shields.io/badge/Base%20de%20datos-Supabase-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com)
-[![Framework Next.js](https://img.shields.io/badge/Framework-Next.js%2016-000000?style=for-the-badge&logo=next.js)](https://nextjs.org)
+[![Framework Next.js](https://img.shields.io/badge/Framework-Next.js%2016.4-000000?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![Lenguaje TypeScript](https://img.shields.io/badge/Lenguaje-TypeScript%205-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
 [![Estilos Tailwind CSS](https://img.shields.io/badge/Estilos-Tailwind%20CSS%204-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com)
 [![Tests Vitest](https://img.shields.io/badge/Tests-Vitest%205-FF3E00?style=for-the-badge&logo=vitest)](https://vitest.dev)
@@ -68,27 +68,43 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 
 ## 📊 Estado del proyecto
 
-| Spec | Alcance                                                             | Estado                                             |
-| ---- | ------------------------------------------------------------------- | -------------------------------------------------- |
-| 001  | Base: auth, esquema con RLS, panel esqueleto, PWA, despliegue       | ✅ Cerrada                                         |
-| 002  | Calendarios, categorías y eventos; vistas mensual, semanal y diaria | ✅ Cerrada                                         |
-| 003  | Compartición: enlace, ID + PIN, roles Lector/Editor, miembros       | ✅ Cerrada                                         |
-| 004  | Importación única de `.ics` (enlace o archivo)                      | ✅ Cerrada                                         |
-| 005  | Identidad visual, color de acento, marco, agenda, mini calendario   | ✅ Cerrada                                         |
-| 006  | Gestión de cuenta: recuperación, email, contraseña, borrar cuenta   | ✅ Cerrada                                         |
-| 007  | Sincronización solo lectura con Google OAuth 2.0 y grupos           | ✅ Cerrada                                         |
-| 008  | Mejoras de experiencia: ventana de evento, arrastrar, atajos        | ✅ Cerrada                                         |
-| 009  | Sincronización bidireccional con Google                             | ✅ Cerrada                                         |
-| 010  | Renombrado a CaFam                                                  | ✅ Cerrada                                         |
-| 011  | Modo oscuro, cristal, animaciones, microinteracciones               | ✅ Cerrada                                         |
-| 012  | Imágenes en eventos con Supabase Storage                            | ✅ Cerrada                                         |
-| 013  | Eventos recurrentes con reglas personalizables                      | ✅ Cerrada                                         |
-| 014  | Comentarios en eventos                                              | ✅ Cerrada                                         |
-| 015  | Asistente de chat con proveedor LLM gratuito (Groq)                 | ✅ Hecha (falta cierre y `GROQ_API_KEY` en Vercel) |
-| 016  | Calendario estilo Google Calendar en móvil                          | ✅ Cerrada                                         |
-| 017  | Mover/redimensionar arrastrar, menú contextual, "Deshacer"          | ✅ Cerrada                                         |
-| 018  | Calendarios de iCloud por CalDAV                                    | ✅ Cerrada                                         |
-| 019  | Escritorio, móvil y tiempo real (Supabase Realtime)                 | ✅ Cerrada                                         |
+| Spec | Alcance                                                             | Estado                                            |
+| ---- | ------------------------------------------------------------------- | ------------------------------------------------- |
+| 001  | Base: auth, esquema con RLS, panel esqueleto, PWA, despliegue       | ✅ Cerrada                                        |
+| 002  | Calendarios, categorías y eventos; vistas mensual, semanal y diaria | ✅ Cerrada                                        |
+| 003  | Compartición: enlace, ID + PIN, roles Lector/Editor, miembros       | ✅ Cerrada                                        |
+| 004  | Importación única de `.ics` (enlace o archivo)                      | ✅ Cerrada                                        |
+| 005  | Identidad visual, color de acento, marco, agenda, mini calendario   | ✅ Cerrada                                        |
+| 006  | Gestión de cuenta: recuperación, email, contraseña, borrar cuenta   | ✅ Cerrada                                        |
+| 007  | Sincronización solo lectura con Google OAuth 2.0 y grupos           | ✅ Cerrada                                        |
+| 008  | Mejoras de experiencia: ventana de evento, arrastrar, atajos        | ✅ Cerrada                                        |
+| 009  | Sincronización bidireccional con Google                             | ✅ Cerrada                                        |
+| 010  | Renombrado a CaFam                                                  | ✅ Cerrada                                        |
+| 011  | Modo oscuro, animaciones, microinteracciones                        | ✅ Cerrada                                        |
+| 012  | Imágenes en eventos con Supabase Storage                            | ✅ Cerrada                                        |
+| 013  | Eventos recurrentes con reglas personalizables                      | ✅ Cerrada                                        |
+| 014  | Comentarios en eventos                                              | ✅ Cerrada                                        |
+| 015  | Asistente de chat con proveedor LLM gratuito (Groq)                 | ✅ Cerrada                                        |
+| 016  | Calendario estilo Google Calendar en móvil                          | ✅ Cerrada                                        |
+| 017  | Mover/redimensionar arrastrando, menú contextual, "Deshacer"        | ✅ Cerrada                                        |
+| 018  | Calendarios de iCloud por CalDAV                                    | ✅ Cerrada                                        |
+| 019  | Escritorio, móvil y tiempo real (Supabase Realtime)                 | ✅ Cerrada                                        |
+| 020  | Disponibilidad ("Ocupado") y sincronización rápida                  | ✅ Cerrada                                        |
+| 021  | Animaciones y microinteracciones                                    | ✅ Cerrada                                        |
+| 022  | Eventos desde la foto de un horario                                 | ✅ Cerrada                                        |
+| 023  | Auditoría y 25 correcciones                                         | ✅ Cerrada (migraciones pendientes en prod)       |
+| 024  | Rendimiento: cambio de periodo sin red, asistente en streaming      | ✅ Cerrada                                        |
+| 025  | Sistema de diseño y componentes base                                | ✅ Cerrada                                        |
+| 026  | Calendario móvil primero                                            | ✅ Cerrada                                        |
+| 027  | Venito y el chat como conversación                                  | ✅ Cerrada                                        |
+| 028  | Notas y listas de tareas                                            | ✅ Cerrada (migraciones pendientes en dev y prod) |
+| 029  | Pantallas restantes y recorrido en móvil                            | ✅ Cerrada                                        |
+| 030  | Identidad visual "Nexo"                                             | ✅ Cerrada                                        |
+| 031  | Venito pasa a ser una morsa                                         | ✅ Cerrada                                        |
+| 032  | Panel lateral desplazable y calendarios plegables                   | ✅ Cerrada                                        |
+| 033  | Next.js 16.4.6 y `npm audit` sin vulnerabilidades                   | ✅ Cerrada                                        |
+
+> Las specs 024 a 033 están en la rama `claude/eager-turing-5xgj2t`, pendientes de merge a `main`.
 
 > Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -102,8 +118,11 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 - **CRUD de calendarios** (nombre, descripción, color pastel de una paleta cerrada) y **categorías por calendario**.
 - **CRUD de eventos** (hora, día completo, varios días, descripción, lugar, color propio y categoría).
 - **Vistas mensual, semanal y diaria** que mezclan todos los calendarios, con panel de filtros por persona → calendario → categoría. La visibilidad y el orden se guardan por usuario.
-- **Vista agenda** (por defecto): 14 días seguidos desde la fecha, con número del día gigante, filas de evento, "Sin eventos", crear en cada día y línea de la hora actual.
-- **Panel del calendario:** tarjeta "Próximo evento" con cuenta atrás, mini calendario mensual con puntos por calendario y filtros con avatares de iniciales.
+- **Vista agenda** continua (por defecto): bandas de mes, separadores de semana, "Sin eventos" y carga de más días al llegar a un extremo.
+- **Cambio de periodo sin red:** el calendario lee una ventana ancha de eventos y cambia de mes, semana o día en el navegador, con precarga de los contiguos.
+- **Panel del calendario:** tarjeta de saludo con el próximo evento y cuenta atrás, mini calendario con puntos por calendario y filtros. El panel se desplaza por sí mismo si no cabe.
+- **Calendarios plegables:** cada grupo o persona de los filtros se pliega (sin cambiar qué se ve), las categorías van plegadas bajo su calendario, el orden se cambia en el modo "Ordenar" y lo plegado se recuerda en el dispositivo.
+- **Grupos de calendarios** para mostrar u ocultar varios a la vez. "Mis calendarios" muestra grupos plegables y cada calendario en una fila que se despliega con sus acciones.
 - **Juntar calendarios propios** en uno (fusión real, irreversible, con confirmación).
 
 ### 👥 Compartición
@@ -126,8 +145,9 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 
 ### ☁️ Sincronización con Google e iCloud
 
-- **Google:** conexión por OAuth 2.0, hasta 5 cuentas, elegir hasta 20 calendarios, actualización automática cada hora y manual. Escritura completa: crear, cambiar, mover y borrar eventos, renombrar, crear y subir calendarios.
-- **iCloud:** por CalDAV con contraseña específica de app, mismo alcance que Google (leer, escribir, renombrar, crear y subir).
+- **Google:** conexión por OAuth 2.0, hasta 5 cuentas, elegir hasta 20 calendarios, actualización en minutos gracias a los avisos de Google (cada 15 minutos como respaldo) y manual. Escritura completa: crear, cambiar, mover y borrar eventos, renombrar, crear y subir calendarios.
+- **iCloud:** por CalDAV con contraseña específica de app, mismo alcance que Google (leer, escribir, renombrar, crear y subir), cada 15 minutos.
+- Antes de leer se comprueba la versión del calendario: si no cambió, no se descarga nada.
 - Avisos de permiso revocado o fallos de sincronización en "Mis calendarios".
 
 ### 🖼️ Imágenes en eventos
@@ -148,18 +168,35 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 - Cualquier miembro, Lectores incluidos, puede comentar. Carga después de abrir el detalle, 50 más recientes, "Ver anteriores".
 - Edición y borrado con permisos, actualización cada 20 s con el detalle abierto.
 
-### 🤖 Asistente de chat
+### 🤖 Venito, el asistente de chat
 
-- Pantalla `/dashboard/assistant` con hilo en tiempo real, "Pensando…", eventos citados que abren su detalle.
-- Herramientas solo lectura (`list_events`, `search_events`, `find_free_time`) atadas a la sesión del usuario.
-- Proveedor Groq con modelo `openai/gpt-oss-120b` y fallback `qwen/qwen3.8-27b`. Disponibilidad calculada en TypeScript.
-- Cuota de 30 preguntas al día por usuario.
+- **Venito** es la mascota de CaFam (una morsa con gafas, en SVG propio con seis expresiones). Su botón flotante abre el chat como un panel en cualquier pantalla; `/dashboard/assistant` lo muestra a página completa.
+- Conversación con burbujas, "escribiendo…" con el paso real (respuesta en streaming) y sugerencias según el contexto.
+- Herramientas solo lectura (`list_events`, `search_events`, `find_free_time`, `get_comments`) atadas a la sesión del usuario; los eventos citados abren su detalle.
+- **Eventos desde una imagen:** adjunta hasta 3 fotos de un horario y Venito propone los eventos en una tarjeta editable; nada se crea hasta pulsar "Crear". Las imágenes no se guardan.
+- Proveedor Groq (`openai/gpt-oss-120b`, con `qwen/qwen3.8-27b` de reserva y para las imágenes). Disponibilidad común calculada en TypeScript, solo con el consentimiento de cada persona. 30 preguntas al día por usuario.
+
+### 📝 Notas y listas
+
+- Sección **Notas** con listas de tareas y notas de texto, personales o compartidas con un calendario (con los roles de ese calendario).
+- Cambios al instante con "Deshacer", búsqueda, fijar, archivar, fecha límite y tiempo real.
+
+### 👀 Disponibilidad
+
+- Con el consentimiento de cada persona, sus bloques "Ocupado" (sin título) se ven en las vistas de semana y día de quien comparte calendario con ella.
 
 ### ⚡ Tiempo real y experiencia de escritorio
 
 - Cambios en eventos, calendarios o miembros notificados por Supabase Realtime al tema `user:<id>` de cada miembro.
 - Tarjeta de detalle junto al evento desde 769 px, barra lateral plegable, ocultar fines de semana, duración de evento nuevo, tecla C.
 - Bloque provisional en el móvil al arrastrar, detalle en hoja inferior, pellizcar para ampliar.
+- Mover y redimensionar eventos arrastrando, menú contextual, "Deshacer" (también con Ctrl/⌘+Z) y atajos de teclado (? muestra la ayuda).
+
+### 🎨 Identidad visual "Nexo"
+
+- Fondo lavanda, acento violeta con degradado (u otro de seis a elegir), tipografía Inter, tema claro, oscuro o como el sistema.
+- En el móvil, navegación en píldora flotante abajo con "+" y Venito; en el escritorio, pestañas arriba.
+- Movimiento con intención y versión reducida con `prefers-reduced-motion`.
 
 ---
 
@@ -168,7 +205,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | Capa         | Tecnología                                                                                  |
 | ------------ | ------------------------------------------------------------------------------------------- |
 | Lenguaje     | TypeScript 5 `strict`, sin `any` explícito (ESLint en error)                                |
-| Framework    | Next.js 16.4 (App Router, Turbopack, Server Components, Server Actions), React 19.3         |
+| Framework    | Next.js 16.4.6 (App Router, Turbopack, Server Components, Server Actions), React 19.3       |
 | Estilos      | Tailwind CSS 4 vía `@tailwindcss/postcss`                                                   |
 | Datos y auth | Supabase Free: PostgreSQL 17 con RLS + Supabase Auth (email/contraseña) con `@supabase/ssr` |
 | Validación   | zod 4                                                                                       |
@@ -205,23 +242,26 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 │   │   │   ├── events/        # alta y detalle de eventos
 │   │   │   ├── settings/      # Ajustes
 │   │   │   ├── connections/   # cuentas de Google e iCloud
-│   │   │   └── assistant/     # asistente de chat
-│   │   ├── join/              # "Unirme con código"
-│   │   ├── import/            # "Importar calendario" (.ics)
+│   │   │   ├── assistant/     # asistente de chat a página completa
+│   │   │   ├── notes/         # notas y listas
+│   │   │   ├── join/          # "Unirme con código"
+│   │   │   └── import/        # "Importar calendario" (.ics)
 │   │   ├── invite/[token]/    # vista previa y unión por token
 │   │   ├── offline/           # pantalla sin conexión
 │   │   └── api/               # OAuth, sincronización, imágenes, asistente, keep-alive
-│   ├── components/            # componentes React (ui, shell, calendar, settings, etc.)
+│   ├── components/            # componentes React (ui, shell, brand con Venito, calendar, groups, notes, assistant…)
 │   └── lib/                   # lógica pura, consultas, utilidades, auth, calendar, theme…
 ├── public/
 │   ├── sw.js                  # service worker propio
 │   └── icons/                 # iconos de la PWA
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # migraciones SQL numeradas (001–019)
+│   └── migrations/            # migraciones SQL con fecha (hasta las de notas, spec 028)
 ├── tests/
 │   ├── unit/                  # tests unitarios (jsdom)
-│   └── integration/           # tests de integración contra Supabase dev
+│   ├── integration/           # tests de integración contra Supabase dev
+│   └── fixtures/              # .ics, respuestas de Google y horarios sintéticos
+├── scripts/                   # capturas, recorrido en móvil, iconos y medición de rendimiento (perf/)
 ├── vercel.json                # cron y configuración de Vercel
 ├── package.json
 └── .env.example               # variables documentadas sin valores
@@ -237,8 +277,9 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 4. **Compartir:** por enlace (con rol, usos y caducidad) o por ID y PIN. Los miembros pueden unirse con código.
 5. **Importar:** subir un `.ics` o indicar un enlace para crear un calendario nuevo.
 6. **Sincronizar:** conectar cuentas de Google o iCloud para traer calendarios y mantenerlos actualizados.
-7. **Asistente:** preguntar en lenguaje natural sobre eventos y disponibilidad común.
-8. **Tiempo real:** los cambios de otros miembros se reflejan al instante en la pestaña visible.
+7. **Venito:** preguntar en lenguaje natural sobre eventos y disponibilidad común, o pasarle la foto de un horario.
+8. **Notas:** listas de la compra o de tareas, solas o compartidas con un calendario.
+9. **Tiempo real:** los cambios de otros miembros se reflejan al instante en la pestaña visible.
 
 ---
 
@@ -259,11 +300,13 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | `/dashboard/join`                   | con sesión                  | Unirme con ID y PIN                                       |
 | `/dashboard/import`                 | con sesión                  | Importar `.ics`                                           |
 | `/dashboard/connections`            | con sesión                  | Cuentas de Google e iCloud conectadas                     |
-| `/dashboard/assistant`              | con sesión                  | Asistente de chat                                         |
+| `/dashboard/assistant`              | con sesión                  | Chat de Venito a página completa                          |
+| `/dashboard/notes`, `/new`, `/[id]` | con sesión                  | Notas y listas                                            |
 | `/invite/[token]`                   | pública/privada             | Vista previa y unión por token                            |
 | `/offline`                          | pública                     | Pantalla sin conexión                                     |
 | `/privacy`                          | pública                     | Política de privacidad                                    |
-| `/api/assistant`                    | con sesión (POST)           | Pregunta al asistente                                     |
+| `/api/assistant`                    | con sesión (POST)           | Pregunta al asistente (respuesta en streaming NDJSON)     |
+| `/api/sync/google-push`             | pública (POST)              | Avisos de cambios de Google                               |
 | `/api/sync/run`                     | Bearer `CRON_SECRET` (POST) | Ejecutar sincronización                                   |
 | `/api/images/purge`                 | Bearer `CRON_SECRET` (POST) | Borrar imágenes de la cola de purga                       |
 | `/api/cron/keep-alive`              | Bearer `CRON_SECRET`        | Mantener Supabase activo                                  |
@@ -276,7 +319,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 
 - Node.js 24
 - npm (gestor de paquetes único permitido en el proyecto)
-- Cuenta de Supabase (proyecto dev y prod)
+- Cuenta de Supabase (proyecto dev y prod), o Docker para un Supabase local (`npx supabase start`)
 - Cuenta de Vercel (para despliegue)
 
 ### Comandos disponibles
@@ -312,8 +355,11 @@ npm run db:push
 # Regenerar tipos de Supabase
 npm run db:types
 
-# Evaluación del asistente (35 preguntas a Groq, ~9 min)
+# Evaluación del asistente (39 preguntas a Groq, ~10 min, gasta cuota)
 npm run eval:assistant
+
+# Evaluación de eventos desde imagen (12 horarios sintéticos, ~12 min, gasta cuota)
+npm run eval:schedule
 ```
 
 > Los usuarios de prueba usan el dominio `@cafam.test`.
@@ -334,6 +380,7 @@ npm run eval:assistant
 | `CRON_SECRET`                              | Vercel, `.env.local`, `.env.test.local` | Secreto del servidor. Debe igualar `cron_secret` en Vault |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `.env.local`, Vercel                    | Cliente OAuth de Google, solo servidor                    |
 | `GROQ_API_KEY`                             | `.env.local`, `.env.test.local`, Vercel | Clave de Groq del asistente, solo servidor                |
+| `SYNC_PUSH_URL`                            | Solo Vercel (Production)                | Dirección de los avisos de Google, solo servidor          |
 | `SUPABASE_SECRET_KEY`                      | **Solo `.env.test.local`**              | Nunca en Vercel ni en `src/`                              |
 
 `.env.local` y `.env.test.local` apuntan a **dev** y están ignorados por git.
@@ -376,7 +423,7 @@ npx supabase link --project-ref uthubyzhonrtrmbcqcjh   # volver a dev inmediatam
 Ninguna tarea se da por hecha sin ejecutar y reportar la salida de:
 
 ```bash
-npm run typecheck && npm run lint && npm run format:check && npm test
+npm run typecheck && npm run lint && npm run format:check && npm test && npm run build
 npm run test:db   # obligatorio si la tarea toca esquema, RLS o acceso a datos
 ```
 
@@ -394,8 +441,10 @@ feat: registro de usuario (T7)
 
 - Solo tokens (`bg-paper`, `text-muted`, `bg-accent`…); nada de `bg-white`, colores de Tailwind ni hex en clases.
 - Nunca `text-white`, `text-black` ni la variante `dark:`.
-- Tipografía: Inter Tight para todo.
-- Colores de calendario solo como marca (barra, punto o barra de 4 px).
+- Identidad **Nexo** (enmienda 11 de la constitución): tipografía Inter, radios y elevaciones como tokens, sin `backdrop-filter`.
+- Solo componentes de `components/ui` (`Button`, `IconButton`, `Card`, `Chip`, `Sheet`, `EmptyState`…).
+- Colores de calendario como relleno de los bloques de evento y, fuera de ellos, solo como marca.
+- Capturas a 390, 768 y 1440 px, en claro y oscuro, antes de cerrar una tarea de interfaz.
 
 ---
 
@@ -403,14 +452,14 @@ feat: registro de usuario (T7)
 
 ### PWA
 
-- Manifest nativo en `src/app/manifest.ts` con nombre CaFam, color piedra `#E8E5DD`, iconos 192, 512 y 512 maskable.
+- Manifest nativo en `src/app/manifest.ts` con nombre CaFam, color lavanda `#F3F2FA`, iconos 192, 512 y 512 maskable.
 - iOS: `appleWebApp` + `apple-touch-icon`. Ayuda de instalación solo en Safari iOS.
 - Service worker propio en `public/sw.js`:
   - Precachea `/offline`, iconos y estáticos de `/_next/static/`.
   - Navegaciones: red primero, con `/offline` como respaldo.
   - Caché primero para `/_next/static/` e `/icons/`.
   - **Nunca cachea HTML con sesión ni respuestas de Supabase.**
-  - Si cambias `sw.js` o los iconos, sube `CACHE_NAME` (`cafam-vN`).
+  - Si cambias `sw.js` o los iconos, sube `CACHE_NAME` (`cafam-vN`; ahora `cafam-v5`).
 
 ### Despliegue
 
@@ -429,6 +478,9 @@ feat: registro de usuario (T7)
 - **Prohibido:** servicios de pago, SDK de analítica/tracking/telemetría, librerías PWA de terceros, ORMs, backends paralelos.
 - El asistente usa Groq con retención cero activada y no entrena con los datos.
 - Las imágenes de eventos nunca se envían a Google ni iCloud.
+- Las imágenes adjuntas al asistente viajan en la petición y no se guardan.
+- `npm audit` sin vulnerabilidades conocidas (spec 033).
+- Cabeceras de seguridad (`frame-ancestors`, `nosniff`, `noindex`) en todas las rutas.
 - Política de privacidad pública en `/privacy`.
 
 ---
@@ -437,13 +489,13 @@ feat: registro de usuario (T7)
 
 El proyecto **aún no está terminado**. Existen specs pendientes y funcionalidades planificadas para versiones futuras:
 
-- **020** (redactada, sin aprobar): disponibilidad en la rejilla y sincronización rápida.
+- Que la sincronización no borre los eventos creados en CaFam fuera de la ventana de 12 meses (pendiente de la 023).
 - Vistas de año y de 4 días.
 - Búsqueda de eventos.
 - Papelera o deshacer de más de una acción.
 - Recordatorios push.
 - Compartir e integrar con el sistema operativo.
-- Alta en lenguaje natural desde el asistente (guardar conversaciones o responder por voz necesita otra spec).
+- Alta en lenguaje natural sin IA ("Cena con Ana mañana a las 21").
 - Zona horaria por evento.
 - Sincronizar o actualizar un calendario importado.
 - Importar a un calendario que ya existe.
@@ -470,7 +522,8 @@ Hasta que exista su spec aprobada:
 - Alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución).
 - Zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario existente, exportar a `.ics`.
 - Verificación de email en el registro, traspaso voluntario de calendarios, exportar datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos, i18n.
-- Crear o cambiar eventos desde el asistente, guardar conversaciones o responder por voz (necesitan otra spec).
+- Cambiar eventos desde el asistente (salvo crearlos desde una imagen), guardar conversaciones o responder por voz (necesitan otra spec).
+- En notas: fecha límite por elemento, reordenar arrastrando, vencimientos en el calendario, notas de un evento y notas desde el asistente.
 
 ---
 

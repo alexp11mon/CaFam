@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-16, al cerrar las specs 024 a 030 (rendimiento, rediseño completo, Venito y Notas).
+> Última actualización: 2026-11-17, al cerrar las specs 031 a 033 (Venito morsa, calendarios plegables y vulnerabilidades) y revisar toda la documentación.
 
 ## 1. Qué es
 
@@ -63,6 +63,8 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 033-vulnerabilidades | `next` y `eslint-config-next` 16.4.2 → 16.4.6 (GHSA-mfr8-8qww-v76h) y `npm audit fix` de las herramientas de desarrollo (`minimatch`, `typescript-eslint`): `npm audit` con 0 vulnerabilidades | **Cerrada** (2026-11-17), T1; sin migraciones ni dependencias nuevas |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
+
+> Las secciones "Añadido por la spec NNN" cuentan lo que añadió cada spec **en su momento**. Lo visual y el marco de la 005, la 011, la 016, la 019 y la 025 (piedra, Inter Tight, cristal, barra lateral, cajón, barra inferior entre 769 y 1023 px) lo sustituyeron la identidad **Nexo** y su marco (030, ver §6 "Identidad visual"); el asistente pasó a ser un panel con Venito (027) y responde en streaming (024). Ante una contradicción manda la spec más reciente.
 
 Lo que hay hoy: registro, login, logout, protección de rutas, portada, pantalla offline, PWA instalable y cron de keep-alive (spec 001), y además (spec 002):
 
@@ -364,7 +366,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   │   ├── forgot-password/ # pedir enlace + actions.ts (requestRecovery) — spec 006
 │   │   │   └── reset-password/  # contraseña nueva + actions.ts (resetPassword) — spec 006
 │   │   ├── auth/confirm/route.ts  # verifica el token_hash de los correos de Auth (spec 006)
-│   │   ├── dashboard/         # layout.tsx (marco con el acento + slot `modal`), page.tsx (redirige al calendario); protegido por getRouteAccess
+│   │   ├── dashboard/         # layout.tsx (marco con el acento + slot `modal`), page.tsx (redirige al calendario); protegido por getRouteAccess. También assistant/ (chat a página completa, spec 015/027) y notes/ (lista, new y [id], spec 028)
 │   │   │   ├── @modal/        # spec 008: default.tsx y [...catchAll] (null), (.)events/new y (.)events/[id] (ventana sobre el calendario)
 │   │   │   ├── calendar/      # vistas agenda/mes/semana/día (?view=&date=) + preferences-actions.ts (incl. saveLastView) + mini-month-actions.ts + agenda-actions.ts (loadAgendaEvents, spec 016)
 │   │   │   │                  # events/ también: quick-actions.ts, quick-writes.ts y event-writes.ts (spec 017: cambios rápidos, deshacer y pegar)
@@ -382,31 +384,35 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── api/sync/run/route.ts  # spec 007: POST con Bearer CRON_SECRET; actualiza lo pendiente (`maxDuration` 60)
 │   │   └── api/cron/keep-alive/route.ts  # GET protegido por CRON_SECRET
 │   ├── components/
-│   │   ├── ui/                # button (variantes), link-button, text-field, text-area, select, form-alert, time-field (combobox de horas), toast (avisos) (solo tokens)
-│   │   ├── shell/             # app-frame, side-rail, bottom-bar (769–1023 px), more-sheet, top-bar y nav-drawer (móvil, spec 016), calendar-header (contexto de la cabecera), bar-styles, icons (SVG propios)
-│   │   ├── brand/             # logo (LogoMark y Logo)
+│   │   ├── ui/                # button y button-styles (variantes), link-button, icon-button, text-field, text-area, select, form-alert, time-field (combobox de horas), toast (avisos), card, chip, sheet, empty-state, switch, swap-label, icon-swap, crossfade-text, stagger-list, error-screen, fold-chevron (solo tokens)
+│   │   ├── shell/             # app-frame, top-nav (desde 769 px), top-bar y bottom-bar (píldora flotante, móvil), create-fab ("+"), assistant-fab (Venito y el panel del chat), more-sheet, calendar-header (contexto de la cabecera), calendar-sheet (filtros en el móvil), theme-toggle, theme-sync, bar-styles, icons (SVG propios). Sin barra lateral ni cajón desde la 030
+│   │   ├── brand/             # logo (LogoMark y Logo) y venito (la morsa, spec 027/031)
 │   │   ├── settings/          # accent-picker
 │   │   ├── account/           # formularios de cuenta, diálogo de borrado, avisos, calendario sin propietario (spec 006)
 │   │   ├── people/            # avatar
 │   │   ├── auth/              # auth-card, login-form, signup-form (Client Components con useActionState)
-│   │   ├── dashboard/         # calendar-list
+│   │   ├── dashboard/         # calendar-list (filas que se despliegan, spec 032)
+│   │   ├── groups/            # group-section, group-list, group-form, assign-group-select, fold-section y new-group-button (specs 007 y 032)
+│   │   ├── notes/             # spec 028: notes-board, note-card, note-form, note-editor, checklist, text-note
 │   │   ├── calendar/          # formularios, vistas (agenda-view, month/week/day, time-grid, slot-layer), event-block (bloque relleno con las marcas de imágenes y de repetición), month-strip, fab, event-modal, event-panel, quick-create, gone-event, calendar-skeleton, mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog, draggable-event, event-interactions (contexto), event-menu, event-clipboard, go-to-date-dialog, shortcuts-help, use-undo-toast (spec 017)…
 │   │   ├── sharing/           # invite-form, copy-button, invite-list, access-code-panel, member-list, join-code-form, invite-join-card
 │   │   ├── import/            # import-form, import-summary
 │   │   ├── recurrence/        # spec 013: repeat-field, recurrence-editor, series-scope-dialog, series-delete
 │   │   ├── comments/          # spec 014: event-comments (sección con sondeo), comment-item, comment-text, comment-form, comments-skeleton
 │   │   ├── images/            # spec 012: image-picker, upload-list, use-image-uploads (cola de subidas), image-uploader (detalle), event-images (galería), image-viewer (visor), use-image-blob
-│   │   ├── assistant/         # spec 015: assistant-chat, cited-events
+│   │   ├── assistant/         # spec 015: assistant-chat, cited-events; spec 022: image-attach, proposal-card
 │   │   ├── connections/       # spec 007: connection-list, provider-notice, calendar-picker, sync-status, sync-now-button, disconnect-dialog; spec 018: icloud-notice, icloud-connect-form
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
 │   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts, next-path.ts (destino tras login: solo /invite/<token>)
-│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, agenda-feed, agenda-today, month-lanes, month-strip, to-view-events, month-marks, next-event, grouping, format, schemas, error-messages, time-options, slots, popover, shortcuts, new-event-query, draft, drag, undo, sheet, zoom (spec 017); queries.ts (lecturas con RLS)
+│   │   ├── calendar/          # LÓGICA PURA testeada: palette, time-zone, ranges, layout, agenda-feed, agenda-today, month-lanes, month-strip, to-view-events, month-marks, next-event, grouping, format, schemas, error-messages, time-options, slots, popover, shortcuts, new-event-query, draft, drag, undo, sheet, zoom (spec 017), event-window (spec 024), folded (spec 032); queries.ts (lecturas con RLS)
 │   │   ├── motion/            # spec 021: play, origin, marks, flight, morph, release, rubber-band
 │   │   ├── theme/             # accents.ts: los seis acentos y los neutros (fuente de los valores de globals.css)
 │   │   ├── shell/             # nav.ts: destinos y sección activa
 │   │   ├── people/            # avatar.ts: iniciales y tintes
-│   │   ├── hooks/             # use-now.ts (reloj compartido), use-calendar-shortcuts.ts, use-refresh-on-focus.ts, use-is-phone.ts, use-event-drag.ts, use-event-keys.ts, use-grid-zoom.ts (spec 017), use-presence, use-enter-once, use-pulse-on y use-follow-drag (spec 021)
+│   │   ├── hooks/             # use-now.ts (reloj compartido), use-calendar-shortcuts.ts, use-refresh-on-focus.ts, use-is-phone.ts, use-event-drag.ts, use-event-keys.ts, use-grid-zoom.ts (spec 017), use-live-calendar, use-hold-live y use-sidebar-collapsed (spec 019), use-presence, use-enter-once, use-pulse-on y use-follow-drag (spec 021), use-event-window y use-stable-list (spec 024), use-folded (spec 032)
+│   │   ├── availability/      # spec 020: busy.ts (puro) y queries.ts
+│   │   ├── notes/             # spec 028: order, search, progress, permissions, schemas, limits, types, error-messages (puros) y queries.ts
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
 │   │   ├── forms/             # form-state.ts: FormState genérico, ConfirmState, ParseResult, readString
@@ -422,7 +428,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   └── icons/                 # icon.svg (maestro) → icon-192, icon-512, icon-512-maskable (letras al 85 %), apple-touch-icon
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions, calendar_groups · 009: sync_write_schema, sync_write_functions, sync_apply_events_v2 · 010: rename_cafam · 011: profile_theme · 012: event_images, event_images_functions, event_images_storage, event_images_purge_claim, copy_calendar_images(_fix), images_purge, reserve_images_order · 013: event_series, series_reserve_images, series_rules_fast_tz, event_series_functions, series_copy_upload, materialize_occurrence · 014: event_comments, comments_copy_loss · 017: event_undo, trash_row · 018: icloud_provider, sync_write_context_provider · 015: assistant · 019: live_changes, profile_view_options · 020: busy_grid, sync_fast · 023: restore_event_guard, assistant_busy_scope, join_code_lock
+│   └── migrations/            # 001: base_schema, rls_policies · 002: calendars_and_events, merge_calendars · 003: sharing_tables_and_policies, members_with_names, invite_functions, access_code_functions, fix_join_with_code · 004: import_calendar · 005: profile_accent, remove_old_blue · 006: account_orphan_schema, account_recovery_limit, delete_own_account, decide_orphan_calendar, copy_calendar_for_owner, apply_orphan_decisions, account_mail_jobs, account_notices_read, skip_test_addresses · 008: profile_last_view · 007: sync_schema, sync_readonly, sync_connect_functions, sync_worker_functions, calendar_groups · 009: sync_write_schema, sync_write_functions, sync_apply_events_v2 · 010: rename_cafam · 011: profile_theme · 012: event_images, event_images_functions, event_images_storage, event_images_purge_claim, copy_calendar_images(_fix), images_purge, reserve_images_order · 013: event_series, series_reserve_images, series_rules_fast_tz, event_series_functions, series_copy_upload, materialize_occurrence · 014: event_comments, comments_copy_loss · 017: event_undo, trash_row · 018: icloud_provider, sync_write_context_provider · 015: assistant · 019: live_changes, profile_view_options · 020: busy_grid, sync_fast · 023: restore_event_guard, assistant_busy_scope, join_code_lock · 028: notes, notes_calendar_functions
 ├── tests/
 │   ├── setup-unit.ts
 │   ├── fixtures/ics/          # .ics sintéticos al estilo Google, iCloud y Outlook (nunca calendarios reales)
@@ -482,7 +488,7 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/api/cron/keep-alive` | `Authorization: Bearer ${CRON_SECRET}` | `200 {"ok":true}` / `401` / `500` |
 | `/dashboard/assistant` | con sesión | El chat de Venito a página completa (specs 015 y 027); día a día se abre como panel desde su botón |
 | `/dashboard/notes`, `/dashboard/notes/new`, `/dashboard/notes/[id]` | con sesión (`[id]` ajeno o inexistente → 404) | Notas (spec 028) |
-| `/api/assistant` | con sesión (POST; sin sesión → `401`) | Una pregunta del asistente (spec 015): `200`, `400`, `429` (cuota), `499` (cancelada), `503` (proveedor) |
+| `/api/assistant` | con sesión (POST; sin sesión → `401`) | Una pregunta del asistente (spec 015): `400` y `429` (cuota) en JSON; si no, `200` con líneas NDJSON `status`, `done` o `error` (spec 024). `GET` → `204` (precalienta la función) |
 | `/api/sync/google-push` | pública (POST) | Avisos de Google (spec 020): marca el calendario con `sync_push`; siempre `200` sin cuerpo, sin leer el cuerpo |
 
 La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSession)`, en `src/lib/auth/route-access.ts` (testeada en `route-access.test.ts`). Para proteger una ruta nueva se cambia **ahí**, no en cada página. El `matcher` de `src/proxy.ts` excluye estáticos, `sw.js` y el manifest.
@@ -591,14 +597,14 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
 
 ### PWA
 
-- Manifest: CaFam (nombre y nombre corto), `theme_color` y `background_color` piedra `#E8E5DD` (de `NEUTRALS.stone`), `start_url /dashboard/calendar`, `standalone`, iconos 192, 512 y 512 maskable generados desde `public/icons/icon.svg`. El favicon (`/icon.svg`) se enlaza explícitamente en `metadata.icons`: la convención de archivo sola no dejaba `<link rel="icon">`.
+- Manifest: CaFam (nombre y nombre corto), `theme_color` y `background_color` lavanda `#F3F2FA` (de `NEUTRALS.stone`, identidad Nexo), `start_url /dashboard/calendar`, `standalone`, iconos 192, 512 y 512 maskable generados desde `public/icons/icon.svg`. El favicon (`/icon.svg`) se enlaza explícitamente en `metadata.icons`: la convención de archivo sola no dejaba `<link rel="icon">`.
 - iOS: `appleWebApp` en `layout.tsx` + `apple-touch-icon`. La portada muestra la ayuda "Compartir › Añadir a pantalla de inicio" **solo** en Safari iOS.
 - `public/sw.js`:
   - Precachea `/offline`, los iconos y los `/_next/static/` que referencia `/offline`.
   - En navegaciones usa red primero, con `/offline` como respaldo.
   - Usa caché primero para `/_next/static/` e `/icons/`.
   - **Nunca cachea HTML con sesión ni respuestas de Supabase** (privacidad en dispositivos compartidos).
-  - **Si cambias `sw.js` o los iconos, sube `CACHE_NAME`** (`cafam-vN`; ahora `v3`).
+  - **Si cambias `sw.js` o los iconos, sube `CACHE_NAME`** (`cafam-vN`; ahora `v5`).
   - Se registra solo en producción.
 
 ### Identidad visual
@@ -837,14 +843,14 @@ Vistas de año y de 4 días, búsqueda de eventos, papelera o deshacer más de u
 
 ## 12. Cómo continuar
 
-**Lo más reciente (2026-11-16): encargo de rediseño, specs 024 a 030**, en la rama `claude/clever-feynman-lx0v5m`. Pendiente del usuario:
+**Lo más reciente (2026-11-17): specs 024 a 033**, todas en la rama `claude/eager-turing-5xgj2t` (contiene también la rama anterior `claude/clever-feynman-lx0v5m`). `main` sigue en el cierre de la 023. Pendiente del usuario:
 
-1. Revisar el resultado (capturas en `specs/030-estilo-nexo/capturas/` y `specs/029-pantallas-restantes-y-cierre/capturas/`).
-2. Aplicar las dos migraciones de la 028 (`notes`, `notes_calendar_functions`) a **dev** (`npm run db:push` con el link en dev) y regenerar tipos allí si difieren; después a **prod** junto con las tres de la 023, que seguían pendientes.
-3. Merge a `main` y prueba en el iPhone (Safari y PWA). El icono de una PWA ya instalada no cambia hasta volver a añadirla a la pantalla de inicio.
+1. Revisar el resultado (capturas en `specs/030-estilo-nexo/capturas/`, `specs/029-pantallas-restantes-y-cierre/capturas/` y `specs/032-calendarios-plegables/capturas/`).
+2. Aplicar las dos migraciones de la 028 (`notes`, `notes_calendar_functions`) a **dev** (`npm run db:push` con el link en dev) y regenerar tipos allí si difieren; después a **prod** junto con las tres de la 023, que seguían pendientes. **Hay que hacerlo antes o a la vez que el merge**: sin ellas, la sección Notas falla en producción.
+3. Merge a `main` (despliega Next 16.4.6, sin vulnerabilidades conocidas, spec 033) y prueba en el iPhone (Safari y PWA). El icono de una PWA ya instalada no cambia hasta volver a añadirla a la pantalla de inicio.
 4. No se han ejecutado `eval:assistant` ni `eval:schedule` (el prompt y las herramientas no cambiaron).
 
-Siguientes trabajos recomendados: (a) periodos contiguos ya pintados para bajar el cambio de mes por debajo de 80 ms con CPU lenta (diferido de la 024 y la 026); (b) sacar zod del JS inicial; (c) rediseñar la organización de los formularios largos (evento completo, repetición) con el estilo Nexo; (d) la spec pendiente de la 023 (la sincronización borra los eventos creados en CaFam fuera de la ventana).
+Siguientes trabajos recomendados: (a) periodos contiguos ya pintados para bajar el cambio de mes por debajo de 80 ms con CPU lenta (diferido de la 024 y la 026); (b) sacar zod del JS inicial; (c) rediseñar la organización de los formularios largos (evento completo, repetición) con el estilo Nexo; (d) la spec pendiente de la 023 (la sincronización borra los eventos creados en CaFam fuera de la ventana); (e) actualizaciones mayores de herramientas sin vulnerabilidades (TypeScript 7, ESLint 10, CLI de Supabase 3), cada una con su spec porque pueden romper la compilación o el lint.
 
 
 La 006 y la 008 están cerradas y en producción (2026-10-23 y 2026-10-24). La 008 añadió la migración `profile_last_view`, ya aplicada en prod.
