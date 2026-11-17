@@ -177,6 +177,19 @@ try {
     await visible(page.getByRole("heading", { name: "Dentista" })).waitFor();
   });
 
+  await step("destinos y cerrar sesión deshabilitados sin red", async () => {
+    await visible(page.getByRole("button", { name: "Más" })).click();
+    await visible(
+      page.getByRole("link", { name: "Ajustes: Necesita conexión" }),
+    ).waitFor();
+    const signOut = visible(
+      page.getByRole("button", { name: /Cerrar sesión/ }),
+    );
+    if (!(await signOut.isDisabled()))
+      throw new Error("se puede cerrar sesión");
+    await page.keyboard.press("Escape");
+  });
+
   await step("una pantalla que necesita red", async () => {
     await page.goto(`${BASE}/dashboard/settings`);
     await visible(page.getByText("Necesita conexión")).waitFor();
@@ -224,6 +237,34 @@ try {
   await step("vuelve a la página real", async () => {
     await page.waitForURL((url) => !url.pathname.startsWith("/offline"));
     await visible(page.getByText("Cena sin red")).waitFor({ timeout: 15_000 });
+  });
+
+  await step("cerrar sesión no deja nada en el dispositivo", async () => {
+    await visible(page.getByRole("button", { name: "Más" })).click();
+    await visible(page.getByRole("button", { name: "Cerrar sesión" })).click();
+    await page.waitForURL("**/login**");
+    const left = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const open = indexedDB.open("cafam-offline");
+          open.onsuccess = () => {
+            const db = open.result;
+            const stores = [...db.objectStoreNames];
+            const tx = db.transaction(stores);
+            let count = 0;
+            for (const name of stores) {
+              tx.objectStore(name).count().onsuccess = (event) => {
+                count += event.target.result;
+              };
+            }
+            tx.oncomplete = () => {
+              db.close();
+              resolve(count);
+            };
+          };
+        }),
+    );
+    if (left !== 0) throw new Error(`quedan ${left} registros`);
   });
 } finally {
   await browser.close();

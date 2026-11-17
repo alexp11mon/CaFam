@@ -122,7 +122,8 @@ Además, `npm run test:db` en las tareas que tocan acceso a datos (T4, T5) y pru
 
   Cubre: RF-7, RF-8, RF-11, RF-12, RF-13, RF-15, RF-16, RF-31 | Módulo: sw.js, offline-app, offline-router, offline-sources, calendar-props
 
-- [ ] T10 Deshabilitar lo que necesita red y cerrar sesión con cuidado
+- [x] T10 Deshabilitar lo que necesita red y cerrar sesión con cuidado
+  Evidencia: `offline-gates` (6), `sign-out-guard` (5, con borrar la cuenta), `series-scope-dialog`, `repeat-field`, `provider-labels` y `event-panel` (2 casos sin red) en verde. `gates.ts` (`navReason`, `allowedScopes`, `networkReason`), `NAV_ITEMS.needsNetwork` con `NavLink` en la barra, las pestañas y "Más", `readOnlyReason(synced, online)` con el motivo `offline`, "Repetir" bloqueado conservando su valor, "Solo este evento" como único alcance, el selector de calendario de la nota deshabilitado, imágenes y comentarios con "Disponible con conexión" en `EventPanel`, y `SignOutGuard` (deshabilitado sin red, aviso de RF-61 y `forgetDevice` antes de salir o de borrar la cuenta). typecheck, lint (aviso previo), format:check, `npm test` (310 archivos, 2901 tests) y build en verde. `scripts/e2e-offline.mjs` con 15 pasos en verde, dos de esta tarea: sin red "Ajustes: Necesita conexión" y "Cerrar sesión" deshabilitado en "Más"; con red, cerrar sesión deja IndexedDB sin ningún registro.
   Incluye `gates.ts`, `NAV_ITEMS.needsNetwork`, `readOnlyReason`, `RepeatField`, `SeriesScopeDialog`, el selector de calendario de la nota, `EventImages`, `EventComments` y `SignOutGuard` (también en borrar la cuenta).
   Hecho cuando: `npm test -- offline-gates sign-out-guard series-scope-dialog repeat-field read-only` en verde. Los tests cubren:
   - textos "Necesita conexión", "Disponible con conexión" y "Sin conexión no se puede escribir en Google/iCloud";

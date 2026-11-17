@@ -37,6 +37,8 @@ import { Checklist } from "./checklist";
 import { PendingMark } from "@/components/offline/pending-mark";
 import { useOfflineQueue } from "@/lib/hooks/use-offline";
 import { noteOf } from "@/lib/offline/outbox";
+import { useConnection } from "@/lib/hooks/use-connection";
+import { networkReason } from "@/lib/offline/gates";
 import { TextNote } from "./text-note";
 
 type Fields = Partial<
@@ -235,6 +237,9 @@ export function NoteEditor({
 
   // Changes of this note still on the device (spec 034 RF-37).
   const { queue } = useOfflineQueue();
+  // Personal to shared and back waits for the network (spec 034 RF-35).
+  const moveReason = networkReason(useConnection());
+  const moveId = useId();
   const waiting = queue.some((entry) => noteOf(entry.change) === note.id);
   const due = dueLabel(note.dueDate, today);
   const { canWrite } = access;
@@ -430,6 +435,8 @@ export function NoteEditor({
               label="Dónde se guarda"
               name="calendarId"
               value={note.calendarId ?? ""}
+              disabled={Boolean(moveReason)}
+              aria-describedby={moveReason ? `${moveId}` : undefined}
               onChange={(event) => {
                 const calendarId = event.target.value || null;
                 const name =
@@ -449,6 +456,11 @@ export function NoteEditor({
                 </option>
               ))}
             </Select>
+          ) : null}
+          {access.canMove && moveReason ? (
+            <p id={moveId} className="text-sm text-muted">
+              {moveReason}
+            </p>
           ) : null}
         </section>
       ) : null}

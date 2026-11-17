@@ -118,7 +118,7 @@ export function detailFromSnapshot(
       categoryName:
         copy.categories.find((c) => c.id === event.categoryId)?.name ?? null,
       author: event.createdByName ?? "",
-      readOnly: readOnlyReason(calendar.synced),
+      readOnly: readOnlyReason(calendar.synced, false),
       provider: calendar.synced?.provider,
       repeat: event.seriesId
         ? {

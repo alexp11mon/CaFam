@@ -114,6 +114,8 @@ describe("OfflineApp", () => {
     await db.saveSnapshot(COPY);
     await open("/dashboard/settings");
 
-    expect(await screen.findByText(/Necesita conexión/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/^Esta pantalla necesita conexión/),
+    ).toBeInTheDocument();
   });
 });

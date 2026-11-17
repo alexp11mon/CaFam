@@ -4,7 +4,7 @@
 import type { EventWindow } from "@/lib/calendar/event-window";
 import * as db from "./db";
 import { pendingEvents } from "./overlay";
-import { getQueueState } from "./queue-store";
+import { clearQueue, getQueueState } from "./queue-store";
 import {
   mergeWindow,
   type OfflineEvent,
@@ -57,4 +57,13 @@ export async function mergeIntoCopy(
     { ...snapshot, events: mergeWindow(snapshot.events, window) },
     true,
   );
+}
+
+/**
+ * Nothing of the user stays on this device, in memory or in IndexedDB:
+ * before signing out or deleting the account (spec 034 RF-60, RF-62, RF-65).
+ */
+export async function forgetDevice(): Promise<void> {
+  await setSnapshot(null);
+  await clearQueue();
 }
