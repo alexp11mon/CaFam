@@ -103,6 +103,8 @@ export async function createSingle(
   supabase: Supabase,
   userId: string,
   row: ReturnType<typeof toRow>,
+  /** Made in the browser for an event created offline: a resend is not a second one (spec 034 D6). */
+  id?: string,
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const synced = await syncedWrite(supabase, { op: "create", row });
   if (synced.status === "failed") {
@@ -117,7 +119,7 @@ export async function createSingle(
   if (synced.status === "done") return { ok: true, id: synced.eventId };
   const { data, error } = await supabase
     .from("events")
-    .insert({ ...row, created_by: userId })
+    .insert({ ...row, created_by: userId, ...(id ? { id } : {}) })
     .select("id")
     .single();
   if (error) return { ok: false, error: getCalendarErrorMessage(error) };

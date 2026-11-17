@@ -55,7 +55,7 @@ function withChange(event: EventRecord, change: Change): EventData {
 }
 
 /** What planSeriesChange reads from the form: the same rule, the new date. */
-function seriesValues(
+export function seriesValues(
   event: EventRecord,
   data: EventData,
   timeZone: string,

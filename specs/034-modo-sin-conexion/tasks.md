@@ -58,7 +58,9 @@ Además, `npm run test:db` en las tareas que tocan acceso a datos (T4, T5) y pru
 
   Cubre: RF-1, RF-2, RF-3, RF-66 | Módulo: offline-actions (D13)
 
-- [ ] T5 Aplicar un cambio enviado sin conexión (`applyOfflineChange`)
+- [x] T5 Aplicar un cambio enviado sin conexión (`applyOfflineChange`)
+  Evidencia: `npm run test:db -- offline-apply` en verde (15 tests: crear con id del navegador y repetirlo, cambiar un suelto, uno `partial` que conserva la descripción del servidor, cambiar y borrar una repetición con `this`, borrar dos veces, los tres conflictos con `force`, Lector, expulsado, calendario de Google, `CF429` de 200 elementos, notas y elementos con el orden sin conflicto y una nota compartida escrita por un Lector). `offline-actions.test.ts`: sin sesión → `unauthenticated` y cambio no válido → `rejected`. `npm test` (incluye `notes`): 2829/2829. typecheck, lint (aviso previo), format:check y build en verde.
+  Desviación del plan: las escrituras de notas van directas en `offline-writes.ts` (con `getNoteErrorMessage` y `NOTE_MESSAGES` de siempre) en lugar de extraer `note-writes.ts`, para no tocar las acciones de Notas, que siguen igual. `createSingle` gana el `id` opcional y `seriesValues` se exporta. Un cambio de un calendario del que el usuario fue expulsado es `rejected` ("No tienes permiso"), no "borrado por otro". Los textos del modo sin conexión empiezan en `lib/offline/messages.ts`.
   Este paso también incluye `createSingle` con `id` y `note-writes.ts` extraído de `notes/actions.ts` sin cambiar su comportamiento.
   Hecho cuando: `npm run test:db -- offline-apply` y `npm test -- notes` en verde. Los tests cubren:
   - crear con id del navegador y repetirlo = un solo evento;
