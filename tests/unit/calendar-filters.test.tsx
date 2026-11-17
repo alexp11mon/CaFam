@@ -120,9 +120,24 @@ function setup(
 
 const chip = (name: RegExp) => screen.queryByRole("link", { name });
 
+// The up/down buttons only show in "Ordenar" (spec 032 RF-7).
+async function ordering() {
+  await userEvent.click(screen.getByRole("button", { name: "Ordenar" }));
+}
+
+// Categories start folded under their calendar (spec 032 RF-5).
+async function showCategories(calendarName: string) {
+  await userEvent.click(
+    screen.getByRole("button", {
+      name: `Mostrar las categorías de ${calendarName}`,
+    }),
+  );
+}
+
 describe("CalendarWorkspace filter tree (RF-42)", () => {
-  it("shows people, their calendars and the categories of each calendar", () => {
+  it("shows people, their calendars and the categories of each calendar", async () => {
     setup();
+    await showCategories("Clases Uni");
 
     for (const name of [
       "Yo",
@@ -232,6 +247,7 @@ describe("visibility (RF-32, RF-33, RF-43, RF-44)", () => {
   it("hides one category without touching the others or the server (RF-32)", async () => {
     const user = userEvent.setup();
     const { setCalendarVisibility, setPersonVisibility } = setup();
+    await showCategories("Clases Uni");
 
     await user.click(screen.getByRole("checkbox", { name: "Matemáticas" }));
 
@@ -295,6 +311,7 @@ describe("order (RF-45)", () => {
   it("moves a calendar down, saves the whole order and keeps the focus", async () => {
     const user = userEvent.setup();
     const { saveOrder } = setup();
+    await ordering();
 
     await user.click(
       screen.getByRole("button", { name: "Bajar Mi calendario" }),
@@ -319,6 +336,7 @@ describe("order (RF-45)", () => {
   it("moves a person up", async () => {
     const user = userEvent.setup();
     const { saveOrder } = setup();
+    await ordering();
 
     await user.click(screen.getByRole("button", { name: "Subir Ana" }));
 
@@ -330,8 +348,9 @@ describe("order (RF-45)", () => {
     expect(labels().indexOf("Ana")).toBeLessThan(labels().indexOf("Yo"));
   });
 
-  it("disables the moves that would go past the ends", () => {
+  it("disables the moves that would go past the ends", async () => {
     setup();
+    await ordering();
 
     expect(
       screen.getByRole("button", { name: "Subir Mi calendario" }),
@@ -348,6 +367,7 @@ describe("order (RF-45)", () => {
     setup({
       saveOrder: async () => ({ error: "No tienes permiso para hacer esto." }),
     });
+    await ordering();
 
     await user.click(
       screen.getByRole("button", { name: "Bajar Mi calendario" }),
@@ -385,8 +405,9 @@ describe("group of calendars without owner (spec 006 RF-22)", () => {
     ];
   }
 
-  it("is shown last and cannot be moved, nor can anyone move below it", () => {
+  it("is shown last and cannot be moved, nor can anyone move below it", async () => {
     setup({ groups: withOrphans() });
+    await ordering();
 
     expect(
       screen.getByRole("checkbox", { name: "Sin propietario" }),
@@ -401,6 +422,7 @@ describe("group of calendars without owner (spec 006 RF-22)", () => {
     const { setCalendarVisibility, setPersonVisibility } = setup({
       groups: withOrphans(),
     });
+    await ordering();
 
     await userEvent.click(
       screen.getByRole("checkbox", { name: "Sin propietario" }),
@@ -413,6 +435,7 @@ describe("group of calendars without owner (spec 006 RF-22)", () => {
 
   it("saves the order of its calendars without saving it as a person", async () => {
     const { saveOrder } = setup({ groups: withOrphans() });
+    await ordering();
 
     await userEvent.click(
       screen.getByRole("button", { name: "Bajar Familia de Luis" }),
@@ -432,5 +455,97 @@ describe("side panel (spec 032 RF-1)", () => {
     expect(panel.className).toMatch(/lg:max-h-\[calc\(100dvh-15rem\)\]/);
     expect(panel.className).toContain("lg:overflow-y-auto");
     expect(panel.className).toContain("lg:overscroll-contain");
+  });
+});
+
+describe("folding (spec 032 RF-3 to RF-7)", () => {
+  it("folds a person's calendars without hiding their events, and remembers it", async () => {
+    const user = userEvent.setup();
+    const { setPersonVisibility, setCalendarVisibility } = setup();
+    const fold = screen.getByRole("button", { name: "Plegar Ana" });
+    expect(fold).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(fold);
+
+    expect(
+      screen.queryByRole("checkbox", { name: "Familia de Ana" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Ana" })).toBeChecked();
+    expect(chip(/Cena de Ana/)).toBeInTheDocument();
+    expect(setPersonVisibility).not.toHaveBeenCalled();
+    expect(setCalendarVisibility).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem("cafam-folded")!)).toEqual({
+      "person:ana": true,
+    });
+    expect(
+      screen.getByRole("button", { name: "Desplegar Ana" }),
+    ).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("starts folded what was folded on this device", () => {
+    localStorage.setItem("cafam-folded", '{"person:me":true}');
+    setup();
+
+    expect(
+      screen.queryByRole("checkbox", { name: "Mi calendario" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: "Familia de Ana" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows how many calendars of a person are visible", () => {
+    const saved = groups();
+    saved[0]!.calendars[1]!.visible = false;
+    setup({ groups: saved });
+
+    expect(screen.getByText("1 de 2 visibles")).toBeInTheDocument();
+  });
+
+  it("folds the whole section with its title and sums up what is shown", async () => {
+    const user = userEvent.setup();
+    const saved = groups();
+    saved[1]!.calendars[0]!.visible = false;
+    setup({ groups: saved });
+
+    await user.click(screen.getByRole("button", { name: "Calendarios" }));
+
+    expect(screen.queryByRole("checkbox", { name: "Yo" })).toBeNull();
+    expect(screen.getByText("2 de 3 visibles")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ordenar" })).toBeNull();
+  });
+
+  it("says how many categories are hidden while they are folded", async () => {
+    const user = userEvent.setup();
+    setup();
+    await showCategories("Clases Uni");
+    await user.click(screen.getByRole("checkbox", { name: "Física" }));
+    await user.click(
+      screen.getByRole("button", {
+        name: "Ocultar las categorías de Clases Uni",
+      }),
+    );
+
+    expect(screen.queryByRole("checkbox", { name: "Física" })).toBeNull();
+    expect(screen.getByText("1 categoría oculta")).toBeInTheDocument();
+  });
+
+  it("shows the up and down buttons only while ordering, with everything unfolded", async () => {
+    const user = userEvent.setup();
+    setup();
+    await user.click(screen.getByRole("button", { name: "Plegar Ana" }));
+    expect(screen.queryByRole("button", { name: /^Subir|^Bajar/ })).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Ordenar" }));
+
+    expect(
+      screen.getByRole("button", { name: "Bajar Familia de Ana" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Hecho" }));
+    expect(screen.queryByRole("button", { name: /^Subir|^Bajar/ })).toBeNull();
+    // Ordering did not change what stays folded.
+    expect(
+      screen.queryByRole("checkbox", { name: "Familia de Ana" }),
+    ).toBeNull();
   });
 });

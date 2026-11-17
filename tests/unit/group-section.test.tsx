@@ -282,6 +282,8 @@ describe("calendar filters with groups (RF-36, RF-38 to RF-40)", () => {
   it("moves groups among groups and people among people", async () => {
     const user = userEvent.setup();
     const props = setupWorkspace();
+    // The up/down buttons are in "Ordenar" (spec 032 RF-7).
+    await user.click(screen.getByRole("button", { name: "Ordenar" }));
 
     expect(screen.getByRole("button", { name: "Bajar Ocio" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Subir Yo" })).toBeDisabled();
