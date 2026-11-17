@@ -36,7 +36,8 @@ Además, `npm run test:db` en las tareas que tocan acceso a datos (T4, T5) y pru
 
   Cubre: RF-26, RF-28, RF-37, RF-40, RF-42, RF-43, RF-49 | Módulo: outbox, overlay
 
-- [ ] T3 Detectar conflictos y comprobar límites (`conflict.ts`, `limits.ts`, puros)
+- [x] T3 Detectar conflictos y comprobar límites (`conflict.ts`, `limits.ts`, puros)
+  Evidencia: `offline-conflict` y `offline-limits` en verde (todo `offline-`: 45 tests). El orden de una lista no pasa por `conflict.ts`: `applyOfflineChange` lo aplica siempre (se prueba en T5). typecheck, lint, format:check y build en verde; `npm test` 2826/2826 tras dar 5 s a la carga perezosa del chat en `assistant-fab.test.tsx` (commit `fix` aparte).
   Hecho cuando: `npm test -- offline-conflict offline-limits` en verde. Los tests cubren:
   - servidor = mía → aplicado; servidor = base → aplicar; si no, conflicto;
   - borrado por otro; borrado mío sobre uno cambiado;

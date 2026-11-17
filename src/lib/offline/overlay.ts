@@ -78,6 +78,8 @@ export function pendingNotes(
   notes: readonly Note[],
   queue: readonly OutboxEntry[],
   now: string,
+  /** The author of the notes created offline, for the limit of RF-36. */
+  userId: string | null = null,
 ): PendingNote[] {
   const byId = new Map<string, PendingNote>(
     notes.map((note) => [note.id, { ...note, items: [...note.items] }]),
@@ -99,7 +101,7 @@ export function pendingNotes(
           archived: change.fields.archived ?? false,
           dueDate: change.fields.dueDate ?? null,
           updatedAt: now,
-          ownerId: null,
+          ownerId: userId,
           calendarId: change.calendarId,
           calendarName: null,
           items: [],
