@@ -123,7 +123,7 @@ describe("UploadForm (RF-43)", () => {
 });
 
 describe("Subir a Google in Mis calendarios (RF-38)", () => {
-  it("shows the link only when the calendar can be uploaded", () => {
+  it("shows the link only when the calendar can be uploaded", async () => {
     render(
       <CalendarList
         timeZone="Europe/Madrid"
@@ -149,11 +149,14 @@ describe("Subir a Google in Mis calendarios (RF-38)", () => {
     );
 
     const [mine, other] = screen.getAllByRole("listitem");
+    // Each row unfolds its actions (spec 032 RF-12).
+    await userEvent.click(within(mine!).getByRole("button", { name: /Mío/ }));
     expect(
-      within(mine).getByRole("link", { name: "Subir Mío a Google o iCloud" }),
+      within(mine!).getByRole("link", { name: "Subir Mío a Google o iCloud" }),
     ).toHaveAttribute("href", "/dashboard/calendars/a/upload");
+    await userEvent.click(within(other!).getByRole("button", { name: /Otro/ }));
     expect(
-      within(other).queryByRole("link", { name: /a Google/ }),
+      within(other!).queryByRole("link", { name: /a Google/ }),
     ).not.toBeInTheDocument();
   });
 });

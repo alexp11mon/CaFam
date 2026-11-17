@@ -4,7 +4,9 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { CalendarWorkspace } from "@/components/calendar/calendar-workspace";
 import { CalendarList } from "@/components/dashboard/calendar-list";
 import { AssignGroupSelect } from "@/components/groups/assign-group-select";
+import { FoldSection } from "@/components/groups/fold-section";
 import { GroupForm } from "@/components/groups/group-form";
+import { NewGroupButton } from "@/components/groups/new-group-button";
 import { GroupSection } from "@/components/groups/group-section";
 import { ToastProvider } from "@/components/ui/toast";
 import { getVisibleRange } from "@/lib/calendar/ranges";
@@ -24,6 +26,13 @@ beforeAll(() => {
 });
 
 const GROUP = { id: "g1", name: "Trabajo" };
+
+// Rename, delete and move wait behind "⋯" (spec 032 RF-11).
+async function options() {
+  await userEvent.click(
+    screen.getByRole("button", { name: "Opciones de Trabajo" }),
+  );
+}
 
 function section(
   overrides: Partial<React.ComponentProps<typeof GroupSection>> = {},
@@ -83,6 +92,7 @@ describe("GroupSection", () => {
   it("renames with the keyboard (RF-41)", async () => {
     const user = userEvent.setup();
     const props = section();
+    await options();
 
     await user.click(screen.getByRole("button", { name: "Renombrar Trabajo" }));
     const field = screen.getByLabelText(/nuevo nombre/i);
@@ -97,6 +107,7 @@ describe("GroupSection", () => {
   it("asks before deleting and says the calendars stay (RF-41)", async () => {
     const user = userEvent.setup();
     const props = section();
+    await options();
 
     await user.click(screen.getByRole("button", { name: "Borrar Trabajo" }));
     const dialog = screen.getByRole("dialog");
@@ -111,6 +122,7 @@ describe("GroupSection", () => {
   it("moves the group up and down, never past the ends (RF-38)", async () => {
     const user = userEvent.setup();
     const props = section({ index: 0, count: 2 });
+    await options();
 
     expect(
       screen.getByRole("button", { name: "Subir Trabajo" }),
@@ -130,7 +142,7 @@ describe("GroupForm (RF-35)", () => {
     }));
     render(<GroupForm action={action} />);
 
-    await user.type(screen.getByLabelText("Nuevo grupo"), "Trabajo");
+    await user.type(screen.getByLabelText("Nombre del grupo"), "Trabajo");
     await user.click(screen.getByRole("button", { name: "Crear grupo" }));
 
     expect(
@@ -187,7 +199,7 @@ describe("AssignGroupSelect (RF-36, RF-37)", () => {
 });
 
 describe("CalendarList with groups (RF-36, RF-46)", () => {
-  it("offers a group for each calendar and labels the ones without owner", () => {
+  it("offers a group for each calendar and labels the ones without owner", async () => {
     render(
       <CalendarList
         timeZone="Europe/Madrid"
@@ -210,6 +222,9 @@ describe("CalendarList with groups (RF-36, RF-46)", () => {
 
     const item = screen.getByRole("listitem");
     expect(item).toHaveTextContent("Sin propietario");
+    await userEvent.click(
+      within(item).getByRole("button", { name: /Familia/ }),
+    );
     expect(
       within(item).getByRole("combobox", { name: "Grupo de Familia" }),
     ).toHaveValue("g1");
@@ -294,5 +309,75 @@ describe("calendar filters with groups (RF-36, RF-38 to RF-40)", () => {
       groups: ["g2", "g1"],
       calendars: { g2: ["c"], g1: ["a", "b"], me: ["d"] },
     });
+  });
+});
+
+describe("lighter Mis calendarios (spec 032 RF-10, RF-11, RF-13)", () => {
+  it("folds a group with the same memory as the filters", async () => {
+    const user = userEvent.setup();
+    section({ calendarCount: 2 });
+    expect(screen.getByText("2 calendarios")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Plegar Trabajo" }));
+
+    expect(screen.queryByText("Contenido del grupo")).not.toBeVisible();
+    expect(JSON.parse(localStorage.getItem("cafam-folded")!)).toEqual({
+      "group:g1": true,
+    });
+  });
+
+  it("keeps the group's actions behind Opciones", async () => {
+    const user = userEvent.setup();
+    section();
+    expect(
+      screen.queryByRole("button", { name: "Renombrar Trabajo" }),
+    ).toBeNull();
+
+    await user.click(
+      screen.getByRole("button", { name: "Opciones de Trabajo" }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Opciones de Trabajo" }),
+    ).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.getByRole("button", { name: "Renombrar Trabajo" }),
+    ).toBeInTheDocument();
+  });
+
+  it("folds Sin grupo too", async () => {
+    const user = userEvent.setup();
+    render(
+      <FoldSection id="section:ungrouped" title="Sin grupo" count={1}>
+        <p>Calendarios sueltos</p>
+      </FoldSection>,
+    );
+    expect(screen.getByText("1 calendario")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Plegar Sin grupo" }));
+
+    expect(screen.getByText("Calendarios sueltos")).not.toBeVisible();
+  });
+
+  it("creates a group from a sheet that closes when it is created", async () => {
+    const user = userEvent.setup();
+    const action = vi.fn(async () => ({ values: { name: "" } }));
+    render(<NewGroupButton action={action} />);
+
+    await user.click(screen.getByRole("button", { name: "Nuevo grupo" }));
+    const sheet = screen.getByRole("dialog", { name: "Nuevo grupo" });
+    await user.type(
+      within(sheet).getByLabelText("Nombre del grupo"),
+      "Familia",
+    );
+    await user.click(
+      within(sheet).getByRole("button", { name: "Crear grupo" }),
+    );
+
+    await vi.waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    const data = (action.mock.calls[0] as unknown[])[1] as FormData;
+    expect(data.get("name")).toBe("Familia");
   });
 });

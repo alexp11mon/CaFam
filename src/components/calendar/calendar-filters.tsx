@@ -4,6 +4,7 @@ import { useId, useState, type ReactNode } from "react";
 import { Avatar } from "@/components/people/avatar";
 import { ChevronIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
+import { FoldChevron } from "@/components/ui/fold-chevron";
 import { IconButton } from "@/components/ui/icon-button";
 import { foldId } from "@/lib/calendar/folded";
 import { useFolded } from "@/lib/hooks/use-folded";
@@ -95,18 +96,6 @@ function PersonCheckbox({
       {tint ? <Avatar name={name} tint={tint} /> : null}
       <span className="min-w-0 break-words">{name}</span>
     </label>
-  );
-}
-
-/** A chevron that points down when open and to the side when folded. */
-export function FoldChevron({ open }: { open: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`flex transition-[rotate] duration-(--motion-base-in) ease-(--ease-in-out) ${open ? "" : "-rotate-90"}`}
-    >
-      <ChevronIcon direction="down" />
-    </span>
   );
 }
 

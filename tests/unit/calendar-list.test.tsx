@@ -29,6 +29,13 @@ beforeAll(() => {
   };
 });
 
+// Each row unfolds its actions, one at a time (spec 032 RF-12).
+async function open(item: HTMLElement) {
+  await userEvent.click(
+    within(item).getAllByRole("button", { expanded: false })[0]!,
+  );
+}
+
 const leave = vi.fn<(id: string) => Promise<ConfirmState>>(async () => ({}));
 
 describe("CalendarList", () => {
@@ -74,7 +81,7 @@ describe("CalendarList", () => {
     expect(names).toEqual(["Fútbol", "Familia", "Mi calendario"]);
   });
 
-  it("offers Editar only to the owner and Categorías to owner and editor (RF-41)", () => {
+  it("offers Editar only to the owner and Categorías to owner and editor (RF-41)", async () => {
     render(
       <CalendarList
         timeZone="Europe/Madrid"
@@ -85,22 +92,26 @@ describe("CalendarList", () => {
 
     const [owner, editor, viewer] = screen.getAllByRole("listitem");
 
+    await open(owner!);
     expect(
       within(owner!).getByRole("link", { name: /Editar/ }),
     ).toHaveAttribute("href", "/dashboard/calendars/1/edit");
     expect(
       within(owner!).getByRole("link", { name: /Categorías/ }),
     ).toHaveAttribute("href", "/dashboard/calendars/1/categories");
+    await open(editor!);
+    expect(within(owner!).queryByRole("link", { name: /Editar/ })).toBeNull();
     expect(within(editor!).queryByRole("link", { name: /Editar/ })).toBeNull();
     expect(
       within(editor!).getByRole("link", { name: /Categorías/ }),
     ).toHaveAttribute("href", "/dashboard/calendars/2/categories");
+    await open(viewer!);
     expect(
       within(viewer!).queryByRole("link", { name: /Editar|Categorías/ }),
     ).toBeNull();
   });
 
-  it("the owner sees Compartir y miembros and cannot leave (RF-33)", () => {
+  it("the owner sees Compartir y miembros and cannot leave (RF-33)", async () => {
     render(
       <CalendarList
         timeZone="Europe/Madrid"
@@ -110,6 +121,7 @@ describe("CalendarList", () => {
     );
 
     const [owner] = screen.getAllByRole("listitem");
+    await open(owner!);
 
     expect(
       within(owner!).getByRole("link", { name: /Compartir y miembros/ }),
@@ -128,9 +140,11 @@ describe("CalendarList", () => {
     const [, editor, viewer] = screen.getAllByRole("listitem");
     const user = userEvent.setup();
 
+    await open(editor!);
     expect(
       within(editor!).getByRole("link", { name: /Miembros/ }),
     ).toHaveAttribute("href", "/dashboard/calendars/2/members");
+    await open(viewer!);
     expect(
       within(viewer!).getByRole("link", { name: /Miembros/ }),
     ).toHaveAttribute("href", "/dashboard/calendars/3/members");
@@ -148,6 +162,34 @@ describe("CalendarList", () => {
       }),
     );
     expect(leave.mock.calls[0]?.[0]).toBe("3");
+  });
+
+  it("unfolds one row at a time and says so (spec 032 RF-12)", async () => {
+    render(
+      <CalendarList
+        timeZone="Europe/Madrid"
+        calendars={CALENDARS}
+        leaveAction={leave}
+      />,
+    );
+    const [owner, editor] = screen.getAllByRole("listitem");
+    const ownerRow = within(owner!).getByRole("button", {
+      name: /Mi calendario/,
+    });
+    expect(ownerRow).toHaveAttribute("aria-expanded", "false");
+    expect(within(owner!).queryByRole("link")).toBeNull();
+
+    await userEvent.click(ownerRow);
+    expect(ownerRow).toHaveAttribute("aria-expanded", "true");
+    expect(within(owner!).getAllByRole("link").length).toBeGreaterThan(0);
+
+    await open(editor!);
+    expect(ownerRow).toHaveAttribute("aria-expanded", "false");
+
+    await userEvent.click(
+      within(editor!).getByRole("button", { name: /^Familia/ }),
+    );
+    expect(within(editor!).queryByRole("link")).toBeNull();
   });
 
   it("shows the empty state with a way to create a calendar (RF-7)", () => {

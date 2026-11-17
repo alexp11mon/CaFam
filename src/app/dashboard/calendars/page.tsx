@@ -6,12 +6,14 @@ import {
   CalendarList,
   type CalendarListItem,
 } from "@/components/dashboard/calendar-list";
-import { GroupForm } from "@/components/groups/group-form";
+import { FoldSection } from "@/components/groups/fold-section";
 import { GroupList } from "@/components/groups/group-list";
+import { NewGroupButton } from "@/components/groups/new-group-button";
 import { ReconnectNotice } from "@/components/connections/reconnect-notice";
 import { ChipLink } from "@/components/ui/chip";
 import { LinkButton } from "@/components/ui/link-button";
 import { daysLeftNow } from "@/lib/account/orphan";
+import { foldId } from "@/lib/calendar/folded";
 import { getNotices, getOrphanCalendars } from "@/lib/account/queries";
 import { organizeGroups } from "@/lib/calendar/organize-groups";
 import {
@@ -101,6 +103,9 @@ async function Calendars() {
           className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
         >
           <li>
+            <NewGroupButton action={createGroup} />
+          </li>
+          <li>
             <ChipLink href="/dashboard/import">Importar calendario</ChipLink>
           </li>
           <li>
@@ -120,7 +125,6 @@ async function Calendars() {
           ) : null}
         </ul>
       </div>
-      <GroupForm action={createGroup} />
       <GroupList
         sections={sections}
         timeZone={timeZone}
@@ -132,9 +136,21 @@ async function Calendars() {
         saveOrder={saveOrder}
       />
       {sections.length > 0 && ungrouped.length > 0 ? (
-        <h2 className="text-lg font-semibold text-ink">Sin grupo</h2>
-      ) : null}
-      {sections.length === 0 || ungrouped.length > 0 ? (
+        // Folds like a group (spec 032 RF-10).
+        <FoldSection
+          id={foldId.ungrouped}
+          title="Sin grupo"
+          count={ungrouped.length}
+        >
+          <CalendarList
+            calendars={ungrouped}
+            timeZone={timeZone}
+            leaveAction={leaveCalendar}
+            groups={sections.map((section) => section.group)}
+            assignAction={assignToGroup}
+          />
+        </FoldSection>
+      ) : sections.length === 0 ? (
         <CalendarList
           calendars={ungrouped}
           timeZone={timeZone}

@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { EventDetail } from "@/components/calendar/event-detail";
@@ -70,7 +71,7 @@ describe("EventDetail of a read-only synced event (spec 009 RF-8)", () => {
 describe("CalendarList with synced calendars (RF-26, RF-44)", () => {
   const base = { id: "c1", name: "Trabajo (Google)", color: "#A0C4FF" };
 
-  it("shows the last update to every member and the account only to the owner", () => {
+  it("shows the last update to every member and the account only to the owner", async () => {
     render(
       <CalendarList
         timeZone="Europe/Madrid"
@@ -87,6 +88,10 @@ describe("CalendarList with synced calendars (RF-26, RF-44)", () => {
     );
 
     const [mine, shared] = screen.getAllByRole("listitem");
+    // The row unfolds its details and actions (spec 032 RF-12).
+    await userEvent.click(
+      within(mine!).getByRole("button", { name: /Trabajo/ }),
+    );
     expect(mine).toHaveTextContent("27 oct");
     expect(mine).toHaveTextContent("11:05");
     expect(mine).toHaveTextContent("ana@gmail.com");

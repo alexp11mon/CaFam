@@ -2,12 +2,16 @@
 
 import { useActionState, useId, useState, useTransition } from "react";
 import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
-import { ChevronIcon } from "@/components/shell/icons";
+import { ChevronIcon, MoreIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
+import { FoldChevron } from "@/components/ui/fold-chevron";
 import { FormAlert } from "@/components/ui/form-alert";
+import { IconButton } from "@/components/ui/icon-button";
 import { SwapLabel } from "@/components/ui/swap-label";
 import { TextField } from "@/components/ui/text-field";
+import { foldId } from "@/lib/calendar/folded";
 import type { GroupVisibility } from "@/lib/calendar/organize-groups";
+import { useFolded } from "@/lib/hooks/use-folded";
 import type { ConfirmState, FormState } from "@/lib/forms/form-state";
 
 type GroupState = FormState<"name">;
@@ -21,7 +25,9 @@ const VISIBILITY_TEXT: Record<GroupVisibility, string> = {
 
 /**
  * One of the user's groups in "Mis calendarios": name, switch to show or hide
- * all its calendars, rename, delete and move (spec 007 RF-38 to RF-41).
+ * all its calendars, rename, delete and move (spec 007 RF-38 to RF-41). It
+ * folds like the group in the filters, and its actions wait behind "⋯"
+ * (spec 032 RF-10, RF-11).
  */
 export function GroupSection({
   group,
@@ -48,6 +54,10 @@ export function GroupSection({
 }) {
   const headingId = useId();
   const stateId = useId();
+  const listId = useId();
+  const optionsId = useId();
+  const [folded, setFolded] = useFolded(foldId.group(group.id));
+  const [options, setOptions] = useState(false);
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
@@ -63,76 +73,106 @@ export function GroupSection({
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+      <div className="flex items-center gap-1">
+        <IconButton
+          label={`${folded ? "Desplegar" : "Plegar"} ${group.name}`}
+          aria-expanded={!folded}
+          aria-controls={listId}
+          onClick={() => setFolded(!folded)}
+          className="-ml-2 text-muted"
+        >
+          <FoldChevron open={!folded} />
+        </IconButton>
         <h2
           id={headingId}
           className="min-w-0 break-words text-lg font-semibold text-ink"
         >
           {group.name}
         </h2>
-        <div className="flex flex-wrap items-center gap-2">
+        <span className="shrink-0 text-sm text-muted tabular-nums">
+          {calendarCount === 1
+            ? "1 calendario"
+            : `${calendarCount} calendarios`}
+        </span>
+        <div className="ml-auto flex shrink-0 items-center">
           {calendarCount > 0 ? (
-            <div className="flex min-h-11 items-center gap-2 text-sm font-medium text-ink">
-              <label className="flex min-h-11 items-center">
-                <input
-                  type="checkbox"
-                  checked={shown}
-                  disabled={pending}
-                  aria-describedby={stateId}
-                  ref={(input) => {
-                    if (input) input.indeterminate = visibility === "partial";
-                  }}
-                  onChange={() =>
-                    startTransition(async () => {
-                      // A partial group is shown whole (RF-39, RF-40).
-                      setError((await setVisibility(!shown)).error);
-                    })
-                  }
-                  className="size-5 shrink-0 accent-ink"
-                />
-                <span className="sr-only">
-                  Mostrar «{group.name}» en el calendario
-                </span>
-              </label>
-              <span id={stateId} className="text-muted">
+            <label className="flex size-11 items-center justify-center">
+              <input
+                type="checkbox"
+                checked={shown}
+                disabled={pending}
+                aria-describedby={stateId}
+                ref={(input) => {
+                  if (input) input.indeterminate = visibility === "partial";
+                }}
+                onChange={() =>
+                  startTransition(async () => {
+                    // A partial group is shown whole (RF-39, RF-40).
+                    setError((await setVisibility(!shown)).error);
+                  })
+                }
+                className="size-5 shrink-0 accent-ink"
+              />
+              <span className="sr-only">
+                Mostrar «{group.name}» en el calendario
+              </span>
+              {/* Said, not shown: the box already says it (spec 032 RF-11). */}
+              <span id={stateId} className="sr-only">
                 {VISIBILITY_TEXT[visibility]}
               </span>
-            </div>
+            </label>
           ) : null}
-          <Button
-            variant="secondary"
-            aria-label={`Renombrar ${group.name}`}
-            onClick={() => setEditing(true)}
+          <IconButton
+            label={`Opciones de ${group.name}`}
+            aria-expanded={options}
+            aria-controls={optionsId}
+            onClick={() => setOptions(!options)}
           >
-            Renombrar
-          </Button>
-          <ConfirmDialog
-            triggerLabel="Borrar"
-            triggerAriaLabel={`Borrar ${group.name}`}
-            title={`¿Borrar el grupo «${group.name}»?`}
-            description="No se borra ningún calendario ni evento: sus calendarios quedarán sin grupo."
-            confirmLabel="Sí, borrar"
-            action={deleteAction}
-          />
-          <Button
-            variant="secondary"
-            aria-label={`Subir ${group.name}`}
-            disabled={index === 0}
-            onClick={() => onMove("up")}
-            className="min-w-11 px-2"
-          >
-            <ChevronIcon direction="up" />
-          </Button>
-          <Button
-            variant="secondary"
-            aria-label={`Bajar ${group.name}`}
-            disabled={index === count - 1}
-            onClick={() => onMove("down")}
-            className="min-w-11 px-2"
-          >
-            <ChevronIcon direction="down" />
-          </Button>
+            <MoreIcon />
+          </IconButton>
         </div>
+      </div>
+      <div
+        id={optionsId}
+        hidden={!options}
+        className="flex flex-wrap items-center gap-2 rounded-card bg-paper p-3"
+      >
+        <Button
+          variant="secondary"
+          aria-label={`Renombrar ${group.name}`}
+          onClick={() => {
+            setEditing(true);
+            setOptions(false);
+          }}
+        >
+          Renombrar
+        </Button>
+        <ConfirmDialog
+          triggerLabel="Borrar"
+          triggerAriaLabel={`Borrar ${group.name}`}
+          title={`¿Borrar el grupo «${group.name}»?`}
+          description="No se borra ningún calendario ni evento: sus calendarios quedarán sin grupo."
+          confirmLabel="Sí, borrar"
+          action={deleteAction}
+        />
+        <Button
+          variant="secondary"
+          aria-label={`Subir ${group.name}`}
+          disabled={index === 0}
+          onClick={() => onMove("up")}
+          className="min-w-11 px-2"
+        >
+          <ChevronIcon direction="up" />
+        </Button>
+        <Button
+          variant="secondary"
+          aria-label={`Bajar ${group.name}`}
+          disabled={index === count - 1}
+          onClick={() => onMove("down")}
+          className="min-w-11 px-2"
+        >
+          <ChevronIcon direction="down" />
+        </Button>
       </div>
       <FormAlert message={error} />
       {editing ? (
@@ -165,14 +205,16 @@ export function GroupSection({
           </div>
         </form>
       ) : null}
-      {calendarCount === 0 ? (
-        <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
-          Este grupo aún no tiene calendarios. Elige el grupo en la ficha de un
-          calendario.
-        </p>
-      ) : (
-        children
-      )}
+      <div id={listId} hidden={folded}>
+        {calendarCount === 0 ? (
+          <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
+            Este grupo aún no tiene calendarios. Elige el grupo en la ficha de
+            un calendario.
+          </p>
+        ) : (
+          children
+        )}
+      </div>
     </section>
   );
 }
