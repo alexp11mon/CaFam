@@ -60,6 +60,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 030-estilo-nexo | Identidad "Nexo" pedida por el usuario con su prototipo (enmienda 11): lavanda, violeta con degradado, Inter, navegación en píldora (flotante abajo en el móvil con "+" y Venito flotantes; arriba en escritorio), cabecera del calendario en el contenido, tarjeta de saludo y Venito secretario con gafas | **Cerrada** (2026-11-16), T1–T6; sin migraciones |
 | 031-venito-morsa | Venito pasa de foca a morsa de línea con gafas, colmillos y bigotes, como la referencia del usuario (enmienda 12) | **Cerrada** (2026-11-16), T1; sin migraciones |
 | 032-calendarios-plegables | Panel lateral del calendario que se desplaza por sí mismo (fallo: con muchos calendarios no se llegaba a los de abajo), grupos y personas plegables en los filtros con modo "Ordenar", y "Mis calendarios" con grupos plegables, opciones tras "⋯", calendarios en filas que se despliegan y "Nuevo grupo" en una hoja | **Cerrada** (2026-11-17), T1–T5; sin migraciones. Spec, plan y tareas aprobados de antemano por el usuario |
+| 033-vulnerabilidades | `next` y `eslint-config-next` 16.4.2 → 16.4.6 (GHSA-mfr8-8qww-v76h) y `npm audit fix` de las herramientas de desarrollo (`minimatch`, `typescript-eslint`): `npm audit` con 0 vulnerabilidades | **Cerrada** (2026-11-17), T1; sin migraciones ni dependencias nuevas |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -329,7 +330,7 @@ La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen d
 | Capa | Tecnología |
 |------|-----------|
 | Lenguaje | TypeScript 5 `strict`, sin `any` explícito (ESLint en error); Node.js 24 |
-| Framework | **Next.js 16.4** (App Router, Turbopack, Server Components, Server Actions), React 19.3 |
+| Framework | **Next.js 16.4.6** (App Router, Turbopack, Server Components, Server Actions), React 19.3 |
 | Estilos | Tailwind CSS 4 vía `@tailwindcss/postcss` (`postcss.config.mjs`) |
 | Datos y auth | Supabase Free: PostgreSQL 17 con RLS + Supabase Auth (email/contraseña) con `@supabase/ssr` (sesión en cookies) |
 | Validación | `zod` 4 |
