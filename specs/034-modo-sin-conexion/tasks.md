@@ -88,7 +88,8 @@ Además, `npm run test:db` en las tareas que tocan acceso a datos (T4, T5) y pru
 
   Cubre: RF-10, RF-18, RF-27, RF-57, RF-64 | Módulo: db, connection
 
-- [ ] T7 Encolar sin red y enviar al volver (`with-outbox.ts`, `flush.ts`)
+- [x] T7 Encolar sin red y enviar al volver (`with-outbox.ts`, `flush.ts`)
+  Evidencia: `offline-with-outbox` (7 tests) y `offline-flush` (7 tests) en verde. `withOutbox(write, change)` también encola si quedan cambios anteriores en la cola, para que lleguen en orden (RF-40); un `change` nulo es una escritura que necesita red. La cola en memoria vive en `queue-store.ts` (con `useSyncExternalStore` en T8); "Deshacer" devuelve la cola a como estaba si no ha entrado nada después. El candado es una sola ejecución por pestaña más `navigator.locks` entre pestañas; otra pestaña puede reenviar un cambio y el servidor responde "aplicado" (RF-41). typecheck, lint (aviso previo), format:check, `npm test` (2854/2854) y build en verde.
   Hecho cuando: `npm test -- offline-with-outbox offline-flush` en verde. Los tests cubren:
   - con red llama a la acción y no encola;
   - sin red o con un fallo de red encola, guarda y devuelve un éxito con "Deshacer" `offline`;
