@@ -21,6 +21,9 @@ vi.mock("@/app/dashboard/assistant/context-actions", () => ({
   }),
 }));
 
+// The chat is loaded with lazy(): its first import takes over a second when
+// the whole suite runs in parallel.
+const LAZY = { timeout: 5000 };
 const fetchMock = vi.fn();
 const json = (body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -95,7 +98,9 @@ describe("the chat panel (RF-2, RF-3)", () => {
 
     await userEvent.click(venito());
     expect(panel).toHaveAttribute("open");
-    expect(await screen.findByLabelText("Tu pregunta")).toBeInTheDocument();
+    expect(
+      await screen.findByLabelText("Tu pregunta", {}, LAZY),
+    ).toBeInTheDocument();
     expect(venito()).toHaveAttribute("aria-expanded", "true");
 
     await userEvent.click(
@@ -109,7 +114,7 @@ describe("the chat panel (RF-2, RF-3)", () => {
     render(<AssistantFab />);
     await userEvent.click(venito());
     const panel = screen.getByRole("dialog", { name: "Chat con Venito" });
-    await screen.findByLabelText("Tu pregunta");
+    await screen.findByLabelText("Tu pregunta", {}, LAZY);
 
     panel.removeAttribute("open");
     act(() => void panel.dispatchEvent(new Event("close")));
@@ -124,7 +129,7 @@ describe("the chat panel (RF-2, RF-3)", () => {
     render(<AssistantFab />);
     await userEvent.click(venito());
     const panel = screen.getByRole("dialog", { name: "Chat con Venito" });
-    const header = (await screen.findByRole("banner")) as HTMLElement;
+    const header = (await screen.findByRole("banner", {}, LAZY)) as HTMLElement;
 
     const move = (type: string, clientY: number) =>
       act(() => {
@@ -149,7 +154,7 @@ describe("the chat panel (RF-2, RF-3)", () => {
     render(<AssistantFab />);
     await userEvent.click(venito());
     await userEvent.type(
-      await screen.findByLabelText("Tu pregunta"),
+      await screen.findByLabelText("Tu pregunta", {}, LAZY),
       "¿Qué hay hoy?{Enter}",
     );
     await screen.findByText("Hoy tienes dentista.");
@@ -171,7 +176,7 @@ describe("the chat panel (RF-2, RF-3)", () => {
     render(<AssistantFab />);
     await userEvent.click(venito());
     await userEvent.type(
-      await screen.findByLabelText("Tu pregunta"),
+      await screen.findByLabelText("Tu pregunta", {}, LAZY),
       "¿Qué hay hoy?{Enter}",
     );
     await userEvent.click(
