@@ -1,5 +1,5 @@
 // Display and form helpers for events and views (spec 002 RF-20, RF-29, RF-34, RF-36).
-import { AGENDA_DAYS, weekStart, type CalendarView } from "./ranges";
+import { AGENDA_DAYS, FOUR_DAYS, weekStart, type CalendarView } from "./ranges";
 import {
   addDays,
   allDayFromRange,
@@ -124,8 +124,13 @@ export function formatPeriodTitle(view: CalendarView, dateKey: string): string {
   if (view === "month") {
     return formatKey(dateKey, { month: "long", year: "numeric" });
   }
-  const first = view === "agenda" ? dateKey : weekStart(dateKey);
-  const last = addDays(first, (view === "agenda" ? AGENDA_DAYS : 7) - 1);
+  // The year is its number (spec 042 RF-4).
+  if (view === "year") return dateKey.slice(0, 4);
+  const first =
+    view === "agenda" || view === "4days" ? dateKey : weekStart(dateKey);
+  const length =
+    view === "agenda" ? AGENDA_DAYS : view === "4days" ? FOUR_DAYS : 7;
+  const last = addDays(first, length - 1);
   const short = { day: "numeric", month: "short" } as const;
   return `${formatKey(first, short)} – ${formatKey(last, { ...short, year: "numeric" })}`;
 }

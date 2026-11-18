@@ -8,13 +8,13 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
 
 ## Tareas
 
-- [ ] T1 Rangos, navegación, títulos y atajos
+- [x] T1 Rangos, navegación, títulos y atajos
   Hecho cuando: `npm test -- ranges format event-window shortcuts calendar-year` en verde.
   - `year`: del 1 de enero al 31 de diciembre; navegación de un año (29 de febrero → 28).
   - `4days`: 4 días desde la fecha; navegación de 4 en 4; sin efecto de ocultar fines de semana.
   - Y y X en `SHORTCUTS`.
 
-  Cubre: RF-4, RF-6, RF-8, RF-9, RF-12 | Evidencia: —
+  Cubre: RF-4, RF-6, RF-8, RF-9, RF-12 | Evidencia: `npm test -- ranges format event-window shortcuts calendar-year` 96/96: `year` del 1 de enero al 31 de diciembre (365 o 366 días), navega de año en año (29 de febrero → 28) y su título es el año; `4days` son 4 días seguidos desde la fecha (fines de semana incluidos), navega de 4 en 4 y su título es "20 nov – 23 nov 2026"; `eventDays` hace que el año no lea eventos (solo marcas, RF-5) y `warmRange` precarga 4 días a cada lado; `parseViewParams` acepta las dos vistas en la URL y como guardada; Y y X en `SHORTCUTS`. P8 en verde.
 - [ ] T2 Marcas del año en la base de datos
   Hecho cuando: `npm run test:db -- day-marks` en verde.
   - Migración, `db:push`, `db:types`. `calendar_day_marks` respeta RLS, da días distintos por calendario, días completos por fecha UTC y `22023` con más de 370 días; `last_view` acepta las nuevas.

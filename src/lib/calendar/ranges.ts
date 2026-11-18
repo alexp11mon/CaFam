@@ -8,14 +8,20 @@ import {
   zonedLocalToUtc,
 } from "./time-zone";
 
-export type CalendarView = "agenda" | "month" | "week" | "day";
+export type CalendarView =
+  "agenda" | "month" | "week" | "day" | "year" | "4days";
 
 export const VIEWS: readonly CalendarView[] = [
   "agenda",
   "month",
   "week",
   "day",
+  "year",
+  "4days",
 ];
+
+/** Days of the 4-day view (spec 042 RF-6). */
+export const FOUR_DAYS = 4;
 
 export function isCalendarView(value: unknown): value is CalendarView {
   return VIEWS.some((view) => view === value);
@@ -76,6 +82,18 @@ export function visibleDayKeys(view: CalendarView, dateKey: string): string[] {
   } else if (view === "week") {
     first = weekStart(dateKey);
     count = 7;
+  } else if (view === "year") {
+    // The whole year of the date (spec 042 RF-1).
+    const { year } = parseDateKey(dateKey)!;
+    first = formatDateKey({ year, month: 1, day: 1 });
+    count = daysBetween(
+      first,
+      formatDateKey({ year: year + 1, month: 1, day: 1 }),
+    );
+  } else if (view === "4days") {
+    // Days in a row from the date, weekends included (RF-6, RF-8).
+    first = dateKey;
+    count = FOUR_DAYS;
   } else if (view === "agenda") {
     // The continuous agenda opens with room above and below (spec 016 plan, flow 7.1).
     first = addDays(dateKey, -AGENDA_BEFORE);
@@ -135,7 +153,16 @@ export function navigate(
   if (view === "day") return addDays(dateKey, direction);
   if (view === "agenda") return addDays(dateKey, AGENDA_DAYS * direction);
   if (view === "week") return addDays(dateKey, 7 * direction);
+  if (view === "4days") return addDays(dateKey, FOUR_DAYS * direction);
   const parts = parseDateKey(dateKey)!;
+  if (view === "year") {
+    // Same day a year away; 29 February becomes 28 (spec 042 RF-4).
+    const year = parts.year + direction;
+    const leap =
+      parseDateKey(formatDateKey({ year, month: 2, day: 29 }))?.month === 2;
+    const day = parts.month === 2 && parts.day === 29 && !leap ? 28 : parts.day;
+    return formatDateKey({ year, month: parts.month, day });
+  }
   const month = parts.month + direction;
   return formatDateKey({
     year: parts.year + (month < 1 ? -1 : month > 12 ? 1 : 0),

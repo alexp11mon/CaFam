@@ -32,6 +32,13 @@ export function visibleDayRange(view: CalendarView, date: string): DayRange {
   return { from: days[0]!, to: days.at(-1)! };
 }
 
+/** The days whose events a view needs: the year reads only marks (spec 042 RF-5). */
+export function eventDays(view: CalendarView, date: string): DayRange {
+  return view === "year"
+    ? { from: date, to: date }
+    : visibleDayRange(view, date);
+}
+
 /**
  * What the server reads for a date, whatever the view: the weeks of the
  * previous month to those of the next one, and at least the agenda's days
@@ -52,8 +59,8 @@ export function serverWindow(date: string): DayRange {
 
 /** The visible period and one more on each side: what idle time loads (RF-3). */
 export function warmRange(view: CalendarView, date: string): DayRange {
-  const visible = visibleDayRange(view, date);
-  if (view === "agenda") return visible;
+  const visible = eventDays(view, date);
+  if (view === "agenda" || view === "year") return visible;
   if (view === "day") {
     return { from: addDays(date, -7), to: addDays(date, 7) };
   }

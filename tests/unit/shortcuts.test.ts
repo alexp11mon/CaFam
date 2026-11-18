@@ -44,7 +44,7 @@ describe("shortcutFor", () => {
   });
 
   it("ignores other keys", () => {
-    expect(shortcutFor(press("x"), true)).toBeNull();
+    expect(shortcutFor(press("q"), true)).toBeNull();
     expect(shortcutFor(press("Enter"), true)).toBeNull();
   });
 

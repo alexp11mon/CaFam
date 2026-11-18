@@ -55,6 +55,9 @@ export const SHORTCUTS: readonly {
   { keys: "M", description: "Vista mes", press: ["m"], shortcut: "month" },
   { keys: "S", description: "Vista semana", press: ["s"], shortcut: "week" },
   { keys: "D", description: "Vista día", press: ["d"], shortcut: "day" },
+  // Y as in year (A is the agenda) and X as in Google Calendar (spec 042 RF-9).
+  { keys: "Y", description: "Vista año", press: ["y"], shortcut: "year" },
+  { keys: "X", description: "Vista 4 días", press: ["x"], shortcut: "4days" },
   {
     keys: "G",
     description: "Ir a una fecha",

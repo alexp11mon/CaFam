@@ -104,7 +104,7 @@ describe("parseViewParams (RF-30; spec 005 RF-15, RF-44)", () => {
 
   it("falls back to the agenda of today for invalid values and arrays (spec 005 RF-44)", () => {
     expect(
-      parseViewParams({ view: "year", date: "2026-13-01" }, TODAY),
+      parseViewParams({ view: "decade", date: "2026-13-01" }, TODAY),
     ).toEqual({ view: "agenda", date: TODAY });
     expect(
       parseViewParams({ view: ["day", "week"], date: ["2026-01-01"] }, TODAY),
@@ -168,14 +168,14 @@ describe("parseViewParams with a saved view (spec 008 RF-25 to RF-27)", () => {
   });
 
   it("keeps the agenda for a wrong view in the URL (spec 005 RF-44)", () => {
-    expect(parseViewParams({ view: "year" }, TODAY, "week")).toEqual({
+    expect(parseViewParams({ view: "decade" }, TODAY, "week")).toEqual({
       view: "agenda",
       date: TODAY,
     });
   });
 
   it("ignores a saved value that is not a view", () => {
-    expect(parseViewParams({}, TODAY, "year")).toEqual({
+    expect(parseViewParams({}, TODAY, "decade")).toEqual({
       view: "agenda",
       date: TODAY,
     });

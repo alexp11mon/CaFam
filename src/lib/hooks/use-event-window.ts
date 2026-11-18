@@ -5,7 +5,7 @@ import {
   mergeWindow,
   planLoad,
   trimWindow,
-  visibleDayRange,
+  eventDays,
   warmRange,
   type DayRange,
   type EventWindow,
@@ -53,7 +53,7 @@ export function useEventWindow<T extends WindowEvent>({
   const window = state.source === initial ? state.window : initial;
   const failed = state.source === initial ? state.failed : null;
 
-  const visible = useMemo(() => visibleDayRange(view, date), [view, date]);
+  const visible = useMemo(() => eventDays(view, date), [view, date]);
   const cold = planLoad(window.range, visible);
   const plan = cold ?? planLoad(window.range, warmRange(view, date));
   const planKey = plan
