@@ -1,0 +1,40 @@
+# Tasks 049 — Cuenta: verificar el email, traspasar un calendario y exportar los datos
+
+Spec: `specs/049-cuenta-verificacion-traspaso-exportar/spec.md`. Plan: `specs/049-cuenta-verificacion-traspaso-exportar/plan.md` (aprobados de antemano por el usuario el 2026-11-18). Depende de la 043 (`write-ics`).
+
+> Estado: pendiente.
+
+Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T1 y T3.
+
+## Tareas
+
+- [ ] T1 Migración
+  Hecho cuando: `npm run test:db -- account-more` en verde: límite de reenvío, `transfer_calendar` (solo propietario, a un miembro, no traído, revoca invitaciones, código, feed y suscripción, avisa), purga de cuentas sin confirmar que respeta a los demás.
+
+  Cubre: RF-1, RF-6 a RF-11 | Evidencia: —
+- [ ] T2 Registro con confirmación
+  Hecho cuando: `npm test -- signup-action login-action auth-confirm-route check-email next-path` en verde; prueba en dev con "Confirm email" activado: registro, correo de Brevo, enlace, entrada con aviso, invitación conservada.
+
+  Cubre: RF-1 a RF-5 | Evidencia: —
+- [ ] T3 Traspaso
+  Hecho cuando: `npm test -- transfer-dialog transfer-actions` en verde (confirmación escribiendo el nombre) y capturas a 390 y 1440 px.
+
+  Cubre: RF-7 a RF-11 | Evidencia: —
+- [ ] T4 ZIP sin dependencias
+  Hecho cuando: `npm test -- zip-store account-files` en verde: CRC-32 de vectores conocidos, nombres UTF-8, archivo vacío, y un `.zip` generado en el test se lista con `tar -tf`.
+
+  Cubre: RNF-1 | Evidencia: —
+- [ ] T5 Descargar mis datos
+  Hecho cuando: `npm test -- export-data export-actions` en verde (sin datos ajenos ni secretos), prueba en el navegador con imágenes y capturas del progreso.
+
+  Cubre: RF-12 a RF-15, RNF-2 | Evidencia: —
+- [ ] T6 Cierre
+  Hecho cuando: AGENTS.md (autenticación y "Confirm email"), README y constitución actualizados; `python -m graphify update .`; P8 completa.
+
+## Trazabilidad
+
+| RF | Tareas |
+|----|--------|
+| RF-1 a RF-6 | T1, T2 |
+| RF-7 a RF-11 | T1, T3 |
+| RF-12 a RF-15 | T4, T5 |
