@@ -31,8 +31,12 @@ describe("no secrets in src/", () => {
 });
 
 // Spec 007, T14: the OAuth client secret, the cron secret and the refresh
-// tokens stay on the server.
-const SERVER_SECRETS = ["GOOGLE_CLIENT_SECRET", "CRON_SECRET"];
+// tokens stay on the server; since spec 040, also the VAPID private key.
+const SERVER_SECRETS = [
+  "GOOGLE_CLIENT_SECRET",
+  "CRON_SECRET",
+  "VAPID_PRIVATE_KEY",
+];
 const isClient = (content: string) => /^\s*["']use client["']/.test(content);
 
 /** `@/…` and relative imports of a file, as paths inside src/ without extension. */
@@ -56,7 +60,8 @@ const withoutExtension = (path: string) => path.replace(/\.tsx?$/, "");
 
 describe("spec 007 secrets (T14)", () => {
   it("never exposes the server secrets with NEXT_PUBLIC_", () => {
-    const pattern = /NEXT_PUBLIC_\w*(GOOGLE_CLIENT_SECRET|CRON_SECRET)/;
+    const pattern =
+      /NEXT_PUBLIC_\w*(GOOGLE_CLIENT_SECRET|CRON_SECRET|VAPID_PRIVATE_KEY)/;
     expect(
       FILES.filter(({ content }) => pattern.test(content)).map((f) => f.path),
     ).toEqual([]);

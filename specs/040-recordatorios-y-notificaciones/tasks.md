@@ -29,12 +29,12 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Triggers sociales: comentario ajeno encola, el propio no; sin suscripción no encola; tipo desactivado no encola; cambio por sincronización no encola.
 
   Cubre: RF-2, RF-7, RF-10, RF-13 a RF-16, RF-18 | Evidencia: migración `20261121100000_push.sql` aplicada en dev (`db:push`, `db:types`); `npm run test:db -- push.test` 8/8: suscripciones solo propias y por `save_push_subscription` (un endpoint pasa a la última cuenta), recordatorios personales con pertenencia, máximo 3 y borrados al salir del calendario, aviso por defecto materializado por el trigger `event_reminders_default` (también cubre las altas de T4), `push_mark_sent` sin duplicar con dos llamadas a la vez, secreto erróneo → 42501, comentario ajeno encola y el propio no, sin dispositivo no encola, tipo desactivado no encola, cambios juntados en 2 min, sincronización (sin sesión) no encola, unirse y cambio de rol. `test:db` completo: 630/631 (`live-changes` dio timeout una vez y pasa al repetirlo, trampa conocida); P8 en verde (3.257 tests).
-- [ ] T4 Ruta de envío y aviso por defecto al crear
+- [x] T4 Ruta de envío y aviso por defecto al crear
   Hecho cuando: `npm test -- push-run-route` (fetch simulado) y `npm run test:db -- push` en verde.
   - `/api/push/run`: 401 sin secreto; envía recordatorios y cola; 410 borra la suscripción; un fallo de una no para las demás.
   - `createEvent`, `createSingle` y las altas del asistente materializan el aviso por defecto del creador.
 
-  Cubre: RF-6, RF-10, RF-11, RF-16, RNF-2 | Evidencia: —
+  Cubre: RF-6, RF-10, RF-11, RF-16, RNF-2 | Evidencia: `npm test -- push-run-route` 5/5 con `fetch` simulado: 401 sin secreto, recordatorio cifrado (`aes128gcm`, `TTL`, `vapid t=…, k=…`) enviado una vez, nada si otra ejecución ya lo marcó, 410 → `push_drop_subscription`, un fallo de red no para las demás, 500 sin claves VAPID. El aviso por defecto lo materializa el trigger `event_reminders_default` de T3 en toda alta con sesión (`createEvent`, `createSingle`, asistente, pegar), así que esas acciones no cambian; `no-secrets` vigila `VAPID_PRIVATE_KEY`. `npm run test:db -- push.test` 8/8; P8 en verde (3.262 tests).
 - [ ] T5 Service worker
   Hecho cuando: `npm test -- sw-push` (sw.js en `vm`, como `offline-sw-sync.test.ts`) en verde.
   - `push` muestra la notificación con `tag`; `notificationclick` enfoca una ventana abierta o abre la URL. `CACHE_NAME` `cafam-v8`.
