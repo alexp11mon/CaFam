@@ -1,15 +1,23 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { formatDateKeyFull } from "@/lib/calendar/format";
 import { visibleMarks } from "@/lib/calendar/month-marks";
 import { getVisibleRange } from "@/lib/calendar/ranges";
 import { parseDateKey } from "@/lib/calendar/time-zone";
 import { yearMonths, yearOf } from "@/lib/calendar/year";
 import { useYearMarks, type LoadYearMarks } from "@/lib/hooks/use-year-marks";
+import type { DayRange } from "@/lib/calendar/event-window";
+import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 import { CalendarLink } from "./calendar-nav";
 
 const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
+
+// One formatter for the 365 labels, as formatDateKeyFull writes them: a new
+// one per day cost tens of ms with a slow CPU (RNF-1).
+const fullDay = new Intl.DateTimeFormat("es-ES", {
+  dateStyle: "full",
+  timeZone: "UTC",
+});
 
 const monthName = new Intl.DateTimeFormat("es-ES", {
   month: "long",
@@ -26,12 +34,15 @@ export function YearView({
   colors,
   visibleCalendarIds,
   loadYearMarks,
+  availableRange,
 }: {
   date: string;
   today: string;
   colors: Record<string, string>;
   visibleCalendarIds: ReadonlySet<string>;
   loadYearMarks?: LoadYearMarks;
+  /** Offline, the months out of the copy are dimmed with a note (RF-13). */
+  availableRange?: DayRange;
 }) {
   const { marks, failed, retry } = useYearMarks(yearOf(date), loadYearMarks);
   const shown = visibleMarks(marks ?? {}, visibleCalendarIds);
@@ -60,11 +71,17 @@ export function YearView({
             days.slice(index * 7, index * 7 + 7),
           );
           const name = monthName.format(new Date(`${month}-01T00:00:00Z`));
+          // Keys compare as text: "-31" is past any day of the month.
+          const away =
+            availableRange !== undefined &&
+            (`${month}-31` < availableRange.from ||
+              `${month}-01` > availableRange.to);
           return (
             <section
               key={month}
               aria-label={name}
-              className="flex flex-col gap-1 rounded-card surface p-2 sm:p-3"
+              data-away={away || undefined}
+              className="flex flex-col gap-1 rounded-card surface p-2 data-away:opacity-50 sm:p-3"
             >
               <h2>
                 <CalendarLink
@@ -75,6 +92,11 @@ export function YearView({
                   {name}
                 </CalendarLink>
               </h2>
+              {away ? (
+                <p className="px-2 text-sm text-muted">
+                  {OFFLINE_MESSAGES.outOfRange}
+                </p>
+              ) : null}
               <table className="w-full table-fixed text-center">
                 <thead>
                   <tr>
@@ -104,7 +126,7 @@ export function YearView({
                             <CalendarLink
                               view="day"
                               date={day}
-                              aria-label={`${formatDateKeyFull(day)}${isToday ? ", hoy" : ""}${dots.length > 0 ? ", con eventos" : ""}`}
+                              aria-label={`${fullDay.format(new Date(`${day}T00:00:00Z`))}${isToday ? ", hoy" : ""}${dots.length > 0 ? ", con eventos" : ""}`}
                               aria-current={isToday ? "date" : undefined}
                               className={`press-quiet mx-auto flex size-11 flex-col items-center justify-center rounded-control text-sm tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
                                 isToday

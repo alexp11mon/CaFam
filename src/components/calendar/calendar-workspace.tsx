@@ -95,6 +95,7 @@ import { QuickCreate } from "./quick-create";
 import { WeekView } from "./week-view";
 import { YearView } from "./year-view";
 import type { LoadYearMarks } from "@/lib/hooks/use-year-marks";
+import type { DayRange } from "@/lib/calendar/event-window";
 
 export interface PanelCalendar extends GroupableCalendar {
   color: string;
@@ -198,6 +199,7 @@ export function CalendarWorkspace({
   monthMarks,
   loadMonthMarks,
   loadYearMarks,
+  availableRange,
   saveLastView,
   loadAgendaEvents,
   editableCalendars = [],
@@ -236,6 +238,8 @@ export function CalendarWorkspace({
   ) => Promise<{ marks: MonthMarks } | { error: string }>;
   /** Days with events of a whole year, for the year view (spec 042 RF-5). */
   loadYearMarks?: LoadYearMarks;
+  /** The days of the offline copy: the year dims the months out of it (spec 042 RF-13). */
+  availableRange?: DayRange;
   /** Remembers a view chosen with a shortcut (spec 008 RF-25). */
   saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
   /** More days for the continuous agenda (spec 016 RF-48, RF-49). */
@@ -331,7 +335,8 @@ export function CalendarWorkspace({
       ? agendaMonth.month
       : date.slice(0, 7);
   usePublishCalendarHeader({
-    title: monthLabel(titleMonth, today),
+    // The year view is titled with its year (spec 042 RF-4).
+    title: view === "year" ? date.slice(0, 4) : monthLabel(titleMonth, today),
     today,
     onToday: () =>
       view === "agenda"
@@ -855,6 +860,7 @@ export function CalendarWorkspace({
                 colors={colors}
                 visibleCalendarIds={visibleCalendars}
                 loadYearMarks={loadYearMarks}
+                availableRange={availableRange}
               />
             ) : view === "month" ? (
               <MonthView

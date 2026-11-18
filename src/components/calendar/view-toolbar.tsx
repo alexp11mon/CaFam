@@ -56,6 +56,21 @@ const VIEWS: {
     previous: "Día anterior",
     next: "Día siguiente",
   },
+  // Spec 042 RF-10.
+  {
+    view: "4days",
+    label: "4 días",
+    key: "X",
+    previous: "4 días anteriores",
+    next: "4 días siguientes",
+  },
+  {
+    view: "year",
+    label: "Año",
+    key: "Y",
+    previous: "Año anterior",
+    next: "Año siguiente",
+  },
 ];
 
 const BUTTON =

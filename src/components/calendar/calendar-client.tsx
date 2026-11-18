@@ -311,6 +311,7 @@ export function CalendarClient({
         {events.loading ? "Cargando eventos…" : ""}
       </p>
       {availableRange &&
+      view !== "year" &&
       !coversRange(availableRange, {
         from: range.days[0]!,
         to: range.days.at(-1)!,
@@ -347,6 +348,7 @@ export function CalendarClient({
           events={shown}
           monthMarks={marks}
           busyIntervals={busyKnown ?? EMPTY_BUSY}
+          availableRange={availableRange}
         />
       </div>
     </CalendarNavContext>

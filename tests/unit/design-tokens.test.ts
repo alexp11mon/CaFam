@@ -29,6 +29,8 @@ const FLOATING = new Set([
   // The confirmation of signing out with changes waiting (spec 034 RF-61).
   "src/components/offline/sign-out-guard.tsx",
   "src/components/calendar/calendar-dock.tsx",
+  // The "Más vistas" menu of the phone heading (spec 042 RF-10).
+  "src/components/calendar/calendar-heading.tsx",
   "src/components/calendar/confirm-dialog.tsx",
   "src/components/calendar/calendar-workspace.tsx",
   "src/components/calendar/draggable-event.tsx",

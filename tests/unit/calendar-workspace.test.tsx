@@ -328,6 +328,13 @@ describe("CalendarWorkspace on a phone", () => {
     ).toBeInTheDocument();
   });
 
+  it("titles the year view with its year on a phone (spec 042 RF-4)", () => {
+    setup(true, withHeader, { view: "year" });
+    expect(
+      within(screen.getByRole("banner")).getByRole("button", { name: /2026/ }),
+    ).toBeInTheDocument();
+  });
+
   it("opens the month row under the header", async () => {
     setup(true, withHeader);
 

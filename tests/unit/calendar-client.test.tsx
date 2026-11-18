@@ -240,3 +240,59 @@ describe("CalendarClient", () => {
     );
   });
 });
+
+// Spec 042 T5: the year and the 4 days in the browser (RF-12, RF-13).
+describe("CalendarClient with the new views", () => {
+  it("draws the whole year without reading its events (RF-5, RF-12)", () => {
+    const loadWindow = vi.fn(async () => ({ events: [] }));
+    render(client({ initialView: "year", loadWindow }));
+    expect(screen.getByTestId("where")).toHaveTextContent(
+      "year 2026-11-15 2026-01-01..2026-12-31",
+    );
+    expect(loadWindow).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("reads no events when moving to a year out of the window (RNF-1)", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const loadWindow = vi.fn(async () => ({ events: [] }));
+    render(
+      client({ initialView: "year", initialDate: "2030-05-01", loadWindow }),
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(loadWindow).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it("draws 4 days, weekends included even when hidden (RF-6)", () => {
+    render(client({ initialView: "4days", showWeekends: false }));
+    expect(screen.getByTestId("where")).toHaveTextContent(
+      "4days 2026-11-15 2026-11-15..2026-11-18",
+    );
+  });
+
+  it("offline, the year has no alert of its own: its months say it (RF-13)", () => {
+    render(
+      client({
+        initialView: "year",
+        availableRange: { from: "2026-10-15", to: "2027-02-15" },
+      }),
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("offline, 4 days out of the copy say they are not available (RF-13)", () => {
+    render(
+      client({
+        initialView: "4days",
+        initialDate: "2027-06-01",
+        availableRange: { from: "2026-10-15", to: "2027-02-15" },
+      }),
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "no están disponibles sin conexión",
+    );
+  });
+});

@@ -75,6 +75,17 @@ export function offlineCalendarProps(copy: Snapshot) {
         ),
       };
     },
+    // The year's marks from the copy's events (spec 042 RF-13).
+    loadYearMarks: async (year: number) => {
+      const range = getVisibleRange("year", `${year}-01-01`, timeZone);
+      return {
+        marks: monthMarks(
+          eventsInRange(copy.events, range.from, range.to),
+          range.days,
+          timeZone,
+        ),
+      };
+    },
     // Filters change on this device only, unsaved (RF-15).
     setCalendarVisibility: done,
     setPersonVisibility: done,

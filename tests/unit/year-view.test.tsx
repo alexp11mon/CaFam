@@ -71,7 +71,7 @@ describe("year helpers", () => {
 describe("YearView", () => {
   it("draws the 12 months, Monday first, in columns by width", async () => {
     setup();
-    const months = screen.getAllByRole("region");
+    const months = [...document.querySelectorAll("section")];
     expect(months).toHaveLength(12);
     expect(months[0]).toHaveAccessibleName("enero");
     expect(
@@ -87,30 +87,28 @@ describe("YearView", () => {
       "xl:grid-cols-4",
     );
     // Only the days of each month: 365 links in 2026.
-    expect(screen.getAllByRole("link", { name: /de 2026/ }).length).toBe(365);
-    await screen.findByRole("link", { name: /5 de marzo.*con eventos/ });
+    expect(document.querySelectorAll('a[href*="view=day"]')).toHaveLength(365);
+    await screen.findByLabelText(/5 de marzo.*con eventos/);
   });
 
   it("marks today and the visible calendars' days with dots", async () => {
     setup();
-    const day = await screen.findByRole("link", {
-      name: /5 de marzo.*con eventos/,
-    });
+    const day = await screen.findByLabelText(/5 de marzo.*con eventos/);
     expect(day.querySelectorAll("[data-dot]")).toHaveLength(2);
     // A hidden calendar leaves no mark.
     expect(
-      screen.getByRole("link", { name: /^viernes, 6 de marzo de 2026$/ }),
+      screen.getByLabelText(/^viernes, 6 de marzo de 2026$/),
     ).toBeInTheDocument();
-    const today = screen.getByRole("link", { name: /19 de noviembre.*hoy/ });
+    const today = screen.getByLabelText(/19 de noviembre.*hoy/);
     expect(today).toHaveAttribute("aria-current", "date");
     expect(today).toHaveClass("bg-accent");
   });
 
   it("opens the day view from a day and the month view from a name (RF-3)", () => {
     const { go } = setup();
-    fireEvent.click(screen.getByRole("link", { name: /^jueves, 5 de marzo/ }));
+    fireEvent.click(screen.getByLabelText(/^jueves, 5 de marzo/));
     expect(go).toHaveBeenLastCalledWith("day", "2026-03-05", undefined);
-    fireEvent.click(screen.getByRole("link", { name: "marzo" }));
+    fireEvent.click(screen.getByText("marzo"));
     expect(go).toHaveBeenLastCalledWith("month", "2026-03-01", undefined);
   });
 

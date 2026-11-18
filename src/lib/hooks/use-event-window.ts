@@ -54,8 +54,12 @@ export function useEventWindow<T extends WindowEvent>({
   const failed = state.source === initial ? state.failed : null;
 
   const visible = useMemo(() => eventDays(view, date), [view, date]);
-  const cold = planLoad(window.range, visible);
-  const plan = cold ?? planLoad(window.range, warmRange(view, date));
+  // The year shows marks, never events: nothing to read (spec 042 RF-5, RNF-1).
+  const year = view === "year";
+  const cold = year ? null : planLoad(window.range, visible);
+  const plan = year
+    ? null
+    : (cold ?? planLoad(window.range, warmRange(view, date)));
   const planKey = plan
     ? `${plan.mode}:${plan.ranges.map(keyOf).join(",")}`
     : null;

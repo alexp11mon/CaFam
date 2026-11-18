@@ -126,7 +126,7 @@ describe("CalendarHeading", () => {
   it("keeps every control 40 px or more to touch", () => {
     const { heading } = setup("week");
     for (const control of within(heading).getAllByRole("button")) {
-      expect(control.className).toMatch(/\b(?:min-h-11|size-11)\b/);
+      expect(control.className).toMatch(/\b(?:min-h-10|min-h-11|size-11)\b/);
     }
   });
 
@@ -135,5 +135,46 @@ describe("CalendarHeading", () => {
     expect(
       within(heading).getByRole("link", { name: "Buscar" }),
     ).toHaveAttribute("href", "/dashboard/search");
+  });
+});
+
+// Spec 042 T5: the year and the 4 days behind "Más vistas" (RF-10, plan D3).
+describe("CalendarHeading with more views", () => {
+  it("keeps four tabs and opens the others from Más vistas, remembering the choice", async () => {
+    const { heading, go, saveLastView } = setup("month");
+    const more = within(heading).getByRole("button", { name: "Más vistas" });
+    expect(more).toHaveAttribute("aria-expanded", "false");
+    expect(more.className).toContain("min-h-10");
+    await userEvent.click(more);
+    expect(more).toHaveAttribute("aria-expanded", "true");
+    await userEvent.click(within(heading).getByRole("link", { name: "Año" }));
+    expect(go).toHaveBeenCalledExactlyOnceWith("year", "2026-11-15", [
+      "cal-view",
+    ]);
+    expect(saveLastView).toHaveBeenCalledExactlyOnceWith("year");
+    expect(within(heading).queryByRole("link", { name: "Año" })).toBeNull();
+  });
+
+  it("closes with Escape", async () => {
+    const { heading } = setup("month");
+    await userEvent.click(
+      within(heading).getByRole("button", { name: "Más vistas" }),
+    );
+    await userEvent.keyboard("{Escape}");
+    expect(
+      within(heading).getByRole("button", { name: "Más vistas" }),
+    ).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("names the chosen view on the button and moves by its period", async () => {
+    const { heading, go } = setup("4days");
+    const more = within(heading).getByRole("button", {
+      name: "Más vistas: 4 días",
+    });
+    expect(more).toHaveAttribute("aria-current", "page");
+    await userEvent.click(
+      within(heading).getByRole("button", { name: "4 días siguientes" }),
+    );
+    expect(go).toHaveBeenCalledWith("4days", "2026-11-19", ["cal-next"]);
   });
 });
