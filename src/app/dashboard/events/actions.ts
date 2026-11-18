@@ -11,37 +11,27 @@ import {
   requireActionUser,
   type EventRecord,
 } from "@/lib/calendar/queries";
-import {
-  parseEventInput,
-  type EventData,
-  type EventFormValues,
-} from "@/lib/calendar/schemas";
+import { parseEventInput, type EventFormValues } from "@/lib/calendar/schemas";
 import { readString, type ConfirmState } from "@/lib/forms/form-state";
 import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
 import { resolveRepeat } from "@/lib/recurrence/presets";
-import type { RecurrenceRule } from "@/lib/recurrence/rule";
 import { parseEventId } from "@/lib/recurrence/occurrence-id";
-import {
-  seriesColumns,
-  SERIES_SCOPES,
-  type SeriesScope,
-} from "@/lib/recurrence/series-write";
+import { SERIES_SCOPES, type SeriesScope } from "@/lib/recurrence/series-write";
 import { isGoneDone, type GoneDone } from "@/lib/sync/provider-labels";
 import { goneText, writeErrorText } from "@/lib/sync/write-errors";
 import {
   changeOccurrence,
+  convertToSeries,
+  createSeries,
   deleteOccurrences,
   deleteSingle,
   failure,
-  isSyncedCalendar,
   refresh,
-  seriesFailure,
   syncedWrite,
   toRow,
   updateSingle,
   type EventFormState,
   type Saved,
-  type Supabase,
 } from "./event-writes";
 
 function readEventValues(formData: FormData): EventFormValues {
@@ -90,106 +80,6 @@ function readScope(formData: FormData): SeriesScope | null {
   return (SERIES_SCOPES as readonly string[]).includes(scope)
     ? (scope as SeriesScope)
     : null;
-}
-
-/**
- * A single event becomes a series (RF-21). With images it stays as the first
- * occurrence of a new series row, which never holds images (plan D7); with
- * comments too (spec 023 RF-12).
- */
-async function convertToSeries(
-  supabase: Supabase,
-  event: EventRecord,
-  input: {
-    data: EventData;
-    rule: RecurrenceRule;
-    timeZone: string;
-    values: EventFormValues;
-  },
-): Promise<Saved> {
-  const { data, rule, timeZone, values } = input;
-  if (await isSyncedCalendar(supabase, data.calendarId)) {
-    return { fieldErrors: { repeat: RECURRENCE_MESSAGES.synced }, values };
-  }
-  const columns = seriesColumns(data, rule, timeZone);
-  if (!columns) {
-    return { fieldErrors: { repeat: RECURRENCE_MESSAGES.empty }, values };
-  }
-  // Images and comments hang from the row of an occurrence, never from the
-  // series: with either, the event stays as its first occurrence (spec 023
-  // RF-12).
-  const [images, comments] = await Promise.all(
-    (["event_images", "event_comments"] as const).map((table) =>
-      supabase
-        .from(table)
-        .select("id", { count: "exact", head: true })
-        .eq("event_id", event.id),
-    ),
-  );
-  if (images.error) throw images.error;
-  if (comments.error) throw comments.error;
-
-  if (!images.count && !comments.count) {
-    const { error } = await supabase
-      .from("events")
-      .update({ ...toRow(data), ...columns })
-      .eq("id", event.id);
-    return error ? seriesFailure(error, values) : { id: event.id };
-  }
-
-  const { data: series, error } = await supabase
-    .from("events")
-    .insert({ ...toRow(data), ...columns, created_by: event.createdBy })
-    .select("id")
-    .single();
-  if (error) return seriesFailure(error, values);
-  const { error: attachError } = await supabase
-    .from("events")
-    .update({
-      ...toRow(data),
-      starts_at: columns.starts_at,
-      ends_at: columns.ends_at,
-      series_id: series.id,
-      original_start: columns.starts_at,
-    })
-    .eq("id", event.id);
-  if (attachError) {
-    // Two writes: undo the first so the event is not shown twice.
-    await supabase.from("events").delete().eq("id", series.id);
-    return seriesFailure(attachError, values);
-  }
-  return { id: event.id };
-}
-
-/**
- * A new series (spec 013 RF-6, RF-8): never in a calendar of Google (RF-29),
- * starting at its first occurrence, with the creator's zone (RF-12).
- */
-async function createSeries(
-  supabase: Supabase,
-  userId: string,
-  input: {
-    data: EventData;
-    rule: RecurrenceRule;
-    timeZone: string;
-    values: EventFormValues;
-  },
-): Promise<{ id: string } | EventFormState> {
-  const { data, rule, timeZone, values } = input;
-  if (await isSyncedCalendar(supabase, data.calendarId)) {
-    return { fieldErrors: { repeat: RECURRENCE_MESSAGES.synced }, values };
-  }
-  const columns = seriesColumns(data, rule, timeZone);
-  if (!columns) {
-    return { fieldErrors: { repeat: RECURRENCE_MESSAGES.empty }, values };
-  }
-  const { data: row, error } = await supabase
-    .from("events")
-    .insert({ ...toRow(data), ...columns, created_by: userId })
-    .select("id")
-    .single();
-  if (error) return seriesFailure(error, values);
-  return { id: row.id };
 }
 
 export async function createEvent(

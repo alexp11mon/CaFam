@@ -6,6 +6,8 @@
 // - server equals base: nobody else touched it, apply;
 // - otherwise someone else changed it: ask.
 
+import type { SeriesBase } from "./outbox";
+
 export type Verdict = "applied" | "apply" | "conflict";
 
 type Fields = Record<string, unknown>;
@@ -58,4 +60,35 @@ export function verdictOrGone(
 export function createVerdict(mine: Fields, server: Fields | null): Verdict {
   if (server === null) return "apply";
   return same(mine, server, mine) ? "applied" : "conflict";
+}
+
+const instant = (value: string | null) =>
+  value === null ? null : Date.parse(value);
+
+/**
+ * Whether a series is as the copy had it: its fields, rule, deleted dates and
+ * what hangs from its exceptions (spec 035 RF-14, RF-15, plan D3).
+ */
+/** A series' base; its fields as the change was validated (description may be unknown). */
+type SeriesLike = Omit<SeriesBase, "fields"> & { fields: object };
+
+export function sameSeries(base: SeriesLike, now: SeriesLike): boolean {
+  const dates = (list: string[]) =>
+    list
+      .map((date) => Date.parse(date))
+      .sort((a, b) => a - b)
+      .join();
+  return (
+    same(
+      base.fields as unknown as Fields,
+      base.fields as unknown as Fields,
+      now.fields as unknown as Fields,
+    ) &&
+    base.recurrence === now.recurrence &&
+    dates(base.exdates) === dates(now.exdates) &&
+    base.totals.exceptions === now.totals.exceptions &&
+    base.totals.images === now.totals.images &&
+    base.totals.comments === now.totals.comments &&
+    instant(base.totals.latest) === instant(now.totals.latest)
+  );
 }

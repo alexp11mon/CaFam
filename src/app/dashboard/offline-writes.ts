@@ -8,27 +8,52 @@ import {
   type EventRecord,
 } from "@/lib/calendar/queries";
 import type { EventData } from "@/lib/calendar/schemas";
+import {
+  COMMENT_MESSAGES,
+  getCommentErrorMessage,
+} from "@/lib/comments/error-messages";
+import { commentRowFor } from "@/lib/comments/queries";
+import {
+  getImageErrorMessage,
+  IMAGE_MESSAGES,
+} from "@/lib/images/error-messages";
+import { purgeDeps, purgeObjects } from "@/lib/images/purge";
 import { getNoteErrorMessage, NOTE_MESSAGES } from "@/lib/notes/error-messages";
 import { getNote } from "@/lib/notes/queries";
 import type { Note } from "@/lib/notes/types";
-import { createVerdict, verdictOrGone } from "@/lib/offline/conflict";
+import {
+  createVerdict,
+  sameSeries,
+  verdictOrGone,
+} from "@/lib/offline/conflict";
 import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
-import type { NoteFields } from "@/lib/offline/outbox";
+import type { NoteFields, SeriesBase } from "@/lib/offline/outbox";
 import type { ParsedChange } from "@/lib/offline/schemas";
+import { utcDateKey, zonedDateKey } from "@/lib/calendar/time-zone";
+import { resolveRepeat } from "@/lib/recurrence/presets";
+import {
+  planSeriesChange,
+  planSeriesDelete,
+} from "@/lib/recurrence/series-write";
 import { writeEngineDeps } from "@/lib/sync/engine";
 import type { WritableEvent } from "@/lib/sync/google-payload";
 import { writeErrorText } from "@/lib/sync/write-errors";
 import { readSyncedEvent } from "@/lib/sync/write-event";
 import {
   changeOccurrence,
+  convertToSeries,
+  createSeries,
   createSingle,
   deleteOccurrences,
   deleteSingle,
+  materializeWith,
   toRow,
+  unconfirmedLoss,
   updateSingle,
   type Supabase,
 } from "./events/event-writes";
 import { seriesValues } from "./events/quick-writes";
+import { totalsOf } from "./offline-reads-detail";
 
 // Applies one change made offline with the user's session (spec 034 RF-41,
 // RF-46, RF-47, RF-50 to RF-55, RF-58; plan D5 to D8). It reuses the writes
@@ -72,6 +97,31 @@ function eventData(event: EventRecord): EventData {
 }
 
 type EventChange = Extract<ParsedChange, { type: `event.${string}` }>;
+
+const RECURRENCE_INVALID = "La repetición no es válida.";
+const NO_SERIES = { series: null };
+
+/** "Repetir" as the form sends it, resolved with the event's date (RF-11). */
+function repeatOf(
+  repeat: string | undefined,
+  data: Pick<EventData, "allDay" | "startsAt">,
+  timeZone: string,
+) {
+  const date = data.allDay
+    ? utcDateKey(data.startsAt)
+    : zonedDateKey(data.startsAt, timeZone);
+  return resolveRepeat(repeat ?? "none", date);
+}
+
+/** The message of a form state: its own, or that of its first field. */
+function formMessage(state: {
+  formError?: string;
+  fieldErrors?: Partial<Record<string, string>>;
+}): string | undefined {
+  return (
+    state.formError ?? Object.values(state.fieldErrors ?? {}).find(Boolean)
+  );
+}
 
 const REVOKED = new Set([
   writeErrorText("revoked", "google"),
@@ -206,6 +256,31 @@ async function applyEvent(
   const current = server ? fields(eventData(server)) : null;
 
   if (change.type === "event.create") {
+    const repeat = repeatOf(change.repeat, change.data, timeZone);
+    if (!repeat.ok) return failed(RECURRENCE_INVALID);
+    if (repeat.rule) {
+      // A series created with the browser's id: a resend finds it (RF-11).
+      if (server) return APPLIED;
+      const data = {
+        ...change.data,
+        description: change.data.description ?? null,
+      };
+      const created = await createSeries(
+        supabase,
+        userId,
+        {
+          data,
+          rule: repeat.rule,
+          timeZone,
+          values: {
+            ...seriesValues(NO_SERIES, data, timeZone),
+            repeat: change.repeat ?? "none",
+          },
+        },
+        change.id,
+      );
+      return "id" in created ? APPLIED : failed(formMessage(created));
+    }
     const verdict = createVerdict(fields(change.data), current);
     if (verdict === "applied") return APPLIED;
     if (verdict === "conflict" && !force) {
@@ -230,6 +305,11 @@ async function applyEvent(
   }
 
   const mine = change.type === "event.update" ? change.data : null;
+  const asked = change.type === "event.update" ? change.repeat : undefined;
+  // Only "Repetir" changed: the fields agree, but there is still a write.
+  const converting = Boolean(
+    asked && asked !== "none" && server && !server.series,
+  );
   // Expelled from its calendar: not "deleted by another", just not allowed (RF-47).
   if (!server && !(await canSeeCalendar(supabase, change.base.calendarId))) {
     return failed(CALENDAR_MESSAGES.forbidden);
@@ -245,7 +325,9 @@ async function applyEvent(
     );
     if (verdict === "conflict") return { status: "conflict", server: latest };
     // Gone only in the provider: deleting it there takes it out of CaFam too.
-    if (verdict === "applied" && (mine || !server)) return APPLIED;
+    if (verdict === "applied" && (mine || !server) && !converting) {
+      return APPLIED;
+    }
   }
   if (!server || (!now.event && mine)) {
     return mine ? failed(CALENDAR_MESSAGES.notFound) : APPLIED;
@@ -274,6 +356,18 @@ async function applyEvent(
       mine.description === undefined ? server.description : mine.description,
   };
   const values = seriesValues(server, data, timeZone);
+  const repeat = repeatOf(asked, data, timeZone);
+  if (!repeat.ok) return failed(RECURRENCE_INVALID);
+  if (!server.series && repeat.rule) {
+    // Convert into a series (spec 035 RF-11), as the form does.
+    const converted = await convertToSeries(supabase, now.event ?? server, {
+      data,
+      rule: repeat.rule,
+      timeZone,
+      values: { ...values, repeat: asked ?? "none" },
+    });
+    return "id" in converted ? APPLIED : failed(formMessage(converted));
+  }
   const saved = server.series
     ? await changeOccurrence(
         supabase,
@@ -292,6 +386,245 @@ async function applyEvent(
     server.calendarId,
     saved.formError ?? field,
   );
+}
+
+type SeriesChange = Extract<ParsedChange, { type: `series.${string}` }>;
+
+/** The series as it is now, in the shape of the copy's base (spec 035 D3). */
+async function seriesNow(
+  supabase: Supabase,
+  seriesId: string,
+): Promise<SeriesBase | null> {
+  const { data, error } = await supabase
+    .from("events")
+    .select(
+      "id, calendar_id, title, description, location, color, category_id, starts_at, ends_at, all_day, recurrence, exdates",
+    )
+    .eq("id", seriesId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data?.recurrence) return null;
+  const { totals } = await totalsOf(supabase, [seriesId]);
+  return {
+    fields: {
+      title: data.title,
+      calendarId: data.calendar_id,
+      allDay: data.all_day,
+      startsAt: data.starts_at,
+      endsAt: data.ends_at,
+      description: data.description,
+      location: data.location,
+      color: data.color,
+      categoryId: data.category_id,
+    },
+    recurrence: data.recurrence,
+    exdates: data.exdates ?? [],
+    totals: totals.get(seriesId) ?? {
+      exceptions: 0,
+      images: 0,
+      comments: 0,
+      latest: null,
+    },
+  };
+}
+
+/**
+ * A change of a series made offline: applied in the chosen scope when the
+ * series and what hangs from it are as the copy had them; otherwise a
+ * conflict with the series now and what forcing it would lose (spec 035
+ * RF-14, RF-15, plan D3).
+ */
+async function applySeries(
+  supabase: Supabase,
+  timeZone: string,
+  change: SeriesChange,
+  force: boolean,
+): Promise<ApplyResult> {
+  const server = await getEvent(supabase, change.id);
+  const mine = change.type === "series.update" ? change.data : null;
+  if (!server) {
+    if (!(await canSeeCalendar(supabase, change.base.fields.calendarId))) {
+      return failed(CALENDAR_MESSAGES.forbidden);
+    }
+    return mine ? { status: "conflict", server: null } : APPLIED;
+  }
+  // No longer a series (made single by someone else): ask with what it is.
+  if (!server.series) {
+    return { status: "conflict", server: fields(eventData(server)) };
+  }
+  const series = server.series;
+
+  // A partial event did not know the description: it keeps the server's (R6).
+  const data: EventData | null = mine && {
+    ...mine,
+    description:
+      mine.description === undefined ? server.description : mine.description,
+  };
+  const values = data && {
+    ...seriesValues(server, data, timeZone),
+    repeat: change.type === "series.update" ? change.repeat : "none",
+  };
+
+  if (!force) {
+    const now = await seriesNow(supabase, series.id);
+    // shortcut: a resend after a lost answer finds the series changed and
+    // asks; telling it apart from another person's change needs a mark.
+    if (!now || !sameSeries(change.base, now)) {
+      const plan =
+        data && values
+          ? planSeriesChange({
+              series,
+              occurrence: server,
+              row: toRow(data),
+              repeat: values.repeat,
+              startDate: values.startDate,
+              scope: change.scope,
+              timeZone,
+            })
+          : {
+              kind: "delete" as const,
+              ...planSeriesDelete(series, change.scope),
+            };
+      const loss =
+        plan.kind === "error"
+          ? null
+          : await unconfirmedLoss(supabase, series.id, plan.loss, false);
+      return {
+        status: "conflict",
+        server: now
+          ? {
+              ...fields(now.fields),
+              recurrence: now.recurrence,
+              exdates: now.exdates,
+              totals: now.totals,
+              loss,
+            }
+          : null,
+      };
+    }
+  }
+
+  if (!data || !values) {
+    const result = await deleteOccurrences(
+      supabase,
+      series,
+      change.scope,
+      true,
+    );
+    return result ? failed(result.formError) : APPLIED;
+  }
+  const saved = await changeOccurrence(
+    supabase,
+    { ...server, series },
+    { data, values, scope: change.scope, confirmLoss: true, timeZone },
+  );
+  return "id" in saved ? APPLIED : failed(formMessage(saved));
+}
+
+type CommentChange = Extract<ParsedChange, { type: `comment.${string}` }>;
+
+/** Whether the event of a comment can still be seen (not deleted, not expelled). */
+async function eventVisible(supabase: Supabase, eventId: string) {
+  return (await commentRowFor(supabase, eventId)) !== null;
+}
+
+/** Comments made offline (spec 035 RF-21, RF-22, RF-26 to RF-28). */
+async function applyComment(
+  supabase: Supabase,
+  change: CommentChange,
+  force: boolean,
+): Promise<ApplyResult> {
+  if (change.type === "comment.add") {
+    const row = await commentRowFor(supabase, change.eventId);
+    if (row === null) return failed(COMMENT_MESSAGES.gone);
+    let eventId = row?.id;
+    if (!eventId) {
+      // An occurrence without its own row gets one first, as with a connection.
+      const created = await materializeWith(supabase, change.eventId);
+      if ("error" in created) return failed(COMMENT_MESSAGES.gone);
+      eventId = created.eventId;
+    }
+    const { error } = await supabase.from("event_comments").insert({
+      event_id: eventId,
+      body: change.body,
+      client_id: change.clientId,
+    });
+    // The same client id: it was saved by an earlier send (RF-22).
+    if (error && error.code !== "23505") {
+      return failed(getCommentErrorMessage(error));
+    }
+    return APPLIED;
+  }
+
+  const { data: current, error } = await supabase
+    .from("event_comments")
+    .select("body")
+    .eq("id", change.id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!current) {
+    // Deleted event or expelled: refused; only the comment gone: as asked.
+    if (!(await eventVisible(supabase, change.eventId))) {
+      return failed(COMMENT_MESSAGES.gone);
+    }
+    return change.type === "comment.delete"
+      ? APPLIED
+      : failed(COMMENT_MESSAGES.commentGone);
+  }
+  const mine = change.type === "comment.update" ? { body: change.body } : null;
+  if (!force) {
+    const verdict = verdictOrGone(change.base, mine, current);
+    if (verdict === "applied") return APPLIED;
+    if (verdict === "conflict") return { status: "conflict", server: current };
+  }
+  const write =
+    change.type === "comment.update"
+      ? supabase
+          .from("event_comments")
+          .update({ body: change.body })
+          .eq("id", change.id)
+          .select("id")
+      : supabase
+          .from("event_comments")
+          .delete()
+          .eq("id", change.id)
+          .select("id");
+  const { data: rows, error: writeError } = await write;
+  if (writeError) return failed(getCommentErrorMessage(writeError));
+  return rows && rows.length > 0 ? APPLIED : failed(COMMENT_MESSAGES.forbidden);
+}
+
+/** An image deleted offline: with the policy of always (spec 035 RF-38). */
+async function applyImageDelete(
+  supabase: Supabase,
+  id: string,
+): Promise<ApplyResult> {
+  const { data, error } = await supabase
+    .from("event_images")
+    .delete()
+    .eq("id", id)
+    .select("object_id");
+  if (error) return failed(getImageErrorMessage(error));
+  if (!data || data.length === 0) {
+    const { data: visible, error: readError } = await supabase
+      .from("event_images")
+      .select("id")
+      .eq("id", id)
+      .maybeSingle();
+    if (readError) throw readError;
+    // Still there: not allowed. Gone already: nothing left to do.
+    return visible ? failed(IMAGE_MESSAGES.forbidden) : APPLIED;
+  }
+  // The trigger queued the objects; if this fails the hourly purge does it.
+  try {
+    const { supabase: anon, secret } = purgeDeps();
+    await purgeObjects(
+      anon,
+      secret,
+      data.map((row) => row.object_id),
+    );
+  } catch {}
+  return APPLIED;
 }
 
 function noteFields(note: Note): Fields {
@@ -479,7 +812,20 @@ export async function applyChange(
     if (change.type.startsWith("note.") || change.type.startsWith("item.")) {
       return await applyNote(supabase, change as NoteChange, force);
     }
-    // Series, comments and images arrive in spec 035 T6 and T7.
+    if (change.type.startsWith("series.")) {
+      return await applySeries(
+        supabase,
+        timeZone,
+        change as SeriesChange,
+        force,
+      );
+    }
+    if (change.type.startsWith("comment.")) {
+      return await applyComment(supabase, change as CommentChange, force);
+    }
+    if (change.type === "image.delete") {
+      return await applyImageDelete(supabase, change.id);
+    }
     return failed(OFFLINE_MESSAGES.needsNetwork);
   } catch {
     // The network or Supabase failed: keep it for later (RF-46).

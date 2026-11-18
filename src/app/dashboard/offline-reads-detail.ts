@@ -5,6 +5,7 @@ import type {
   OfflineImage,
   OfflineSeries,
 } from "@/lib/offline/snapshot";
+import type { SeriesTotals } from "@/lib/offline/outbox";
 import type { Supabase } from "./events/event-writes";
 
 // What the copy of format 2 adds (spec 035 RF-13, RF-17, RF-29, plan D3):
@@ -51,6 +52,80 @@ async function rowsFor<Row>(
   return parts.flat();
 }
 
+/**
+ * What another person could change in some series: every exception (in the
+ * range or not), and the images and comments they hold (D3). Also used by
+ * the server to compare a change of a series made offline (RF-14).
+ */
+export async function totalsOf(
+  supabase: Supabase,
+  seriesIds: readonly string[],
+): Promise<{
+  exceptions: {
+    id: string;
+    series_id: string | null;
+    original_start: string | null;
+    updated_at: string;
+  }[];
+  totals: Map<string, SeriesTotals>;
+}> {
+  // Every exception of those series, in the range or not (D3).
+  const exceptions = await rowsFor(seriesIds, (chunk, a, b) =>
+    supabase
+      .from("events")
+      .select("id, series_id, original_start, updated_at")
+      .in("series_id", chunk)
+      .order("id")
+      .range(a, b),
+  );
+  const exceptionIds = exceptions.map((row) => row.id);
+  const [images, comments] = await Promise.all([
+    rowsFor(exceptionIds, (chunk, a, b) =>
+      supabase
+        .from("event_images")
+        .select("event_id")
+        .in("event_id", chunk)
+        .eq("status", "ready")
+        .order("id")
+        .range(a, b),
+    ),
+    rowsFor(exceptionIds, (chunk, a, b) =>
+      supabase
+        .from("event_comments")
+        .select("event_id")
+        .in("event_id", chunk)
+        .order("id")
+        .range(a, b),
+    ),
+  ]);
+  const seriesOfException = new Map(
+    exceptions.map((row) => [row.id, row.series_id ?? ""]),
+  );
+  const totals = new Map<string, SeriesTotals>(
+    seriesIds.map((id) => [
+      id,
+      { exceptions: 0, images: 0, comments: 0, latest: null },
+    ]),
+  );
+  for (const row of exceptions) {
+    const total = totals.get(row.series_id ?? "");
+    if (!total) continue;
+    total.exceptions += 1;
+    if (!total.latest || row.updated_at > total.latest) {
+      total.latest = row.updated_at;
+    }
+  }
+  for (const { event_id } of images) {
+    const total = totals.get(seriesOfException.get(event_id) ?? "");
+    if (total) total.images += 1;
+  }
+  for (const { event_id } of comments) {
+    const total = totals.get(seriesOfException.get(event_id) ?? "");
+    if (total) total.comments += 1;
+  }
+  return { exceptions, totals };
+}
+
 /** The series of the range, with what another person could change (D3). */
 export async function seriesOf(
   supabase: Supabase,
@@ -91,57 +166,11 @@ export async function seriesOf(
     }
     if ((data?.length ?? 0) < PAGE) break;
   }
-  // Every exception of those series, in the range or not (D3).
-  const exceptions = await rowsFor(
+  const { exceptions, totals } = await totalsOf(
+    supabase,
     rows.map((row) => row.id),
-    (chunk, a, b) =>
-      supabase
-        .from("events")
-        .select("id, series_id, original_start, updated_at")
-        .in("series_id", chunk)
-        .order("id")
-        .range(a, b),
   );
-  const exceptionIds = exceptions.map((row) => row.id);
-  const [images, comments] = await Promise.all([
-    rowsFor(exceptionIds, (chunk, a, b) =>
-      supabase
-        .from("event_images")
-        .select("event_id")
-        .in("event_id", chunk)
-        .eq("status", "ready")
-        .order("id")
-        .range(a, b),
-    ),
-    rowsFor(exceptionIds, (chunk, a, b) =>
-      supabase
-        .from("event_comments")
-        .select("event_id")
-        .in("event_id", chunk)
-        .order("id")
-        .range(a, b),
-    ),
-  ]);
-  const seriesOfException = new Map(
-    exceptions.map((row) => [row.id, row.series_id ?? ""]),
-  );
-  const totals = new Map(rows.map((row) => [row.id, row.totals]));
-  for (const row of exceptions) {
-    const total = totals.get(row.series_id ?? "");
-    if (!total) continue;
-    total.exceptions += 1;
-    if (!total.latest || row.updated_at > total.latest) {
-      total.latest = row.updated_at;
-    }
-  }
-  for (const { event_id } of images) {
-    const total = totals.get(seriesOfException.get(event_id) ?? "");
-    if (total) total.images += 1;
-  }
-  for (const { event_id } of comments) {
-    const total = totals.get(seriesOfException.get(event_id) ?? "");
-    if (total) total.comments += 1;
-  }
+  for (const row of rows) row.totals = totals.get(row.id) ?? row.totals;
   return {
     series: rows,
     exceptions: exceptions.flatMap((row) =>

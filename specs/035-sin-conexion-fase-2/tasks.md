@@ -96,7 +96,7 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 
   Evidencia (2026-11-18): `npm run test:db -- offline-apply` 27 en verde (12 de `offline-apply-synced` y los 15 de la 034), con `openSession` simulado y una cuenta de Google sembrada en dev con tres calendarios (dos escribibles y uno de solo lectura). `readSyncedEvent` (`write-event.ts`) usa el mismo `sync_write_context` que escribir, así que un Lector o un calendario de solo lectura se rechazan antes de llamar al proveedor; si el proveedor responde `revoked`, llama a `sync_fail` como una escritura (aviso "Volver a conectar"). `offline-writes.ts` compara la base con el evento del proveedor y escribe con `updateSingle` contra esa versión. Una cuenta ya marcada hace que la base de datos responda "sin permiso": se distingue leyendo el calendario (rol, acceso del proveedor y `can_write`) y se devuelve `held`. `flush.ts` y la hoja de cambios tratan `held` como `retry` hasta la T9. Limitación anotada en el código: un alta en un traído coge el id del proveedor, así que reenviarla tras perder la respuesta la duplica (arreglarlo pide una migración). Verificación completa en verde (318 archivos, 2.971 tests).
 
-- [ ] T7 Aplicar en el servidor series, comentarios y borrados de imágenes hechos sin red (`offline-writes.ts`)
+- [x] T7 Aplicar en el servidor series, comentarios y borrados de imágenes hechos sin red (`offline-writes.ts`)
   Hecho cuando: `npm run test:db -- offline-apply-series offline-apply-comments` en verde. Los tests cubren:
   - "Este y los siguientes" y "Todos los eventos" con `confirmLoss`;
   - crear una serie y convertir un suelto con `repeat`;
@@ -106,6 +106,8 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
   - borrar una imagen: la propia, como propietario o como Editor → `applied`; ya borrada → `applied`; la ajena siendo Lector → `rejected`.
 
   Cubre: RF-10, RF-11, RF-14, RF-15, RF-21, RF-22, RF-26, RF-27, RF-28, RF-38 | Módulo: offline-writes
+
+  Evidencia (2026-11-18): `npm run test:db -- offline-apply` 43 en verde en 4 archivos (8 de `offline-apply-series`, 8 de `offline-apply-comments` y los de la 034 y la T6), y `npm run test:db -- event-series event-images event-comments offline-snapshot` 95 en verde tras mover `createSeries`, `convertToSeries` y la materialización (`materializeWith`) de las acciones a `event-writes.ts`. Las series se comparan con `sameSeries` (`conflict.ts`, con sus tests unitarios): campos, regla, fechas borradas y los totales que calcula `totalsOf` (extraída de la lectura de la copia); el conflicto lleva la serie actual y su `series_loss`. Un alta con `repeat` usa el id del navegador; convertir no se da por hecho aunque los campos coincidan. Limitación anotada en el código: reenviar un cambio de serie tras perder la respuesta pregunta en lugar de darlo por hecho. `npm test` en verde (318 archivos, 2.973 tests) con `--maxWorkers=4`: con todos los hilos, 1 o 2 tests de interfaz distintos en cada pasada agotan su tiempo por carga ajena de la máquina, y cada uno pasa solo. typecheck, lint, format y build en verde.
 
 - [ ] T8 Abrir las rutas del service worker y subir imágenes pendientes (`/api/offline/apply`, `/api/offline/image`, `image-upload.ts`)
   Hecho cuando: `npm test -- offline-routes offline-image-upload` y `npm run test:db -- offline-image-route` en verde. Los tests cubren:

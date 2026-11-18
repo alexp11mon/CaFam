@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createVerdict,
   same,
+  sameSeries,
   verdict,
   verdictOrGone,
 } from "@/lib/offline/conflict";
@@ -108,5 +109,52 @@ describe("notes and items (RF-53 to RF-55)", () => {
         { text: "Pan integral", done: false },
       ),
     ).toBe("conflict");
+  });
+});
+
+describe("sameSeries (spec 035 RF-14, RF-15, plan D3)", () => {
+  const base = {
+    fields: {
+      title: "Inglés",
+      calendarId: "cal",
+      allDay: false,
+      startsAt: "2026-11-16T17:00:00+00:00",
+      endsAt: "2026-11-16T18:00:00+00:00",
+      description: null,
+      location: "Aula 3",
+      color: null,
+      categoryId: null,
+    },
+    recurrence: "FREQ=WEEKLY",
+    exdates: ["2026-12-07T17:00:00+00:00"],
+    totals: {
+      exceptions: 1,
+      images: 0,
+      comments: 2,
+      latest: "2026-11-10T08:00:00.123456+00:00",
+    },
+  };
+
+  it("is the same whatever the format of the instants and the order of exdates", () => {
+    expect(
+      sameSeries(base, {
+        ...base,
+        fields: { ...base.fields, startsAt: "2026-11-16T17:00:00.000Z" },
+        exdates: ["2026-12-07T17:00:00Z"],
+        totals: { ...base.totals, latest: "2026-11-10T08:00:00.123456Z" },
+      }),
+    ).toBe(true);
+  });
+
+  it("changes with a field, the rule, a deleted date or the totals", () => {
+    const changed = [
+      { ...base, fields: { ...base.fields, title: "Francés" } },
+      { ...base, recurrence: "FREQ=DAILY" },
+      { ...base, exdates: [...base.exdates, "2026-12-14T17:00:00Z"] },
+      { ...base, totals: { ...base.totals, comments: 3 } },
+      { ...base, totals: { ...base.totals, images: 1 } },
+      { ...base, totals: { ...base.totals, latest: "2026-11-11T08:00:00Z" } },
+    ];
+    for (const now of changed) expect(sameSeries(base, now)).toBe(false);
   });
 });
