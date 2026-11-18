@@ -25,6 +25,7 @@ import { loadPage } from "@/lib/offline/navigate";
 import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
 import type { SeriesScope } from "@/lib/recurrence/series-write";
 import { ColorPicker } from "./color-picker";
+import { ReminderField, type ReminderDefaults } from "./reminder-field";
 import { useEventModal } from "./event-modal";
 import { SwapLabel } from "@/components/ui/swap-label";
 
@@ -62,7 +63,10 @@ export function EventForm({
   withImages = false,
   series,
   eventId,
+  reminders,
 }: {
+  /** The user's own reminders: the current ones or the defaults (spec 040 RF-5, RF-6). */
+  reminders?: { initial?: number[]; defaults?: ReminderDefaults };
   action: FormAction<EventFormState>;
   /** The event being edited, to queue the change offline (spec 034 RF-20). */
   eventId?: string;
@@ -313,6 +317,13 @@ export function EventForm({
         }
         error={errors.repeat}
       />
+      {reminders ? (
+        <ReminderField
+          allDay={allDay}
+          initial={reminders.initial}
+          defaults={reminders.defaults}
+        />
+      ) : null}
       <TextArea
         label="Descripción"
         name="description"

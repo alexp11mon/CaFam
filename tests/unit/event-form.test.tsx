@@ -597,3 +597,36 @@ describe("EventForm on an occurrence", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+// Spec 040, T6: the reminders of the user in the form (RF-5, RF-6).
+describe("EventForm: Avisos (spec 040)", () => {
+  it("starts with the default and sends the chosen reminders", async () => {
+    const user = userEvent.setup();
+    const action = vi.fn<(prev: State, formData: FormData) => Promise<State>>(
+      async () => ({ values: INITIAL }),
+    );
+    render(
+      <EventForm
+        action={action}
+        initial={{ ...INITIAL, title: "Cena" }}
+        calendars={CALENDARS}
+        categories={CATEGORIES}
+        submitLabel="Crear evento"
+        pendingLabel="Creando…"
+        cancelHref="/dashboard"
+        reminders={{ defaults: { timed: 10, allDay: 1440 } }}
+      />,
+    );
+    expect(screen.getByRole("group", { name: "Avisos" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Aviso 1")).toHaveValue("10");
+    await user.selectOptions(screen.getByLabelText("Aviso 1"), "60");
+    await user.click(screen.getByRole("button", { name: "Crear evento" }));
+    await waitFor(() => expect(action).toHaveBeenCalled());
+    expect(action.mock.calls[0]![1].get("reminders")).toBe("60");
+  });
+
+  it("has no reminders field when none is given", () => {
+    setup();
+    expect(screen.queryByRole("group", { name: "Avisos" })).toBeNull();
+  });
+});

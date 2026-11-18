@@ -13,6 +13,8 @@ import {
 } from "@/lib/calendar/queries";
 import { parseEventInput, type EventFormValues } from "@/lib/calendar/schemas";
 import { readString, type ConfirmState } from "@/lib/forms/form-state";
+import { parseReminders } from "@/lib/push/options";
+import { writeReminders } from "@/lib/push/reminder-writes";
 import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
 import { resolveRepeat } from "@/lib/recurrence/presets";
 import { parseEventId } from "@/lib/recurrence/occurrence-id";
@@ -73,6 +75,25 @@ function parseForm(values: EventFormValues, timeZone: string) {
     { ...values, allDay: values.allDay === "on" },
     timeZone,
   );
+}
+
+/**
+ * The reminders of the form, after the event is saved (spec 040 RF-5, RF-6).
+ * Not saving them never undoes the event: the detail lets the user retry.
+ */
+async function saveFormReminders(
+  supabase: Awaited<ReturnType<typeof requireActionUser>>["supabase"],
+  userId: string,
+  eventId: string,
+  formData: FormData,
+) {
+  const minutes = parseReminders(formData.get("reminders"));
+  if (minutes === null) return;
+  try {
+    await writeReminders(supabase, userId, eventId, minutes);
+  } catch {
+    // Kept as they were: the default of the profile or the previous ones.
+  }
 }
 
 function readScope(formData: FormData): SeriesScope | null {
@@ -142,6 +163,7 @@ export async function createEvent(
     return failure(error, values);
   }
 
+  await saveFormReminders(supabase, userId, id, formData);
   refresh();
   // With images to upload the form needs the id first (spec 012 RF-7, plan D11).
   if (inWindow(formData) || formData.get("images") === "1") {
@@ -202,6 +224,7 @@ export async function updateEvent(
 
   if (isGoneDone(saved)) return gone(formData, values, saved);
   if (!("id" in saved)) return saved;
+  await saveFormReminders(supabase, userId, saved.id, formData);
   refresh();
   if (inWindow(formData)) return { done: "updated", values };
   redirect(`/dashboard/events/${saved.id}`);

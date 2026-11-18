@@ -40,13 +40,13 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - `push` muestra la notificación con `tag`; `notificationclick` enfoca una ventana abierta o abre la URL. `CACHE_NAME` `cafam-v8`.
 
   Cubre: RF-11 | Evidencia: `npm test -- sw-push` 5/5 (sw.js en `vm`): `push` muestra la notificación con `tag`, `renotify`, icono y la URL (aviso genérico si no hay datos legibles); `notificationclick` cierra, lleva una ventana abierta de la app a la URL y la enfoca, o abre una nueva, y nunca abre otro origen; `CACHE_NAME` `cafam-v8` (`brand-icons` y `offline-sw-sync` actualizados); P8 en verde.
-- [ ] T6 Ajustes y avisos en el evento
+- [x] T6 Ajustes y avisos en el evento
   Hecho cuando: `npm test -- notification-settings reminder-field event-form event-panel` en verde y capturas a 390, 768 y 1440 px en claro y oscuro en `capturas/`.
   - Activar, lista de dispositivos, prueba, iOS sin instalar, permiso denegado, avisos por defecto y tipos sociales.
   - `ReminderField` (hasta 3) en alta y edición, "Avisarme" en el detalle para Lectores.
   - Cerrar sesión borra la suscripción del dispositivo.
 
-  Cubre: RF-1 a RF-7, RF-14, RF-18, RNF-4 | Evidencia: —
+  Cubre: RF-1 a RF-7, RF-14, RF-18, RNF-4 | Evidencia: `npm test -- notification-settings reminder-field event-form event-panel push-options`: activar solo tras pulsar, lista de dispositivos con "Quitar", aviso de prueba a este dispositivo, iOS sin instalar, permiso bloqueado, aviso por defecto y tipos de aviso; `ReminderField` (hasta 3) en alta y edición y "Avisarme" en el detalle también para Lectores (se guarda al momento y se revierte si falla); cerrar sesión llama a `forgetPushSubscription` (`SignOutGuard`). Capturas en `capturas/` (`ajustes-notificaciones` y `detalle-avisarme`, 390, 768 y 1440 px, claro y oscuro, con `scripts/screenshots-040.mjs`). Sin conexión el detalle no ofrece avisos (necesitan red). P8 en verde (3.282 tests).
 - [ ] T7 Prueba real y privacidad
   Hecho cuando: con `next start -p 3100` y Edge/Chrome, activar avisos, crear un evento a 2 minutos y llamar a mano a `/api/push/run`: llega una notificación y al pulsarla abre el detalle (captura). `/privacy` con la sección "Notificaciones".
 

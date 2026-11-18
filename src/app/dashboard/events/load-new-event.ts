@@ -5,6 +5,7 @@ import type {
 } from "@/components/calendar/event-form";
 import { eventToFormDates, todayKey } from "@/lib/calendar/format";
 import { parseNewEventQuery } from "@/lib/calendar/new-event-query";
+import { getReminderDefaults } from "@/lib/push/reminder-writes";
 import { canWriteEvents } from "@/lib/sync/read-only";
 import {
   getCategoriesForCalendars,
@@ -24,6 +25,8 @@ export type NewEventData =
       initial: EventFormValues;
       calendars: CalendarOption[];
       categories: CategoryOption[];
+      /** The defaults of the profile (spec 040 RF-6). */
+      reminderDefaults: { timed: number | null; allDay: number | null };
     };
 
 /**
@@ -32,11 +35,13 @@ export type NewEventData =
  */
 export async function loadNewEvent(query: Query): Promise<NewEventData> {
   const { supabase, userId } = await requireUser();
-  const [calendars, timeZone, viewOptions] = await Promise.all([
-    getMyCalendars(supabase, userId),
-    getProfileTimeZone(supabase, userId),
-    getViewOptions(supabase, userId),
-  ]);
+  const [calendars, timeZone, viewOptions, reminderDefaults] =
+    await Promise.all([
+      getMyCalendars(supabase, userId),
+      getProfileTimeZone(supabase, userId),
+      getViewOptions(supabase, userId),
+      getReminderDefaults(supabase, userId),
+    ]);
   // Only calendars where the user can write (RF-27), synced ones included when
   // their account writes (spec 009 RF-9).
   const editable = calendars.filter(canWriteEvents);
@@ -80,6 +85,7 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
         synced: synced !== null,
       })),
       categories,
+      reminderDefaults,
     };
   }
 
@@ -106,5 +112,6 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
       synced: synced !== null,
     })),
     categories,
+    reminderDefaults,
   };
 }

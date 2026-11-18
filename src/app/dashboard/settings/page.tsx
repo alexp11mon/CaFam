@@ -7,6 +7,7 @@ import { ProfileForm } from "@/components/account/profile-form";
 import { AccentPicker } from "@/components/settings/accent-picker";
 import { AvailabilitySetting } from "@/components/settings/availability-setting";
 import { BusySetting } from "@/components/settings/busy-setting";
+import { NotificationSettings } from "@/components/settings/notification-settings";
 import { ThemePicker } from "@/components/settings/theme-picker";
 import { FormAlert } from "@/components/ui/form-alert";
 import { getConfirmNotice } from "@/lib/account/confirm-type";
@@ -31,6 +32,13 @@ import {
   requestEmailChange,
   saveProfile,
 } from "./account-actions";
+import {
+  removePushSubscription,
+  savePushSubscription,
+  sendTestPush,
+  setDefaultReminders,
+  setNotificationPrefs,
+} from "./push-actions";
 
 export const metadata: Metadata = { title: "Ajustes" };
 
@@ -96,6 +104,47 @@ async function CalendarSection() {
       duration={duration}
       saveWeekends={setShowWeekends}
       saveDuration={setDefaultDuration}
+    />
+  );
+}
+
+// Spec 040: devices, default reminders and kinds of notice (RF-1 to RF-6, RF-14).
+async function NotificationSection() {
+  const { supabase, userId } = await requireUser();
+  const [{ data: devices }, { data: profile }] = await Promise.all([
+    supabase
+      .from("push_subscriptions")
+      .select("id, device, endpoint")
+      .eq("user_id", userId)
+      .order("created_at"),
+    supabase
+      .from("profiles")
+      .select("notify, reminder_minutes, reminder_all_day_minutes")
+      .eq("id", userId)
+      .maybeSingle(),
+  ]);
+  const notify = (profile?.notify ?? {}) as Record<string, unknown>;
+  return (
+    <NotificationSettings
+      publicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
+      devices={devices ?? []}
+      defaults={{
+        timed: profile ? profile.reminder_minutes : 10,
+        allDay: profile ? profile.reminder_all_day_minutes : 1440,
+      }}
+      notify={{
+        joined: notify.joined !== false,
+        access: notify.access !== false,
+        comments: notify.comments !== false,
+        changes: notify.changes === true,
+      }}
+      actions={{
+        save: savePushSubscription,
+        remove: removePushSubscription,
+        test: sendTestPush,
+        setNotify: setNotificationPrefs,
+        setDefaults: setDefaultReminders,
+      }}
     />
   );
 }
@@ -170,6 +219,11 @@ export default function SettingsPage({
       <Section id="settings-calendar" title="Calendario">
         <Suspense fallback={LOADING}>
           <CalendarSection />
+        </Suspense>
+      </Section>
+      <Section id="settings-notifications" title="Notificaciones">
+        <Suspense fallback={LOADING}>
+          <NotificationSection />
         </Suspense>
       </Section>
       <Section id="settings-busy" title="Disponibilidad">

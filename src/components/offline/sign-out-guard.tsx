@@ -7,6 +7,8 @@ import { useOfflineQueue } from "@/lib/hooks/use-offline";
 import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 import { waitingCount } from "@/lib/offline/queue-store";
 import { forgetDevice } from "@/lib/offline/snapshot-store";
+import { forgetPushSubscription } from "@/lib/push/browser";
+import { removeDeviceSubscription } from "@/app/dashboard/settings/push-actions";
 
 /**
  * "Cerrar sesión" (spec 034 RF-60 to RF-62, plan D12): it needs the network,
@@ -39,6 +41,8 @@ export function SignOutGuard({
   }, [asking]);
 
   const signOut = async () => {
+    // This device stops getting the user's notices (spec 040 RF-18).
+    await forgetPushSubscription(removeDeviceSubscription);
     try {
       await forgetDevice();
     } catch {

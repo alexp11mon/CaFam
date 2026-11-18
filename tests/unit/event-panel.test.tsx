@@ -94,6 +94,7 @@ function setup({
   deleteAction = vi.fn(async (): Promise<ConfirmState> => ({})),
   inWindow = false,
   startEditing = false,
+  reminders = undefined as number[] | undefined,
 } = {}) {
   const panel = (
     <EventPanel
@@ -107,6 +108,7 @@ function setup({
       categories={[]}
       updateAction={vi.fn(async () => ({ values: EDIT }))}
       deleteAction={deleteAction}
+      reminders={reminders}
     />
   );
   render(
@@ -335,5 +337,19 @@ describe("EventPanel and old synced copies", () => {
       },
     });
     expect(screen.queryByText(/Copia antigua/)).toBeNull();
+  });
+});
+
+// Spec 040, T6: "Avisarme" for any member, Lectores included (RF-7).
+describe("EventPanel reminders", () => {
+  it("offers Avisarme to a reader with their own reminders", () => {
+    setup({ canEdit: false, reminders: [30] });
+    expect(screen.getByRole("group", { name: "Avisarme" })).toBeVisible();
+    expect(screen.getByLabelText("Aviso 1")).toHaveValue("30");
+  });
+
+  it("shows nothing without them (offline)", () => {
+    setup({ canEdit: false });
+    expect(screen.queryByRole("group", { name: "Avisarme" })).toBeNull();
   });
 });

@@ -20,6 +20,8 @@ import type {
   FormState,
 } from "@/lib/forms/form-state";
 import { EventDetail, type EventDetailData } from "./event-detail";
+import { EventReminders } from "./reminder-field";
+import { setEventReminders } from "@/app/dashboard/events/reminder-actions";
 import {
   EventForm,
   type CalendarOption,
@@ -56,7 +58,10 @@ export function EventPanel({
   images = [],
   series,
   startEditing = false,
+  reminders,
 }: {
+  /** The user's own reminders; none offline, where they need the network (spec 040 RF-7). */
+  reminders?: number[];
   /** "Editar" of the detail card opens straight in the form (spec 019 RF-9). */
   startEditing?: boolean;
   detail: EventDetailData;
@@ -152,6 +157,7 @@ export function EventPanel({
             pendingLabel="Guardando…"
             cancelHref="/dashboard/calendar"
             series={series ?? undefined}
+            reminders={reminders ? { initial: reminders } : undefined}
           />
         </div>
       </ViewTransition>
@@ -190,6 +196,14 @@ export function EventPanel({
           }
           media={
             <>
+              {reminders && online ? (
+                <EventReminders
+                  eventId={detail.id}
+                  allDay={detail.allDay}
+                  initial={reminders}
+                  save={setEventReminders}
+                />
+              ) : null}
               <EventImages
                 images={images}
                 title={detail.title}

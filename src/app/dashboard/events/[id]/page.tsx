@@ -33,6 +33,7 @@ async function Event({
       images={data.images}
       editInitial={data.editInitial}
       series={data.series}
+      reminders={data.reminders}
       calendars={data.calendars}
       categories={data.categories}
       updateAction={updateEvent.bind(null, id)}

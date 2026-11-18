@@ -15,6 +15,7 @@ import {
   getProfileTimeZone,
   requireUser,
 } from "@/lib/calendar/queries";
+import { readReminders } from "@/lib/push/reminder-writes";
 import { getMembers } from "@/lib/sharing/queries";
 import {
   canWriteEvents,
@@ -36,6 +37,8 @@ export interface EventData {
   canAttach: boolean;
   /** An occurrence: saving asks the scope (spec 013 RF-15, RF-32). */
   series: { limitReached: boolean } | null;
+  /** The user's own reminders, on the series for an occurrence; none offline (spec 040 RF-7). */
+  reminders?: number[];
 }
 
 /**
@@ -49,10 +52,11 @@ export async function loadEvent(id: string): Promise<EventData | null> {
   if (!event) return null;
   // Independent reads go together: opening an event was a chain of 7 to 10
   // round trips (spec 023 RF-14).
-  const [calendar, timeZone, members] = await Promise.all([
+  const [calendar, timeZone, members, reminders] = await Promise.all([
     getCalendar(supabase, userId, event.calendarId),
     getProfileTimeZone(supabase, userId),
     getMembers(supabase, [event.calendarId]),
+    readReminders(supabase, userId, id),
   ]);
   if (!calendar) return null;
 
@@ -123,5 +127,6 @@ export async function loadEvent(id: string): Promise<EventData | null> {
     series: event.series
       ? { limitReached: !event.rowId && event.series.exceptions >= 100 }
       : null,
+    reminders,
   };
 }
