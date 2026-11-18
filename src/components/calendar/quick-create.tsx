@@ -17,6 +17,7 @@ import { TimeField } from "@/components/ui/time-field";
 import { eventFormOrQueue } from "@/lib/offline/event-actions";
 import { isOnline } from "@/lib/offline/connection";
 import { useUndoToast } from "./use-undo-toast";
+import { NlField, type ResolvedEvent } from "./nl-field";
 import type { Draft } from "@/lib/calendar/draft";
 import { formatDayHeading } from "@/lib/calendar/format";
 import { placePopover, type Box } from "@/lib/calendar/popover";
@@ -40,7 +41,7 @@ import { SwapLabel } from "@/components/ui/swap-label";
 type State = FormState<keyof EventFormValues>;
 
 // Size used to place the window beside the slot; the CSS keeps it in this box.
-const SIZE = { width: 384, height: 380 };
+const SIZE = { width: 384, height: 500 };
 
 /**
  * Quick window next to the chosen slot: title, day and hours, calendar,
@@ -56,7 +57,12 @@ export function QuickCreate({
   onClose,
   onTitleChange,
   onDraftChange,
+  timeZone,
+  defaultMinutes,
 }: {
+  /** For "Escribe el evento" (spec 041 RF-11). */
+  timeZone: string;
+  defaultMinutes: number;
   /** The hours typed move the provisional block (spec 019 RF-39). */
   onDraftChange?: (range: DraftRange) => void;
   draft: Draft;
@@ -106,6 +112,29 @@ export function QuickCreate({
     onDraftChange(range);
   }
   const [calendarId, setCalendarId] = useState(defaultCalendarId);
+  // A phrase may move the day, add a place or a repetition (spec 041 RF-12).
+  const [days, setDays] = useState({ start: draft.day, end: draft.day });
+  const [location, setLocation] = useState("");
+  const [repeat, setRepeat] = useState<string | null>(null);
+  // What was changed by hand is never overwritten by a phrase.
+  const [touched] = useState(() => new Set<string>());
+
+  function applyPhrase(event: ResolvedEvent) {
+    if (event.title && !touched.has("title")) {
+      setTitle(event.title);
+      onTitleChange(event.title);
+    }
+    if (event.calendarId && !touched.has("calendar")) {
+      setCalendarId(event.calendarId);
+    }
+    if (!touched.has("hours")) {
+      setDays({ start: event.startDate, end: event.endDate });
+      setAllDay(event.allDay);
+      if (!event.allDay) changeHours(event.startTime, event.endTime);
+    }
+    if (event.location) setLocation(event.location);
+    if (event.repeat) setRepeat(event.repeat);
+  }
   const errors = state.fieldErrors ?? {};
 
   useEffect(() => {
@@ -175,7 +204,7 @@ export function QuickCreate({
 
   function moreOptions() {
     // Everything typed goes to the full form (RF-39, plan D4).
-    const query = new URLSearchParams({ date: draft.day });
+    const query = new URLSearchParams({ date: days.start });
     if (allDay) {
       query.set("allDay", "1");
     } else {
@@ -227,26 +256,40 @@ export function QuickCreate({
           Nuevo evento
         </h2>
         <input type="hidden" name="mode" value="modal" />
-        <input type="hidden" name="startDate" value={draft.day} />
-        <input type="hidden" name="endDate" value={draft.day} />
+        <input type="hidden" name="startDate" value={days.start} />
+        <input type="hidden" name="endDate" value={days.end} />
         {allDay ? <input type="hidden" name="allDay" value="on" /> : null}
+        {location ? (
+          <input type="hidden" name="location" value={location} />
+        ) : null}
+        {repeat ? <input type="hidden" name="repeat" value={repeat} /> : null}
         <FormAlert message={state.formError} />
+        <NlField
+          timeZone={timeZone}
+          defaultMinutes={defaultMinutes}
+          calendars={calendars}
+          fallback={{ date: draft.day, startTime: start }}
+          onApply={applyPhrase}
+          autoFocus
+        />
         <TextField
           label="Título"
           name="title"
           maxLength={100}
           value={title}
           onChange={(event) => {
+            touched.add("title");
             setTitle(event.target.value);
             onTitleChange(event.target.value);
           }}
-          data-autofocus=""
           error={errors.title}
         />
         <div className="flex flex-col gap-2">
           <p className="font-semibold first-letter:uppercase">
-            {formatDayHeading(draft.day)}
+            {formatDayHeading(days.start)}
+            {days.end !== days.start ? ` – ${formatDayHeading(days.end)}` : ""}
           </p>
+          {location ? <p className="text-muted">{location}</p> : null}
           {allDay ? (
             <div className="flex items-center justify-between gap-3">
               <p className="text-muted">Todo el día</p>
@@ -267,12 +310,13 @@ export function QuickCreate({
                 label="Hora de inicio"
                 name="startTime"
                 value={start}
-                onValueChange={(next) =>
+                onValueChange={(next) => {
+                  touched.add("hours");
                   changeHours(
                     next,
                     endTouched ? end : shiftEnd(start, next, end),
-                  )
-                }
+                  );
+                }}
                 options={startOptions()}
                 error={errors.startTime}
               />
@@ -281,6 +325,7 @@ export function QuickCreate({
                 name="endTime"
                 value={end}
                 onValueChange={(next) => {
+                  touched.add("hours");
                   setEndTouched(true);
                   changeHours(start, next);
                 }}
@@ -306,7 +351,10 @@ export function QuickCreate({
               label="Calendario"
               name="calendarId"
               value={calendarId}
-              onChange={(event) => setCalendarId(event.target.value)}
+              onChange={(event) => {
+                touched.add("calendar");
+                setCalendarId(event.target.value);
+              }}
               error={errors.calendarId}
             >
               {calendars.map((calendar) => (

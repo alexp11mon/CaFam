@@ -906,6 +906,8 @@ export function CalendarWorkspace({
             onClose={closeDraft}
             onTitleChange={setDraftTitle}
             onDraftChange={changeDraft}
+            timeZone={timeZone}
+            defaultMinutes={defaultDuration}
           />
         ) : null}
         {interactive.dialog}

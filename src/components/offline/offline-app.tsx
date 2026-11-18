@@ -166,6 +166,15 @@ function NewEvent({ copy, search }: { copy: Snapshot; search: string }) {
           pendingLabel="Creando…"
           cancelHref="/dashboard/calendar"
           focusTitle
+          // Pure: the phrase is read offline too (spec 041 RF-14).
+          phrase={
+            new URLSearchParams(search).has("from")
+              ? undefined
+              : {
+                  timeZone: copy.profile.timeZone,
+                  defaultMinutes: copy.profile.duration,
+                }
+          }
         />
       </EventModalProvider>
     </main>

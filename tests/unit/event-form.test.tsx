@@ -630,3 +630,82 @@ describe("EventForm: Avisos (spec 040)", () => {
     expect(screen.queryByRole("group", { name: "Avisos" })).toBeNull();
   });
 });
+
+describe("EventForm: Escribe el evento (spec 041 RF-11 to RF-14)", () => {
+  function renderPhrase() {
+    const action = vi.fn(async (_prev: State, formData: FormData) => ({
+      values: Object.fromEntries(formData) as unknown as EventFormValues,
+    }));
+    render(
+      <EventForm
+        action={action}
+        initial={INITIAL}
+        calendars={CALENDARS}
+        categories={CATEGORIES}
+        submitLabel="Crear evento"
+        pendingLabel="Creando…"
+        cancelHref="/dashboard"
+        focusTitle
+        phrase={{ timeZone: "Europe/Madrid", defaultMinutes: 90 }}
+      />,
+    );
+    return action;
+  }
+
+  it("starts in the phrase and only when creating", () => {
+    renderPhrase();
+    expect(screen.getByLabelText("Escribe el evento")).toHaveFocus();
+  });
+
+  it("fills every field and leaves the ones touched by hand", async () => {
+    const user = userEvent.setup();
+    const action = renderPhrase();
+    await user.type(screen.getByLabelText("Lugar"), "Bar Pepe");
+    await user.type(
+      screen.getByLabelText("Escribe el evento"),
+      "Cena con Ana el 3 de diciembre de 2026 a las 21 en casa @fam todos los días",
+    );
+    // The preview lives in a polite live region (RNF-3).
+    const preview = await screen.findByText(
+      "Cena con Ana · Jueves, 3 de diciembre · 21:00–22:30 · casa · @Familia · Cada día",
+    );
+    expect(preview.closest("[aria-live]")).toHaveAttribute(
+      "aria-live",
+      "polite",
+    );
+    await user.click(screen.getByRole("button", { name: "Aplicar" }));
+
+    expect(screen.getByLabelText("Título")).toHaveValue("Cena con Ana");
+    expect(screen.getByLabelText("Calendario")).toHaveValue("cal-b");
+    expect(screen.getByLabelText("Fecha de inicio")).toHaveValue("2026-12-03");
+    expect(screen.getByLabelText("Fecha de fin")).toHaveValue("2026-12-03");
+    expect(
+      screen.getByRole("combobox", { name: "Hora de inicio" }),
+    ).toHaveValue("21:00");
+    expect(screen.getByRole("combobox", { name: "Hora de fin" })).toHaveValue(
+      "22:30",
+    );
+    expect(screen.getByLabelText("Lugar")).toHaveValue("Bar Pepe");
+    expect(screen.getByLabelText("Repetir")).toHaveValue("daily");
+
+    await user.click(screen.getByRole("button", { name: "Crear evento" }));
+    const sent = action.mock.calls[0]![1];
+    expect(sent.get("repeat")).toBe("daily");
+    expect(sent.get("location")).toBe("Bar Pepe");
+    expect(sent.get("phrase")).toBeNull();
+  });
+
+  it("turns all day on for a date alone", async () => {
+    const user = userEvent.setup();
+    renderPhrase();
+    await user.type(
+      screen.getByLabelText("Escribe el evento"),
+      "Viaje del 3 al 5 de diciembre de 2026{Enter}",
+    );
+    expect(screen.getByLabelText("Todo el día")).toBeChecked();
+    expect(
+      screen.queryByRole("combobox", { name: "Hora de inicio" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Fecha de fin")).toHaveValue("2026-12-05");
+  });
+});

@@ -27,6 +27,8 @@ export type NewEventData =
       categories: CategoryOption[];
       /** The defaults of the profile (spec 040 RF-6). */
       reminderDefaults: { timed: number | null; allDay: number | null };
+      /** "Escribe el evento" for a new one, not a duplicate (spec 041 RF-11). */
+      phrase?: { timeZone: string; defaultMinutes: number };
     };
 
 /**
@@ -113,5 +115,6 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
     })),
     categories,
     reminderDefaults,
+    phrase: { timeZone, defaultMinutes: viewOptions.duration },
   };
 }

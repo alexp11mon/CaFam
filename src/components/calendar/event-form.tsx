@@ -26,6 +26,7 @@ import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
 import type { SeriesScope } from "@/lib/recurrence/series-write";
 import { ColorPicker } from "./color-picker";
 import { ReminderField, type ReminderDefaults } from "./reminder-field";
+import { fillField, NlField, type ResolvedEvent } from "./nl-field";
 import { useEventModal } from "./event-modal";
 import { SwapLabel } from "@/components/ui/swap-label";
 
@@ -64,7 +65,10 @@ export function EventForm({
   series,
   eventId,
   reminders,
+  phrase,
 }: {
+  /** Creating: "Escribe el evento" above the title (spec 041 RF-11). */
+  phrase?: { timeZone: string; defaultMinutes: number };
   /** The user's own reminders: the current ones or the defaults (spec 040 RF-5, RF-6). */
   reminders?: { initial?: number[]; defaults?: ReminderDefaults };
   action: FormAction<EventFormState>;
@@ -146,6 +150,11 @@ export function EventForm({
   const [asking, setAsking] = useState(false);
   const [scope, setScope] = useState<SeriesScope | null>(null);
   const [dismissed, setDismissed] = useState<EventFormState | null>(null);
+  const [repeat, setRepeat] = useState(values.repeat);
+  const form = useRef<HTMLFormElement>(null);
+  // Fields changed by hand are never overwritten by a phrase (spec 041 RF-12).
+  const touched = useRef(new Set<string>());
+  const applying = useRef(false);
 
   // The fields are uncontrolled (React resets forms after an action); this state only
   // drives the times and the category list. A server response carries what was
@@ -160,6 +169,7 @@ export function EventForm({
     setEndTime(values.endTime);
     setStartDate(values.startDate);
     setEndDate(values.endDate);
+    setRepeat(values.repeat);
     // Losses keep the dialog open to confirm; any other answer closes it.
     setAsking(Boolean(state.loss));
   }
@@ -170,6 +180,33 @@ export function EventForm({
       setEndTime(shiftEnd(startTime, next, endTime));
     }
     setStartTime(next);
+  }
+
+  function applyPhrase(event: ResolvedEvent) {
+    const element = form.current;
+    if (!element) return;
+    const free = (name: string) => !touched.current.has(name);
+    applying.current = true;
+    try {
+      if (event.title && free("title"))
+        fillField(element, "title", event.title);
+      if (event.calendarId && free("calendarId")) {
+        fillField(element, "calendarId", event.calendarId);
+      }
+      if (free("allDay"))
+        fillField(element, "allDay", event.allDay ? "on" : "");
+      if (free("startDate")) fillField(element, "startDate", event.startDate);
+      if (free("endDate")) fillField(element, "endDate", event.endDate);
+      if (!event.allDay && free("startTime")) setStartTime(event.startTime);
+      if (!event.allDay && free("endTime")) setEndTime(event.endTime);
+      if (event.location && free("location")) {
+        fillField(element, "location", event.location);
+      }
+      if (event.repeat && free("repeat-choice")) setRepeat(event.repeat);
+    } finally {
+      applying.current = false;
+    }
+    modal?.setDirty(true);
   }
 
   const calendarCategories = categories.filter(
@@ -214,10 +251,15 @@ export function EventForm({
   // noValidate: errors come from the server in Spanish, not from the browser.
   return (
     <form
+      ref={form}
       action={formAction}
       noValidate
       // Any typing counts as a change the window must not lose silently (spec 008 RF-7).
       onInput={() => modal?.setDirty(true)}
+      onChange={(event) => {
+        const name = (event.target as Element).getAttribute("name");
+        if (name && !applying.current) touched.current.add(name);
+      }}
       onSubmit={(event) => {
         // An occurrence is saved from the scope dialog, never straight away.
         const submitter = (event.nativeEvent as SubmitEvent).submitter;
@@ -230,14 +272,25 @@ export function EventForm({
     >
       {modal ? <input type="hidden" name="mode" value="modal" /> : null}
       <FormAlert message={state.formError} />
+      {phrase ? (
+        <NlField
+          timeZone={phrase.timeZone}
+          defaultMinutes={phrase.defaultMinutes}
+          calendars={calendars}
+          fallback={{ date: startDate, startTime }}
+          onApply={applyPhrase}
+          autoFocus={focusTitle}
+        />
+      ) : null}
       <TextField
         label="Título"
         name="title"
         maxLength={100}
         defaultValue={values.title}
-        autoFocus={focusTitle}
+        // With a phrase field the cursor starts there instead (spec 041 RF-13).
+        autoFocus={focusTitle && !phrase}
         // Inside the window the dialog opens after mounting: it focuses this one.
-        data-autofocus={focusTitle ? "" : undefined}
+        data-autofocus={focusTitle && !phrase ? "" : undefined}
         error={errors.title}
       />
       <Select
@@ -309,7 +362,7 @@ export function EventForm({
       <RepeatField
         startDate={startDate}
         allDay={allDay}
-        defaultValue={values.repeat}
+        defaultValue={repeat}
         disabledReason={
           calendars.find((c) => c.id === calendarId)?.synced
             ? RECURRENCE_MESSAGES.synced

@@ -28,11 +28,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Valores del formulario en la zona del perfil (también con cambio de hora) y duración de Ajustes; tramos resaltados en el texto original.
 
   Cubre: RF-11, RF-12 | Evidencia: `npm test -- nl-resolve nl-preview` 15/15: valores del formulario con la duración de Ajustes o la dicha, el hueco del formulario si la frase no da fecha ni hora, "hasta las" cuenta hacia atrás, fin al día siguiente pasada la medianoche ("de 22 a 1"), todo el día y varios días, `@calendario` con `matchCalendar` (ambiguo, solo lectura y desconocido avisan), cambio de hora en Europe/Madrid (las 2:30 que no existen pasan a las 3:30 con aviso; las que se repiten se conservan), repetición propuesta; vista previa ("Dentista · Jueves, 19 de noviembre · 10:30–11:30 · Calle Mayor · @Familia") y tramos resaltados sobre el texto original; P8 en verde.
-- [ ] T5 Campo en el alta rápida y en el formulario
+- [x] T5 Campo en el alta rápida y en el formulario
   Hecho cuando: `npm test -- nl-field quick-create event-form` en verde y capturas a 390 y 1440 px en claro y oscuro en `capturas/`.
   - Vista previa en vivo, `aria-live`, "Aplicar"/Intro, no pisa lo tocado a mano, "+" y N enfocan la frase, funciona en la app sin conexión.
 
-  Cubre: RF-11 a RF-14, RNF-3 | Evidencia: —
+  Cubre: RF-11 a RF-14, RNF-3 | Evidencia: `npm test -- nl-field quick-create event-form offline-app` en verde: `NlField` ("Escribe el evento") con vista previa en vivo en una región `aria-live="polite"`, lo reconocido subrayado (no solo color), avisos (tarde por defecto, calendario desconocido), "Aplicar" o Intro sin enviar el formulario y sin mandar la frase; en el alta rápida rellena título, día, horas, calendario, lugar y repetición, y en el formulario completo todos los campos (también "Todo el día" y "Repetir") sin pisar los tocados a mano; el "+", N y la ventana empiezan en la frase; en la app sin conexión funciona igual. Capturas en `capturas/` (`formulario-frase`, `formulario-aplicado` y `alta-rapida-frase`, 390 y 1440 px, claro y oscuro, con `scripts/screenshots-041.mjs`). P8 en verde (3.602 tests).
 - [ ] T6 Cierre
   Hecho cuando: AGENTS.md, README y constitución (hoja de ruta) actualizados; `python -m graphify update .`; P8 completa.
 

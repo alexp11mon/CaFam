@@ -67,6 +67,8 @@ function setup(
         onClose={onClose}
         onTitleChange={onTitleChange}
         onDraftChange={onDraftChange}
+        timeZone="Europe/Madrid"
+        defaultMinutes={60}
       />
     </ToastProvider>,
   );
@@ -74,11 +76,12 @@ function setup(
 }
 
 describe("QuickCreate", () => {
-  it("opens with the cursor in the title, the day, the hours and the calendar (RF-37, RF-28)", () => {
+  it("opens with the cursor in the phrase, the day, the hours and the calendar (RF-37, spec 041 RF-13)", () => {
     setup();
 
     expect(screen.getByRole("dialog", { name: "Nuevo evento" })).toBeVisible();
-    expect(screen.getByLabelText("Título")).toHaveFocus();
+    expect(screen.getByLabelText("Escribe el evento")).toHaveFocus();
+    expect(screen.getByLabelText("Título")).toHaveValue("");
     expect(screen.getByText("jueves, 22 de octubre")).toBeVisible();
     expect(
       screen.getByRole("combobox", { name: "Hora de inicio" }),
@@ -243,6 +246,8 @@ describe("QuickCreate and the provisional block", () => {
           onClose={vi.fn()}
           onTitleChange={vi.fn()}
           onDraftChange={onDraftChange}
+          timeZone="Europe/Madrid"
+          defaultMinutes={60}
         />
       </ToastProvider>,
     );
@@ -269,5 +274,69 @@ describe("QuickCreate and the provisional block", () => {
     ).toHaveAttribute("open");
     // @ts-expect-error jsdom has none by default
     delete window.matchMedia;
+  });
+
+  describe("Escribe el evento (spec 041)", () => {
+    it("previews and fills the window, without overwriting the title typed", async () => {
+      const user = userEvent.setup();
+      const { action, onTitleChange } = setup();
+      await user.type(
+        screen.getByLabelText("Escribe el evento"),
+        "Cena con Ana el 25 de octubre de 2026 de 21 a 23 en casa @familia",
+      );
+      expect(
+        await screen.findByText(
+          "Cena con Ana · Domingo, 25 de octubre · 21:00–23:00 · casa · @Familia",
+        ),
+      ).toBeVisible();
+      // Intro applies; it never saves.
+      await user.keyboard("{Enter}");
+      expect(action).not.toHaveBeenCalled();
+      expect(screen.getByLabelText("Título")).toHaveValue("Cena con Ana");
+      expect(onTitleChange).toHaveBeenLastCalledWith("Cena con Ana");
+      expect(
+        screen.getByRole("combobox", { name: "Hora de inicio" }),
+      ).toHaveValue("21:00");
+      expect(screen.getByRole("combobox", { name: "Hora de fin" })).toHaveValue(
+        "23:00",
+      );
+      expect(screen.getByLabelText("Calendario")).toHaveValue("cal-a");
+      expect(screen.getByText("domingo, 25 de octubre")).toBeVisible();
+
+      // A title changed by hand stays when the phrase is applied again.
+      await user.clear(screen.getByLabelText("Título"));
+      await user.type(screen.getByLabelText("Título"), "Cumple");
+      await user.clear(screen.getByLabelText("Escribe el evento"));
+      await user.type(
+        screen.getByLabelText("Escribe el evento"),
+        "Comida el 26 de octubre de 2026 cada semana",
+      );
+      await user.click(screen.getByRole("button", { name: "Aplicar" }));
+      expect(screen.getByLabelText("Título")).toHaveValue("Cumple");
+
+      await user.click(screen.getByRole("button", { name: "Guardar" }));
+      const sent = action.mock.calls[0]![1];
+      expect(sent.get("title")).toBe("Cumple");
+      expect(sent.get("startDate")).toBe("2026-10-26");
+      expect(sent.get("allDay")).toBe("on");
+      expect(sent.get("location")).toBe("casa");
+      expect(sent.get("repeat")).toBe("weekly");
+      expect(sent.get("phrase")).toBeNull();
+    });
+
+    it("says what is not certain", async () => {
+      const user = userEvent.setup();
+      setup();
+      await user.type(
+        screen.getByLabelText("Escribe el evento"),
+        "Médico el 25 de octubre de 2026 a las 5 @gimnasio",
+      );
+      expect(
+        await screen.findByText("Se entiende por la tarde: 17:00."),
+      ).toBeVisible();
+      expect(
+        screen.getByText("No hay ningún calendario «gimnasio»."),
+      ).toBeVisible();
+    });
   });
 });

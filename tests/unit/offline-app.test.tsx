@@ -103,6 +103,33 @@ describe("OfflineApp", () => {
     expect(await screen.findByText("Sin copia")).toBeInTheDocument();
   });
 
+  it("reads the phrase of a new event offline (spec 041 RF-14)", async () => {
+    const user = userEvent.setup();
+    await db.claimFor("me");
+    await db.saveSnapshot({
+      ...COPY,
+      calendars: [
+        {
+          id: "c1",
+          name: "Familia",
+          color: "#A0C4FF",
+          role: "owner",
+          synced: null,
+        },
+      ],
+    } as unknown as Snapshot);
+    await open("/dashboard/events/new");
+
+    await user.type(
+      await screen.findByLabelText("Escribe el evento"),
+      "Cena el 20 de diciembre de 2026 a las 21{Enter}",
+    );
+    expect(
+      screen.getByText("Cena · Domingo, 20 de diciembre · 21:00–22:00"),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Título")).toHaveValue("Cena");
+  });
+
   it("opens the notes of the copy at the address it came from", async () => {
     await db.claimFor("me");
     await db.saveSnapshot(COPY);

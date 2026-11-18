@@ -33,6 +33,7 @@ async function NewEvent({ searchParams }: { searchParams: SearchParams }) {
       calendars={data.calendars}
       categories={data.categories}
       reminders={{ defaults: data.reminderDefaults }}
+      phrase={data.phrase}
       submitLabel="Crear evento"
       pendingLabel="Creando…"
       cancelHref="/dashboard/calendar"
