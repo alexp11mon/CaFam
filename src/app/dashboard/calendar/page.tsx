@@ -90,8 +90,8 @@ async function CalendarContent({
         covered
           ? null
           : getEventsInRange(supabase, upcomingWindow.from, upcomingWindow.to),
-        // Only the week and the day show them (spec 020 RF-16).
-        view === "week" || view === "day"
+        // Only the grid views show them (spec 020 RF-16, spec 042 RF-7).
+        view === "week" || view === "4days" || view === "day"
           ? getBusyIntervals(supabase, range.from, range.to)
           : [],
       ]);

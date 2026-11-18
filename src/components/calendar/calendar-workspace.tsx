@@ -867,7 +867,8 @@ export function CalendarWorkspace({
                 }
                 draft={draftMark}
               />
-            ) : view === "week" ? (
+            ) : view === "week" || view === "4days" ? (
+              // The 4 days are the week's grid with 4 columns (spec 042 RF-6).
               <WeekView
                 days={days}
                 events={shown}

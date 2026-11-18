@@ -20,10 +20,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Migración, `db:push`, `db:types`. `calendar_day_marks` respeta RLS, da días distintos por calendario, días completos por fecha UTC y `22023` con más de 370 días; `last_view` acepta las nuevas.
 
   Cubre: RF-5, RF-11 | Evidencia: Migración `20261123100000_views_year.sql` aplicada en dev (`db:push`, `db:types`); `npm run test:db -- day-marks profile-last-view` 10/10: `calendar_day_marks` da (día, calendario) distintos con hora en la zona del perfil (23:30 UTC es el día siguiente en Madrid) y días completos por fecha UTC con fin exclusivo, recorta un evento largo a los días pedidos, no cuenta las series (las expande la app), respeta RLS (el Lector ve sus calendarios, un ajeno nada, `anon` no puede llamarla) y da `22023` con más de 370 días o un rango al revés; `last_view` acepta `year` y `4days` y rechaza otros (23514). `test:db` completo 636/636; P8 en verde.
-- [ ] T3 Vista 4 días
+- [x] T3 Vista 4 días
   Hecho cuando: `npm test -- four-day-view` en verde: crear, mover, tarjeta y "Ocupado" funcionan como en la semana.
 
-  Cubre: RF-6, RF-7 | Evidencia: —
+  Cubre: RF-6, RF-7 | Evidencia: `npm test -- four-day-view` 3/3: con `view="4days"` el workspace pinta la rejilla de la semana (`WeekView`) con 4 columnas (viernes a lunes, fin de semana incluido), una capa de huecos por día para crear, el evento editable con su tirador (mover y redimensionar con `DraggableEvent`, que abre la tarjeta como en la semana) y los bloques "Ocupado". La página y el cliente piden los "Ocupado" también en 4 días; el esqueleto tiene 4 columnas. P8 en verde.
 - [ ] T4 Vista año
   Hecho cuando: `npm test -- year-view use-year-marks` en verde: 12 meses, columnas por anchura, puntos por calendario visible, hoy, pulsar día y mes, series expandidas.
 

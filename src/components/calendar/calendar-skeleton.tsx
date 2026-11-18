@@ -49,13 +49,16 @@ export function CalendarSkeleton({ view }: { view: CalendarView }) {
             </div>
           ) : (
             <div className="flex h-calendar gap-1 tab:h-[max(32rem,calc(100dvh-18rem))]">
-              {Array.from({ length: view === "week" ? 7 : 1 }, (_, index) => (
-                <div
-                  key={index}
-                  data-testid="skeleton-grid-column"
-                  className={`flex-1 ${BLOCK}`}
-                />
-              ))}
+              {Array.from(
+                { length: view === "week" ? 7 : view === "4days" ? 4 : 1 },
+                (_, index) => (
+                  <div
+                    key={index}
+                    data-testid="skeleton-grid-column"
+                    className={`flex-1 ${BLOCK}`}
+                  />
+                ),
+              )}
             </div>
           )}
         </div>

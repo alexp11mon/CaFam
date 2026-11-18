@@ -247,7 +247,7 @@ export function CalendarClient({
 
   // "Ocupado" blocks: the server's for its own week or day, the rest asked
   // for when someone is marked (RF-9, plan D5).
-  const gridView = view === "week" || view === "day";
+  const gridView = view === "week" || view === "4days" || view === "day";
   const busyKey = gridView ? `${view}|${range.days[0]}` : null;
   const [busy, setBusy] = useState<{
     seen: BusyInput[];
