@@ -139,3 +139,21 @@ export function versionRows(
       theirs: theirs ? show(key, theirs[key], timeZone) : "Borrado",
     }));
 }
+
+/**
+ * The rows of a conflict. For something the user deleted, what the other
+ * person changed in it since the copy, not every field against "Borrado".
+ */
+export function conflictRows(
+  change: OfflineChange,
+  server: Fields | null,
+  timeZone: string,
+) {
+  if (change.type.endsWith(".delete") && "base" in change) {
+    return versionRows({ ...change.base }, server, timeZone).map((row) => ({
+      ...row,
+      mine: "Borrado",
+    }));
+  }
+  return versionRows(mineOf(change), server, timeZone);
+}

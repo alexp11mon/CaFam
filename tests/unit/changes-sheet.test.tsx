@@ -12,7 +12,7 @@ import {
 import { ChangesSheet } from "@/components/offline/changes-sheet";
 import { ToastProvider } from "@/components/ui/toast";
 import type { EventData } from "@/lib/calendar/schemas";
-import { versionRows } from "@/lib/offline/changes";
+import { conflictRows, versionRows } from "@/lib/offline/changes";
 import { resetConnection } from "@/lib/offline/connection";
 import * as db from "@/lib/offline/db";
 import {
@@ -192,5 +192,23 @@ describe("versionRows", () => {
     expect(versionRows(MINE, THEIRS, "Europe/Madrid")).toEqual([
       { label: "Lugar", mine: "Restaurante", theirs: "Casa de Luis" },
     ]);
+  });
+});
+
+describe("conflictRows", () => {
+  it("shows what the other person changed in what the user deleted (RF-52)", () => {
+    expect(
+      conflictRows(
+        { type: "event.delete", id: "e1", base: BASE },
+        THEIRS,
+        "Europe/Madrid",
+      ),
+    ).toEqual([{ label: "Lugar", mine: "Borrado", theirs: "Casa de Luis" }]);
+  });
+
+  it("compares the user's version with theirs otherwise", () => {
+    expect(conflictRows(UPDATE, THEIRS, "Europe/Madrid")).toEqual(
+      versionRows(MINE, THEIRS, "Europe/Madrid"),
+    );
   });
 });

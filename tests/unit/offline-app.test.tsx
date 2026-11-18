@@ -1,4 +1,5 @@
 import { act, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OfflineApp } from "@/components/offline/offline-app";
 import { ToastProvider } from "@/components/ui/toast";
@@ -106,6 +107,60 @@ describe("OfflineApp", () => {
     // The assistant needs the network (R2).
     expect(
       screen.queryByRole("button", { name: /Venito|Asistente/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("goes back to the calendar after deleting from the detail (T12)", async () => {
+    await db.claimFor("me");
+    await db.saveSnapshot({
+      ...COPY,
+      calendars: [
+        {
+          id: "cal",
+          name: "Familia",
+          description: null,
+          color: "#FFADAD",
+          ownerId: "me",
+          createdAt: "2026-01-01T00:00:00Z",
+          role: "owner",
+          synced: null,
+        },
+      ],
+      events: [
+        {
+          id: "e1",
+          calendarId: "cal",
+          title: "Fútbol",
+          startsAt: "2026-11-20T17:00:00Z",
+          endsAt: "2026-11-20T18:00:00Z",
+          allDay: false,
+          color: null,
+          categoryId: null,
+          location: null,
+          imageCount: 0,
+          commentCount: 0,
+          seriesId: null,
+          description: null,
+          createdBy: "me",
+          createdByName: "Ana López",
+          seriesSummary: null,
+          seriesChanged: false,
+        },
+      ],
+    } as unknown as Snapshot);
+    await open("/dashboard/events/e1");
+
+    await screen.findByRole("heading", { name: "Fútbol" });
+    await userEvent.click(
+      screen.getByRole("button", { name: "Borrar evento" }),
+    );
+    // The queued deletion hides the event, but the screen does not end in
+    // "Necesita conexión": it goes back to the calendar.
+    await vi.waitFor(() =>
+      expect(window.location.pathname).toBe("/dashboard/calendar"),
+    );
+    expect(
+      screen.queryByText(/^Esta pantalla necesita conexión/),
     ).not.toBeInTheDocument();
   });
 

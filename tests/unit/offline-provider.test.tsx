@@ -76,6 +76,14 @@ describe("OfflineProvider", () => {
     expect(server.loadOfflineSnapshot).not.toHaveBeenCalled();
   });
 
+  it("reads again a copy older than 15 minutes (RF-6)", async () => {
+    await db.saveSnapshot(
+      copy("u1", new Date(Date.now() - 16 * 60_000).toISOString()),
+    );
+    mount();
+    await waitFor(() => expect(server.loadOfflineSnapshot).toHaveBeenCalled());
+  });
+
   it("sends what waits, says so and refreshes (RF-39, RF-44, RF-45)", async () => {
     await addChange({ type: "note.delete", id: "n", base: {} as never });
     mount();

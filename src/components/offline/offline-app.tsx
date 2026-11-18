@@ -120,12 +120,17 @@ function EventScreen({ copy, id }: { copy: Snapshot; id: string }) {
     () => detailFromSnapshot(copy, queue, id),
     [copy, queue, id],
   );
-  if (!data) return <NeedsNetwork />;
+  // Deleting it here queues the deletion, which hides the event before the
+  // button can close the screen: keep showing the last version (T12).
+  const [shown, setShown] = useState(data);
+  if (data && data !== shown) setShown(data);
+  const view = data ?? shown;
+  if (!view) return <NeedsNetwork />;
   return (
     <main className={NARROW}>
       <EventModalProvider value={modal}>
         <EventPanel
-          {...data}
+          {...view}
           updateAction={updateEvent.bind(null, id)}
           deleteAction={deleteFromDetail.bind(null, id)}
         />

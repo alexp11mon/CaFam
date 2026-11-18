@@ -11,6 +11,7 @@ import { useOfflineQueue, useOfflineSnapshot } from "@/lib/hooks/use-offline";
 import {
   changeTitle,
   conflictChoices,
+  conflictRows,
   conflictKind,
   mineOf,
   recreateOf,
@@ -94,11 +95,7 @@ function ConflictItem({
             {M.mine} arriba · {M.theirs.toLowerCase()} debajo
           </p>
           <Versions
-            rows={versionRows(
-              mineOf(conflict.change),
-              conflict.server,
-              timeZone,
-            )}
+            rows={conflictRows(conflict.change, conflict.server, timeZone)}
             mineLabel={M.mine}
             theirsLabel={M.theirs}
           />
