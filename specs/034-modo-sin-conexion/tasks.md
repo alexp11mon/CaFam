@@ -134,7 +134,8 @@ Además, `npm run test:db` en las tareas que tocan acceso a datos (T4, T5) y pru
 
   Cubre: RF-14, RF-17, RF-23, RF-24, RF-25, RF-35, RF-60, RF-61, RF-62, RF-65 | Módulo: gates, sign-out-guard
 
-- [ ] T11 Resolver conflictos y revisar cambios no enviados, y actualizar `/privacy`
+- [x] T11 Resolver conflictos y revisar cambios no enviados, y actualizar `/privacy`
+  Evidencia: `changes-sheet` (8: las dos versiones con solo los campos que difieren, "Conservar la mía" con `force`, "Conservar la suya" sin enviar nada, "Volver a crearlo" como alta con el mismo id y "Descartar mi cambio", "Borrarlo igualmente"/"Conservar el suyo", un elemento de lista como en RF-50, un rechazado con título, fecha, motivo, contenido seleccionable y "Descartar", y los conflictos que siguen en IndexedDB al recargar) y `privacy-page` (sección "Datos guardados en este dispositivo": qué se guarda y qué no, cada 15 minutos, y que se borra al cerrar sesión, al borrar la cuenta o con otra cuenta) en verde. La lógica legible está en `lib/offline/changes.ts` (pura); `ConnectionBadge` abre `ChangesSheet`. Una nota borrada por otra persona solo ofrece "Descartar mi cambio": sus elementos se fueron con ella. typecheck, lint (aviso previo), format:check, `npm test` (311 archivos, 2910 tests) y build en verde. `scripts/e2e-offline.mjs` con 16 pasos en verde, con la hoja abierta desde el indicador sin red. Los conflictos reales entre dos usuarios se recorren en la T12.
   Incluye `ChangesSheet`, abierto desde el indicador, y la sección "Datos guardados en este dispositivo" de `/privacy`.
   Hecho cuando: `npm test -- changes-sheet privacy` en verde. Los tests cubren:
   - las dos versiones;

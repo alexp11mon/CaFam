@@ -141,4 +141,16 @@ describe("/privacy: images in the assistant (spec 022)", () => {
       "no se envían a Google, a iCloud ni al asistente",
     );
   });
+
+  // Spec 034 (RF-66, RF-67).
+  it("says what the device keeps, for how long and when it is deleted", () => {
+    render(<PrivacyPage />);
+    const section = screen
+      .getByRole("heading", { name: "Datos guardados en este dispositivo" })
+      .closest("section")!;
+    expect(section).toHaveTextContent("una copia de tus datos");
+    expect(section).toHaveTextContent("No se guardan imágenes, comentarios");
+    expect(section).toHaveTextContent("cada 15 minutos");
+    expect(section).toHaveTextContent("Se borra entera al cerrar sesión");
+  });
 });

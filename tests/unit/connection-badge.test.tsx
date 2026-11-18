@@ -12,6 +12,12 @@ import type { Snapshot } from "@/lib/offline/snapshot";
 import { memoryIndexedDb } from "./memory-indexeddb";
 
 // Spec 034 T8: the state of the connection and what waits (RF-9, RF-29).
+// T11: it opens the "Cambios" sheet.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock("@/app/dashboard/offline-actions", () => ({
+  applyOfflineChange: vi.fn(),
+  loadOfflineSnapshot: vi.fn(),
+}));
 beforeEach(async () => {
   vi.stubGlobal("indexedDB", memoryIndexedDb());
   forgetConnection();

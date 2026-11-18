@@ -213,6 +213,15 @@ try {
     await visible(page.getByText("Cena sin red")).waitFor();
   });
 
+  await step("hoja de cambios desde el indicador", async () => {
+    await visible(
+      page.getByRole("button", { name: /Sin conexión · datos.*pendiente/ }),
+    ).click();
+    const sheet = page.getByRole("dialog", { name: "Cambios" });
+    await sheet.getByText(/cambios pendientes: se enviarán/).waitFor();
+    await page.keyboard.press("Escape");
+  });
+
   await context.setOffline(false);
 
   await step("al volver la red llega todo", async () => {
