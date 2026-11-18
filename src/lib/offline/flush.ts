@@ -44,7 +44,10 @@ async function sendAll(send: Send): Promise<FlushResult> {
     if ("unauthenticated" in result) {
       return { applied, stopped: "unauthenticated" };
     }
-    if (result.status === "retry") return { applied, stopped: "retry" };
+    // shortcut: held stops like retry until spec 035 T9 skips its entity.
+    if (result.status === "retry" || result.status === "held") {
+      return { applied, stopped: "retry" };
+    }
 
     let gone = [entry];
     if (result.status === "applied") applied += 1;

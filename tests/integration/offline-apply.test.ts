@@ -311,7 +311,7 @@ describe("rejected changes (RF-47, RNF-5)", () => {
     expect(await eventRow(id)).toMatchObject({ title: "Dentista" });
   });
 
-  it("a calendar from Google is rejected", async () => {
+  it("a calendar from Google whose account cannot write is rejected (spec 035 RF-2)", async () => {
     const result = await apply(ana, {
       type: "event.create",
       id: randomUUID(),
@@ -319,7 +319,7 @@ describe("rejected changes (RF-47, RNF-5)", () => {
     });
     expect(result).toEqual({
       status: "rejected",
-      reason: expect.stringMatching(/Google/),
+      reason: expect.stringMatching(/permiso/i),
     });
   });
 });

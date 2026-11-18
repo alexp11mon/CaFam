@@ -186,3 +186,75 @@ export async function writeEvent(
     done();
   }
 }
+
+export type ReadResult =
+  /** The calendar is not synced: CaFam's row is the one to compare with. */
+  | { status: "normal" }
+  /** Uploaded before it had an id in the provider: it lives only in CaFam. */
+  | { status: "local" }
+  | {
+      status: "read";
+      /** Null when the provider no longer has it (spec 035 RF-6). */
+      event: WritableEvent | null;
+      provider: ProviderName;
+      connectionId: string;
+    }
+  | {
+      status: "failed";
+      failure: Exclude<WriteFailure, "gone">;
+      provider: ProviderName;
+      connectionId: string;
+    }
+  | { status: "dbError"; error: unknown };
+
+/**
+ * One event as its provider has it now, read before writing a change made
+ * offline over it (spec 035 RF-5, RF-6, plan D1). The same context as a
+ * write, so a Reader or a read-only calendar is refused here already (RF-2).
+ */
+export async function readSyncedEvent(
+  calendarId: string,
+  eventId: string,
+  deps: SyncDeps,
+): Promise<ReadResult> {
+  const { data, error } = await call(deps, "sync_write_context", {
+    p_calendar_id: calendarId,
+    p_event_id: eventId,
+    p_target_calendar_id: null,
+  });
+  if (error) return { status: "dbError", error };
+  const context = data as Context;
+  if (!context.synced) return { status: "normal" };
+  if (!context.event_external_id) return { status: "local" };
+  const provider = providerOrGoogle(context.provider);
+  const connectionId = context.connection_id;
+
+  const { fetchFn, done } = withDeadline(deps.fetchFn);
+  try {
+    const session = await openSession(
+      { ...deps, fetchFn },
+      provider,
+      connectionId,
+    );
+    const event = await session.readEvent(
+      context.calendar_external_id,
+      context.event_external_id,
+    );
+    return { status: "read", event, provider, connectionId };
+  } catch (failure) {
+    const kind = writeFailureOf(failure);
+    if (kind === "gone") {
+      return { status: "read", event: null, provider, connectionId };
+    }
+    if (kind === "revoked") {
+      // The notice with "Volver a conectar", as after a write (RF-7).
+      await call(deps, "sync_fail", {
+        p_calendar_id: calendarId,
+        p_kind: "revoked",
+      }).catch(() => undefined);
+    }
+    return { status: "failed", failure: kind, provider, connectionId };
+  } finally {
+    done();
+  }
+}

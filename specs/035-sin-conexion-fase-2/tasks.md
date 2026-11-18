@@ -83,7 +83,7 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 
   Evidencia (2026-11-18): `npm test -- google-read-event icloud-read-event` 9 en verde, con `tests/fixtures/sync/google-event.json` (suelto, repetición, día completo y cancelado) y `icloud-series.ics` (serie con `VTIMEZONE`, `EXDATE` y una repetición con su propio `VEVENT`). `readEvent` está en `ProviderSession`: Google hace `GET events/{id}` y da `null` con 404, 410 o `cancelled`; iCloud lee el recurso y busca el evento con `expandObject` en una ventana de un año a cada lado de la clave de la repetición. `read-event.ts` no importa `ical.js` directamente: pasa por `icloud-ics.ts`. Verificación completa en verde (318 archivos, 2.971 tests).
 
-- [ ] T6 Aplicar en el servidor los cambios de Google e iCloud hechos sin red (`offline-writes.ts`)
+- [x] T6 Aplicar en el servidor los cambios de Google e iCloud hechos sin red (`offline-writes.ts`)
   Hecho cuando: `npm run test:db -- offline-apply-synced` en verde, con el proveedor simulado (`vi.mock` del cliente de Google e iCloud) y el calendario traído sembrado en dev. Los tests cubren:
   - crear, cambiar, mover dentro de la cuenta y borrar → primero el proveedor y después CaFam;
   - el proveedor cambió el evento → conflicto con su versión;
@@ -93,6 +93,8 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
   - un Lector o un calendario de solo lectura del proveedor → `rejected`.
 
   Cubre: RF-1, RF-2, RF-4, RF-5, RF-6, RF-7, RF-9, RNF-3, RNF-4 | Módulo: offline-writes
+
+  Evidencia (2026-11-18): `npm run test:db -- offline-apply` 27 en verde (12 de `offline-apply-synced` y los 15 de la 034), con `openSession` simulado y una cuenta de Google sembrada en dev con tres calendarios (dos escribibles y uno de solo lectura). `readSyncedEvent` (`write-event.ts`) usa el mismo `sync_write_context` que escribir, así que un Lector o un calendario de solo lectura se rechazan antes de llamar al proveedor; si el proveedor responde `revoked`, llama a `sync_fail` como una escritura (aviso "Volver a conectar"). `offline-writes.ts` compara la base con el evento del proveedor y escribe con `updateSingle` contra esa versión. Una cuenta ya marcada hace que la base de datos responda "sin permiso": se distingue leyendo el calendario (rol, acceso del proveedor y `can_write`) y se devuelve `held`. `flush.ts` y la hoja de cambios tratan `held` como `retry` hasta la T9. Limitación anotada en el código: un alta en un traído coge el id del proveedor, así que reenviarla tras perder la respuesta la duplica (arreglarlo pide una migración). Verificación completa en verde (318 archivos, 2.971 tests).
 
 - [ ] T7 Aplicar en el servidor series, comentarios y borrados de imágenes hechos sin red (`offline-writes.ts`)
   Hecho cuando: `npm run test:db -- offline-apply-series offline-apply-comments` en verde. Los tests cubren:

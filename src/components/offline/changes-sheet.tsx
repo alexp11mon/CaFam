@@ -181,7 +181,11 @@ export function ChangesSheet({
       const result = await withTimeout(
         applyOfflineChange(change, { force: true }),
       );
-      if ("unauthenticated" in result || result.status === "retry") {
+      if (
+        "unauthenticated" in result ||
+        result.status === "retry" ||
+        result.status === "held"
+      ) {
         return show(M.needsNetwork);
       }
       await dropConflict(conflict.changeId);

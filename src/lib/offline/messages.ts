@@ -11,7 +11,6 @@ export const OFFLINE_MESSAGES = {
   needsNetworkPage:
     "Esta pantalla necesita conexión. Vuelve cuando tengas red o sigue con el calendario y las notas.",
   pending: "Pendiente de enviar",
-  syncedRejected: "Sin conexión no se puede escribir en Google ni en iCloud",
   readOnly: (provider: "google" | "icloud") =>
     `Sin conexión no se puede escribir en ${provider === "icloud" ? "iCloud" : "Google"}`,
   unsent: "Cambios no enviados",

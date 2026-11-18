@@ -1,4 +1,7 @@
-import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
+import {
+  CALENDAR_MESSAGES,
+  getCalendarErrorMessage,
+} from "@/lib/calendar/error-messages";
 import {
   canSeeCalendar,
   getEvent,
@@ -12,12 +15,15 @@ import { createVerdict, verdictOrGone } from "@/lib/offline/conflict";
 import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 import type { NoteFields } from "@/lib/offline/outbox";
 import type { ParsedChange } from "@/lib/offline/schemas";
+import { writeEngineDeps } from "@/lib/sync/engine";
+import type { WritableEvent } from "@/lib/sync/google-payload";
+import { writeErrorText } from "@/lib/sync/write-errors";
+import { readSyncedEvent } from "@/lib/sync/write-event";
 import {
   changeOccurrence,
   createSingle,
   deleteOccurrences,
   deleteSingle,
-  isSyncedCalendar,
   toRow,
   updateSingle,
   type Supabase,
@@ -36,7 +42,9 @@ export type ApplyResult =
   | { status: "applied" }
   | { status: "conflict"; server: Fields | null }
   | { status: "rejected"; reason: string }
-  | { status: "retry" };
+  | { status: "retry" }
+  /** The account of a synced calendar needs reconnecting: kept (spec 035 RF-7, D8). */
+  | { status: "held"; connectionId: string };
 
 const APPLIED: ApplyResult = { status: "applied" };
 
@@ -65,6 +73,128 @@ function eventData(event: EventRecord): EventData {
 
 type EventChange = Extract<ParsedChange, { type: `event.${string}` }>;
 
+const REVOKED = new Set([
+  writeErrorText("revoked", "google"),
+  writeErrorText("revoked", "icloud"),
+]);
+
+/**
+ * The account of a synced calendar the user may write in, when it is only
+ * the account that cannot now: it needs reconnecting (spec 035 RF-7, RF-8).
+ * Once marked, the database refuses every write with "no permission", and an
+ * Editor cannot read the account's state: the calendar's own fields tell.
+ */
+async function heldConnection(
+  supabase: Supabase,
+  userId: string,
+  calendarId: string,
+): Promise<string | null> {
+  const [member, synced] = await Promise.all([
+    supabase
+      .from("calendar_members")
+      .select("role")
+      .eq("calendar_id", calendarId)
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabase
+      .from("synced_calendars")
+      .select("connection_id, state, google_access, can_write")
+      .eq("calendar_id", calendarId)
+      .maybeSingle(),
+  ]);
+  const role = member.data?.role;
+  const row = synced.data;
+  if (!row || (role !== "owner" && role !== "editor")) return null;
+  const writable =
+    row.state === "active" &&
+    (row.google_access === "owner" || row.google_access === "writer");
+  return writable && !row.can_write ? row.connection_id : null;
+}
+
+/**
+ * A write of always that failed: an account to reconnect keeps the change
+ * (spec 035 RF-7); anything else as in the 034.
+ */
+async function failedSynced(
+  supabase: Supabase,
+  userId: string,
+  calendarId: string,
+  message: string | undefined,
+): Promise<ApplyResult> {
+  if (
+    message &&
+    (REVOKED.has(message) || message === CALENDAR_MESSAGES.forbidden)
+  ) {
+    const connectionId = await heldConnection(supabase, userId, calendarId);
+    if (connectionId) return { status: "held", connectionId };
+  }
+  return failed(message);
+}
+
+/** CaFam's event with the fields its provider has now (spec 035 D1). */
+function withProvider(event: EventRecord, now: WritableEvent): EventRecord {
+  return {
+    ...event,
+    title: now.title,
+    description: now.description,
+    location: now.location,
+    startsAt: now.starts_at,
+    endsAt: now.ends_at,
+    allDay: now.all_day,
+  };
+}
+
+type Current =
+  { ok: true; event: EventRecord | null } | { ok: false; result: ApplyResult };
+
+/**
+ * The event to compare with: CaFam's row, or for a synced calendar the one
+ * the provider has now, read just before writing (spec 035 RF-5, RF-6, D1).
+ */
+async function currentOf(
+  supabase: Supabase,
+  userId: string,
+  server: EventRecord | null,
+): Promise<Current> {
+  if (!server || server.series) return { ok: true, event: server };
+  const read = await readSyncedEvent(
+    server.calendarId,
+    server.id,
+    writeEngineDeps(supabase),
+  );
+  switch (read.status) {
+    case "normal":
+    case "local":
+      return { ok: true, event: server };
+    case "read":
+      return {
+        ok: true,
+        event: read.event ? withProvider(server, read.event) : null,
+      };
+    case "dbError":
+      // A Reader, or a calendar the provider only lets read (RF-2).
+      return {
+        ok: false,
+        result: await failedSynced(
+          supabase,
+          userId,
+          server.calendarId,
+          getCalendarErrorMessage(read.error),
+        ),
+      };
+    case "failed":
+      return {
+        ok: false,
+        result:
+          read.failure === "revoked"
+            ? { status: "held", connectionId: read.connectionId }
+            : read.failure === "transient"
+              ? { status: "retry" }
+              : failed(writeErrorText(read.failure, read.provider)),
+      };
+  }
+}
+
 async function applyEvent(
   supabase: Supabase,
   userId: string,
@@ -81,9 +211,6 @@ async function applyEvent(
     if (verdict === "conflict" && !force) {
       return { status: "conflict", server: current };
     }
-    if (await isSyncedCalendar(supabase, change.data.calendarId)) {
-      return { status: "rejected", reason: OFFLINE_MESSAGES.syncedRejected };
-    }
     const data = {
       ...change.data,
       description: change.data.description ?? null,
@@ -94,7 +221,12 @@ async function applyEvent(
       toRow(data),
       change.id,
     );
-    return created.ok ? APPLIED : failed(created.error);
+    // shortcut: in a synced calendar the provider gives the id, so a resend
+    // after a lost answer creates it twice; fixing it needs sync_commit_event
+    // to take the browser's id (a migration).
+    return created.ok
+      ? APPLIED
+      : failedSynced(supabase, userId, change.data.calendarId, created.error);
   }
 
   const mine = change.type === "event.update" ? change.data : null;
@@ -102,30 +234,37 @@ async function applyEvent(
   if (!server && !(await canSeeCalendar(supabase, change.base.calendarId))) {
     return failed(CALENDAR_MESSAGES.forbidden);
   }
+  const now = await currentOf(supabase, userId, server);
+  if (!now.ok) return now.result;
+  const latest = now.event ? fields(eventData(now.event)) : null;
   if (!force) {
     const verdict = verdictOrGone(
       fields(change.base),
       mine && fields(mine),
-      current,
+      latest,
     );
-    if (verdict === "applied") return APPLIED;
-    if (verdict === "conflict") return { status: "conflict", server: current };
+    if (verdict === "conflict") return { status: "conflict", server: latest };
+    // Gone only in the provider: deleting it there takes it out of CaFam too.
+    if (verdict === "applied" && (mine || !server)) return APPLIED;
   }
-  if (!server) {
+  if (!server || (!now.event && mine)) {
     return mine ? failed(CALENDAR_MESSAGES.notFound) : APPLIED;
-  }
-  if (
-    (await isSyncedCalendar(supabase, server.calendarId)) ||
-    (mine && (await isSyncedCalendar(supabase, mine.calendarId)))
-  ) {
-    return { status: "rejected", reason: OFFLINE_MESSAGES.syncedRejected };
   }
 
   if (!mine) {
-    const result = server.series
-      ? await deleteOccurrences(supabase, server.series, "this", true)
-      : await deleteSingle(supabase, server.id, "page");
-    return result ? failed(result.formError) : APPLIED;
+    if (server.series) {
+      const result = await deleteOccurrences(
+        supabase,
+        server.series,
+        "this",
+        true,
+      );
+      return result ? failed(result.formError) : APPLIED;
+    }
+    const result = await deleteSingle(supabase, server.id, "page");
+    // Already deleted in the provider: CaFam dropped it too (spec 009 RF-25).
+    if (!result || !now.event) return APPLIED;
+    return failedSynced(supabase, userId, server.calendarId, result.formError);
   }
 
   // A partial event did not know the description: it keeps the server's (R6).
@@ -141,11 +280,18 @@ async function applyEvent(
         { ...server, series: server.series },
         { data, values, scope: "this", confirmLoss: true, timeZone },
       )
-    : await updateSingle(supabase, server, data, values);
-  if (typeof saved === "string") return failed(CALENDAR_MESSAGES.notFound);
+    : // Against what the provider has, so only what changed is sent (D1).
+      await updateSingle(supabase, now.event ?? server, data, values);
+  // Deleted in the provider while writing: as RF-6.
+  if (typeof saved === "string") return { status: "conflict", server: null };
   if ("id" in saved) return APPLIED;
   const field = Object.values(saved.fieldErrors ?? {}).find(Boolean);
-  return failed(saved.formError ?? field);
+  return failedSynced(
+    supabase,
+    userId,
+    server.calendarId,
+    saved.formError ?? field,
+  );
 }
 
 function noteFields(note: Note): Fields {
