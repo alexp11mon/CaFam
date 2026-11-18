@@ -108,6 +108,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 036  | Venito crea eventos y propone cambios desde el chat                 | 🟡 Hecha, pendiente del eval y del cierre         |
 | 037  | El "+" no tapa "Enviar" en la pantalla del asistente                | ✅ Cerrada                                        |
 | 038  | La sincronización no borra lo que queda fuera de la ventana         | ✅ Cerrada (migración pendiente en prod)          |
+| 039  | Búsqueda de eventos, también sin conexión                           | ✅ Cerrada (migración pendiente en prod)          |
 
 > Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
@@ -129,6 +130,12 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 - **Calendarios plegables:** cada grupo o persona de los filtros se pliega (sin cambiar qué se ve), las categorías van plegadas bajo su calendario, el orden se cambia en el modo "Ordenar" y lo plegado se recuerda en el dispositivo.
 - **Grupos de calendarios** para mostrar u ocultar varios a la vez. "Mis calendarios" muestra grupos plegables y cada calendario en una fila que se despliega con sus acciones.
 - **Juntar calendarios propios** en uno (fusión real, irreversible, con confirmación).
+
+### 🔎 Búsqueda
+
+- Lupa en la cabecera del calendario (o tecla `/`): busca por título, lugar, descripción y comentarios en todos tus calendarios, también los ocultos, sin importar tildes ni mayúsculas.
+- Resultados por día, próximos primero, con las repeticiones de las series y el comentario que coincide resaltado.
+- Sin conexión busca en los datos guardados en el dispositivo.
 
 ### 👥 Compartición
 
@@ -506,7 +513,6 @@ feat: registro de usuario (T7)
 El proyecto **aún no está terminado**. Existen specs pendientes y funcionalidades planificadas para versiones futuras:
 
 - Vistas de año y de 4 días.
-- Búsqueda de eventos.
 - Papelera o deshacer de más de una acción.
 - Recordatorios push.
 - Compartir e integrar con el sistema operativo.
@@ -532,7 +538,7 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 
 Hasta que exista su spec aprobada:
 
-- Vistas de año y de 4 días, búsqueda, papelera o deshacer de más de una acción.
+- Vistas de año y de 4 días, papelera o deshacer de más de una acción.
 - Recordatorios push, compartir e integrar con el sistema.
 - Alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución).
 - Zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario existente, exportar a `.ics`.

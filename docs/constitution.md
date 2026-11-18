@@ -45,8 +45,9 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 031-venito-morsa | Venito pasa a ser una morsa (enmienda 12) |
 | 032-calendarios-plegables | Panel lateral que se desplaza solo, grupos plegables en los filtros y "Mis calendarios" más ligero |
 | 033-vulnerabilidades | Next.js 16.4.6 y herramientas sin vulnerabilidades conocidas (`npm audit` a cero) |
+| 038-sincronizacion-sin-borrar-fuera-de-ventana | La sincronización solo borra lo que solapa la ventana leída; lo antiguo queda como copia |
+| 039-busqueda-de-eventos | Búsqueda de eventos por título, lugar, descripción y comentarios, también sin conexión |
 | Futura (sin número) | Recordatorios con notificaciones push (Web Push, gratis; en iOS solo con la app instalada) |
-| Futura (sin número) | Búsqueda de eventos por título, lugar y descripción |
 | Futura (sin número) | Compartir e integrar con el sistema: compartir un evento, recibir `.ics` o fotos compartidas, accesos directos y número de eventos de hoy en el icono |
 | Futura (sin número) | Alta de eventos en lenguaje natural ("Cena con Ana mañana a las 21"), sin IA ni coste |
 

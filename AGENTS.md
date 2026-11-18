@@ -90,6 +90,7 @@ Reglas:
 | 036-venito-crea-y-edita | Venito crea eventos (hora fija o relativa a otro evento, "justo cuando acabe PIAE") y propone cambios que se confirman; calendario y evento por su nombre, "Deshacer", nunca borra, 3 por mensaje | **Hecha** (2026-11-18), T1–T10; sin migraciones ni dependencias. Pendientes del usuario: `EVAL_PART=write npm run eval:assistant` contra Groq y el cierre. |
 | 037-boton-crear-en-el-chat | En `/dashboard/assistant` el "+" flotante del móvil tapaba "Enviar", y desde 1024 px la página medía toda la pantalla bajo la barra superior (barra de entrada cortada). `CreateButton` flotante no se pinta en el asistente; la página pierde `lg:h-dvh` | **Cerrada** (2026-11-18), T1; sin migraciones. Pendiente la prueba en el iPhone tras el merge |
 | 038-sincronizacion-sin-borrar-fuera-de-ventana | La sincronización solo borra los eventos traídos que solapan la ventana leída (6 meses atrás, 12 adelante) y no omitidos por el límite de 2.000; lo antiguo queda como copia con la nota "Copia antigua: ya no se actualiza desde Google/iCloud" | **Cerrada** (2026-11-18), T1–T4; migración `sync_apply_window` aplicada en dev (pendiente `db push` a prod **antes** de desplegar) |
+| 039-busqueda-de-eventos | Búsqueda por título, lugar, descripción y comentarios en todos los calendarios (también los ocultos), sin tildes ni mayúsculas, con series por repetición, agrupada por día, en `/dashboard/search`, con la lupa en las cabeceras, la tecla `/` y sin conexión sobre la copia | **Cerrada** (2026-11-18), T1–T6; migración `event_search` aplicada en dev (pendiente `db push` a prod) |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -365,6 +366,13 @@ Añadido por la spec 038 (migración `sync_apply_window`):
 - **Copia antigua**: un evento traído que empezó antes de la ventana (`isOutsideWindow`, `lib/sync/window.ts`) ya no se actualiza; si se borró en el proveedor, CaFam lo conserva con imágenes y comentarios. El detalle lo dice con `StaleCopyNote` (`staleCopyText` de `provider-labels.ts`). Si vuelve a entrar en la ventana, se actualiza por `external_id` sin duplicarse.
 - **Capturas**: `scripts/capture-kit.mjs` (registro, siembra con la clave secreta, 390 y 1440 px en claro y oscuro, borrado del usuario) lo usan los `scripts/screenshots-0NN.mjs` desde la 038.
 
+Añadido por la spec 039 (migración `event_search`):
+
+- **Ruta `/dashboard/search?q=`** (`app/dashboard/search/`, acción `runSearch`) con `SearchScreen` (`components/search/search-screen.tsx`): campo enfocado, busca 350 ms después de la última tecla desde 2 caracteres, últimas 5 búsquedas del dispositivo (`localStorage` `cafam-recent-search`), "Buscando…", vacío con Venito confundido, error con "Reintentar", resultados por día ("Próximos" y "Pasados"), "Oculto en el calendario", extracto del comentario con `<mark>`, "Hay más resultados: afina la búsqueda" (100 como mucho), "Buscar más atrás" (2 años más cada vez) y el número en `aria-live`. Escape o "Cerrar" vuelven atrás.
+- **Accesos**: lupa "Buscar" en `CalendarHeading` (móvil) y `TopNav` (desde 769 px) y la tecla `/` (`SHORTCUTS`, `shortcut: "search"`).
+- **Lógica pura** en `lib/search/`: `normalize` (sin tildes ni mayúsculas, ñ conservada, igual que `search_text`), `group`, `highlight` (`excerpt`), `recent` y `limits`. `searchEvents` (`queries.ts`, solo servidor) llama a `search_events`, lee las filas con RLS y expande las series con `expandRows` en el periodo (`searchRange`: −1 año, +2 años); una excepción solo sale si coincide ella.
+- **Sin conexión**: `searchOffline` y `OFFLINE_SEARCH_NOTE` (`offline-sources.ts`) buscan en los eventos y comentarios de la copia; `matchRoute` conoce `search` y `OfflineApp` la pinta. No busca en lo que espera en la cola.
+
 Añadido por la spec 036 (sin migraciones):
 
 - **Herramientas de escritura** (`WRITE_TOOL_DEFINITIONS`): `create_events` (crea en el acto de 1 a 3) y `propose_changes` (prepara de 1 a 3 cambios sin escribir nada). Solo se ofrecen si `wantsWrite(hilo)` (`lib/assistant/write-intent.ts`) ve un verbo de crear o cambiar en el último mensaje del usuario, o en uno anterior de la misma petición mientras Venito pregunta. El texto de eventos, comentarios o imágenes nunca abre la escritura. `runAssistant` las recibe con `deps.write` y el prompt nombra los calendarios escribibles; una ronda con escritura va en serie.
@@ -470,6 +478,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── dashboard/         # calendar-list (filas que se despliegan, spec 032)
 │   │   ├── groups/            # group-section, group-list, group-form, assign-group-select, fold-section y new-group-button (specs 007 y 032)
 │   │   ├── notes/             # spec 028: notes-board, note-card, note-form, note-editor, checklist, text-note
+│   │   ├── search/            # spec 039: search-screen
 │   │   ├── calendar/          # formularios, vistas (agenda-view, month/week/day, time-grid, slot-layer), event-block (bloque relleno con las marcas de imágenes y de repetición), month-strip, fab, event-modal, event-panel, quick-create, gone-event, calendar-skeleton, mini-month, next-event-card, filtros, workspace, merge-form, confirm-dialog, draggable-event, event-interactions (contexto), event-menu, event-clipboard, go-to-date-dialog, shortcuts-help, use-undo-toast (spec 017)…
 │   │   ├── sharing/           # invite-form, copy-button, invite-list, access-code-panel, member-list, join-code-form, invite-join-card
 │   │   ├── import/            # import-form, import-summary
@@ -489,6 +498,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── people/            # avatar.ts: iniciales y tintes
 │   │   ├── hooks/             # use-now.ts (reloj compartido), use-calendar-shortcuts.ts, use-refresh-on-focus.ts, use-is-phone.ts, use-event-drag.ts, use-event-keys.ts, use-grid-zoom.ts (spec 017), use-live-calendar, use-hold-live y use-sidebar-collapsed (spec 019), use-presence, use-enter-once, use-pulse-on y use-follow-drag (spec 021), use-event-window y use-stable-list (spec 024), use-folded (spec 032)
 │   │   ├── availability/      # spec 020: busy.ts (puro) y queries.ts
+│   │   ├── search/            # spec 039: normalize, group, highlight, recent, limits (puras) y queries.ts
 │   │   ├── notes/             # spec 028: order, search, progress, permissions, schemas, limits, types, error-messages (puros) y queries.ts
 │   │   ├── sharing/           # schemas, error-messages, merge-access, invite-url, roles (puros) y queries.ts (lecturas con RLS)
 │   │   ├── ics/               # importación .ics: limits, source-url, ip-guard, fetch-ics, read-source, parse-ics (única que importa ical.js), convert-events, import-calendar (orquesta), schemas, error-messages, import-state
@@ -567,6 +577,7 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/api/images/purge` | `Authorization: Bearer ${CRON_SECRET}` (POST) | Spec 012: borra en Storage los objetos de la cola de purga; `maxDuration` 60 |
 | `/api/cron/keep-alive` | `Authorization: Bearer ${CRON_SECRET}` | `200 {"ok":true}` / `401` / `500` |
 | `/dashboard/assistant` | con sesión | El chat de Venito a página completa (specs 015 y 027); día a día se abre como panel desde su botón |
+| `/dashboard/search` | con sesión | Búsqueda de eventos (spec 039); `?q=` se puede compartir y recargar. Sin conexión, la abre la app sin red |
 | `/dashboard/notes`, `/dashboard/notes/new`, `/dashboard/notes/[id]` | con sesión (`[id]` ajeno o inexistente → 404) | Notas (spec 028) |
 | `/api/assistant` | con sesión (POST; sin sesión → `401`) | Una pregunta del asistente (spec 015): `400` y `429` (cuota) en JSON; si no, `200` con líneas NDJSON `status`, `done` o `error` (spec 024). `GET` → `204` (precalienta la función) |
 | `/api/sync/google-push` | pública (POST) | Avisos de Google (spec 020): marca el calendario con `sync_push`; siempre `200` sin cuerpo, sin leer el cuerpo |
@@ -675,6 +686,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `synced_calendars` gana `remote_version`, `full_read_at` y `push_pending_at`. Tablas `sync_channels` (un canal por calendario, `token_hash` SHA-256) y `sync_channel_stops` (cola sin FK que llena el trigger `sync_channels_queue_stop`), con RLS y sin permisos para clientes.
   - `sync_due_calendars` (15 min o aviso con 1 min desde el último intento y sin fallos), `sync_claim_due` (devuelve también versión, lectura completa, aviso y caducidad del canal), `sync_push`, `sync_store_channel`, `sync_mark_checked`, `sync_claim_stops` (tira las paradas de cuentas que no están activas) y `sync_done_stop`, todas con `p_secret`. `sync_trigger` despierta también por paradas; `connect_account` borra los canales de la cuenta al reconectar.
 - Añadido por la spec 038 (migración `sync_apply_window`): `sync_apply_events` gana `p_from timestamptz`, `p_to timestamptz` y `p_keep text[]` (todos `default null`; firma de 10 argumentos, la de 7 se borró). El borrado exige solape con `[p_from, p_to)` y que el `external_id` no esté en `p_keep`.
+- Añadido por la spec 039 (migración `event_search`): extensiones `pg_trgm` y `unaccent` en `extensions`; `search_text(text)` inmutable (minúsculas sin tildes, ñ conservada); índices GIN de trigramas `events_search_idx` (título, lugar y descripción) y `event_comments_search_idx`; `search_events(p_query, p_from, p_to, p_limit)` `SECURITY INVOKER` (solo `authenticated`) devuelve `(event_id, matched_comment)` de los calendarios del llamante: cada palabra debe aparecer (AND), la más larga va por el índice. Medido: 6,4 ms con 20.000 eventos.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, …) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
 ### PWA

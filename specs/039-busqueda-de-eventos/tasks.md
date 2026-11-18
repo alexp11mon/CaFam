@@ -2,7 +2,7 @@
 
 Spec: `specs/039-busqueda-de-eventos/spec.md`. Plan: `specs/039-busqueda-de-eventos/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: en curso.
+> Estado: cerrada (2026-11-18), T1–T6. Pendiente del usuario: `db push` a prod.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T2.
 
@@ -41,8 +41,9 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - La ruta abre en `OfflineApp`.
 
   Cubre: RF-10 | Evidencia: `npm test -- offline-search offline-router` 8/8; `searchOffline` y `OFFLINE_SEARCH_NOTE` en `offline-sources.ts`, ruta `search` en `offline-router.tsx` y `OfflineSearch` en `OfflineApp`; `scripts/e2e-offline.mjs` con el paso "buscar sin red": 17/17 pasos en verde con Edge; P8 en verde.
-- [ ] T6 Cierre
+- [x] T6 Cierre
   Hecho cuando: AGENTS.md (§2, sección de la spec, rutas, estructura), README y constitución (hoja de ruta: "Búsqueda" pasa a 039) actualizados; `python -m graphify update .`; P8 completa.
+  Evidencia: AGENTS.md, README y constitución actualizados; `python -m graphify update .`; P8 en verde (3.233 tests, build correcto) y `npm run test:db` completo 57 archivos / 623 tests.
 
 ## Trazabilidad
 
