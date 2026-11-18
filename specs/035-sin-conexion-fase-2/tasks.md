@@ -109,7 +109,7 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 
   Evidencia (2026-11-18): `npm run test:db -- offline-apply` 43 en verde en 4 archivos (8 de `offline-apply-series`, 8 de `offline-apply-comments` y los de la 034 y la T6), y `npm run test:db -- event-series event-images event-comments offline-snapshot` 95 en verde tras mover `createSeries`, `convertToSeries` y la materialización (`materializeWith`) de las acciones a `event-writes.ts`. Las series se comparan con `sameSeries` (`conflict.ts`, con sus tests unitarios): campos, regla, fechas borradas y los totales que calcula `totalsOf` (extraída de la lectura de la copia); el conflicto lleva la serie actual y su `series_loss`. Un alta con `repeat` usa el id del navegador; convertir no se da por hecho aunque los campos coincidan. Limitación anotada en el código: reenviar un cambio de serie tras perder la respuesta pregunta en lugar de darlo por hecho. `npm test` en verde (318 archivos, 2.973 tests) con `--maxWorkers=4`: con todos los hilos, 1 o 2 tests de interfaz distintos en cada pasada agotan su tiempo por carga ajena de la máquina, y cada uno pasa solo. typecheck, lint, format y build en verde.
 
-- [ ] T8 Abrir las rutas del service worker y subir imágenes pendientes (`/api/offline/apply`, `/api/offline/image`, `image-upload.ts`)
+- [x] T8 Abrir las rutas del service worker y subir imágenes pendientes (`/api/offline/apply`, `/api/offline/image`, `image-upload.ts`)
   Hecho cuando: `npm test -- offline-routes offline-image-upload` y `npm run test:db -- offline-image-route` en verde. Los tests cubren:
   - sin sesión `401`; cambio no válido → `rejected`; el mismo resultado que la acción;
   - `reserve` devuelve URL firmadas de subida con la sesión del usuario, y con `reservedId` todavía `pending` no reserva otra;
@@ -118,6 +118,8 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
   - el cliente guarda el id reservado antes de subir, sube dos a la vez con progreso y, tras un corte, reutiliza la reserva (una sola imagen al final).
 
   Cubre: RF-39, RF-40, RF-41, RF-42, RF-44, RNF-3 | Módulo: rutas offline, image-upload
+
+  Evidencia (2026-11-18): `npm test -- offline-routes offline-image-upload` 13 en verde y `npm run test:db -- offline-image-route` 5 en verde, subiendo bytes reales a las URL firmadas de dev. La acción y `/api/offline/apply` comparten `applyWithSession` (`offline-session.ts`); `/api/offline/image` llama a `offlineImage` (`offline-images.ts`), que reserva con `reserve_event_images` (materializando la repetición si hace falta), firma con `createSignedUploadUrl` y la sesión del usuario, y responde `429`, `404`, `409` (falta un objeto al confirmar) o `503` si falla Supabase. Storage no firma una URL para un objeto que ya existe: tras un corte, ese objeto llega con URL nula y el cliente no lo vuelve a subir. Cada respuesta lleva también la URL completa, así el service worker no necesita configuración. `image-upload.ts` guarda el id antes de subir, sube los dos objetos a la vez con progreso y repite la reserva una vez si se purgó. Verificación completa en verde (320 archivos, 2.986 tests, con 4 hilos).
 
 - [ ] T9 Enviar con la app cerrada y con cuentas retenidas (`flush.ts`, `background.ts`, `public/sw.js`)
   Hecho cuando: `npm test -- offline-flush offline-sw-sync offline-background` en verde. `offline-flush` y `offline-sw-sync` pasan los mismos casos (archivo compartido) por `flush.ts` y por `sw.js` cargado en un `vm`. Los tests cubren:
