@@ -13,11 +13,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Relativas, días de la semana (también hoy y "que viene"), fechas con y sin año, `d/m`, rangos de varios días.
 
   Cubre: RF-1, RF-2, RF-3, RF-6 | Evidencia: `npm test -- nl-dates` 63/63 (57 frases: relativas, días de la semana con "próximo" y "que viene", abreviados, fechas con y sin año, `d/m` en orden español, rangos de varios días, "ayer" marcado como pasado, "por la mañana" no es una fecha y "10-12" sin año tampoco); `normalizeText` conserva la longitud y la ñ; P8 en verde (3.346 tests).
-- [ ] T2 Horas y duraciones
+- [x] T2 Horas y duraciones
   Hecho cuando: `npm test -- nl-times` en verde con al menos 50 frases.
   - "y media", "y cuarto", "menos cuarto", franjas, am/pm, rangos, "hasta", duraciones y ambigüedad de la tarde.
 
-  Cubre: RF-4, RF-5, RF-15 | Evidencia: —
+  Cubre: RF-4, RF-5, RF-15 | Evidencia: `npm test -- nl-times` 66/66 (63 frases): "a las", "21:30", "21h", "9 de la noche", "y media", "y cuarto", "menos cuarto", mediodía, medianoche, franjas (9, 17 y 21 h), am/pm, rangos ("de 10 a 12", "10-12", "de 9 a 11 de la noche"), "hasta las", duraciones ("1h30", "90 min", "media hora", "una hora y media") y la tarde por defecto entre 1 y 7 marcada para la vista previa; P8 en verde.
 - [ ] T3 Lugar, calendario, repetición y título
   Hecho cuando: `npm test -- nl-parse nl-cases` en verde (batería completa, más de 150).
   - "en 2 semanas" no es lugar; "@fam" elige Familia; ambiguo avisa; título limpio con mayúscula.
