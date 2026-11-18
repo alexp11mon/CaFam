@@ -15,12 +15,12 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - `scripts/make-vapid-keys.mjs`.
 
   Cubre: RF-17, RNF-1 | Evidencia: `npm test -- push-encrypt push-vapid` 4/4: `encryptPayload` reproduce byte a byte el cuerpo del ejemplo del RFC 8291 §5 y otro aleatorio se descifra; `vapidJwt` verificado con `crypto.verify`, `aud` el origen y `exp` 12 h; `scripts/make-vapid-keys.mjs`; P8 en verde (3.237 tests).
-- [ ] T2 Cálculo de recordatorios y textos
+- [x] T2 Cálculo de recordatorios y textos
   Hecho cuando: `npm test -- push-reminders push-payload push-device` en verde.
   - `dueReminders`: con hora, días completos a las 9:00 en la zona, serie semanal, excepción movida, repetición borrada, cambio de hora en Europe/Madrid, retraso de más de 15 min descartado.
   - Textos ("Hoy a las…", "Mañana…", lugar opcional) y sociales; `pushSupport` para iOS sin instalar, denegado y listo.
 
-  Cubre: RF-5, RF-8, RF-9, RF-10, RF-11, RF-12 | Evidencia: —
+  Cubre: RF-5, RF-8, RF-9, RF-10, RF-11, RF-12 | Evidencia: `npm test -- push-reminders push-payload push-device` 20/20: con hora, día completo a las 9:00 en la zona del perfil (los minutos de un día completo cuentan desde las 9:00 de su día: el valor por defecto es 1440, "El día anterior a las 9:00", en lugar del 900 del plan), serie semanal con cambio de hora, repetición borrada, excepción movida, retraso de más de 15 min descartado; textos de recordatorio y sociales; `deviceName` y `pushSupport`; P8 en verde (3.257 tests).
 - [ ] T3 Esquema, RLS y funciones
   Hecho cuando: `npm run test:db -- push` en verde.
   - Migración, `db:push`, `db:types`.
