@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-18, al cerrar la spec 034 (modo sin conexión) y adoptar graphify (enmienda 13).
+> Última actualización: 2026-11-18, al cerrar la spec 035 (sin conexión, fase 2), después de la 034 y de adoptar graphify (enmienda 13).
 
 ## 0. Mapa del proyecto: graphify (obligatorio)
 
@@ -86,6 +86,7 @@ Reglas:
 | 032-calendarios-plegables | Panel lateral del calendario que se desplaza por sí mismo (fallo: con muchos calendarios no se llegaba a los de abajo), grupos y personas plegables en los filtros con modo "Ordenar", y "Mis calendarios" con grupos plegables, opciones tras "⋯", calendarios en filas que se despliegan y "Nuevo grupo" en una hoja | **Cerrada** (2026-11-17), T1–T5; sin migraciones. Spec, plan y tareas aprobados de antemano por el usuario |
 | 033-vulnerabilidades | `next` y `eslint-config-next` 16.4.2 → 16.4.6 (GHSA-mfr8-8qww-v76h) y `npm audit fix` de las herramientas de desarrollo (`minimatch`, `typescript-eslint`): `npm audit` con 0 vulnerabilidades | **Cerrada** (2026-11-17), T1; sin migraciones ni dependencias nuevas |
 | 034-modo-sin-conexion | Copia del dispositivo (IndexedDB) con los eventos de 1 mes atrás a 3 meses adelante y todas las notas; la app se abre sin red desde `/offline`; cambios de eventos y notas en una cola que se envía en orden al volver la red; conflictos con las dos versiones, "Cambios no enviados", y borrado de los datos al cerrar sesión | **Cerrada** (2026-11-18), T1–T12; sin migraciones ni dependencias. Pendiente la prueba del usuario en el iPhone |
+| 035-sin-conexion-fase-2 | Sin conexión también en calendarios de Google e iCloud (se escribe primero en el proveedor al volver la red), series con sus tres alcances y "Repetir", comentarios, miniaturas e imágenes (añadir y borrar), envío con la app cerrada (Background Sync, Chromium) y "Volver a conectar" para la cuenta retenida | **Cerrada** (2026-11-18), T1–T12; sin migraciones ni dependencias. Pendientes del usuario las pruebas con cuentas reales de Google e iCloud, Chrome de Android y el iPhone |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -344,6 +345,17 @@ Añadido por la spec 034 (modo sin conexión; sin migraciones ni dependencias):
 - **`/privacy`**: sección "Datos guardados en este dispositivo".
 - **Pruebas en el navegador**: `scripts/e2e-offline.mjs` (un usuario) y `scripts/e2e-offline-conflicts.mjs` (dos usuarios, conflictos y capturas), con Edge y `context.setOffline`; `scripts/perf/offline-measure.mjs` mide RNF-2 y RNF-3 (`PROFILE=1` con `next build --no-mangling` da el perfil).
 
+Añadido por la spec 035 (sin conexión, fase 2; sin migraciones ni dependencias). Lo de la 034 sobre "Lo que necesita red" que dejaba de solo lectura los traídos, con un solo alcance en las series, sin "Repetir" y con imágenes y comentarios "Disponible con conexión" ya no vale:
+
+- **Copia de formato 2** (`SNAPSHOT_FORMAT`, base `cafam-offline` versión 2 con `thumbs`, `images` y `pending-images`): `offline-reads-detail.ts` añade las series con sus totales (`series`, `exceptions`), los 50 comentarios más recientes de cada evento del rango y las imágenes `ready`. `syncThumbs` (`thumbs.ts`) baja las miniaturas que faltan y borra las que sobran al leer la copia; `image-cache.ts` guarda las 30 imágenes grandes abiertas con red (la más antigua sale).
+- **Traídos de Google e iCloud**: se escriben sin red con las reglas de siempre (`canWriteOffline`, `offlineReadOnly`, `offlineMoveTargets`: solo dentro de la misma cuenta). Al enviar, `readEvent` (`lib/sync/read-event.ts`) lee el evento en el proveedor y lo compara con la base del cambio: cambiado o borrado allí → conflicto. Si la cuenta necesita volver a conectarse, el resultado es `held` con su `connectionId`. El cambio y los que dependen de él se conservan y la hoja "Cambios" ofrece "Volver a conectar" (`/dashboard/connections/<id>`).
+- **Series sin red**: `series.update` y `series.delete` con `scope` (`describe.ts`: `seriesUpdateOf`, `seriesDeleteOf`). La pérdida se cuenta en la copia (`series-loss.ts`, `lossInCopy`) y se pide confirmar como con red. `series-overlay.ts` (con `ical.js`, siempre con `import()`) y `usePendingSeries` pintan las repeticiones como quedarán. Al enviar, `applySeries` compara la serie y sus totales con la base del cambio (`sameSeries`); si otra persona cambió algo, el conflicto lleva `recurrence` y `loss`, y la hoja lo enseña con "Ahora se repite…" y "Se perderán…".
+- **Comentarios sin red**: `OfflineComments` (`comment-view.ts`: los de la copia con la cola encima), con "Ver anteriores" deshabilitado. Añadir, editar y borrar van a la cola con "Pendiente de enviar" y "Deshacer". El `client_id` evita duplicados al reenviar.
+- **Imágenes sin red**: `addImagesOffline` (`image-actions.ts`) reduce como siempre y guarda en `pending-images`. Caben como mucho 10 por evento (guardadas + pendientes) y 20 en el dispositivo (`image-limits.ts`). La galería y el visor leen del dispositivo (`useImageBlob(path, local)`): sin la imagen grande, la miniatura con "La imagen completa necesita conexión". Al enviar, `uploadPendingImage` (`image-upload.ts`) reserva y pide URL firmadas a `POST /api/offline/image` y sube los dos objetos directamente a Storage. Una imagen rechazada queda en "Cambios no enviados" con "Descargar".
+- **Envío con la app cerrada** (Background Sync, solo Chromium): encolar registra la etiqueta `cafam-offline` (`background.ts`). `sw.js` (`cafam-v7`) atiende `sync` con su propia copia del bucle de `flush.ts` y llama a `POST /api/offline/apply` y `/api/offline/image` con la cookie de sesión (`offline-session.ts`; sin sesión `401` y se conserva todo). Escribe en `meta` `lastBackgroundSync`, y al abrir la app `OfflineProvider` avisa "N cambios sincronizados". El cerrojo `cafam-offline-flush` (Web Locks) impide enviar a la vez desde la app y el service worker. Safari y Firefox envían al abrir.
+- **`/privacy`**: la sección del dispositivo cuenta los comentarios, las miniaturas, las imágenes abiertas, lo pendiente y que las imágenes pendientes se pierden si el navegador borra los datos del sitio.
+- **Pruebas en el navegador**: `scripts/e2e-offline-detail.mjs` (detalle sin red a 390 y 1440 px), `scripts/e2e-offline-background.mjs` (envío con la app cerrada), `scripts/screenshots-035.mjs` y `scripts/perf/offline-measure-035.mjs` (RNF-2), todos con Edge.
+
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 
 - **Flujo SDD (P7):** no se escribe código sin `spec.md` → `plan.md` → `tasks.md` aprobados explícitamente por el usuario, en ese orden. Cada spec vive en `specs/NNN-nombre/`. Se implementa **una tarea `Tn` cada vez y con el test primero** (rojo → verde). Cada commit cita su tarea.
@@ -440,7 +452,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── images/            # spec 012: image-picker, upload-list, use-image-uploads (cola de subidas), image-uploader (detalle), event-images (galería), image-viewer (visor), use-image-blob
 │   │   ├── assistant/         # spec 015: assistant-chat, cited-events; spec 022: image-attach, proposal-card
 │   │   ├── connections/       # spec 007: connection-list, provider-notice, calendar-picker, sync-status, sync-now-button, disconnect-dialog; spec 018: icloud-notice, icloud-connect-form
-│   │   ├── offline/           # spec 034: offline-provider, offline-app, offline-router, connection-badge, connection-announcer, pending-mark, changes-sheet, sign-out-guard
+│   │   ├── offline/           # spec 034: offline-provider, offline-app, offline-router, connection-badge, connection-announcer, pending-mark, changes-sheet, sign-out-guard; spec 035: offline-comments
 │   │   └── pwa/               # service-worker-register, retry-button, ios-install-hint
 │   ├── lib/
 │   │   ├── auth/              # schemas.ts (zod), error-messages.ts, form-state.ts, route-access.ts, next-path.ts (destino tras login: solo /invite/<token>)
@@ -460,7 +472,7 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   │   ├── images/            # spec 012: paths, limits, fit, alt, error-messages (puras), prepare-image (canvas), upload-object (XHR con progreso), download-image, queries.ts, purge.ts
 │   │   ├── assistant/         # spec 015. Puras: limits, dates, free-slots, error-messages, schemas, people-match, serialize, citations, prompt, tool-definitions. Con red o BD: provider (único que llama a Groq), tools (con la sesión), run (bucle con dependencias inyectadas)
 │   │   ├── sync/              # spec 007. Puras y testeadas: limits, window, limit-events, nearest-color, event-row, google-events, oauth-state, summary, error-messages, schemas, read-only (canWriteEvents, canMerge). Con red o BD: providers/google.ts (único cliente HTTP de Google), google-config, run-sync (motor con dependencias inyectadas), engine.ts (entrada del servidor), queries.ts (lecturas con RLS)
-│   │   ├── offline/           # spec 034. Puras: range, snapshot, outbox, overlay, conflict, limits, describe, changes, gates, messages, schemas. Con IndexedDB o red: db, connection, queue-store, snapshot-store, with-outbox, flush, event-actions, note-actions, offline-sources, navigate
+│   │   ├── offline/           # spec 034. Puras: range, snapshot, outbox, overlay, conflict, limits, describe, changes, gates, messages, schemas. Con IndexedDB o red: db, connection, queue-store, snapshot-store, with-outbox, flush, event-actions, note-actions, offline-sources, navigate. Spec 035: comment-view, image-limits, series-loss (puras); series-overlay (ical.js con import()), thumbs, image-cache, image-actions, image-upload, background
 │   │   └── supabase/          # env.ts, server.ts, client.ts, proxy.ts
 │   └── types/database.ts      # GENERADO con `npm run db:types`; no editar a mano
 ├── public/
@@ -532,6 +544,7 @@ Navegador / PWA ──cookies──▶ Vercel ─ src/proxy.ts ── refresca s
 | `/dashboard/notes`, `/dashboard/notes/new`, `/dashboard/notes/[id]` | con sesión (`[id]` ajeno o inexistente → 404) | Notas (spec 028) |
 | `/api/assistant` | con sesión (POST; sin sesión → `401`) | Una pregunta del asistente (spec 015): `400` y `429` (cuota) en JSON; si no, `200` con líneas NDJSON `status`, `done` o `error` (spec 024). `GET` → `204` (precalienta la función) |
 | `/api/sync/google-push` | pública (POST) | Avisos de Google (spec 020): marca el calendario con `sync_push`; siempre `200` sin cuerpo, sin leer el cuerpo |
+| `/api/offline/apply`, `/api/offline/image` | con sesión (POST; sin sesión → `401`) | Spec 035: el service worker reenvía un cambio hecho sin conexión (el mismo contrato que `applyOfflineChange`) y reserva o confirma una imagen pendiente (URL firmadas de subida) |
 
 La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSession)`, en `src/lib/auth/route-access.ts` (testeada en `route-access.test.ts`). Para proteger una ruta nueva se cambia **ahí**, no en cada página. El `matcher` de `src/proxy.ts` excluye estáticos, `sw.js` y el manifest.
 
@@ -646,7 +659,8 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - En navegaciones usa red primero; si falla una de `/dashboard`, redirige a `/offline?from=<ruta>` (spec 034), que sale de la caché con cualquier consulta. El mensaje `refresh-offline` vuelve a precachear.
   - Usa caché primero para `/_next/static/` e `/icons/`.
   - **Nunca cachea HTML con sesión ni respuestas de Supabase** (privacidad en dispositivos compartidos).
-  - **Si cambias `sw.js` o los iconos, sube `CACHE_NAME`** (`cafam-vN`; ahora `v6`).
+  - Atiende `sync` con la etiqueta `cafam-offline` (spec 035): envía la cola con la app cerrada en Chromium.
+  - **Si cambias `sw.js` o los iconos, sube `CACHE_NAME`** (`cafam-vN`; ahora `v7`).
   - Se registra solo en producción.
 
 ### Identidad visual
@@ -782,6 +796,7 @@ python -m graphify query "<pregunta>"   # mapa del proyecto (§0); también expl
 - **Tiempo real fuera del calendario:** una pantalla que deba refrescarse con cambios ajenos llama a `useLiveCalendar(userId)`; su tabla necesita un trigger con `live_notify`.
 - **Asistente:** el servidor manda líneas NDJSON; cualquier estado nuevo del progreso va en `STATUS`/`statusFor` (`lib/assistant/stream.ts`), no en el componente.
 - **Escrituras sin conexión (spec 034):** una escritura nueva de eventos o notas desde la interfaz pasa por `event-actions.ts` o `note-actions.ts` (`withOutbox`) y necesita su tipo en `OfflineChange` (`outbox.ts`), su descripción en `describe.ts` y su aplicación en `applyOfflineChange`; si no puede hacerse sin red, que responda "Necesita conexión" (`networkReason`). Lo que dependa de la red usa `useConnection()`, nunca `navigator.onLine` a secas.
+- **Bucle de envío sin conexión (spec 035):** está escrito dos veces, en `lib/offline/flush.ts` y en `public/sw.js` (sin empaquetar, plan D4). Un cambio en uno va también en el otro, con su caso en `tests/unit/offline-flush-cases.ts`, que pasa por los dos (`offline-flush.test.ts` y `offline-sw-sync.test.ts`, que carga `sw.js` en un `vm`). Un tipo nuevo de `OfflineChange` necesita también su caso en `sw.js` y su aplicación en `offline-writes.ts`.
 - **Commits:** Conventional Commits en español con la tarea: `feat: registro de usuario (T7)`.
 
 ## 10. Trampas conocidas
@@ -883,19 +898,23 @@ python -m graphify query "<pregunta>"   # mapa del proyecto (§0); también expl
 - **El panel del navegador de la app no registra service workers** (spec 034): el modo sin conexión se prueba con Playwright y Edge (`context.setOffline(true)`), como en `scripts/e2e-offline.mjs`. Para mirar IndexedDB desde un script, comprueba antes `indexedDB.databases()`: abrir `cafam-offline` si no existe la crea vacía y la app ya no la actualiza.
 - **`eventDayKeys` guarda sus días por objeto y zona** (`WeakMap`, spec 034 RNF-2): la agenda pedía cada evento en cada día y tardaba 4 s con 2.000 eventos. Si algún día se cambia un evento en su sitio (`event.startsAt = …`), el resultado sale viejo: crea siempre un objeto nuevo.
 - **En la app sin conexión, una pantalla que se lee de la cola** (como el detalle) puede quedarse vacía en cuanto se encola su propio borrado: conserva la última versión mientras se cierra (`EventScreen`).
+- **Background Sync (spec 035)** solo existe en Chromium (Chrome, Edge, Android). Safari y Firefox envían al abrir la app. El service worker no puede llamar a Server Actions (su id cambia en cada despliegue): por eso existen `/api/offline/apply` e `/api/offline/image`. Tampoco tiene `document.cookie` ni el cliente de Supabase: las imágenes van con URL firmadas. Para probarlo, en Playwright con Edge basta encolar sin red, cerrar la página (no el contexto) y `context.setOffline(false)`: el evento `sync` llega sin ninguna página abierta (`scripts/e2e-offline-background.mjs`). El panel del navegador de la app no registra service workers.
+- **URL firmadas de subida** (`createSignedUploadUrl`): Storage no firma un objeto que ya existe ("already exists"). Tras un corte a mitad de subida, `signed()` lo trata como ya subido (`token` y `url` nulos) y se confirma sin volver a subirlo. Solo se guarda la reserva (`reservedId`, plan D7); las URL se piden de nuevo en cada intento y nunca van a IndexedDB.
+- **El IndexedDB de memoria de los tests** (`tests/unit/memory-indexeddb.ts`) no tiene `close()` en la base: un helper de test que abra `cafam-offline` a mano no debe cerrarla. En un script de Playwright, `put` en los almacenes de `cafam-offline` necesita la clave explícita (no tienen `keyPath`). Si no, lanza dentro del callback y la promesa de `page.evaluate` no termina nunca.
+- **La copia se renueva cada 15 minutos**: un script que siembra datos después del registro debe borrar `cafam-offline` y recargar para que la app lea una copia entera, o no verá lo sembrado sin red.
 
 ## 11. Fuera de alcance hasta su spec
 
-Vistas de año y de 4 días, búsqueda de eventos, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, envío de cambios sin conexión con la app cerrada (y el resto de "Fuera de alcance" de la 034) e i18n. No implementes nada de esto sin su spec aprobada. El asistente (015) está hecho: crear o cambiar eventos desde el asistente, guardar conversaciones o responder por voz necesitan otra spec. Las notas (028) están hechas: fecha límite por elemento, reordenar arrastrando, vencimientos en el calendario, notas de un evento y notas desde el asistente necesitan la suya.
+Vistas de año y de 4 días, búsqueda de eventos, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, el resto de "Fuera de alcance" de la 034 y la 035 e i18n. No implementes nada de esto sin su spec aprobada. El asistente (015) está hecho: crear o cambiar eventos desde el asistente, guardar conversaciones o responder por voz necesitan otra spec. Las notas (028) están hechas: fecha límite por elemento, reordenar arrastrando, vencimientos en el calendario, notas de un evento y notas desde el asistente necesitan la suya.
 
 ## 12. Cómo continuar
 
-**Lo más reciente (2026-11-18): spec 034 (modo sin conexión)**, cerrada en la rama `034-modo-sin-conexion`. `main` ya tiene las specs 024 a 033. Pendiente del usuario:
+**Lo más reciente (2026-11-18): spec 035 (sin conexión, fase 2)**, cerrada en la rama `035-sin-conexion-fase-2`, que ya contiene la 034 cerrada. `main` tiene las specs 024 a 033. Pendiente del usuario:
 
-1. Revisar las capturas de `specs/034-modo-sin-conexion/capturas/`.
-2. Si aún no se ha hecho: las migraciones de la 028 (`notes`, `notes_calendar_functions`) y de la 023 en **prod** (la 034 no añade ninguna, pero lee notas).
-3. `git push` de la rama y merge a `main`, y probar en el iPhone (Safari y la app instalada): abrir sin red, cambiar algo y recuperar la red. El service worker nuevo (`cafam-v6`) se instala al abrir la app con red.
-4. La rama `035-sin-conexion-fase-2` sale de la T8 de la 034: rebásala sobre la 034 cerrada antes de seguir.
+1. Revisar las capturas de `specs/034-modo-sin-conexion/capturas/` y `specs/035-sin-conexion-fase-2/capturas/`.
+2. Si aún no se ha hecho: las migraciones de la 028 (`notes`, `notes_calendar_functions`) y de la 023 en **prod**. La 034 y la 035 no añaden ninguna.
+3. `git push` de la rama `035-sin-conexion-fase-2` y merge a `main` (lleva también la 034). El service worker nuevo (`cafam-v7`) se instala al abrir la app con red.
+4. Los recorridos con cuentas reales y dispositivos de la T12 de la 035: Google, iCloud, series con dos usuarios, el iPhone y el envío con la app cerrada en Chrome de Android y de escritorio.
 
 Siguientes trabajos recomendados: (a) periodos contiguos ya pintados para bajar el cambio de mes por debajo de 80 ms con CPU lenta (diferido de la 024 y la 026); (b) sacar zod del JS inicial; (c) rediseñar la organización de los formularios largos (evento completo, repetición) con el estilo Nexo; (d) la spec pendiente de la 023 (la sincronización borra los eventos creados en CaFam fuera de la ventana); (e) actualizaciones mayores de herramientas sin vulnerabilidades (TypeScript 7, ESLint 10, CLI de Supabase 3), cada una con su spec porque pueden romper la compilación o el lint.
 

@@ -168,7 +168,7 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 
   Evidencia (2026-11-18): `npm test -- changes-sheet offline-provider privacy` en verde. Casos nuevos: serie en conflicto con las dos versiones, "Ahora se repite: …" y "Se perderán 2 cambios, 1 imagen y 3 comentarios."; comentario editado rechazado con su texto; imagen rechazada con "Descargar" (y "Descartar" borra sus bytes del dispositivo); cuenta retenida con sus cambios y "Volver a conectar" a `/dashboard/connections/<id>`; "Conservar la mía" con la cuenta retenida avisa en vez de "Necesita conexión"; al abrir, "3 cambios sincronizados" desde `lastBackgroundSync` una sola vez y los conflictos que dejó en la lista; un cambio retenido sigue en la cola y se envía al volver a la app tras conectar la cuenta; cerrar sesión deja vacíos miniaturas, imágenes abiertas e imágenes pendientes; `/privacy` con comentarios, miniaturas, imágenes abiertas, lo pendiente, la pérdida de imágenes pendientes si el navegador borra los datos y el envío con la app cerrada. Prueba en el navegador (Edge, 390 y 1440 px) con un conflicto de serie, un comentario y una imagen rechazados puestos en IndexedDB: la hoja muestra todo y "Descargar" baja `imagen-cafam.jpg`; usuarios de prueba borrados. Verificación completa en verde: typecheck, lint, format:check, test (325 archivos, 3.042 tests) y build.
 
-- [ ] T12 Validar RF por RF y documentar
+- [x] T12 Validar RF por RF y documentar
   Hecho cuando hay en este archivo:
   - la tabla RF-1 a RF-48 con el test que cubre cada uno;
   - las medidas de RNF-2 (copia con 300 miniaturas y 50 comentarios en 200 eventos, y 20 pendientes);
@@ -177,6 +177,8 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
   - `AGENTS.md` actualizado (estado, "Añadido por la spec 035", trampas de Background Sync y de las URL firmadas).
 
   Cubre: todos | Módulo: validación
+
+  Evidencia (2026-11-18): ver "Validación RF por RF (T12)" más abajo: la tabla RF-1 a RF-48, RNF-2 medido (copia 11,6 MB con 10.000 comentarios y 300 miniaturas, 28,1 MB con las 30 imágenes abiertas; pendientes 11,5 MB), 12 capturas en `capturas/`, los recorridos hechos en Edge (detalle sin red a 390 y 1440 px, envío con la app cerrada en escritorio y hoja de cambios) y los que quedan para el usuario con cuentas reales y dispositivos. `AGENTS.md` actualizado.
 
 ## Trazabilidad RF → Tareas
 
@@ -226,6 +228,104 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 | RF-47 | T4, T11 |
 | RF-48 | T11 |
 | RNF-1 a RNF-6 | T6, T8, T9, T12 |
+
+## Validación RF por RF (T12)
+
+Tests de `tests/unit/` salvo los marcados (test:db), que están en `tests/integration/`. Las pruebas en el navegador corren en Edge contra `next start`:
+
+- "e2e-detalle" es `scripts/e2e-offline-detail.mjs`;
+- "e2e-cerrada" es `scripts/e2e-offline-background.mjs`;
+- "hoja" es la comprobación de la hoja de cambios de la T11.
+
+| RF | Cubierto por |
+|----|--------------|
+| RF-1 | `offline-gates`; `offline-event-actions` (Google escribible); `event-panel` ("Editar" en un traído sin red); `offline-apply-synced` (test:db) |
+| RF-2 | `offline-gates` (solo lectura del proveedor y cuenta sin permiso); `offline-event-actions`; `offline-apply-synced` (test:db) |
+| RF-3 | `offline-gates` (`offlineMoveTargets`: misma cuenta); `offline-apply-synced` (test:db) |
+| RF-4 | `offline-apply-synced` (test:db: primero el proveedor y solo si acepta, CaFam) |
+| RF-5 | `google-read-event`; `icloud-read-event`; `offline-apply-synced` (test:db: cambiado en el proveedor → conflicto) |
+| RF-6 | `google-read-event`; `icloud-read-event` (borrado → `null`); `offline-apply-synced` (test:db) |
+| RF-7 | `offline-apply-synced` (test:db, `held`); `offline-flush` y `offline-sw-sync` (casos compartidos: se salta y se conserva); `changes-sheet` ("Volver a conectar"); `offline-provider` |
+| RF-8 | `offline-provider` (retenido y enviado al volver a la app tras conectar la cuenta) |
+| RF-9 | `offline-apply-synced` (test:db: rechazo del proveedor con el motivo en español) |
+| RF-10 | `offline-event-actions` (los tres alcances al guardar, arrastrar y borrar); `series-scope-dialog`; `offline-apply-series` (test:db) |
+| RF-11 | `offline-event-actions` ("Repetir" al crear y al convertir); `repeat-field`; `offline-outbox`; `offline-apply-series` (test:db) |
+| RF-12 | `offline-series` (repeticiones de la serie cambiada, con el cambio de hora); `offline-gates` |
+| RF-13 | `offline-event-actions` (pide confirmar lo que se pierde según la copia); `offline-series` (`lossInCopy`) |
+| RF-14 | `offline-conflict`; `offline-apply-series` (test:db); `changes-sheet` (las dos versiones y "Ahora se repite"); hoja |
+| RF-15 | `offline-apply-series` (test:db: comentarios e imágenes nuevos en una repetición); `changes-sheet` ("Se perderán 2 cambios, 1 imagen y 3 comentarios.") |
+| RF-16 | `offline-gates`; `offline-event-actions` (sin "Repetir" en un traído) |
+| RF-17 | `offline-snapshot` (test:db: los 50 más recientes de cada evento del rango) |
+| RF-18 | `event-comments-offline` (guardados y "Ver anteriores" deshabilitado con "Necesita conexión"); `event-panel`; e2e-detalle "comentario guardado sin red" |
+| RF-19 | `event-comments-offline`; `offline-outbox`; `offline-apply-comments` (test:db, Lector) ; e2e-detalle "comentar sin red" |
+| RF-20 | `event-comments-offline` ("Pendiente de enviar" y "Deshacer"); e2e-detalle |
+| RF-21 | `offline-apply-comments` (test:db: evento borrado y expulsado); `changes-sheet` (texto visible) |
+| RF-22 | `offline-apply-comments` (test:db: mismo `client_id` dos veces, una fila); `offline-outbox` |
+| RF-23 | `event-comments-offline` (editar a la cola); `offline-gates` (`canEditComment`) |
+| RF-24 | `offline-gates` (`canDeleteComment`: autor y propietario); `event-comments-offline` |
+| RF-25 | `event-comments-offline` (borrar lo quita del detalle) |
+| RF-26 | `offline-conflict`; `offline-apply-comments` (test:db: editado en otro sitio → conflicto) |
+| RF-27 | `offline-apply-comments` (test:db); `changes-sheet` (editado y ya borrado, con su texto) |
+| RF-28 | `offline-apply-comments` (test:db: borrar uno que ya no existe es `applied`) |
+| RF-29 | `offline-thumbs` (descargar las que faltan y borrar las que sobran); `offline-snapshot` (test:db: imágenes del rango) |
+| RF-30 | `event-images-offline` (miniatura del dispositivo sin descargar) |
+| RF-31 | `event-images-offline` (visor con la miniatura y "La imagen completa necesita conexión"); `offline-image-cache` |
+| RF-32 | `event-images-offline` (añadir sin red); e2e-detalle "añadir una imagen sin red" |
+| RF-33 | `offline-image-limits`; `event-images-offline` (10 por evento con las guardadas) |
+| RF-34 | `offline-image-limits`; `event-images-offline` (20 en el dispositivo) |
+| RF-35 | `event-images-offline` ("Pendiente de enviar" y "Quitar"); `offline-outbox` (añadir + quitar = nada) |
+| RF-36 | `offline-gates` (`canDeleteImage`) |
+| RF-37 | `event-images-offline` (borrar con "Deshacer") |
+| RF-38 | `offline-apply-comments` (test:db: borrar una imagen que ya no existe es `applied`) |
+| RF-39 | `offline-image-upload` (dos a la vez y progreso); `offline-image-route`; `offline-routes`; e2e-detalle "al volver la red llegan" |
+| RF-40 | `offline-image-route` (límites y evento borrado); `offline-flush` (a "Cambios no enviados"); `changes-sheet` ("Descargar"); hoja |
+| RF-41 | `offline-image-upload` y `offline-image-route` (reserva reutilizada y objeto ya subido) |
+| RF-42 | `offline-sw-sync` (el bucle del service worker con los casos compartidos); `offline-background`; e2e-cerrada "cerrar la app y volver la red" |
+| RF-43 | `offline-sw-sync` (`lastBackgroundSync`); `offline-provider` ("3 cambios sincronizados" y conflictos que dejó); e2e-cerrada "al abrir, el aviso" |
+| RF-44 | `offline-flush` y `offline-sw-sync` (casos compartidos: `401` conserva todo); `offline-routes` |
+| RF-45 | `offline-flush` (cerrojo `cafam-offline-flush`); `offline-sw-sync`; `offline-provider` |
+| RF-46 | `offline-background` (sin Background Sync no registra nada); `offline-provider` (envío al abrir) |
+| RF-47 | `offline-provider` (cerrar sesión vacía miniaturas, imágenes y pendientes); `offline-db`; `sign-out-guard` |
+| RF-48 | `privacy-page` |
+
+RNF-1: Edge en escritorio probado aquí, también el envío con la app cerrada. Quedan para el usuario Chrome de Android, Safari de iOS y la app instalada en producción.
+
+RNF-2: medido con `scripts/perf/offline-measure-035.mjs` (Edge, IndexedDB de la app y `navigator.storage.estimate()`):
+
+- La medida usa imágenes de tipo foto con grano, codificadas como `prepareImage` (400 px a 0,75 y 2048 px a 0,82). El grano agranda el JPEG, así que es una cota alta.
+- La copia ocupa **11,6 MB** con 200 eventos, 50 comentarios en **cada** uno (10.000 comentarios) y 300 miniaturas, frente a un límite de 40 MB:
+  - el JSON pesa 4,4 MB y 0,9 MB guardado;
+  - las miniaturas suman 6,2 MB, 21 KB cada una.
+- Con las 30 imágenes grandes abiertas (16,5 MB) llega a **28,1 MB**, también por debajo de 40.
+- Las 20 imágenes pendientes ocupan **11,5 MB**, 584 KB cada una, frente a un límite de 50 MB.
+
+RNF-3: las rutas y `offline-writes` validan con zod y escriben con la sesión (`offline-apply*`, test:db, Lector y expulsado). RNF-4: `no-secrets` y las escrituras al proveedor solo con `writeEngineDeps` en el servidor. RNF-5: `package.json` sin cambios. RNF-6: las capturas y `design-tokens`.
+
+### Capturas
+
+En `capturas/`, a 390, 768 y 1440 px, en claro y oscuro:
+
+- `detalle-sin-red-*`: la galería con una imagen pendiente, un comentario guardado y uno pendiente;
+- `conflicto-serie-*`: la hoja "Cambios" con un conflicto de serie, cómo se repite ahora y lo que se perdería.
+
+Salen de `scripts/screenshots-035.mjs`.
+
+### Recorridos
+
+Hechos aquí, en Edge:
+
+- **Detalle sin red a 390 y 1440 px** (e2e-detalle, 12 pasos en verde): comentario guardado, comentar e imagen pendiente sin red, y al volver la red llegan 2 comentarios y 1 imagen.
+- **Envío con la app cerrada en escritorio** (e2e-cerrada, 4 pasos en verde): con el comentario en la cola, se cierra la página y vuelve la red sin ninguna página abierta. El comentario llega al servidor en 1 s, y al abrir la app avisa "1 cambio sincronizado".
+- **Hoja de cambios a 390 y 1440 px**: conflicto de serie, comentario rechazado con su texto e imagen rechazada con "Descargar" (baja `imagen-cafam.jpg`).
+- **Series con dos usuarios**: cubiertas por `offline-apply-series` (test:db), con otra persona que cambia la serie, comenta o sube imágenes a una repetición. No hay recorrido con dos navegadores (R6, falsos conflictos).
+
+Pendientes del usuario, porque necesitan cuentas reales o dispositivos que no hay aquí:
+
+1. **Google**: con una cuenta conectada con escritura, sin red crear, cambiar, mover y borrar en un calendario traído; al volver la red, comprobar en Google Calendar. Cambiar el mismo evento en Google mientras tanto para ver el conflicto. Revocar el permiso en Google antes de recuperar la red para ver "Volver a conectar"; tras conectar, se envía.
+2. **iCloud**: lo mismo con una cuenta de iCloud y el calendario del iPhone, incluida una repetición de una serie.
+3. **Series con dos usuarios**: una persona cambia "Todos los eventos" sin red y la otra cambia una repetición con red. Al volver la red, la primera ve el conflicto con lo que se perdería.
+4. **iPhone** (Safari y la app instalada): comentarios e imágenes sin red, con la cámara. Como no hay envío con la app cerrada, se comprueba que se envía al abrir la app (RF-46).
+5. **Chrome de Android y Chrome de escritorio**: dejar un cambio sin red, cerrar la app y recuperar la red; llega sin abrirla, y al abrir avisa "N cambios sincronizados".
 
 ## Dudas abiertas
 
