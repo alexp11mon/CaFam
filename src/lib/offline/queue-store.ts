@@ -1,17 +1,26 @@
 // What waits on this device, in memory and in IndexedDB (spec 034 RF-27,
 // RF-30, RF-47, RF-57): the queue, the conflicts and the refused changes.
 // React reads it with useSyncExternalStore; db.ts keeps it across reloads.
+import { requestBackgroundSync } from "./background";
 import * as db from "./db";
 import type { Conflict, Rejected } from "./db";
 import { enqueue, type OfflineChange, type OutboxEntry } from "./outbox";
+
+/** A change waiting for its account to be connected again (spec 035 RF-7). */
+export interface Held {
+  changeId: string;
+  connectionId: string;
+}
 
 export interface QueueState {
   queue: OutboxEntry[];
   conflicts: Conflict[];
   rejected: Rejected[];
+  /** From the last send in this tab; not kept on the device. */
+  held: Held[];
 }
 
-const EMPTY: QueueState = { queue: [], conflicts: [], rejected: [] };
+const EMPTY: QueueState = { queue: [], conflicts: [], rejected: [], held: [] };
 
 let state: QueueState = EMPTY;
 const listeners = new Set<() => void>();
@@ -57,6 +66,8 @@ export async function addChange(change: OfflineChange): Promise<string> {
   undoable.set(changeId, { before, after });
   set({ queue: after });
   await db.saveQueue(after);
+  // Sent by the service worker if the app closes first (spec 035 RF-42).
+  void requestBackgroundSync();
   return changeId;
 }
 
@@ -77,6 +88,10 @@ export async function setQueue(queue: OutboxEntry[]): Promise<void> {
   undoable.clear();
   set({ queue });
   await db.saveQueue(queue);
+}
+
+export function setHeld(held: Held[]): void {
+  set({ held });
 }
 
 export async function addConflict(conflict: Conflict): Promise<void> {

@@ -203,6 +203,17 @@ function deleteMany(store: Store, keys: readonly string[]): Promise<void> {
   });
 }
 
+/** What the service worker sent with the app closed (spec 035 RF-43). */
+export interface BackgroundSync {
+  applied: number;
+  at: string;
+}
+
+const BACKGROUND = "lastBackgroundSync";
+export const readBackgroundSync = () =>
+  getOne<BackgroundSync>("meta", BACKGROUND);
+export const clearBackgroundSync = () => deleteMany("meta", [BACKGROUND]);
+
 export const getThumb = (id: string) => getOne<Blob>("thumbs", id);
 export const thumbIds = () => keysOf("thumbs");
 export const putThumb = (id: string, blob: Blob) => putOne("thumbs", id, blob);

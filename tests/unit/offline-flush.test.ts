@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { forgetConnection, loadState } from "@/lib/offline/db";
+import {
+  forgetConnection,
+  loadState,
+  pendingImages,
+  savePendingImage,
+  setReservedId,
+} from "@/lib/offline/db";
 import { resetConnection } from "@/lib/offline/connection";
 import { flush, type Send, type SendResult } from "@/lib/offline/flush";
 import type { OfflineChange } from "@/lib/offline/outbox";
@@ -7,8 +13,10 @@ import {
   addChange,
   clearQueue,
   getQueueState,
+  setQueue,
 } from "@/lib/offline/queue-store";
 import { memoryIndexedDb } from "./memory-indexeddb";
+import { fakeServer, flushCases, type Setup } from "./offline-flush-cases";
 
 // Spec 034 T7: sending the queue when the network is back (RF-38 to RF-49,
 // RF-56, RF-63).
@@ -158,5 +166,68 @@ describe("flush", () => {
     answer({ status: "applied" });
     expect(await first).toEqual({ applied: 1, stopped: null });
     expect(send).toHaveBeenCalledOnce();
+  });
+});
+
+/** The shared cases through flush.ts (spec 035 T9, plan D4). */
+async function runFlush(setup: Setup) {
+  await setQueue(
+    setup.queue.map((change, i) => ({
+      changeId: `c${i}`,
+      createdAt: "2026-11-18T10:00:00Z",
+      change,
+    })),
+  );
+  for (const image of setup.images ?? []) await savePendingImage(image);
+  const fake = fakeServer(setup);
+  const locks: string[] = [];
+  Object.defineProperty(navigator, "locks", {
+    configurable: true,
+    value: {
+      request: async (name: string, work: () => Promise<unknown>) => {
+        locks.push(name);
+        return work();
+      },
+    },
+  });
+  try {
+    const result = await flush(fake.apply, undefined, {
+      post: fake.image,
+      put: async (url) => {
+        await fake.put(url);
+        return "ok";
+      },
+      setReservedId,
+    });
+    const state = await loadState();
+    return {
+      ...result,
+      sent: fake.sent,
+      puts: fake.puts,
+      queue: state.queue.map((entry) => entry.change),
+      conflicts: state.conflicts.map((conflict) => conflict.change),
+      rejected: state.rejected.map(({ change, reason }) => ({
+        change,
+        reason,
+      })),
+      pending: (await pendingImages()).map((image) => image.localId),
+      locks,
+    };
+  } finally {
+    Reflect.deleteProperty(navigator, "locks");
+  }
+}
+
+flushCases(runFlush);
+
+describe("held accounts (spec 035 RF-7)", () => {
+  it("says which changes wait for which account", async () => {
+    await addChange(noteCreate("a"));
+    await addChange(noteCreate("b"));
+    const { send } = server({ a: { status: "held", connectionId: "c1" } });
+    expect(await flush(send)).toEqual({ applied: 1, stopped: null });
+    expect(getQueueState().held).toEqual([
+      { changeId: getQueueState().queue[0]!.changeId, connectionId: "c1" },
+    ]);
   });
 });

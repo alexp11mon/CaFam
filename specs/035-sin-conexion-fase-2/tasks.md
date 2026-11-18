@@ -121,7 +121,7 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 
   Evidencia (2026-11-18): `npm test -- offline-routes offline-image-upload` 13 en verde y `npm run test:db -- offline-image-route` 5 en verde, subiendo bytes reales a las URL firmadas de dev. La acción y `/api/offline/apply` comparten `applyWithSession` (`offline-session.ts`); `/api/offline/image` llama a `offlineImage` (`offline-images.ts`), que reserva con `reserve_event_images` (materializando la repetición si hace falta), firma con `createSignedUploadUrl` y la sesión del usuario, y responde `429`, `404`, `409` (falta un objeto al confirmar) o `503` si falla Supabase. Storage no firma una URL para un objeto que ya existe: tras un corte, ese objeto llega con URL nula y el cliente no lo vuelve a subir. Cada respuesta lleva también la URL completa, así el service worker no necesita configuración. `image-upload.ts` guarda el id antes de subir, sube los dos objetos a la vez con progreso y repite la reserva una vez si se purgó. Verificación completa en verde (320 archivos, 2.986 tests, con 4 hilos).
 
-- [ ] T9 Enviar con la app cerrada y con cuentas retenidas (`flush.ts`, `background.ts`, `public/sw.js`)
+- [x] T9 Enviar con la app cerrada y con cuentas retenidas (`flush.ts`, `background.ts`, `public/sw.js`)
   Hecho cuando: `npm test -- offline-flush offline-sw-sync offline-background` en verde. `offline-flush` y `offline-sw-sync` pasan los mismos casos (archivo compartido) por `flush.ts` y por `sw.js` cargado en un `vm`. Los tests cubren:
   - `held` deja el cambio y los de su entidad en la cola y sigue con el resto;
   - imágenes por `image-upload`;
@@ -133,6 +133,8 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
   - `sw-no-data` sigue en verde.
 
   Cubre: RF-4, RF-7, RF-8, RF-39, RF-42, RF-44, RF-45, RF-46 | Módulo: flush, background, sw.js
+
+  Evidencia (2026-11-18): `npm test -- offline-flush offline-sw-sync offline-background sw-no-data` 47 en verde. Los 11 casos de `tests/unit/offline-flush-cases.ts` (orden, conflicto, rechazado con dependientes, `held`, reintento, fallo de red, sin sesión, imagen subida, imagen rechazada que conserva sus bytes, imagen sin bytes y el candado) pasan por `flush.ts` y por `sw.js` cargado en un `vm`, con el mismo servidor falso (`fakeServer`) detrás de `fetch`. `flush.ts` vuelve a leer la cola de IndexedDB dentro del candado (el service worker pudo enviar parte), salta lo retenido con sus dependientes, sube las imágenes con `uploadPendingImage` y deja en `queue-store` qué cambios esperan a qué cuenta (`held`, para la T11). `background.ts` registra `cafam-offline` con `getRegistration` (no `ready`, que nunca se resuelve sin service worker) al encolar y si queda algo tras enviar. `sw.js` (`cafam-v7`) atiende `sync`, suma lo aplicado en `meta.lastBackgroundSync` (`readBackgroundSync` en `db.ts`) y rechaza la promesa solo si queda algo por reintentar (sin sesión o con una cuenta retenida no sirve que el navegador repita). Verificación completa en verde (322 archivos, 3.017 tests, con 4 hilos).
 
 - [ ] T10 Usar comentarios, imágenes y series en el detalle sin red
   Incluye `EventComments`, `EventImages`, `ImageViewer`, `SeriesScopeDialog`, `RepeatField` y la confirmación de pérdidas con `series-loss`.
