@@ -1,0 +1,41 @@
+{
+  "single": {
+    "kind": "calendar#event",
+    "id": "abc123",
+    "status": "confirmed",
+    "summary": "Dentista",
+    "description": "Llevar la tarjeta",
+    "location": "Calle Mayor 1",
+    "start": {
+      "dateTime": "2026-11-20T10:00:00+01:00",
+      "timeZone": "Europe/Madrid"
+    },
+    "end": {
+      "dateTime": "2026-11-20T11:00:00+01:00",
+      "timeZone": "Europe/Madrid"
+    },
+    "attendees": [{ "email": "invitado@example.test" }]
+  },
+  "instance": {
+    "kind": "calendar#event",
+    "id": "serie9_20261123T170000Z",
+    "status": "confirmed",
+    "recurringEventId": "serie9",
+    "summary": "Inglés",
+    "start": { "dateTime": "2026-11-23T18:00:00+01:00" },
+    "end": { "dateTime": "2026-11-23T19:00:00+01:00" }
+  },
+  "allDay": {
+    "kind": "calendar#event",
+    "id": "cumple",
+    "status": "confirmed",
+    "summary": "Cumpleaños",
+    "start": { "date": "2026-12-04" },
+    "end": { "date": "2026-12-05" }
+  },
+  "cancelled": {
+    "kind": "calendar#event",
+    "id": "serie9_20261130T170000Z",
+    "status": "cancelled"
+  }
+}

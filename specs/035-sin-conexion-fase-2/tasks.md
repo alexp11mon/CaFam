@@ -72,7 +72,7 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 
   Evidencia (2026-11-18): `npm test -- offline-db offline-thumbs offline-image-cache` 15 en verde. El IndexedDB en memoria de los tests ahora conoce versiones (el paso de la 1 a la 2 crea los tres almacenes nuevos y conserva la cola), guarda los `Blob` sin clonarlos (jsdom no sabe) y simula un disco lleno (`quotaExceeded`). `syncThumbs` descarga por `objectId`, nunca más de 4 a la vez (medido en el test), y borra las que ya no están. La caché de imágenes grandes guarda 30 y sale la usada hace más tiempo; abrir una la marca como usada. `savePendingImage` devuelve `false` con el disco lleno y `rememberImage` lo ignora. Verificación completa en verde (316 archivos, 2.962 tests).
 
-- [ ] T5 Leer un evento en Google e iCloud (`readEvent`, `read-event.ts`)
+- [x] T5 Leer un evento en Google e iCloud (`readEvent`, `read-event.ts`)
   Hecho cuando: `npm test -- google-read-event icloud-read-event` en verde con respuestas sintéticas en `tests/fixtures/sync/`. Los tests cubren:
   - Google: evento suelto y repetición; `404` y `410` → `null`;
   - iCloud: recurso suelto, repetición con su propio `VEVENT`, repetición calculada de la serie y `404` → `null`;
@@ -80,6 +80,8 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
   - campos en la forma de `WritableEvent`.
 
   Cubre: RF-5, RF-6 | Módulo: providers, read-event
+
+  Evidencia (2026-11-18): `npm test -- google-read-event icloud-read-event` 9 en verde, con `tests/fixtures/sync/google-event.json` (suelto, repetición, día completo y cancelado) y `icloud-series.ics` (serie con `VTIMEZONE`, `EXDATE` y una repetición con su propio `VEVENT`). `readEvent` está en `ProviderSession`: Google hace `GET events/{id}` y da `null` con 404, 410 o `cancelled`; iCloud lee el recurso y busca el evento con `expandObject` en una ventana de un año a cada lado de la clave de la repetición. `read-event.ts` no importa `ical.js` directamente: pasa por `icloud-ics.ts`. Verificación completa en verde (318 archivos, 2.971 tests).
 
 - [ ] T6 Aplicar en el servidor los cambios de Google e iCloud hechos sin red (`offline-writes.ts`)
   Hecho cuando: `npm run test:db -- offline-apply-synced` en verde, con el proveedor simulado (`vi.mock` del cliente de Google e iCloud) y el calendario traído sembrado en dev. Los tests cubren:

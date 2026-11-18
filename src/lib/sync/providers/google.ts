@@ -383,6 +383,27 @@ export async function insertEvent(
   );
 }
 
+/** One event, or null when Google no longer has it (spec 035 D1). */
+export async function getEvent(
+  accessToken: string,
+  calendarId: string,
+  eventId: string,
+  fetchFn: Fetch = fetch,
+): Promise<GoogleEvent | null> {
+  try {
+    const response = await send(
+      fetchFn,
+      accessToken,
+      "GET",
+      eventUrl(calendarId, eventId),
+    );
+    return (await response.json()) as GoogleEvent;
+  } catch (error) {
+    if (error instanceof ProviderError && error.kind === "missing") return null;
+    throw error;
+  }
+}
+
 /** Changes only the given fields; a repetition's id changes only it (RF-11, RF-14, RF-17). */
 export async function patchEvent(
   accessToken: string,
