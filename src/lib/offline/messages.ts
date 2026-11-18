@@ -41,5 +41,7 @@ export const OFFLINE_MESSAGES = {
   mine: "Tu versión",
   theirs: "La versión de la otra persona",
   goneByOther: "Otra persona lo ha borrado.",
+  pendingImagesFull:
+    "Sin conexión puedes dejar como mucho 20 imágenes pendientes de enviar.",
   changedByOther: "Otra persona lo ha cambiado mientras no tenías conexión.",
 } as const;

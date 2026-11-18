@@ -32,7 +32,7 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 
   Evidencia (2026-11-18): `npm test -- offline-outbox offline-schemas` 26 en verde (10 casos nuevos de la cola y 5 de los esquemas). `image.add` no pasa por el esquema del servidor: la imagen va por su ruta (D5). Las series se funden por alcance y ocurrencia (`series:<alcance>:<id>`). Verificación completa: typecheck, lint (el aviso de siempre en `event-form.tsx`), format, 312 archivos y 2.931 tests, y build en verde. Se arregló de paso el error sin capturar de `offline-app.test.tsx` (`scrollIntoView` en jsdom).
 
-- [ ] T2 Decidir sin red qué se puede hacer y cómo queda una serie (`gates.ts`, `image-limits.ts`, `series-loss.ts`, `series-overlay.ts`)
+- [x] T2 Decidir sin red qué se puede hacer y cómo queda una serie (`gates.ts`, `image-limits.ts`, `series-loss.ts`, `series-overlay.ts`)
   Hecho cuando: `npm test -- offline-gates offline-image-limits offline-series no-secrets` en verde. Los tests cubren:
   - los traídos se escriben sin red con las mismas reglas que con red, con solo lectura del proveedor, cuenta sin permiso y mover solo dentro de la misma cuenta;
   - los tres alcances y "Repetir" en calendarios normales, pero no en traídos;
@@ -43,6 +43,8 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
   - `ical.js` solo se importa en los módulos permitidos y `expand.ts` llega al navegador solo con `import()` (D2).
 
   Cubre: RF-1, RF-2, RF-3, RF-10, RF-11, RF-12, RF-13, RF-16, RF-23, RF-24, RF-33, RF-34, RF-36 | Módulo: gates, image-limits, series-loss, series-overlay
+
+  Evidencia (2026-11-18): `npm test -- offline-gates offline-image-limits offline-series no-secrets` 38 en verde. `series-overlay.ts` planifica con `planSeriesChange`/`planSeriesDelete` y expande con `expandRows`, como el servidor: el caso de "Todos los eventos" a las 19:00 cruza el cambio de hora del 25 de octubre y todas quedan a las 19:00 de Madrid. La guardia nueva de `no-secrets` recorre el grafo de importaciones estáticas desde cada componente cliente (parando en los `"use server"`, que llegan como referencia) y comprueba que no llega a `expand.ts` ni a `series-overlay.ts`. `gates.ts` no importa valores de `series-write` para no arrastrar `ical.js`. Las funciones nuevas aún no se usan en la interfaz: se conectan en la T10. Verificación completa en verde (314 archivos, 2.952 tests).
 
 - [ ] T3 Leer en el servidor la copia de formato 2 (`offline-reads.ts`)
   Hecho cuando: `npm run test:db -- offline-snapshot` en verde. Los tests cubren:

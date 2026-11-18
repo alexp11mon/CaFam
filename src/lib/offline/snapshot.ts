@@ -13,6 +13,7 @@ import type {
 import type { AccentId } from "@/lib/theme/accents";
 import type { ThemeId } from "@/lib/theme/theme";
 import type { Note } from "@/lib/notes/types";
+import type { SeriesTotals } from "./outbox";
 
 /** Bumped when the shape changes: an older copy is dropped (plan R1). */
 export const SNAPSHOT_FORMAT = 1;
@@ -28,6 +29,54 @@ export interface OfflineEvent extends CalendarEventRecord {
   seriesChanged: boolean;
   /** Seen in a window the page read again: no description or author yet (D9). */
   partial?: boolean;
+}
+
+/** A series of the range as its row is (spec 035 RF-12, RF-13, plan D3). */
+export interface OfflineSeries {
+  id: string;
+  calendarId: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  color: string | null;
+  categoryId: string | null;
+  startsAt: string;
+  endsAt: string;
+  allDay: boolean;
+  recurrence: string;
+  recurrenceTz: string | null;
+  recurrenceUntil: string | null;
+  exdates: string[];
+  /** What another person could change in the whole series (D3). */
+  totals: SeriesTotals;
+}
+
+/** An exception of the range: its event is in `events` with this id. */
+export interface OfflineException {
+  id: string;
+  seriesId: string;
+  originalStart: string;
+}
+
+/** One of the 50 latest comments of an event (spec 035 RF-17). */
+export interface OfflineComment {
+  id: string;
+  eventId: string;
+  authorId: string | null;
+  authorName: string;
+  body: string;
+  createdAt: string;
+  editedAt: string | null;
+}
+
+/** A ready image of an event of the range; its thumbnail is in "thumbs" (RF-29). */
+export interface OfflineImage {
+  id: string;
+  eventId: string;
+  uploadedBy: string | null;
+  createdAt: string;
+  width: number;
+  height: number;
 }
 
 export interface OfflineProfile extends CalendarProfile {
