@@ -2,7 +2,7 @@
 
 Spec: `specs/042-vistas-de-ano-y-4-dias/spec.md`. Plan: `specs/042-vistas-de-ano-y-4-dias/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: pendiente.
+> Estado: cerrada (2026-11-19), T1–T6. Paso de producción: la migración `views_year` a prod antes de desplegar (ver el plan).
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T2.
 
@@ -32,8 +32,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- calendar-client calendar-heading offline-sources` en verde, capturas a 390, 768 y 1440 px en claro y oscuro y medida de RNF-1 en `tasks.md`.
 
   Cubre: RF-10, RF-11, RF-12, RF-13, RNF-1, RNF-2 | Evidencia: `npm test -- calendar-client calendar-heading offline-sources` en verde (más `year-view`, `calendar-workspace`): el selector del escritorio (`ViewToolbar`) tiene las 6 vistas con sus teclas (X, Y); en el móvil (`CalendarHeading`) quedan 4 pestañas y "Más vistas" abre 4 días y Año (se cierra al elegir, con Escape o al salir el foco, y dice la vista elegida), y la elección se guarda con `saveLastView`; el título del móvil en el año es el año. `CalendarClient` pinta el año sin leer eventos (`useEventWindow` no planea nada en el año) y 4 días con el fin de semana aunque esté oculto. Sin conexión, `offlineCalendarProps.loadYearMarks` saca las marcas de la copia; los meses del año fuera de la copia quedan atenuados con "Estas fechas no están disponibles sin conexión" y 4 días fuera de la copia muestra el aviso. Capturas en `capturas/` (`anio`, `cuatro-dias` y `mas-vistas` a 390, 768 y 1440 px, claro y oscuro; `scripts/screenshots-042.mjs`). **RNF-1** (Edge, CPU 4× con `Emulation.setCPUThrottlingRate`, de pulsar a pintar el año nuevo): 76, 65 y 78 ms (antes de usar un solo `Intl.DateTimeFormat` para las 365 etiquetas, 158 ms). P8 en verde.
-- [ ] T6 Cierre
+- [x] T6 Cierre
   Hecho cuando: AGENTS.md (vistas, atajos, rutas), README y constitución (hoja de ruta y atajos de "Interacción del calendario") actualizados; `python -m graphify update .`; P8 completa.
+
+  Evidencia: AGENTS.md (estado, "Añadido por la spec 042", base de datos, rutas, atajos, estructura, fuera de alcance, "Cómo continuar" y última actualización), README (tabla, funciones, rutas, hoja de ruta y fuera de alcance) y constitución (hoja de ruta y atajos de "Interacción del calendario") actualizados; `python -m graphify update .` hecho; P8 en verde (typecheck, lint con el aviso previo de `event-form.tsx`, format:check, 3.635 tests y build).
 
 ## Trazabilidad
 
