@@ -104,6 +104,10 @@ describe("syncCalendars", () => {
       // Read time and Google access (spec 009 T4, plan D5, D10).
       p_read_at: "2026-10-27T12:00:00.000Z",
       p_access: "owner",
+      // The window read, so only what overlaps it can be removed (spec 038).
+      p_from: "2026-04-27T00:00:00.000Z",
+      p_to: "2027-10-27T00:00:00.000Z",
+      p_keep: [],
     });
     expect(
       (apply.p_events as { external_id: string }[]).map((e) => e.external_id),
@@ -152,6 +156,7 @@ describe("syncCalendars", () => {
     const apply = named("sync_apply_events")[0].args;
     expect((apply.p_events as unknown[]).length).toBe(2000);
     expect(apply.p_omitted).toBe(100);
+    expect(apply.p_keep as string[]).toHaveLength(100);
   });
 
   it.each([

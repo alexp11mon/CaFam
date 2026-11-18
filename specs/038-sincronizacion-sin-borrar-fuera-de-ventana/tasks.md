@@ -16,13 +16,13 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con P8
 
   Cubre: RF-1 a RF-5, RF-8 | Módulo: migración (D1, D2, D3, D5)
   Evidencia: migración `20261119100000_sync_apply_window` aplicada en dev; `npm run test:db -- sync-worker` 27/27; P8 en verde (336 archivos, 3.195 tests; build correcto).
-- [ ] T2 El motor pasa la ventana y los omitidos
+- [x] T2 El motor pasa la ventana y los omitidos
   Hecho cuando: `npm test -- run-sync limit-events` en verde.
   - `limitEvents` devuelve `omittedIds`.
   - `syncCalendars` llama a `sync_apply_events` con `p_from`, `p_to` (los mismos que `listEvents`) y `p_keep`.
 
   Cubre: RF-1, RF-3 | Módulo: limit-events, run-sync
-  Evidencia: —
+  Evidencia: `npm test -- run-sync sync-core` 50/50 (rojo antes: 4 fallos); P8 en verde (3.196 tests).
 - [ ] T3 Nota de copia antigua en el detalle
   Hecho cuando: `npm test -- sync-window event-panel` en verde y capturas a 390 y 1440 px en claro y oscuro en `capturas/`.
   - `isOutsideWindow` (borde exacto incluido) y `staleCopyText` para Google e iCloud.

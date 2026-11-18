@@ -129,11 +129,9 @@ async function syncOne(
       return { calendarId: calendar.calendar_id, summary: UNCHANGED };
     }
 
-    const read = await provider.listEvents(
-      calendar.external_id,
-      syncWindow(now),
-    );
-    const { events, omitted } = limitEvents(read.events, now);
+    const readWindow = syncWindow(now);
+    const read = await provider.listEvents(calendar.external_id, readWindow);
+    const { events, omitted, omittedIds } = limitEvents(read.events, now);
     const summary = (await rpc(deps, "sync_apply_events", {
       p_secret: deps.secret,
       p_calendar_id: calendar.calendar_id,
@@ -142,6 +140,10 @@ async function syncOne(
       p_omitted: omitted,
       p_read_at: now.toISOString(),
       p_access: read.access,
+      // Only what overlaps the window read can be removed (spec 038 RF-1, RF-3).
+      p_from: readWindow.from.toISOString(),
+      p_to: readWindow.to.toISOString(),
+      p_keep: omittedIds,
     })) as UpdateSummary;
     await rpc(deps, "sync_mark_checked", {
       p_secret: deps.secret,

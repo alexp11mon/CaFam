@@ -70,11 +70,28 @@ describe("limitEvents (RF-19)", () => {
     expect(ids).toEqual([...ids].sort((a, b) => a - b));
   });
 
+  it("lists the external ids it left out (spec 038 RF-3)", () => {
+    const events = ["near", "far", "middle"].map((id, i) => {
+      const start = now.getTime() + [0, 30, 10][i] * DAY;
+      return {
+        external_id: id,
+        starts_at: new Date(start).toISOString(),
+        ends_at: new Date(start + 3_600_000).toISOString(),
+      };
+    });
+    const { omittedIds } = limitEvents(events, now, 2);
+    expect(omittedIds).toEqual(["far"]);
+  });
+
   it("leaves short lists untouched", () => {
     const events = [
       { starts_at: now.toISOString(), ends_at: now.toISOString() },
     ];
-    expect(limitEvents(events, now)).toEqual({ events, omitted: 0 });
+    expect(limitEvents(events, now)).toEqual({
+      events,
+      omitted: 0,
+      omittedIds: [],
+    });
   });
 });
 

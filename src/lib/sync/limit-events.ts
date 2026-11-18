@@ -3,6 +3,7 @@ import { MAX_EVENTS } from "./limits";
 interface Timed {
   starts_at: string;
   ends_at: string;
+  external_id?: string;
 }
 
 /** How far an event is from `now`: zero while it is happening. */
@@ -15,14 +16,15 @@ function distance(event: Timed, now: number): number {
 
 /**
  * Keeps the `max` events nearest to today, in their original order, and
- * counts the rest (RF-19, plan D17).
+ * counts the rest (RF-19, plan D17). `omittedIds` are the external ids left
+ * out, so the reconciliation does not remove them (spec 038 RF-3).
  */
 export function limitEvents<T extends Timed>(
   events: T[],
   now: Date,
   max = MAX_EVENTS,
-): { events: T[]; omitted: number } {
-  if (events.length <= max) return { events, omitted: 0 };
+): { events: T[]; omitted: number; omittedIds: string[] } {
+  if (events.length <= max) return { events, omitted: 0, omittedIds: [] };
 
   const time = now.getTime();
   const kept = new Set(
@@ -35,5 +37,8 @@ export function limitEvents<T extends Timed>(
   return {
     events: events.filter((_, index) => kept.has(index)),
     omitted: events.length - max,
+    omittedIds: events.flatMap((event, index) =>
+      kept.has(index) || !event.external_id ? [] : [event.external_id],
+    ),
   };
 }
