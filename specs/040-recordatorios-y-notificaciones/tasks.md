@@ -35,11 +35,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - `createEvent`, `createSingle` y las altas del asistente materializan el aviso por defecto del creador.
 
   Cubre: RF-6, RF-10, RF-11, RF-16, RNF-2 | Evidencia: `npm test -- push-run-route` 5/5 con `fetch` simulado: 401 sin secreto, recordatorio cifrado (`aes128gcm`, `TTL`, `vapid t=…, k=…`) enviado una vez, nada si otra ejecución ya lo marcó, 410 → `push_drop_subscription`, un fallo de red no para las demás, 500 sin claves VAPID. El aviso por defecto lo materializa el trigger `event_reminders_default` de T3 en toda alta con sesión (`createEvent`, `createSingle`, asistente, pegar), así que esas acciones no cambian; `no-secrets` vigila `VAPID_PRIVATE_KEY`. `npm run test:db -- push.test` 8/8; P8 en verde (3.262 tests).
-- [ ] T5 Service worker
+- [x] T5 Service worker
   Hecho cuando: `npm test -- sw-push` (sw.js en `vm`, como `offline-sw-sync.test.ts`) en verde.
   - `push` muestra la notificación con `tag`; `notificationclick` enfoca una ventana abierta o abre la URL. `CACHE_NAME` `cafam-v8`.
 
-  Cubre: RF-11 | Evidencia: —
+  Cubre: RF-11 | Evidencia: `npm test -- sw-push` 5/5 (sw.js en `vm`): `push` muestra la notificación con `tag`, `renotify`, icono y la URL (aviso genérico si no hay datos legibles); `notificationclick` cierra, lleva una ventana abierta de la app a la URL y la enfoca, o abre una nueva, y nunca abre otro origen; `CACHE_NAME` `cafam-v8` (`brand-icons` y `offline-sw-sync` actualizados); P8 en verde.
 - [ ] T6 Ajustes y avisos en el evento
   Hecho cuando: `npm test -- notification-settings reminder-field event-form event-panel` en verde y capturas a 390, 768 y 1440 px en claro y oscuro en `capturas/`.
   - Activar, lista de dispositivos, prueba, iOS sin instalar, permiso denegado, avisos por defecto y tipos sociales.

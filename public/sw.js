@@ -6,7 +6,7 @@
 // spec 035 it also sends the queue with the app closed (Background Sync).
 
 // Bump the version to drop old caches after a change (plan R5).
-const CACHE_NAME = "cafam-v7";
+const CACHE_NAME = "cafam-v8";
 const OFFLINE_URL = "/offline";
 const PRECACHE_URLS = [
   OFFLINE_URL,
@@ -403,4 +403,56 @@ async function backgroundSync() {
 
 self.addEventListener("sync", (event) => {
   if (event.tag === SYNC_TAG) event.waitUntil(backgroundSync());
+});
+
+// Spec 040: Web Push. The payload is decrypted by the browser (RFC 8291) and
+// only says what to show and what to open (RF-11).
+const DEFAULT_URL = "/dashboard/calendar";
+
+/** Only paths of this app: a notice never opens another site. */
+function appUrl(url) {
+  try {
+    const target = new URL(url || DEFAULT_URL, self.location.origin);
+    if (target.origin === self.location.origin) return target.href;
+  } catch {}
+  return new URL(DEFAULT_URL, self.location.origin).href;
+}
+
+self.addEventListener("push", (event) => {
+  let payload = null;
+  try {
+    payload = event.data ? event.data.json() : null;
+  } catch {}
+  const title = (payload && payload.title) || "CaFam";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: (payload && payload.body) || "",
+      tag: (payload && payload.tag) || undefined,
+      renotify: Boolean(payload && payload.tag),
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      data: { url: (payload && payload.url) || DEFAULT_URL },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = appUrl(event.notification.data && event.notification.data.url);
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      const open = windows.find(
+        (w) => new URL(w.url).origin === self.location.origin,
+      );
+      if (open) {
+        await open.navigate(url);
+        return open.focus();
+      }
+      return self.clients.openWindow(url);
+    })(),
+  );
 });
