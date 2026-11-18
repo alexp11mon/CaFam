@@ -24,10 +24,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- four-day-view` en verde: crear, mover, tarjeta y "Ocupado" funcionan como en la semana.
 
   Cubre: RF-6, RF-7 | Evidencia: `npm test -- four-day-view` 3/3: con `view="4days"` el workspace pinta la rejilla de la semana (`WeekView`) con 4 columnas (viernes a lunes, fin de semana incluido), una capa de huecos por día para crear, el evento editable con su tirador (mover y redimensionar con `DraggableEvent`, que abre la tarjeta como en la semana) y los bloques "Ocupado". La página y el cliente piden los "Ocupado" también en 4 días; el esqueleto tiene 4 columnas. P8 en verde.
-- [ ] T4 Vista año
+- [x] T4 Vista año
   Hecho cuando: `npm test -- year-view use-year-marks` en verde: 12 meses, columnas por anchura, puntos por calendario visible, hoy, pulsar día y mes, series expandidas.
 
-  Cubre: RF-1 a RF-5 | Evidencia: —
+  Cubre: RF-1 a RF-5 | Evidencia: `npm test -- year-view use-year-marks` 9/9: `YearView` pinta los 12 meses (L a D, solo los días de cada mes: 365 enlaces en 2026) en una rejilla de 1, 2, 3 y 4 columnas (`grid-cols-1 tab:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`), hasta 3 puntos con el color de los calendarios visibles (un calendario oculto no marca), hoy en círculo de acento con `aria-current`, un día abre la vista día y el nombre del mes la vista mes, y "Reintentar" si fallan las marcas. `useYearMarks` guarda los años leídos y precarga el siguiente en reposo. `lib/calendar/year.ts` (`yearMonths`, `mergeMarks`) puro. `loadYearMarks` (`year-actions.ts`) → `getYearMarks`: `calendar_day_marks` más las series expandidas con `expandRows` (`npm run test:db -- day-marks` 6/6: los lunes de la serie semanal salen marcados hasta diciembre). P8 en verde.
 - [ ] T5 Selector, vista recordada y sin conexión
   Hecho cuando: `npm test -- calendar-client calendar-heading offline-sources` en verde, capturas a 390, 768 y 1440 px en claro y oscuro y medida de RNF-1 en `tasks.md`.
 

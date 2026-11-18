@@ -93,6 +93,8 @@ import { MonthView } from "./month-view";
 import { NextEventCard, type NextEventItem } from "./next-event-card";
 import { QuickCreate } from "./quick-create";
 import { WeekView } from "./week-view";
+import { YearView } from "./year-view";
+import type { LoadYearMarks } from "@/lib/hooks/use-year-marks";
 
 export interface PanelCalendar extends GroupableCalendar {
   color: string;
@@ -195,6 +197,7 @@ export function CalendarWorkspace({
   loadedAt,
   monthMarks,
   loadMonthMarks,
+  loadYearMarks,
   saveLastView,
   loadAgendaEvents,
   editableCalendars = [],
@@ -231,6 +234,8 @@ export function CalendarWorkspace({
   loadMonthMarks?: (
     month: string,
   ) => Promise<{ marks: MonthMarks } | { error: string }>;
+  /** Days with events of a whole year, for the year view (spec 042 RF-5). */
+  loadYearMarks?: LoadYearMarks;
   /** Remembers a view chosen with a shortcut (spec 008 RF-25). */
   saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
   /** More days for the continuous agenda (spec 016 RF-48, RF-49). */
@@ -842,6 +847,14 @@ export function CalendarWorkspace({
                     />
                   ) : undefined
                 }
+              />
+            ) : view === "year" ? (
+              <YearView
+                date={date}
+                today={today}
+                colors={colors}
+                visibleCalendarIds={visibleCalendars}
+                loadYearMarks={loadYearMarks}
               />
             ) : view === "month" ? (
               <MonthView

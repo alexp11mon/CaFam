@@ -31,6 +31,7 @@ import { setGroupVisibility } from "../calendars/group-actions";
 import { createEvent } from "../events/actions";
 import { loadAgendaEvents } from "./agenda-actions";
 import { loadMonthMarks } from "./mini-month-actions";
+import { loadYearMarks } from "./year-actions";
 import {
   saveLastView,
   saveOrder,
@@ -161,6 +162,7 @@ async function CalendarContent({
       nextEvents={nextEvents}
       loadedAt={upcomingWindow.loadedAt}
       loadMonthMarks={loadMonthMarks}
+      loadYearMarks={loadYearMarks}
       saveLastView={saveLastView}
       loadAgendaEvents={loadAgendaEvents}
       editableCalendars={editableCalendars}

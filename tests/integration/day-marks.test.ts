@@ -8,6 +8,7 @@ import {
   type TestUser,
   type TypedClient,
 } from "./helpers";
+import { getYearMarks } from "@/lib/calendar/queries";
 
 // Spec 042, T2: calendar_day_marks gives which days have events of which
 // calendars, with RLS (RF-5, plan D2), and last_view takes the new views.
@@ -158,6 +159,22 @@ describe("calendar_day_marks", () => {
     expect(reversed.error?.code).toBe("22023");
     const year = await marks(owner.client, "2028-01-01", "2028-12-31");
     expect(year.error).toBeNull();
+  });
+});
+
+describe("getYearMarks (spec 042 T4)", () => {
+  it("adds the series' occurrences to the database's marks", async () => {
+    const marks = await getYearMarks(
+      owner.client,
+      "2026-03-15",
+      "Europe/Madrid",
+    );
+    // The weekly series on Mondays: 2 and 9 March, and every Monday after.
+    expect(marks["2026-03-02"]).toEqual([calendarId]);
+    expect(marks["2026-03-09"]).toEqual([calendarId]);
+    expect(marks["2026-03-03"]).toEqual([calendarId]);
+    expect(marks["2026-03-20"]).toEqual([otherId]);
+    expect(marks["2026-12-28"]).toEqual([calendarId]);
   });
 });
 

@@ -9,6 +9,9 @@ import { DEFAULT_ACCENT, isAccent, type AccentId } from "@/lib/theme/accents";
 import { parseTheme, type ThemeId } from "@/lib/theme/theme";
 import type { CalendarPreference, Person, PersonPreference } from "./grouping";
 import type { CalendarGroup } from "./organize-groups";
+import { monthMarks, type MonthMarks } from "./month-marks";
+import { getVisibleRange } from "./ranges";
+import { mergeMarks } from "./year";
 import { providerOrGoogle } from "@/lib/sync/provider-labels";
 import { accessOf } from "@/lib/sync/providers/google";
 import type { SyncedInfo } from "@/lib/sync/read-only";
@@ -591,28 +594,7 @@ export async function getEventsInRange(
   }));
   if (seriesRows.length === 0) return records;
 
-  // Exceptions whose occurrence could overlap the range, wherever they moved
-  // to: their original starts are not expanded.
-  const longest = Math.max(
-    ...seriesRows.map(
-      (row) => Date.parse(row.ends_at) - Date.parse(row.starts_at),
-    ),
-  );
-  const keys = await allRows((first, last) =>
-    supabase
-      .from("events")
-      .select("series_id, original_start")
-      .not("series_id", "is", null)
-      .lt("original_start", to.toISOString())
-      .gte(
-        "original_start",
-        new Date(from.getTime() - longest - 86_400_000).toISOString(),
-      )
-      .order("series_id")
-      .order("original_start")
-      .range(first, last),
-  );
-
+  const keys = await exceptionKeys(supabase, seriesRows, from, to);
   for (const { row, occurrence } of expandRows(seriesRows, keys, from, to)) {
     records.push({
       id: occurrenceId(row.id, occurrence.originalStart),
@@ -633,6 +615,87 @@ export async function getEventsInRange(
   return records.sort(
     (a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt),
   );
+}
+
+/**
+ * Exceptions whose occurrence could overlap the range, wherever they moved
+ * to: their original starts are not expanded.
+ */
+async function exceptionKeys(
+  supabase: Client,
+  seriesRows: readonly { starts_at: string; ends_at: string }[],
+  from: Date,
+  to: Date,
+) {
+  const longest = Math.max(
+    ...seriesRows.map(
+      (row) => Date.parse(row.ends_at) - Date.parse(row.starts_at),
+    ),
+  );
+  return allRows((first, last) =>
+    supabase
+      .from("events")
+      .select("series_id, original_start")
+      .not("series_id", "is", null)
+      .lt("original_start", to.toISOString())
+      .gte(
+        "original_start",
+        new Date(from.getTime() - longest - 86_400_000).toISOString(),
+      )
+      .order("series_id")
+      .order("original_start")
+      .range(first, last),
+  );
+}
+
+/**
+ * Which calendars have events on each day of the year of `date` (spec 042
+ * RF-5, plan D2): the single events come aggregated from the database, the
+ * series are expanded here. Through RLS.
+ */
+export async function getYearMarks(
+  supabase: Client,
+  date: string,
+  timeZone: string,
+): Promise<MonthMarks> {
+  const range = getVisibleRange("year", date, timeZone);
+  const [rows, seriesRows] = await Promise.all([
+    supabase
+      .rpc("calendar_day_marks", {
+        p_from: range.days[0]!,
+        p_to: range.days.at(-1)!,
+      })
+      .then(({ data, error }) => {
+        if (error) throw error;
+        return data ?? [];
+      }),
+    allRows((first, last) =>
+      supabase
+        .from("events")
+        .select(
+          "id, calendar_id, starts_at, ends_at, all_day, recurrence, recurrence_tz, exdates",
+        )
+        .not("recurrence", "is", null)
+        .lt("starts_at", range.to.toISOString())
+        .or(
+          `recurrence_until.is.null,recurrence_until.gte.${range.from.toISOString()}`,
+        )
+        .order("id")
+        .range(first, last),
+    ),
+  ]);
+  if (seriesRows.length === 0) return mergeMarks(rows);
+  const keys = await exceptionKeys(supabase, seriesRows, range.from, range.to);
+  const occurrences = expandRows(seriesRows, keys, range.from, range.to).map(
+    ({ row, occurrence }) => ({
+      id: occurrenceId(row.id, occurrence.originalStart),
+      calendarId: row.calendar_id,
+      startsAt: occurrence.startsAt,
+      endsAt: occurrence.endsAt,
+      allDay: row.all_day,
+    }),
+  );
+  return mergeMarks(rows, monthMarks(occurrences, range.days, timeZone));
 }
 
 /** People whose calendars the user shares, plus the user (RF-42). Names only, no time zone. */
