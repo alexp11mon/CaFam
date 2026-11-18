@@ -12,7 +12,31 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-18, al cerrar la spec 034 (modo sin conexión).
+> Última actualización: 2026-11-18, al cerrar la spec 034 (modo sin conexión) y adoptar graphify (enmienda 13).
+
+## 0. Mapa del proyecto: graphify (obligatorio)
+
+El proyecto tiene un **grafo de conocimiento** generado con [graphify](https://github.com/safishamsi/graphify) en `graphify-out/` (constitución, enmienda 13): cada archivo, componente, función, test y doc es un nodo, con sus relaciones (importa, llama, prueba…) y agrupado en comunidades ("Offline Mode", "Sync Engine", "Recurring Events"…). Es la **primera fuente** para saber dónde está algo y cómo se relaciona, en lugar de recorrer las carpetas una a una.
+
+**Cómo usarlo** (en esta máquina el lanzador `graphify` no está en el PATH: usa siempre `python -m graphify`):
+
+```
+python -m graphify query "¿cómo se envía la cola sin conexión?"   # subgrafo para una pregunta (BFS); --dfs para seguir un camino; --budget N limita tokens
+python -m graphify explain "flush()"                              # un nodo y sus vecinos (función, componente, archivo)
+python -m graphify path "EventPanel" "applyOfflineChange"         # camino más corto entre dos conceptos
+python -m graphify update .                                       # re-extrae el código cambiado (AST, sin API ni coste, ~25 s)
+python -m graphify update . --force                               # igual, pero acepta que el grafo encoja (tras borrar código)
+python -m graphify hook status                                    # comprueba los hooks de git
+```
+
+Reglas:
+
+1. **Antes de buscar o abrir archivos** para entender el código (Grep, Glob, Read, `rg`, `find`), consulta el grafo con `query`, `explain` o `path`. Lee después solo los archivos y líneas que te señala. Los hooks `PreToolUse` de `.claude/settings.json` (`python -m graphify hook-guard`) te lo recuerdan y añaden lo que el grafo sabe del término buscado. Si lanzas subagentes que exploran código, ponles esta regla en el prompt.
+2. `graphify-out/GRAPH_REPORT.md` (nodos dios, comunidades, conexiones sorprendentes) solo para una revisión amplia de la arquitectura o si `query` no basta. `graphify-out/graph.html` es la vista interactiva para el usuario (agregada por comunidades: hay más de 5.000 nodos).
+3. **Mantenlo al día:** los hooks de git (`post-commit`, `post-checkout`, `post-merge`, `post-rewrite`, instalados con `python -m graphify hook install`) lo regeneran en segundo plano tras cada commit, cambio de rama o merge (log en `~/.cache/graphify-rebuild.log`; no se ejecutan en los worktrees ni a mitad de un rebase o merge). Además, si en la tarea creas, mueves o borras archivos o carpetas, ejecuta `python -m graphify update .` antes de cerrarla (con `--force` si borraste código: sin él, graphify se niega a encoger el grafo). Forma parte de la verificación obligatoria.
+4. `update` solo re-extrae **código** (AST). Los cambios en docs y specs (`.md`) no entran en el grafo sin una extracción semántica (`/graphify . --update` en Claude Code, que gasta tokens del agente); hazla solo si el usuario la pide.
+5. **No se versiona:** `graphify-out/` está en `.gitignore` (pesa más de 10 MB, guarda rutas absolutas y caché y cambia en cada commit). En una máquina o sesión nueva sin grafo: instala `graphifyy` (`pip install graphifyy`), ejecuta `python -m graphify update .` (crea el grafo de código) y `python -m graphify hook install`.
+6. El grafo describe el código; **no sustituye** a la constitución, las specs ni este archivo, que mandan sobre las decisiones.
 
 ## 1. Qué es
 
@@ -337,6 +361,7 @@ La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen d
 - **Aprobaciones del usuario:** pasar de fase (spec → plan → tareas → implementación) y cerrar una spec exigen su aprobación explícita. No la des por supuesta.
 - **Identidad visual (P9, enmienda 11):** toda pantalla nueva o rediseñada sigue la sección "Identidad visual y diseño de interfaz" de la constitución (identidad **Nexo**), usa solo tokens y componentes de `components/ui` (la guardia `design-tokens.test.ts` lo comprueba) y se revisa con capturas a 390, 768 y 1440 px, en claro y oscuro, con Violeta y Ámbar (`scripts/screenshots.mjs`). Móvil primero. Ver §6 "Identidad visual".
 - **Enmienda 3 (2026-10-29):** la constitución ya permite tema oscuro, transparencias con desenfoque, sombras suaves, degradados suaves (siempre como tokens) y animaciones de hasta 400 ms con alternativa para `prefers-reduced-motion`; Supabase Storage; `ical.js` también para repeticiones; y un proveedor LLM gratuito sin tarjeta para el asistente, llamado con `fetch` y sin SDK. La 011 ya actualizó la guardia de diseño (`design-tokens.test.ts`): solo `shadow-soft`/`shadow-float`, cristal y sombra de flotar solo en lo que flota, sin `text-white`, `text-black` ni `dark:`, y duraciones de 400 ms como mucho.
+- **Mapa del proyecto (enmienda 13):** consulta el grafo de graphify antes de explorar el código y regenéralo (`python -m graphify update .`) si creas, mueves o borras archivos. Ver §0.
 - **Acciones externas:** el usuario ejecuta él mismo (con `!` en Claude Code) las acciones sobre producción: `supabase db push` a prod, `git push` y merges a `main`. Prepárale los comandos exactos.
 
 ## 4. Stack
@@ -353,6 +378,7 @@ La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen d
 | Tests | Vitest 5 (proyectos `unit` con jsdom y `db` con node), Testing Library |
 | Calidad | ESLint 9 (`eslint-config-next` + `eslint-config-prettier`), Prettier 3 |
 | BD | Supabase CLI (`supabase` como devDependency) para migraciones y tipos |
+| Mapa para agentes | graphify (`graphifyy` de Python, instalado en la máquina, fuera de `package.json`; enmienda 13, ver §0) |
 
 Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod` y `ical.js` (2.2.1, MPL-2.0, aprobada en la spec 004; solo se importa en `src/lib/ics/parse-ics.ts`, desde la 013 en `src/lib/recurrence/expand.ts` y desde la 018 en `src/lib/sync/icloud-ics.ts`, todos solo del servidor) y `tsdav` (2.5.0 exacta, MIT, aprobada en la spec 018 con la enmienda 6; solo se importa en `src/lib/sync/providers/icloud.ts`). `no-secrets.test.ts` comprueba las dos. El `package.json` no debe crecer sin aprobación.
 
@@ -449,6 +475,8 @@ Dependencias de producción: `next`, `react`, `react-dom`, `@supabase/supabase-j
 │   ├── fixtures/sync/         # respuestas sintéticas de la API de Google Calendar (spec 007)
 │   ├── unit/                  # *.test.ts(x): lógica pura, formularios, vistas, filtros, sw-no-data, no-secrets…
 │   └── integration/           # schema, rls, signup, login, calendars-events, merge-calendars, preferences, profile-accent, remove-old-blue, range-performance contra Supabase dev + helpers.ts
+├── graphify-out/              # grafo de graphify (graph.json, GRAPH_REPORT.md, graph.html, caché); generado e ignorado por git (§0)
+├── .claude/settings.json      # hooks PreToolUse de Claude Code que recuerdan consultar el grafo (§0)
 ├── vercel.json                # cron "0 6 * * *" → /api/cron/keep-alive
 ├── next.config.ts             # cacheComponents, partialPrefetching, cabeceras de /sw.js
 ├── postcss.config.mjs, eslint.config.mjs, vitest.config.ts, tsconfig.json (alias @/* → src/*)
@@ -695,6 +723,7 @@ npm run db:push        # aplica migraciones al proyecto enlazado (dev)
 npm run db:types       # regenera src/types/database.ts
 npm run eval:assistant # spec 015: 39 preguntas a Groq contra dev (~10 min, gasta cuota)
 npm run eval:schedule  # spec 022: 12 horarios sintéticos al modelo con visión (~12 min, gasta cuota)
+python -m graphify query "<pregunta>"   # mapa del proyecto (§0); también explain, path y update .
 ```
 
 ## 9. Patrones del código (síguelos)

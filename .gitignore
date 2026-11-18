@@ -69,3 +69,8 @@ replica/
 # Screenshots of the playwright-cli tool (spec 023 RF-40)
 .playwright-cli/
 .scratch/
+
+# Mapa del proyecto de graphify: se regenera en local con los hooks de git (enmienda 13)
+graphify-out/
+# Ajustes personales de Claude Code (los del proyecto van en .claude/settings.json)
+.claude/settings.local.json
