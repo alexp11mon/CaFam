@@ -110,6 +110,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 038  | La sincronización no borra lo que queda fuera de la ventana         | ✅ Cerrada (migración pendiente en prod)          |
 | 039  | Búsqueda de eventos, también sin conexión                           | ✅ Cerrada (migración pendiente en prod)          |
 | 040  | Recordatorios y notificaciones push                                 | ✅ Cerrada (migración y claves VAPID pendientes)  |
+| 041  | Alta de eventos en lenguaje natural, sin IA                         | ✅ Cerrada                                        |
 
 > Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
@@ -131,6 +132,12 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 - **Calendarios plegables:** cada grupo o persona de los filtros se pliega (sin cambiar qué se ve), las categorías van plegadas bajo su calendario, el orden se cambia en el modo "Ordenar" y lo plegado se recuerda en el dispositivo.
 - **Grupos de calendarios** para mostrar u ocultar varios a la vez. "Mis calendarios" muestra grupos plegables y cada calendario en una fila que se despliega con sus acciones.
 - **Juntar calendarios propios** en uno (fusión real, irreversible, con confirmación).
+
+### ✍️ Alta en lenguaje natural
+
+- "Escribe el evento" en el alta rápida y en el formulario: "Cena con Ana el viernes a las 21 en casa @familia" rellena título, día, horas, lugar, calendario y repetición sencilla ("cada lunes").
+- Vista previa mientras se escribe, con lo entendido subrayado y avisos ("Se entiende por la tarde: 17:00"); nada cambia hasta pulsar "Aplicar" o Intro, y lo editado a mano no se pisa.
+- Un analizador propio en español, sin IA ni red: funciona también sin conexión.
 
 ### 🔎 Búsqueda
 
@@ -525,7 +532,6 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 - Vistas de año y de 4 días.
 - Papelera o deshacer de más de una acción.
 - Compartir e integrar con el sistema operativo.
-- Alta en lenguaje natural sin IA ("Cena con Ana mañana a las 21").
 - Zona horaria por evento.
 - Sincronizar o actualizar un calendario importado.
 - Importar a un calendario que ya existe.
@@ -546,8 +552,7 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 Hasta que exista su spec aprobada:
 
 - Vistas de año y de 4 días, papelera o deshacer de más de una acción.
-- Compartir e integrar con el sistema.
-- Alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución).
+- Compartir e integrar con el sistema (las tres últimas, en la hoja de ruta de la constitución).
 - Zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario existente, exportar a `.ics`.
 - Verificación de email en el registro, traspaso voluntario de calendarios, exportar datos de la cuenta, login social, Microsoft, i18n.
 - Sin conexión: envío en segundo plano, fechas fuera del rango guardado, series enteras, calendarios traídos, imágenes y comentarios (el resto, en "Fuera de alcance" de la spec 034).

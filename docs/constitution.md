@@ -48,8 +48,8 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 038-sincronizacion-sin-borrar-fuera-de-ventana | La sincronización solo borra lo que solapa la ventana leída; lo antiguo queda como copia |
 | 039-busqueda-de-eventos | Búsqueda de eventos por título, lugar, descripción y comentarios, también sin conexión |
 | 040-recordatorios-y-notificaciones | Recordatorios personales y avisos sociales por Web Push (VAPID y cifrado con `node:crypto`, gratis; en iOS solo con la app instalada) |
+| 041-alta-en-lenguaje-natural | Alta de eventos en lenguaje natural ("Cena con Ana mañana a las 21"), con un analizador propio, sin IA ni coste |
 | Futura (sin número) | Compartir e integrar con el sistema: compartir un evento, recibir `.ics` o fotos compartidas, accesos directos y número de eventos de hoy en el icono |
-| Futura (sin número) | Alta de eventos en lenguaje natural ("Cena con Ana mañana a las 21"), sin IA ni coste |
 
 Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": desde el 2026-10-22 son la 006 y la 007. Las specs cerradas no se editan, con una única excepción: el cambio de nombre a CaFam de la spec 010, que solo sustituye el nombre y no toca requisitos, decisiones ni evidencias (enmienda 3).
 

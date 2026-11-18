@@ -2,7 +2,7 @@
 
 Spec: `specs/041-alta-en-lenguaje-natural/spec.md`. Plan: `specs/041-alta-en-lenguaje-natural/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: pendiente.
+> Estado: cerrada (2026-11-18), T1–T6. Sin pasos de producción.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una. Sin migraciones.
 
@@ -33,8 +33,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Vista previa en vivo, `aria-live`, "Aplicar"/Intro, no pisa lo tocado a mano, "+" y N enfocan la frase, funciona en la app sin conexión.
 
   Cubre: RF-11 a RF-14, RNF-3 | Evidencia: `npm test -- nl-field quick-create event-form offline-app` en verde: `NlField` ("Escribe el evento") con vista previa en vivo en una región `aria-live="polite"`, lo reconocido subrayado (no solo color), avisos (tarde por defecto, calendario desconocido), "Aplicar" o Intro sin enviar el formulario y sin mandar la frase; en el alta rápida rellena título, día, horas, calendario, lugar y repetición, y en el formulario completo todos los campos (también "Todo el día" y "Repetir") sin pisar los tocados a mano; el "+", N y la ventana empiezan en la frase; en la app sin conexión funciona igual. Capturas en `capturas/` (`formulario-frase`, `formulario-aplicado` y `alta-rapida-frase`, 390 y 1440 px, claro y oscuro, con `scripts/screenshots-041.mjs`). P8 en verde (3.602 tests).
-- [ ] T6 Cierre
+- [x] T6 Cierre
   Hecho cuando: AGENTS.md, README y constitución (hoja de ruta) actualizados; `python -m graphify update .`; P8 completa.
+
+  Evidencia: AGENTS.md (tabla de specs, sección de la 041, estructura con `lib/nl/` y fuera de alcance), README (estado, "Alta en lenguaje natural", hoja de ruta y fuera de alcance) y constitución (hoja de ruta: la 041 deja de ser futura); `python -m graphify update .`; P8 en verde.
 
 ## Trazabilidad
 
