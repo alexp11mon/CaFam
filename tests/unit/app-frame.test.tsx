@@ -109,6 +109,7 @@ describe("AppFrame on the assistant's page (spec 037 RF-1, RF-2)", () => {
       render(
         <AppFrame
           accent="red"
+          userId="user-1"
           theme="system"
           displayName="Ana López"
           signOutAction={vi.fn(async () => {})}
