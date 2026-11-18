@@ -18,11 +18,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - "y media", "y cuarto", "menos cuarto", franjas, am/pm, rangos, "hasta", duraciones y ambigüedad de la tarde.
 
   Cubre: RF-4, RF-5, RF-15 | Evidencia: `npm test -- nl-times` 66/66 (63 frases): "a las", "21:30", "21h", "9 de la noche", "y media", "y cuarto", "menos cuarto", mediodía, medianoche, franjas (9, 17 y 21 h), am/pm, rangos ("de 10 a 12", "10-12", "de 9 a 11 de la noche"), "hasta las", duraciones ("1h30", "90 min", "media hora", "una hora y media") y la tarde por defecto entre 1 y 7 marcada para la vista previa; P8 en verde.
-- [ ] T3 Lugar, calendario, repetición y título
+- [x] T3 Lugar, calendario, repetición y título
   Hecho cuando: `npm test -- nl-parse nl-cases` en verde (batería completa, más de 150).
   - "en 2 semanas" no es lugar; "@fam" elige Familia; ambiguo avisa; título limpio con mayúscula.
 
-  Cubre: RF-7 a RF-10, RNF-1, RNF-2 | Evidencia: —
+  Cubre: RF-7 a RF-10, RNF-1, RNF-2 | Evidencia: `npm test -- nl-parse` 165/165 sobre la batería `tests/unit/nl-cases.ts` (161 frases: las de la spec, 61 a mano y 100 combinaciones de fecha y hora en los dos órdenes), en menos de 1 ms por frase: "en 2 semanas" no es lugar, lugar hasta la siguiente parte, "@familia" como pista de calendario (no en un correo), repeticiones sencillas ("cada lunes", "todos los días", "de lunes a viernes", "cada mes", "cada año") y título limpio con mayúscula; P8 en verde.
 - [ ] T4 Resolución y vista previa
   Hecho cuando: `npm test -- nl-resolve nl-preview` en verde.
   - Valores del formulario en la zona del perfil (también con cambio de hora) y duración de Ajustes; tramos resaltados en el texto original.

@@ -215,7 +215,7 @@ function single(scan: Scan, today: string): DateResult | null {
   return (
     // "el viernes 27 de noviembre", "el sábado 21": the number decides.
     scan.first(
-      `${B}(?:el )?${WEEKDAY},? (?:dia )?(${DAY_MONTH}|\\d{1,2}[/-]\\d{1,2}(?:[/-]\\d{2,4})?|\\d{1,2})${E}`,
+      `${B}(?:el )?${WEEKDAY},? (?:dia )?(${DAY_MONTH}|\\d{1,2}[/-]\\d{1,2}(?:[/-]\\d{2,4})?|\\d{1,2})${E}(?![:.]\\d|h|\\s*-\\s*\\d)`,
       "date",
       (m) => result(explicit(today, m[2]!.replace(/\.$/, ""))),
     ) ??
