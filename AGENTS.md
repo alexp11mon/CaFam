@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-17, al cerrar las specs 031 a 033 (Venito morsa, calendarios plegables y vulnerabilidades) y revisar toda la documentación.
+> Última actualización: 2026-11-18, al terminar la spec 036 (Venito crea y edita eventos).
 
 ## 1. Qué es
 
@@ -61,6 +61,7 @@ Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. 
 | 031-venito-morsa | Venito pasa de foca a morsa de línea con gafas, colmillos y bigotes, como la referencia del usuario (enmienda 12) | **Cerrada** (2026-11-16), T1; sin migraciones |
 | 032-calendarios-plegables | Panel lateral del calendario que se desplaza por sí mismo (fallo: con muchos calendarios no se llegaba a los de abajo), grupos y personas plegables en los filtros con modo "Ordenar", y "Mis calendarios" con grupos plegables, opciones tras "⋯", calendarios en filas que se despliegan y "Nuevo grupo" en una hoja | **Cerrada** (2026-11-17), T1–T5; sin migraciones. Spec, plan y tareas aprobados de antemano por el usuario |
 | 033-vulnerabilidades | `next` y `eslint-config-next` 16.4.2 → 16.4.6 (GHSA-mfr8-8qww-v76h) y `npm audit fix` de las herramientas de desarrollo (`minimatch`, `typescript-eslint`): `npm audit` con 0 vulnerabilidades | **Cerrada** (2026-11-17), T1; sin migraciones ni dependencias nuevas |
+| 036-venito-crea-y-edita | Venito crea eventos (hora fija o relativa a otro evento, "justo cuando acabe PIAE") y propone cambios que se confirman; calendario y evento por su nombre, "Deshacer", nunca borra, 3 por mensaje | **Hecha** (2026-11-18), T1–T10; sin migraciones ni dependencias. Pendientes del usuario: `EVAL_PART=write npm run eval:assistant` contra Groq y el cierre. Las specs 034 y 035 están en otras ramas |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -307,6 +308,23 @@ Añadido por la spec 032 (sin migraciones):
 - **Plegado recordado en el dispositivo**: `lib/calendar/folded.ts` (puro; `foldId` da las ids compartidas `group:<id>`, `person:<id>`, `section:calendars`, `section:ungrouped`, `categories:<calendarId>`) y `useFolded(id, porDefecto)` (`lib/hooks/use-folded.ts`, `localStorage` `cafam-folded`, solo elecciones explícitas). Las categorías empiezan plegadas; lo demás, desplegado. `tests/setup-unit.ts` limpia el almacén tras cada test.
 - **Filtros** (`CalendarFilters`): título plegable con "N de M visibles", flecha "Plegar/Desplegar <grupo>" y "2/3" por grupo o persona, categorías bajo "Mostrar las categorías de <calendario>" con "1 categoría oculta", y las flechas Subir/Bajar solo tras "Ordenar" (que despliega todo sin guardarlo) hasta "Hecho".
 - **"Mis calendarios"**: `GroupSection` se pliega con la misma id que en los filtros y guarda Renombrar, Borrar, Subir y Bajar tras "Opciones de <grupo>"; "Sin grupo" es un `FoldSection`; `CalendarList` (ahora cliente) pinta filas que despliegan detalles y acciones, una a la vez; "Nuevo grupo" es un chip que abre `GroupForm` en una `Sheet` (`NewGroupButton`; el campo se llama "Nombre del grupo"). `FoldChevron` (`components/ui/fold-chevron.tsx`) es la flecha de todo lo plegable.
+
+Añadido por la spec 036 (sin migraciones):
+
+- **Herramientas de escritura** (`WRITE_TOOL_DEFINITIONS`): `create_events` (crea en el acto de 1 a 3) y `propose_changes` (prepara de 1 a 3 cambios sin escribir nada). Solo se ofrecen si `wantsWrite(hilo)` (`lib/assistant/write-intent.ts`) ve un verbo de crear o cambiar en el último mensaje del usuario, o en uno anterior de la misma petición mientras Venito pregunta. El texto de eventos, comentarios o imágenes nunca abre la escritura. `runAssistant` las recibe con `deps.write` y el prompt nombra los calendarios escribibles; una ronda con escritura va en serie.
+- **El servidor resuelve, el modelo nombra** (`app/dashboard/assistant/assistant-writes.ts`, `writeTools`):
+  - `matchCalendar` (`calendar-match.ts`): sin mayúsculas ni tildes, una parte del nombre o un correo; da ambiguo, de solo lectura con su motivo o pregunta cuál.
+  - `findEventsByTitle` (en `tools.ts`, la lectura de `search_events`) y `pickEvent` (`event-pick.ts`): el del día dicho, el próximo que no ha terminado o, si no hay, el último.
+  - `resolveTimes` (`write-times.ts`): `after` empieza al acabar X, `before` acaba al empezar X, la duración de Ajustes al crear y la del evento al editar.
+  - Los fallos (fin antes del inicio, solo lectura, más de 3, el proveedor) llevan `notice`, que el bucle añade a la respuesta aunque el modelo lo calle.
+- **Acciones** (`lib/assistant/actions.ts`): `created` (con su `anchor` y la ficha `uncreate`) y `change` (antes, después, alcance, pérdida de la serie y `PendingChange` con el `updated_at`). La ruta las manda como líneas NDJSON `action` en cuanto existen y en `done.actions`. `describeAction` da su texto para lectores de pantalla y el resumen que vuelve al modelo dentro del mensaje de Venito.
+- **Confirmar y deshacer** (`write-actions.ts`, Server Actions; lógica en `change-writes.ts`): `confirmChange` aplica un cambio solo si el `updated_at` no cambió (de su serie si la repetición no tiene fila) y devuelve la ficha `unchange`. `undoAssistantAction` borra lo creado o devuelve los valores anteriores, salvo si alguien lo tocó. Un cambio a varias repeticiones no se deshace (como la 017). Reutilizan `createSingle`, `updateSingle`, `changeOccurrence` y `deleteSingle`; `seriesValues` de `quick-writes.ts` se exporta.
+- **Chat**:
+  - `ActionCard` (`components/assistant/action-card.tsx`, `runCardStep`).
+  - "sí" y "no" (`isYes`, `isNo`) confirman o cancelan el cambio pendiente sin llamar a la API; otro texto lo cancela, o lo sustituye si llega un cambio nuevo.
+  - Al cancelar con tarjetas ya recibidas, se conservan.
+  - `onChanged` hace `router.refresh()` desde `AssistantFab`, porque lo escrito en la ruta no refresca la vista y el tiempo real ignora los cambios propios.
+- **Eval**: `tests/assistant-eval/write-questions.ts` (15 peticiones) y la prueba "writes only what is asked" de `scripts/assistant-eval.ts` (`EVAL_PART=read|write`). `scripts/assistant-cards.mjs` prueba las tarjetas en el navegador sin Groq y hace las capturas.
 
 La fuente de verdad es [`docs/constitution.md`](docs/constitution.md). Resumen de lo que más afecta a un agente:
 
@@ -835,15 +853,18 @@ npm run eval:schedule  # spec 022: 12 horarios sintéticos al modelo con visión
 - **`waitForLoadState("networkidle")` tras iniciar sesión** puede no llegar nunca (el canal de tiempo real): en los scripts de Playwright espera a un elemento o un tiempo fijo.
 - **Next deja un `role="alert"` propio** (anunciador de rutas): en Playwright busca los avisos dentro de su contenedor.
 - **La palabra "glass"** en `src/` hace fallar la guardia de diseño, también en un comentario.
+- **Reglas de prueba de series** (spec 036): escribe la RRULE como la escribe la app (`FREQ=WEEKLY;INTERVAL=1;BYDAY=TH`). Una semanal sin `BYDAY` no da repeticiones, y una no canónica hace creer a `planSeriesChange` que cambió la regla ("Solo este evento" falla).
 - **El prototipo de la 030** carga Tailwind desde un CDN: sin red a ese CDN no se pinta; se interpretó leyendo su código.
 
 ## 11. Fuera de alcance hasta su spec
 
-Vistas de año y de 4 días, búsqueda de eventos, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. El asistente (015) está hecho: crear o cambiar eventos desde el asistente, guardar conversaciones o responder por voz necesitan otra spec. Las notas (028) están hechas: fecha límite por elemento, reordenar arrastrando, vencimientos en el calendario, notas de un evento y notas desde el asistente necesitan la suya.
+Vistas de año y de 4 días, búsqueda de eventos, papelera o deshacer más de una acción, recordatorios push, compartir e integrar con el sistema, alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución), zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario que ya existe, exportar a `.ics`, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos e i18n. No implementes nada de esto sin su spec aprobada. El asistente (015) está hecho y desde la 036 crea eventos y propone cambios: borrar eventos o crear series desde el asistente, guardar conversaciones o responder por voz necesitan otra spec. Las notas (028) están hechas: fecha límite por elemento, reordenar arrastrando, vencimientos en el calendario, notas de un evento y notas desde el asistente necesitan la suya.
 
 ## 12. Cómo continuar
 
-**Lo más reciente (2026-11-17): specs 024 a 033**, todas en la rama `claude/eager-turing-5xgj2t` (contiene también la rama anterior `claude/clever-feynman-lx0v5m`). `main` sigue en el cierre de la 023. Pendiente del usuario:
+**Spec 036 (2026-11-18)**: hecha en la rama `claude/gallant-goldberg-0bzfzk`, sin migraciones. Falta que el usuario lance `EVAL_PART=write npm run eval:assistant` contra Groq y dev, la pruebe en el iPhone con un calendario de Google y la cierre. Las specs 034 y 035 las lleva el usuario en otras ramas.
+
+**Specs 024 a 033 (2026-11-17)**, todas en la rama `claude/eager-turing-5xgj2t` (contiene también la rama anterior `claude/clever-feynman-lx0v5m`). `main` sigue en el cierre de la 023. Pendiente del usuario:
 
 1. Revisar el resultado (capturas en `specs/030-estilo-nexo/capturas/`, `specs/029-pantallas-restantes-y-cierre/capturas/` y `specs/032-calendarios-plegables/capturas/`).
 2. Aplicar las dos migraciones de la 028 (`notes`, `notes_calendar_functions`) a **dev** (`npm run db:push` con el link en dev) y regenerar tipos allí si difieren; después a **prod** junto con las tres de la 023, que seguían pendientes. **Hay que hacerlo antes o a la vez que el merge**: sin ellas, la sección Notas falla en producción.

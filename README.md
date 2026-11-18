@@ -103,6 +103,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 031  | Venito pasa a ser una morsa                                         | ✅ Cerrada                                        |
 | 032  | Panel lateral desplazable y calendarios plegables                   | ✅ Cerrada                                        |
 | 033  | Next.js 16.4.6 y `npm audit` sin vulnerabilidades                   | ✅ Cerrada                                        |
+| 036  | Venito crea eventos y propone cambios desde el chat                 | 🟡 Hecha, pendiente del eval y del cierre         |
 
 > Las specs 024 a 033 están en la rama `claude/eager-turing-5xgj2t`, pendientes de merge a `main`.
 
@@ -172,7 +173,8 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 
 - **Venito** es la mascota de CaFam (una morsa con gafas, en SVG propio con seis expresiones). Su botón flotante abre el chat como un panel en cualquier pantalla; `/dashboard/assistant` lo muestra a página completa.
 - Conversación con burbujas, "escribiendo…" con el paso real (respuesta en streaming) y sugerencias según el contexto.
-- Herramientas solo lectura (`list_events`, `search_events`, `find_free_time`, `get_comments`) atadas a la sesión del usuario; los eventos citados abren su detalle.
+- Herramientas de lectura (`list_events`, `search_events`, `find_free_time`, `get_comments`) atadas a la sesión del usuario; los eventos citados abren su detalle.
+- **Crear y cambiar eventos (spec 036):** "Crea Comida Uni en el calendario X justo cuando acabe PIAE hasta las 14:30". El servidor busca el evento de referencia y el calendario por su nombre y calcula las horas. Crear es directo, con "Deshacer". Un cambio se muestra en una tarjeta y no se guarda hasta "Confirmar" (o "sí"). Nunca borra: lleva al evento. Como mucho 3 por mensaje, con los permisos del usuario y, en Google o iCloud, escribiendo primero allí.
 - **Eventos desde una imagen:** adjunta hasta 3 fotos de un horario y Venito propone los eventos en una tarjeta editable; nada se crea hasta pulsar "Crear". Las imágenes no se guardan.
 - Proveedor Groq (`openai/gpt-oss-120b`, con `qwen/qwen3.8-27b` de reserva y para las imágenes). Disponibilidad común calculada en TypeScript, solo con el consentimiento de cada persona. 30 preguntas al día por usuario.
 

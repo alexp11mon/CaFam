@@ -190,11 +190,22 @@ export function ActionCard({
         </>
       ) : (
         <>
-          <EventLines event={action.before} timeZone={timeZone} label="Ahora" />
+          {/* Once applied or undone, the two sides are history. */}
+          <EventLines
+            event={action.before}
+            timeZone={timeZone}
+            label={
+              status === "pending" || status === "failed" ? "Ahora" : "Antes"
+            }
+          />
           <EventLines
             event={action.after}
             timeZone={timeZone}
-            label="Quedará"
+            label={
+              status === "pending" || status === "failed"
+                ? "Quedará"
+                : "Después"
+            }
           />
           {action.scope ? (
             <p className="text-sm text-muted">

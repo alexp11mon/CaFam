@@ -2,7 +2,7 @@
 
 Spec: `specs/036-venito-crea-y-edita/spec.md`. Plan: `specs/036-venito-crea-y-edita/plan.md` (la spec la aprobó el usuario el 2026-11-17 y el plan y las tareas, de antemano, el mismo día).
 
-> Estado: **en curso**.
+> Estado: **hechas** (T1–T10), 2026-11-18. Pendientes del usuario: la evaluación contra Groq (`EVAL_PART=write npm run eval:assistant`), la prueba en el iPhone con un calendario de Google y el cierre de la spec.
 
 Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la verificación de P8 en verde y su salida reportada:
 `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, y además `npm run test:db` en T4 y T5. Sin migraciones ni dependencias nuevas.
@@ -103,10 +103,16 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
   - Inyección en un comentario.
 
   `scripts/assistant-eval.ts` tiene una segunda prueba, "writes only what is asked", con las herramientas de escritura atadas a la sesión del usuario sembrado. La semilla de escritura se crea solo para ella, para no cambiar los huecos libres de las preguntas de lectura. Después de cada petición borra lo creado. Exige el 90 % de aciertos, ninguna escritura indebida y el 90 % por debajo de 10 s. `EVAL_PART=read|write` elige una parte. La pregunta de lectura "Crea una cena…" se quita (ahora es de escritura) y "Borra el dentista" espera el enlace al evento. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 298 archivos y 2.932 tests, build. **No se ha ejecutado contra Groq**: esta sesión no tiene `GROQ_API_KEY` ni acceso a Supabase dev. Lo lanza el usuario con `EVAL_PART=write npm run eval:assistant`.
-- [ ] T10 Capturas, recorrido y documentación
+- [x] T10 Capturas, recorrido y documentación
   Hecho cuando:
   - Capturas de las dos tarjetas a 390, 768 y 1440 px en claro y oscuro en `specs/036-venito-crea-y-edita/capturas/`, con el chat simulado, sin Groq.
   - `AGENTS.md` y `README.md` al día.
   - P8 completa y `npm run test:db` entero en verde.
 
   Cubre: RNF de accesibilidad | Módulo: documentación
+  Evidencia (2026-11-18): `scripts/assistant-cards.mjs` en el navegador real (`next start` contra Supabase local, sin Groq; la respuesta de la API se sustituye por una con tarjetas sembradas de verdad):
+  - «Confirmar» mueve el dentista en la base de datos.
+  - «Deshacer» borra la Comida Uni creada y devuelve el dentista a su hora.
+  - «sí» confirma sin llamar a la API.
+
+  12 capturas de las dos tarjetas (390, 768 y 1440 px; claro y oscuro; Violeta y Ámbar) y `aplicado-390-claro.png` en `capturas/`. Retoque visto en ellas: tras aplicar o deshacer, "Ahora/Quedará" pasan a "Antes/Después" (test en `assistant-action-card`). Visto también, de antes de esta spec: a 390 px el "+" flotante tapa el botón Enviar en `/dashboard/assistant`. `AGENTS.md` (tabla, sección de la 036, §11, §12 y una trampa) y `README.md` al día. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 298 archivos y 2.932 tests, build. `npm run test:db -- --no-file-parallelism` entero en verde contra Supabase local: 50 archivos y 562 tests.

@@ -160,6 +160,8 @@ describe("ActionCard of a change", () => {
     await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
     expect(confirmChange).toHaveBeenCalledWith(change.change);
     expect(await screen.findByText("Cambio aplicado")).toBeInTheDocument();
+    expect(screen.getByText("Antes")).toBeInTheDocument();
+    expect(screen.getByText("Después")).toBeInTheDocument();
     expect(onChanged).toHaveBeenCalledTimes(1);
     await userEvent.click(screen.getByRole("button", { name: "Deshacer" }));
     expect(undoAssistantAction).toHaveBeenCalledWith(undo);
