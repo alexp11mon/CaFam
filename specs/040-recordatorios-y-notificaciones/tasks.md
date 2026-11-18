@@ -47,10 +47,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Cerrar sesión borra la suscripción del dispositivo.
 
   Cubre: RF-1 a RF-7, RF-14, RF-18, RNF-4 | Evidencia: `npm test -- notification-settings reminder-field event-form event-panel push-options`: activar solo tras pulsar, lista de dispositivos con "Quitar", aviso de prueba a este dispositivo, iOS sin instalar, permiso bloqueado, aviso por defecto y tipos de aviso; `ReminderField` (hasta 3) en alta y edición y "Avisarme" en el detalle también para Lectores (se guarda al momento y se revierte si falla); cerrar sesión llama a `forgetPushSubscription` (`SignOutGuard`). Capturas en `capturas/` (`ajustes-notificaciones` y `detalle-avisarme`, 390, 768 y 1440 px, claro y oscuro, con `scripts/screenshots-040.mjs`). Sin conexión el detalle no ofrece avisos (necesitan red). P8 en verde (3.282 tests).
-- [ ] T7 Prueba real y privacidad
+- [x] T7 Prueba real y privacidad
   Hecho cuando: con `next start -p 3100` y Edge/Chrome, activar avisos, crear un evento a 2 minutos y llamar a mano a `/api/push/run`: llega una notificación y al pulsarla abre el detalle (captura). `/privacy` con la sección "Notificaciones".
 
-  Cubre: RF-11, RF-17 | Evidencia: —
+  Cubre: RF-11, RF-17 | Evidencia: `scripts/e2e-push.mjs` con `next start -p 3100` (claves VAPID de prueba solo en local) y Edge con ventana, 6/6: suscripción real al servicio de push de Windows (`wns2-…notify.windows.com`, "Edge en Windows"), aviso de prueba mostrado, alta desde el formulario con el aviso por defecto [10], `/api/push/run` llamado a mano dos veces (`sent` 1 y luego 0), el service worker muestra "Cena de prueba · Hoy a las 23:02" (descifrado por el navegador) con la URL del detalle, y esa URL abre el detalle (captura `capturas/prueba-real-detalle-1440.png`). Pulsar la notificación del sistema no se puede automatizar: lo cubre `sw-push` (`notificationclick`). `/privacy` gana la sección "Notificaciones" (`privacy-page` 11/11). Pendiente del usuario: iPhone y Android. P8 en verde (3.283 tests).
 - [ ] T8 Cierre
   Hecho cuando: AGENTS.md (spec, base de datos, rutas, variables, trampas de VAPID e iOS), README, constitución (hoja de ruta y P2 con Web Push) y `.env.example` actualizados; `python -m graphify update .`; P8 completa.
 

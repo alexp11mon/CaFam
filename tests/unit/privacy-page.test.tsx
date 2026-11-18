@@ -175,4 +175,15 @@ describe("/privacy: images in the assistant (spec 022)", () => {
     expect(section).toHaveTextContent("cada 15 minutos");
     expect(section).toHaveTextContent("Se borra entera al cerrar sesión");
   });
+
+  // Spec 040 (RF-17).
+  it("says what a push subscription keeps and that notices are encrypted", () => {
+    render(<PrivacyPage />);
+    const section = screen
+      .getByRole("heading", { name: "Notificaciones" })
+      .closest("section")!;
+    expect(section).toHaveTextContent("cifrado de extremo a extremo");
+    expect(section).toHaveTextContent("no puede leer su contenido");
+    expect(section).toHaveTextContent("Tus recordatorios son solo tuyos");
+  });
 });

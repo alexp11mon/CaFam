@@ -306,6 +306,27 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
+        <Section title="Notificaciones">
+          <p>
+            Si activas los avisos en un dispositivo, CaFam guarda la dirección
+            que te da el servicio de avisos de tu navegador (Google, Apple,
+            Microsoft o Mozilla), sus claves y el nombre del dispositivo
+            («Chrome en Windows»). Puedes quitar cada dispositivo en Ajustes, y
+            al cerrar sesión se quita el del dispositivo en el que estás.
+          </p>
+          <p>
+            Cada aviso viaja cifrado de extremo a extremo: el servicio de avisos
+            del navegador lo entrega, pero no puede leer su contenido (el
+            título, la hora y el lugar del evento, o quién comentó y qué).
+          </p>
+          <p>
+            Tus recordatorios son solo tuyos: los demás miembros no los ven. Se
+            guarda cuándo se envió cada recordatorio, para no repetirlo, durante
+            8 días. Los avisos de lo que hacen otras personas se borran como
+            mucho 2 días después. Al borrar tu cuenta se borra todo.
+          </p>
+        </Section>
+
         <Section title="Contacto">
           <p>
             Para cualquier duda, escribe al correo de asistencia que muestra
