@@ -2,20 +2,20 @@
 
 Spec: `specs/038-sincronizacion-sin-borrar-fuera-de-ventana/spec.md`. Plan: `specs/038-sincronizacion-sin-borrar-fuera-de-ventana/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: pendiente.
+> Estado: en curso.
 
 Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con P8 en verde y su salida: `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, y `npm run test:db` en T1.
 
 ## Tareas
 
-- [ ] T1 `sync_apply_events` con ventana y conservados
+- [x] T1 `sync_apply_events` con ventana y conservados
   Hecho cuando: `npm run test:db -- sync-worker` en verde con los casos nuevos.
   - Migración `sync_apply_window` y `npm run db:push` + `npm run db:types`.
   - Tests nuevos en `tests/integration/sync-worker.test.ts`: un evento antes de la ventana, uno después, uno que cruza el borde (sí se borra si no viene), uno dentro (sí se borra), uno omitido en `p_keep` (no se borra), y sin `p_from` se borra como antes. El resumen no cuenta los conservados.
   - Un evento antiguo con imagen y comentario conserva ambos.
 
   Cubre: RF-1 a RF-5, RF-8 | Módulo: migración (D1, D2, D3, D5)
-  Evidencia: —
+  Evidencia: migración `20261119100000_sync_apply_window` aplicada en dev; `npm run test:db -- sync-worker` 27/27; P8 en verde (336 archivos, 3.195 tests; build correcto).
 - [ ] T2 El motor pasa la ventana y los omitidos
   Hecho cuando: `npm test -- run-sync limit-events` en verde.
   - `limitEvents` devuelve `omittedIds`.

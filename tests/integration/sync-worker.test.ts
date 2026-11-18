@@ -548,3 +548,117 @@ describe("hourly run (D2, D3)", () => {
     expect(error?.code).toBe("42501");
   });
 });
+
+// Spec 038, T1: only what overlaps the window read can be removed (RF-1 to
+// RF-5, RF-8).
+describe("sync_apply_events with a window (spec 038)", () => {
+  let calendarId: string;
+  const FROM = "2026-06-01T00:00:00.000Z";
+  const TO = "2027-06-01T00:00:00.000Z";
+
+  beforeAll(async () => {
+    calendarId = await newSynced("Ventana", "window-cal");
+  });
+
+  function at(id: string, start: string, end: string) {
+    return {
+      external_id: id,
+      title: id,
+      description: null,
+      location: null,
+      starts_at: start,
+      ends_at: end,
+      all_day: false,
+    };
+  }
+
+  const before = at("before", "2026-01-10T10:00:00Z", "2026-01-10T11:00:00Z");
+  const after = at("after", "2027-08-10T10:00:00Z", "2027-08-10T11:00:00Z");
+  const edge = at("edge", "2026-05-31T22:00:00Z", "2026-06-01T02:00:00Z");
+  const inside = at("inside", "2026-09-10T10:00:00Z", "2026-09-10T11:00:00Z");
+  const kept = at("kept", "2026-10-10T10:00:00Z", "2026-10-10T11:00:00Z");
+
+  async function apply(events: object[], extra: Record<string, unknown> = {}) {
+    const { data, error } = await engine.rpc("sync_apply_events", {
+      p_secret: SECRET,
+      p_calendar_id: calendarId,
+      p_events: events as never,
+      ...extra,
+    });
+    if (error) throw error;
+    return data as { removed: number };
+  }
+
+  async function ids() {
+    const { data } = await admin
+      .from("events")
+      .select("external_id")
+      .eq("calendar_id", calendarId);
+    return (data ?? []).map((row) => row.external_id).sort();
+  }
+
+  it("keeps events outside the window and omitted ones, removes the rest", async () => {
+    await apply([before, after, edge, inside, kept]);
+    const { data: old } = await admin
+      .from("events")
+      .select("id")
+      .eq("calendar_id", calendarId)
+      .eq("external_id", "before")
+      .single();
+    const imageId = crypto.randomUUID();
+    await admin.from("event_images").insert({
+      id: imageId,
+      event_id: old!.id,
+      object_id: imageId,
+      uploaded_by: owner.id,
+      status: "ready",
+      bytes: 1000,
+      width: 10,
+      height: 10,
+    });
+    await admin.from("event_comments").insert({
+      event_id: old!.id,
+      author_id: owner.id,
+      body: "Antiguo",
+      client_id: crypto.randomUUID(),
+    });
+
+    const summary = await apply([], {
+      p_from: FROM,
+      p_to: TO,
+      p_keep: ["kept"],
+    });
+
+    expect(await ids()).toEqual(["after", "before", "kept"]);
+    expect(summary.removed).toBe(2);
+    const images = await admin
+      .from("event_images")
+      .select("id")
+      .eq("event_id", old!.id);
+    const comments = await admin
+      .from("event_comments")
+      .select("id")
+      .eq("event_id", old!.id);
+    expect(images.data).toHaveLength(1);
+    expect(comments.data).toHaveLength(1);
+    await admin.from("event_images").delete().eq("id", imageId);
+  });
+
+  it("updates an old event when it comes back in the read, without duplicating (RF-5)", async () => {
+    await apply([{ ...before, title: "Vuelve" }], {
+      p_from: "2025-12-01T00:00:00Z",
+      p_to: TO,
+    });
+    const { data } = await admin
+      .from("events")
+      .select("title")
+      .eq("calendar_id", calendarId)
+      .eq("external_id", "before");
+    expect(data).toEqual([{ title: "Vuelve" }]);
+  });
+
+  it("without a window removes everything missing, as before (RF-4)", async () => {
+    await apply([]);
+    expect(await ids()).toEqual([]);
+  });
+});
