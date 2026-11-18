@@ -109,6 +109,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 037  | El "+" no tapa "Enviar" en la pantalla del asistente                | ✅ Cerrada                                        |
 | 038  | La sincronización no borra lo que queda fuera de la ventana         | ✅ Cerrada (migración pendiente en prod)          |
 | 039  | Búsqueda de eventos, también sin conexión                           | ✅ Cerrada (migración pendiente en prod)          |
+| 040  | Recordatorios y notificaciones push                                 | ✅ Cerrada (migración y claves VAPID pendientes)  |
 
 > Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
@@ -136,6 +137,12 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 - Lupa en la cabecera del calendario (o tecla `/`): busca por título, lugar, descripción y comentarios en todos tus calendarios, también los ocultos, sin importar tildes ni mayúsculas.
 - Resultados por día, próximos primero, con las repeticiones de las series y el comentario que coincide resaltado.
 - Sin conexión busca en los datos guardados en el dispositivo.
+
+### 🔔 Recordatorios y notificaciones
+
+- Hasta 3 recordatorios personales por evento ("10 minutos antes", "El día anterior a las 9:00"…), con un aviso por defecto en Ajustes que se pone al crear; cualquier miembro, Lectores incluidos, se los pone desde el detalle ("Avisarme").
+- Avisos cuando alguien se une a un calendario tuyo, te da acceso, comenta o cambia un evento tuyo (cada tipo se activa en Ajustes; nunca por la sincronización).
+- Web Push con VAPID y cifrado de extremo a extremo hechos con `node:crypto`, sin dependencias ni servicios de pago. En el iPhone, solo con CaFam añadida a la pantalla de inicio.
 
 ### 👥 Compartición
 
@@ -331,6 +338,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | `/api/sync/google-push`             | pública (POST)              | Avisos de cambios de Google                                             |
 | `/api/sync/run`                     | Bearer `CRON_SECRET` (POST) | Ejecutar sincronización                                                 |
 | `/api/images/purge`                 | Bearer `CRON_SECRET` (POST) | Borrar imágenes de la cola de purga                                     |
+| `/api/push/run`                     | Bearer `CRON_SECRET` (POST) | Enviar los recordatorios y avisos push pendientes                       |
 | `/api/cron/keep-alive`              | Bearer `CRON_SECRET`        | Mantener Supabase activo                                                |
 
 ---
@@ -403,6 +411,8 @@ npm run eval:schedule
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `.env.local`, Vercel                    | Cliente OAuth de Google, solo servidor                    |
 | `GROQ_API_KEY`                             | `.env.local`, `.env.test.local`, Vercel | Clave de Groq del asistente, solo servidor                |
 | `SYNC_PUSH_URL`                            | Solo Vercel (Production)                | Dirección de los avisos de Google, solo servidor          |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`             | `.env.local`, Vercel                    | Clave pública VAPID de los avisos push                    |
+| `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`       | `.env.local`, Vercel                    | Clave privada VAPID y contacto (`mailto:`), solo servidor |
 | `SUPABASE_SECRET_KEY`                      | **Solo `.env.test.local`**              | Nunca en Vercel ni en `src/`                              |
 
 `.env.local` y `.env.test.local` apuntan a **dev** y están ignorados por git.
@@ -481,7 +491,7 @@ feat: registro de usuario (T7)
   - Navegaciones: red primero; sin red, `/dashboard/...` lleva a `/offline?from=...`, que abre la app con la copia del dispositivo (spec 034).
   - Caché primero para `/_next/static/` e `/icons/`.
   - **Nunca cachea HTML con sesión ni respuestas de Supabase.**
-  - Si cambias `sw.js` o los iconos, sube `CACHE_NAME` (`cafam-vN`; ahora `cafam-v6`).
+  - Si cambias `sw.js` o los iconos, sube `CACHE_NAME` (`cafam-vN`; ahora `cafam-v8`).
 
 ### Despliegue
 
@@ -514,7 +524,6 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 
 - Vistas de año y de 4 días.
 - Papelera o deshacer de más de una acción.
-- Recordatorios push.
 - Compartir e integrar con el sistema operativo.
 - Alta en lenguaje natural sin IA ("Cena con Ana mañana a las 21").
 - Zona horaria por evento.
@@ -526,8 +535,6 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 - Exportar los datos de la cuenta.
 - Login social.
 - Microsoft (quedó fuera en la Enmienda 1).
-- Notificaciones.
-- Envío de los cambios sin conexión con la app cerrada (envío en segundo plano).
 - i18n (internacionalización).
 
 > No se implementa nada de esto sin su spec aprobada.
@@ -539,10 +546,10 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 Hasta que exista su spec aprobada:
 
 - Vistas de año y de 4 días, papelera o deshacer de más de una acción.
-- Recordatorios push, compartir e integrar con el sistema.
+- Compartir e integrar con el sistema.
 - Alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución).
 - Zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario existente, exportar a `.ics`.
-- Verificación de email en el registro, traspaso voluntario de calendarios, exportar datos de la cuenta, login social, Microsoft, notificaciones, i18n.
+- Verificación de email en el registro, traspaso voluntario de calendarios, exportar datos de la cuenta, login social, Microsoft, i18n.
 - Sin conexión: envío en segundo plano, fechas fuera del rango guardado, series enteras, calendarios traídos, imágenes y comentarios (el resto, en "Fuera de alcance" de la spec 034).
 - Cambiar eventos desde el asistente (salvo crearlos desde una imagen), guardar conversaciones o responder por voz (necesitan otra spec).
 - En notas: fecha límite por elemento, reordenar arrastrando, vencimientos en el calendario, notas de un evento y notas desde el asistente.

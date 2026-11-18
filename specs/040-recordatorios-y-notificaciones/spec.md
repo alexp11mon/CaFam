@@ -1,6 +1,6 @@
 # Spec 040 — Recordatorios y notificaciones push
 
-> Estado: aprobada de antemano por el usuario en el prompt de arranque (2026-11-18). Pendiente de implementar.
+> Estado: aprobada de antemano por el usuario en el prompt de arranque (2026-11-18). Cerrada el 2026-11-18 (T1–T8).
 
 ## Contexto
 

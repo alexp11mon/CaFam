@@ -2,7 +2,7 @@
 
 Spec: `specs/040-recordatorios-y-notificaciones/spec.md`. Plan: `specs/040-recordatorios-y-notificaciones/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: en curso.
+> Estado: cerrada (2026-11-18), T1–T8. Pendientes del usuario: `db push` a prod de la migración `push`, las claves VAPID en Vercel y las pruebas en el iPhone y Android.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T3 y T4.
 
@@ -51,8 +51,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: con `next start -p 3100` y Edge/Chrome, activar avisos, crear un evento a 2 minutos y llamar a mano a `/api/push/run`: llega una notificación y al pulsarla abre el detalle (captura). `/privacy` con la sección "Notificaciones".
 
   Cubre: RF-11, RF-17 | Evidencia: `scripts/e2e-push.mjs` con `next start -p 3100` (claves VAPID de prueba solo en local) y Edge con ventana, 6/6: suscripción real al servicio de push de Windows (`wns2-…notify.windows.com`, "Edge en Windows"), aviso de prueba mostrado, alta desde el formulario con el aviso por defecto [10], `/api/push/run` llamado a mano dos veces (`sent` 1 y luego 0), el service worker muestra "Cena de prueba · Hoy a las 23:02" (descifrado por el navegador) con la URL del detalle, y esa URL abre el detalle (captura `capturas/prueba-real-detalle-1440.png`). Pulsar la notificación del sistema no se puede automatizar: lo cubre `sw-push` (`notificationclick`). `/privacy` gana la sección "Notificaciones" (`privacy-page` 11/11). Pendiente del usuario: iPhone y Android. P8 en verde (3.283 tests).
-- [ ] T8 Cierre
+- [x] T8 Cierre
   Hecho cuando: AGENTS.md (spec, base de datos, rutas, variables, trampas de VAPID e iOS), README, constitución (hoja de ruta y P2 con Web Push) y `.env.example` actualizados; `python -m graphify update .`; P8 completa.
+
+  Evidencia: AGENTS.md (tabla de specs, sección de la 040, base de datos, ruta `/api/push/run`, variables VAPID, `sw.js` `cafam-v8`, estructura y trampas de VAPID, dev e iOS), README (estado, "Recordatorios y notificaciones", ruta, variables, PWA y hoja de ruta), constitución (hoja de ruta con la 040 y P2 con los servicios de Web Push) y `.env.example` con las tres variables VAPID; `python -m graphify update .`; P8 en verde (3.283 tests).
 
 ## Trazabilidad
 
