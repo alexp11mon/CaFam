@@ -277,6 +277,7 @@ describe("what a change would lose (RF-13)", () => {
       {
         id: "i1",
         eventId: EXC,
+        objectId: "o1",
         uploadedBy: null,
         createdAt: "",
         width: 1,

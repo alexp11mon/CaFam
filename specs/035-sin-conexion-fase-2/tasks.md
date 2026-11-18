@@ -46,7 +46,7 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 
   Evidencia (2026-11-18): `npm test -- offline-gates offline-image-limits offline-series no-secrets` 38 en verde. `series-overlay.ts` planifica con `planSeriesChange`/`planSeriesDelete` y expande con `expandRows`, como el servidor: el caso de "Todos los eventos" a las 19:00 cruza el cambio de hora del 25 de octubre y todas quedan a las 19:00 de Madrid. La guardia nueva de `no-secrets` recorre el grafo de importaciones estáticas desde cada componente cliente (parando en los `"use server"`, que llegan como referencia) y comprueba que no llega a `expand.ts` ni a `series-overlay.ts`. `gates.ts` no importa valores de `series-write` para no arrastrar `ical.js`. Las funciones nuevas aún no se usan en la interfaz: se conectan en la T10. Verificación completa en verde (314 archivos, 2.952 tests).
 
-- [ ] T3 Leer en el servidor la copia de formato 2 (`offline-reads.ts`)
+- [x] T3 Leer en el servidor la copia de formato 2 (`offline-reads.ts`)
   Hecho cuando: `npm run test:db -- offline-snapshot` en verde. Los tests cubren:
   - filas de serie con sus totales de toda la serie;
   - excepciones del rango;
@@ -56,6 +56,8 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
   - una copia de formato 1 se descarta y la cola se conserva.
 
   Cubre: RF-13, RF-14, RF-17, RF-29 | Módulo: offline-reads
+
+  Evidencia (2026-11-18): `npm run test:db -- offline-snapshot` 6 en verde, con una excepción, 52 comentarios (quedan los 50 últimos, el último editado), imágenes `ready` y `pending` y un evento de Sam que Ana no ve. Lo nuevo está en `app/dashboard/offline-reads-detail.ts` (`seriesOf`, `commentsOf`, `imagesOf`), con lecturas por trozos de 150 ids y páginas de 1.000. Los totales cuentan todas las excepciones de la serie, también fuera del rango (D3). Cada imagen lleva su `objectId` para descargar la miniatura. `SNAPSHOT_FORMAT` pasa a 2: `offline-db.test.ts` comprueba que una copia de formato 1 se descarta y la cola se conserva. El test de RF-66 de la 034 ya no prohíbe comentarios e imágenes, que la 035 guarda a propósito. Verificación completa en verde y `npm run test:db` entero: 51 archivos, 573 tests.
 
 - [ ] T4 Guardar miniaturas, imágenes abiertas e imágenes pendientes en el dispositivo (`db.ts` versión 2, `thumbs.ts`, `image-cache.ts`)
   Hecho cuando: `npm test -- offline-db offline-thumbs offline-image-cache` en verde, con el IndexedDB en memoria de los tests de la 034. Los tests cubren:

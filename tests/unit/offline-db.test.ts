@@ -15,7 +15,7 @@ import {
   STORES,
 } from "@/lib/offline/db";
 import type { OutboxEntry } from "@/lib/offline/outbox";
-import type { Snapshot } from "@/lib/offline/snapshot";
+import { SNAPSHOT_FORMAT, type Snapshot } from "@/lib/offline/snapshot";
 import { memoryIndexedDb } from "./memory-indexeddb";
 
 // Spec 034 T6, plan R9.
@@ -29,7 +29,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 const snapshot = (userId: string, extra: Partial<Snapshot> = {}) =>
   ({
-    format: 1,
+    format: SNAPSHOT_FORMAT,
     userId,
     savedAt: "2026-11-17T10:00:00.000Z",
     today: "2026-11-17",
@@ -73,7 +73,7 @@ describe("the offline database (RF-27, RF-57)", () => {
     expect(state.conflicts.map((c) => c.changeId)).toEqual(["c2"]);
     expect(state.rejected.map((r) => r.reason)).toEqual(["No"]);
     expect(await readMeta()).toEqual({
-      format: 1,
+      format: 2,
       userId: "ana",
       savedAt: "2026-11-17T10:00:00.000Z",
     });
@@ -83,8 +83,8 @@ describe("the offline database (RF-27, RF-57)", () => {
     expect(await loadState()).toMatchObject({ conflicts: [], rejected: [] });
   });
 
-  it("leaves out a copy of another format but keeps the queue (R1)", async () => {
-    await saveSnapshot(snapshot("ana", { format: 0 } as Partial<Snapshot>));
+  it("leaves out a copy of format 1 but keeps the queue (R1, spec 035 T3)", async () => {
+    await saveSnapshot(snapshot("ana", { format: 1 } as Partial<Snapshot>));
     await saveQueue([entry]);
     expect(await loadState()).toMatchObject({ snapshot: null, queue: [entry] });
   });

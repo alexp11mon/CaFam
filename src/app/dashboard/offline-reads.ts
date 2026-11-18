@@ -18,15 +18,18 @@ import {
   type OfflineEvent,
   type Snapshot,
 } from "@/lib/offline/snapshot";
+import { parseEventId } from "@/lib/recurrence/occurrence-id";
 import { fromRRule } from "@/lib/recurrence/rule";
 import { summarizeRule } from "@/lib/recurrence/summary";
 import { getMembers } from "@/lib/sharing/queries";
 import type { Supabase } from "./events/event-writes";
+import { commentsOf, imagesOf, seriesOf } from "./offline-reads-detail";
 
 // The full reading of the offline copy (spec 034 RF-1 to RF-3, RF-66, plan
 // D8, D9). Shared by the server action and the integration tests; RLS limits
-// every row (P3). Images, comments, "Ocupado" blocks, e-mails and the
-// credentials of connected accounts are never read here (RF-66).
+// every row (P3). "Ocupado" blocks, e-mails and the credentials of connected
+// accounts are never read here (RF-66). Since spec 035 (format 2) it also
+// holds the series with their totals, the comments and the ready images.
 
 type DetailRow = {
   id: string;
@@ -94,14 +97,31 @@ export async function readSnapshot(
   const today = todayKey(profile.timeZone, now);
   const range = offlineRange(today);
   const span = daysRange(range.from, range.to, profile.timeZone);
-  const [records, details, members] = await Promise.all([
+  const [records, details, members, seriesRows] = await Promise.all([
     getEventsInRange(supabase, span.from, span.to),
     detailRows(supabase, span.from, span.to),
     getMembers(
       supabase,
       calendars.map((calendar) => calendar.id),
     ),
+    seriesOf(supabase, span.from, span.to),
   ]);
+  // Comments and images hang from rows: singles and exceptions, never from
+  // an occurrence without its own row.
+  const rowIds = records
+    .filter((record) => parseEventId(record.id)?.kind === "event")
+    .map((record) => record.id);
+  const calendarOf = new Map(records.map((r) => [r.id, r.calendarId]));
+  const [comments, images] = await Promise.all([
+    commentsOf(supabase, rowIds, (eventId, authorId) =>
+      authorLabel(
+        authorId,
+        members.filter((m) => m.calendarId === calendarOf.get(eventId)),
+      ),
+    ),
+    imagesOf(supabase, rowIds),
+  ]);
+  const inRange = new Set(records.map((record) => record.id));
 
   const events: OfflineEvent[] = records.map((record) => {
     // An occurrence takes its series' text; an exception has its own row.
@@ -138,5 +158,9 @@ export async function readSnapshot(
     preferences,
     events,
     notes,
+    series: seriesRows.series,
+    exceptions: seriesRows.exceptions.filter((e) => inRange.has(e.id)),
+    comments,
+    images,
   };
 }

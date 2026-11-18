@@ -16,7 +16,7 @@ import type { Note } from "@/lib/notes/types";
 import type { SeriesTotals } from "./outbox";
 
 /** Bumped when the shape changes: an older copy is dropped (plan R1). */
-export const SNAPSHOT_FORMAT = 1;
+export const SNAPSHOT_FORMAT = 2;
 
 /** An event as the copy keeps it: what the views draw plus the detail. */
 export interface OfflineEvent extends CalendarEventRecord {
@@ -73,6 +73,8 @@ export interface OfflineComment {
 export interface OfflineImage {
   id: string;
   eventId: string;
+  /** Where its objects are in Storage (`<objectId>/thumb.jpg`). */
+  objectId: string;
   uploadedBy: string | null;
   createdAt: string;
   width: number;
@@ -101,6 +103,11 @@ export interface Snapshot {
   preferences: Awaited<ReturnType<typeof getPreferences>>;
   events: OfflineEvent[];
   notes: Note[];
+  /** Spec 035 (format 2): series of the range with their totals (RF-13). */
+  series: OfflineSeries[];
+  exceptions: OfflineException[];
+  comments: OfflineComment[];
+  images: OfflineImage[];
 }
 
 /** Whether a stored copy can be used by this version of the app (R1). */
