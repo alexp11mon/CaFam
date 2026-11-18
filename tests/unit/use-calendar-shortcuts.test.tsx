@@ -25,6 +25,14 @@ beforeEach(() => {
 });
 
 describe("useCalendarShortcuts", () => {
+  it("/ opens the search, never while typing (spec 039 RF-1)", () => {
+    const { getByLabelText } = render(<Calendar />);
+    fireEvent.keyDown(getByLabelText("Buscar"), { key: "/" });
+    expect(router.push).not.toHaveBeenCalled();
+    fireEvent.keyDown(document.body, { key: "/" });
+    expect(router.push).toHaveBeenCalledWith("/dashboard/search");
+  });
+
   it("N opens a new event on the shown date", () => {
     render(<Calendar />);
     fireEvent.keyDown(document.body, { key: "n" });

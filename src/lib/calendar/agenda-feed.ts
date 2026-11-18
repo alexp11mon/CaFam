@@ -64,7 +64,8 @@ export function weekLabel(first: string, last: string): string {
 const shortTime = (instant: string, timeZone: string) =>
   formatTime(instant, timeZone).replace(/^0(?=\d)/, "");
 
-function lineOf(event: Located, timeZone: string): string | null {
+/** "A las 11:15–14:15 en <lugar>": also the rows of the search (spec 039). */
+export function lineOf(event: Located, timeZone: string): string | null {
   if (event.allDay) return null;
   const start = shortTime(event.startsAt, timeZone);
   const hours =

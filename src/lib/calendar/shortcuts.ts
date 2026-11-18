@@ -1,7 +1,14 @@
 import type { CalendarView } from "./ranges";
 
 export type Shortcut =
-  "new" | "today" | "previous" | "next" | "goto" | "help" | CalendarView;
+  | "new"
+  | "today"
+  | "previous"
+  | "next"
+  | "goto"
+  | "help"
+  | "search"
+  | CalendarView;
 
 export interface KeyPress {
   key: string;
@@ -53,6 +60,13 @@ export const SHORTCUTS: readonly {
     description: "Ir a una fecha",
     press: ["g"],
     shortcut: "goto",
+  },
+  // Spec 039 RF-1, as in Gmail or GitHub.
+  {
+    keys: "/",
+    description: "Buscar eventos",
+    press: ["/"],
+    shortcut: "search",
   },
   {
     keys: "?",

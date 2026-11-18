@@ -129,4 +129,11 @@ describe("CalendarHeading", () => {
       expect(control.className).toMatch(/\b(?:min-h-11|size-11)\b/);
     }
   });
+
+  it("links to the search (spec 039 RF-1)", () => {
+    const { heading } = setup();
+    expect(
+      within(heading).getByRole("link", { name: "Buscar" }),
+    ).toHaveAttribute("href", "/dashboard/search");
+  });
 });

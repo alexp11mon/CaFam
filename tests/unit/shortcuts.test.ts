@@ -37,6 +37,8 @@ describe("shortcutFor", () => {
     ["d", "day"],
     ["g", "goto"],
     ["?", "help"],
+    // Spec 039 RF-1.
+    ["/", "search"],
   ])("maps %j to %j", (key, shortcut) => {
     expect(shortcutFor(press(key), true)).toBe(shortcut);
   });

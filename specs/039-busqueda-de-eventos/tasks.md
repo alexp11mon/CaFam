@@ -29,12 +29,12 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Máximo 100 con `more: true`; "Buscar más atrás" amplía `from` 2 años.
 
   Cubre: RF-5, RF-8 | Evidencia: `npm test -- search-queries` 6/6 con Supabase simulado (serie semanal sin la repetición renombrada, excepción que coincide, 100 con `more`, `searchRange` y "Buscar más atrás"); P8 en verde (3.220 tests).
-- [ ] T4 Pantalla de búsqueda y accesos
+- [x] T4 Pantalla de búsqueda y accesos
   Hecho cuando: `npm test -- search-screen calendar-heading top-nav shortcuts` en verde y capturas a 390, 768 y 1440 px en claro y oscuro (Violeta y Ámbar) en `capturas/`.
   - Campo enfocado, espera de 350 ms, estados (recientes, buscando, vacío, error con "Reintentar"), agrupado, "Oculto en el calendario", extracto del comentario, `aria-live`.
   - Botón en las dos cabeceras y tecla `/` (no escribiendo ni con ventana abierta).
 
-  Cubre: RF-1, RF-2, RF-6 a RF-9, RF-12, RNF-3 | Evidencia: —
+  Cubre: RF-1, RF-2, RF-6 a RF-9, RF-12, RNF-3 | Evidencia: `npm test -- search-screen calendar-heading top-nav shortcuts` en verde (52 tests); ruta `/dashboard/search` con `SearchScreen` y `runSearch`; lupa en `CalendarHeading` y `TopNav`, tecla `/` en `SHORTCUTS`; capturas `capturas/busqueda{,-vacia}-{390,768,1440}-{claro,oscuro}-{violeta,ambar}.png` con `scripts/screenshots-039.mjs`; P8 en verde (3.230 tests).
 - [ ] T5 Búsqueda sin conexión
   Hecho cuando: `npm test -- offline-search` en verde y prueba con `scripts/e2e-offline.mjs` ampliado (buscar sin red).
   - `searchOffline` sobre la copia con eventos, repeticiones y comentarios, con la nota del rango.

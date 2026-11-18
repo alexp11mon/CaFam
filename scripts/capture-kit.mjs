@@ -23,7 +23,19 @@ export const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * Signs a new user up, runs `seed({ admin, user, calendar })` and then, for
  * each width and scheme, `shoot({ page, width, theme, save })`.
  */
-export async function capture(spec, { name = "Ana Capturas", seed, shoot }) {
+const SIZES = { 390: 844, 768: 1024, 1440: 900 };
+const ACCENT_NAMES = { red: "violeta", yellow: "ambar" };
+
+export async function capture(
+  spec,
+  {
+    name = "Ana Capturas",
+    seed,
+    shoot,
+    widths = [390, 1440],
+    accents = [null],
+  },
+) {
   const out = `specs/${spec}/capturas`;
   mkdirSync(out, { recursive: true });
   const email = `test-${randomUUID()}@cafam.test`;
@@ -50,18 +62,23 @@ export async function capture(spec, { name = "Ana Capturas", seed, shoot }) {
       .eq("owner_id", user.id)
       .single();
     const seeded = (await seed?.({ admin, user, calendar, page })) ?? {};
-    for (const scheme of ["light", "dark"]) {
-      await page.emulateMedia({ colorScheme: scheme });
-      const theme = scheme === "light" ? "claro" : "oscuro";
-      for (const [width, height] of [
-        [390, 844],
-        [1440, 900],
-      ]) {
-        await page.setViewportSize({ width, height });
-        const save = (file) =>
-          page.screenshot({ path: `${out}/${file}-${width}-${theme}.png` });
-        await shoot({ page, width, theme, save, ...seeded });
-        console.log("ok", width, theme);
+    for (const accent of accents) {
+      if (accent) {
+        await admin.from("profiles").update({ accent }).eq("id", user.id);
+      }
+      const suffix = accent ? `-${ACCENT_NAMES[accent] ?? accent}` : "";
+      for (const scheme of ["light", "dark"]) {
+        await page.emulateMedia({ colorScheme: scheme });
+        const theme = scheme === "light" ? "claro" : "oscuro";
+        for (const width of widths) {
+          await page.setViewportSize({ width, height: SIZES[width] ?? 900 });
+          const save = (file) =>
+            page.screenshot({
+              path: `${out}/${file}-${width}-${theme}${suffix}.png`,
+            });
+          await shoot({ page, width, theme, save, ...seeded });
+          console.log("ok", width, theme, accent ?? "");
+        }
       }
     }
   } finally {

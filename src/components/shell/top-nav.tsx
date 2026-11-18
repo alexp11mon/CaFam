@@ -13,7 +13,7 @@ import {
 import { TAB_ITEM } from "./bar-styles";
 import { CreateButton } from "./create-fab";
 import { NavLink } from "./nav-link";
-import { SECTION_ICONS } from "./icons";
+import { SearchIcon, SECTION_ICONS } from "./icons";
 import { MoreSheet } from "./more-sheet";
 import { ThemeToggle } from "./theme-toggle";
 import { ConnectionBadge } from "@/components/offline/connection-badge";
@@ -81,6 +81,15 @@ export function TopNav({
           </ul>
         </nav>
         <div className="flex shrink-0 items-center gap-1">
+          {/* Spec 039 RF-1. */}
+          <Link
+            href="/dashboard/search"
+            aria-label="Buscar"
+            aria-keyshortcuts="/"
+            className={ICON}
+          >
+            <SearchIcon />
+          </Link>
           <CreateButton floating={false} />
           <ConnectionBadge />
           <ThemeToggle className={ICON} labelClassName="sr-only" />

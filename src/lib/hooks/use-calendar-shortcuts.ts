@@ -58,6 +58,8 @@ export function useCalendarShortcuts({
         onGoTo?.();
       } else if (shortcut === "help") {
         onHelp?.();
+      } else if (shortcut === "search") {
+        router.push("/dashboard/search");
       } else if (shortcut === "new") {
         router.push(`/dashboard/events/new?date=${date}`);
       } else if (shortcut === "today" && view === "agenda") {

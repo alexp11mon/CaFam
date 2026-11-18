@@ -1,7 +1,8 @@
 "use client";
 
 import { useCalendarHeader } from "@/components/shell/calendar-header";
-import { ChevronIcon, FiltersIcon } from "@/components/shell/icons";
+import Link from "next/link";
+import { ChevronIcon, FiltersIcon, SearchIcon } from "@/components/shell/icons";
 import { formatDateKeyFull } from "@/lib/calendar/format";
 import { navigate, type CalendarView } from "@/lib/calendar/ranges";
 import { CAL_NEXT, CAL_PREV, CAL_VIEW } from "@/lib/calendar/transition-types";
@@ -95,6 +96,15 @@ export function CalendarHeading({
           Calendarios
         </button>
         <div className="flex items-center">
+          {/* Spec 039 RF-1: the search, also with "/" on a keyboard. */}
+          <Link
+            href="/dashboard/search"
+            aria-label="Buscar"
+            aria-keyshortcuts="/"
+            className={ICON}
+          >
+            <SearchIcon />
+          </Link>
           <button
             type="button"
             aria-label={`Hoy, ${formatDateKeyFull(today)}`}
