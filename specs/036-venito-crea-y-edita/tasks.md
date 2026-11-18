@@ -60,7 +60,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
 
   Cubre: RF-24 a RF-30, RF-33 a RF-37, RF-39 | Módulo: assistant-writes, write-actions (D4, D7, D8, D9)
   Evidencia (2026-11-18): `assistant-writes` (8 nuevos de `propose_changes`) y `assistant-write-actions` (5) en verde, primero en rojo. `npm run test:db -- assistant proposed` en verde contra Supabase local (4 archivos, 47 tests; `assistant-writes` con 5 nuevos): nada se escribe hasta confirmar, se aplica y se deshace, un cambio ajeno entre medias impide aplicarlo, una sola repetición de PIAE (excepción creada y deshecha), una creación se deshace salvo si alguien la tocó, y un Lector no puede confirmar. La lógica de confirmar y deshacer vive en `change-writes.ts` (sin `"use server"`) y las acciones en `write-actions.ts`; `seriesValues` de `quick-writes.ts` pasa a exportarse. Las series de prueba usan la regla canónica (`INTERVAL=1`): con otra, `planSeriesChange` cree que cambió la regla. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 295 archivos y 2.903 tests, build.
-- [ ] T6 Bucle y ruta con escritura
+- [x] T6 Bucle y ruta con escritura
   Hecho cuando: `npm test -- assistant-run assistant-route` en verde.
   - Sin intención no se ofrecen las herramientas de escritura; con ella, sí, y el prompt de escritura.
   - Una ronda con escritura va en serie.
@@ -69,6 +69,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
   - Un comentario que pide crear no ofrece la escritura (la intención solo sale de mensajes del usuario).
 
   Cubre: RF-40, RF-42, RF-43, RF-44, RF-46 | Módulo: run, route (D2, D6, D12)
+  Evidencia (2026-11-18): `assistant-run` (6 nuevos), `assistant-route` (3 nuevos) y `assistant-run-tool` (3) en verde, primero en rojo. Sin intención de escribir, o sin dependencias de escritura, no se ofrecen las herramientas; con ella se ofrecen junto con los calendarios escribibles del prompt; una ronda con escritura va en serie; los `notice` de cada resultado llegan a la respuesta; la ruta manda una línea `action` por tarjeta y las repite en `done.actions`, da a `writeTools` la sesión, la zona y `request.signal`, y cuenta una sola pregunta. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 296 archivos y 2.915 tests, build.
 - [ ] T7 Tarjetas en el chat
   Hecho cuando: `npm test -- assistant-action-card assistant-chat-actions` en verde.
   - Tarjeta de evento creado con su referencia, "Abrir" y "Deshacer", y el estado "Deshecho".

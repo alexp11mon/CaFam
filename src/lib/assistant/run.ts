@@ -11,7 +11,8 @@ import {
 } from "./provider";
 import type { ChatMessage, ProposalRow } from "./schemas";
 import { STATUS, statusFor } from "./stream";
-import { TOOL_DEFINITIONS } from "./tool-definitions";
+import { TOOL_DEFINITIONS, WRITE_TOOL_DEFINITIONS } from "./tool-definitions";
+import { wantsWrite } from "./write-intent";
 import type { CitedEvent } from "./tools";
 
 // The model-tools loop of one question (spec 015 plan assistant-run, D2).
@@ -35,6 +36,29 @@ export interface RunDeps {
   timeZone: string;
   /** Told what is being done, step by step, for the person waiting (spec 024 RF-16). */
   onStatus?: (text: string) => void;
+  /**
+   * Spec 036: the route can write. The write tools are only offered when the
+   * user asks to write (plan D2); `calendars` names where they can create.
+   */
+  write?: { calendars: () => Promise<string[]> };
+}
+
+const WRITE_TOOLS = new Set(
+  WRITE_TOOL_DEFINITIONS.map((tool) => tool.function.name),
+);
+
+/** RF-42: the notices of a tool's answer, also of each of its results. */
+function noticesOf(result: object): string[] {
+  const found: string[] = [];
+  if ("notice" in result && typeof result.notice === "string") {
+    found.push(result.notice);
+  }
+  if ("results" in result && Array.isArray(result.results)) {
+    for (const item of result.results) {
+      if (item && typeof item === "object") found.push(...noticesOf(item));
+    }
+  }
+  return found;
 }
 
 /** Sent before the forced answer: without it gpt-oss still tried a tool (400). */
@@ -55,12 +79,18 @@ export async function runAssistant(
   // RF-22: what the tools say must be said is said by the server, not left
   // to the model, which sometimes dropped it (T12).
   const notices = new Set<string>();
+  // Spec 036, D2: only the user's own words open the write tools (RF-40).
+  const writing = deps.write !== undefined && wantsWrite(thread);
+  const offered = writing
+    ? [...TOOL_DEFINITIONS, ...WRITE_TOOL_DEFINITIONS]
+    : TOOL_DEFINITIONS;
   const messages: ProviderMessage[] = [
     {
       role: "system",
       content: systemPrompt(
         dateContext(deps.now, deps.timeZone),
         deps.timeZone,
+        writing ? { calendars: await deps.write!.calendars() } : undefined,
       ),
     },
     ...thread,
@@ -69,7 +99,7 @@ export async function runAssistant(
   for (let round = 0; ; round++) {
     signal?.throwIfAborted();
     // After the last round of tools, no more tools: the model must answer.
-    const tools = round < MAX_TOOL_ROUNDS ? TOOL_DEFINITIONS : [];
+    const tools = round < MAX_TOOL_ROUNDS ? offered : [];
     if (tools.length === 0)
       messages.push({ role: "system", content: FINAL_ROUND });
     // The first round must look at the data: without it the fallback model
@@ -88,19 +118,22 @@ export async function runAssistant(
     for (const call of reply.toolCalls) {
       deps.onStatus?.(statusFor(call.name, call.arguments));
     }
-    // The tools of one round only read: all at once, answered in the order
-    // they were asked (spec 024 RF-18, plan D8).
-    const results = await Promise.all(
-      reply.toolCalls.map((call) =>
-        deps.runTool(call.name, call.arguments, refs),
-      ),
-    );
+    // Reading tools run all at once, answered in the order they were asked
+    // (spec 024 RF-18, plan D8); a round that writes goes one by one, so
+    // the limit and the cards follow what was asked (spec 036 D6).
+    const results = reply.toolCalls.some((call) => WRITE_TOOLS.has(call.name))
+      ? await inOrder(reply.toolCalls, (call) =>
+          deps.runTool(call.name, call.arguments, refs),
+        )
+      : await Promise.all(
+          reply.toolCalls.map((call) =>
+            deps.runTool(call.name, call.arguments, refs),
+          ),
+        );
     signal?.throwIfAborted();
     reply.toolCalls.forEach((call, index) => {
       const result = results[index]!;
-      if ("notice" in result && typeof result.notice === "string") {
-        notices.add(result.notice);
-      }
+      for (const notice of noticesOf(result)) notices.add(notice);
       messages.push({
         role: "tool",
         tool_call_id: call.id,
@@ -109,6 +142,15 @@ export async function runAssistant(
     });
     deps.onStatus?.(STATUS.writing);
   }
+}
+
+async function inOrder<T, R>(
+  items: readonly T[],
+  run: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = [];
+  for (const item of items) results.push(await run(item));
+  return results;
 }
 
 export interface ProposalRunDeps {

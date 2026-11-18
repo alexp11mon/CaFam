@@ -55,6 +55,13 @@ export interface ToolContext {
   refs: Refs<CitedEvent>;
   /** RF-31, D12: leave out Google calendars if the provider trained on data. */
   excludeSynced: boolean;
+  /** Spec 036: the write tools, bound to the session by the route. */
+  writes?: Partial<
+    Record<
+      "create_events" | "propose_changes",
+      (args: unknown) => Promise<object>
+    >
+  >;
 }
 
 const SOURCES: Partial<Record<string, EventSource>> = {
@@ -510,7 +517,11 @@ export async function runTool(
   rawArgs: string,
   ctx: ToolContext,
 ): Promise<object> {
-  const tool = TOOLS[name];
+  const tool =
+    TOOLS[name] ??
+    (name === "create_events" || name === "propose_changes"
+      ? ctx.writes?.[name] && ((args: unknown) => ctx.writes![name]!(args))
+      : undefined);
   if (!tool) return { status: "unknown_tool" };
   let args: unknown;
   try {

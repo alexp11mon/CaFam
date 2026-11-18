@@ -13,7 +13,9 @@ const {
   runTool,
   getMyCalendars,
   getEventsInRange,
+  writeTools,
 } = vi.hoisted(() => ({
+  writeTools: vi.fn(),
   getClaims: vi.fn(),
   gte: vi.fn(),
   insert: vi.fn(),
@@ -42,6 +44,7 @@ vi.mock("@/lib/calendar/queries", () => ({
 }));
 vi.mock("@/lib/assistant/run", () => ({ runAssistant, runProposal }));
 vi.mock("@/lib/assistant/tools", () => ({ runTool }));
+vi.mock("@/app/dashboard/assistant/assistant-writes", () => ({ writeTools }));
 
 import { GET, POST, maxDuration } from "@/app/api/assistant/route";
 
@@ -314,5 +317,92 @@ describe("POST /api/assistant with images", () => {
       }
       spy.mockRestore();
     }
+  });
+});
+
+// Spec 036, T6: the cards go out as soon as they exist (plan D12, RF-44).
+describe("POST /api/assistant with writing", () => {
+  const action = {
+    kind: "created",
+    key: "a1",
+    event: {
+      id: "e1",
+      title: "Comida Uni",
+      startsAt: "2026-11-19T12:30:00.000Z",
+      endsAt: "2026-11-19T13:30:00.000Z",
+      allDay: false,
+      calendarName: "Uni",
+      color: "#A0C4FF",
+    },
+    undo: { kind: "uncreate", id: "e1", updatedAt: "x" },
+  };
+
+  beforeEach(() => {
+    getMyCalendars.mockResolvedValue([
+      { id: "c1", name: "Uni", role: "owner", synced: null },
+      { id: "c2", name: "De Ana", role: "viewer", synced: null },
+    ]);
+    // The write tools tell their cards to the route.
+    writeTools.mockImplementation((ctx) => ({
+      create_events: async () => {
+        ctx.onAction(action);
+        return { status: "created", ref: "e1" };
+      },
+    }));
+    // runTool hands write tools to ctx.writes, like the real one.
+    runTool.mockImplementation(async (name, args, ctx) =>
+      ctx.writes[name](JSON.parse(args)),
+    );
+    runAssistant.mockImplementation(async (_thread, deps) => {
+      expect(await deps.write.calendars()).toEqual(["Uni"]);
+      await deps.runTool("create_events", "{}", { add: () => "e1" });
+      return { answer: "Creado.", events: [] };
+    });
+  });
+
+  it("sends each action line, then the answer with all of them", async () => {
+    const response = await post({
+      messages: [{ role: "user", content: "Crea Comida Uni" }],
+    });
+    expect(await lines(response)).toEqual([
+      { type: "status", text: "Pensando…" },
+      { type: "action", action },
+      {
+        type: "done",
+        answer: "Creado.",
+        events: [],
+        actions: [action],
+        remaining: 26,
+      },
+    ]);
+    // One question, however many writes (RF-43).
+    expect(insert).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives the write tools the session, the zone and the request's signal (RF-39, RF-44)", async () => {
+    await (
+      await post({
+        messages: [{ role: "user", content: "Crea Comida Uni" }],
+      })
+    ).text();
+    expect(writeTools).toHaveBeenCalledWith(
+      expect.objectContaining({
+        supabase,
+        userId: "user-1",
+        timeZone: "Europe/Madrid",
+        signal: expect.any(AbortSignal),
+      }),
+    );
+  });
+
+  it("leaves actions out of an answer without any", async () => {
+    runAssistant.mockResolvedValue({ answer: "Nada.", events: [] });
+    const response = await post(QUESTION);
+    expect((await lines(response)).at(-1)).toEqual({
+      type: "done",
+      answer: "Nada.",
+      events: [],
+      remaining: 26,
+    });
   });
 });

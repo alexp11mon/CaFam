@@ -317,3 +317,116 @@ describe("runAssistant", () => {
     ]);
   });
 });
+
+// Spec 036, T6: writing in the loop (RF-40, RF-42, RF-46; plan D2, D6).
+describe("runAssistant with writing", () => {
+  const toolNames = (chat: { mock: { calls: unknown[][] } }, call = 0) =>
+    (chat.mock.calls[call]![1] as { function: { name: string } }[]).map(
+      (tool) => tool.function.name,
+    );
+  const write = { calendars: vi.fn(async () => ["Familia", "Uni"]) };
+
+  it("offers no write tool when the user does not ask to write (RF-40)", async () => {
+    const { deps: d, chat } = deps([text("Nada.")], { write });
+    await runAssistant(
+      [{ role: "user", content: "¿Qué dicen los comentarios de la cena?" }],
+      d,
+    );
+    expect(toolNames(chat)).not.toContain("create_events");
+    expect(sent(chat)[0]!.content).not.toContain("create_events");
+    expect(write.calendars).not.toHaveBeenCalled();
+  });
+
+  it("offers them, with the writable calendars, when the user asks", async () => {
+    const { deps: d, chat } = deps([text("¿A qué hora?")], { write });
+    await runAssistant(
+      [{ role: "user", content: "Crea Comida Uni el jueves" }],
+      d,
+    );
+    expect(toolNames(chat)).toEqual(
+      expect.arrayContaining(["create_events", "propose_changes"]),
+    );
+    expect(sent(chat)[0]!.content).toContain(
+      "Calendarios en los que puede crear: Familia, Uni.",
+    );
+  });
+
+  it("offers none without write dependencies, whatever the user says", async () => {
+    const { deps: d, chat } = deps([text("Vale.")]);
+    await runAssistant([{ role: "user", content: "Crea una cena" }], d);
+    expect(toolNames(chat)).not.toContain("create_events");
+  });
+
+  it("runs a round with a write in order, one call after another (D6)", async () => {
+    const order: string[] = [];
+    let release: () => void = () => {};
+    const first = new Promise<void>((resolve) => (release = resolve));
+    const { deps: d } = deps(
+      [
+        {
+          content: null,
+          toolCalls: [
+            { id: "a", name: "create_events", arguments: "{}" },
+            { id: "b", name: "search_events", arguments: "{}" },
+          ],
+          message: { role: "assistant", content: null },
+        },
+        text("Hecho."),
+      ],
+      {
+        write,
+        runTool: vi.fn(async (name: string) => {
+          order.push(`start ${name}`);
+          if (name === "create_events") await first;
+          order.push(`end ${name}`);
+          return { status: "ok" };
+        }),
+      },
+    );
+    const run = runAssistant([{ role: "user", content: "Crea X" }], d);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(order).toEqual(["start create_events"]);
+    release();
+    await run;
+    expect(order).toEqual([
+      "start create_events",
+      "end create_events",
+      "start search_events",
+      "end search_events",
+    ]);
+  });
+
+  it("makes sure a failed write is told, also inside several results (RF-42)", async () => {
+    const { deps: d } = deps(
+      [toolCall("create_events", { events: [] }), text("¡Listo!")],
+      {
+        write,
+        runTool: vi.fn(async () => ({
+          status: "done",
+          results: [
+            { status: "created", ref: "e1" },
+            { status: "failed", notice: "No he podido crear «B»: sin red." },
+          ],
+        })),
+      },
+    );
+    const result = await runAssistant(
+      [{ role: "user", content: "Crea A y B" }],
+      d,
+    );
+    expect(result.answer).toBe("No he podido crear «B»: sin red.\n\n¡Listo!");
+  });
+
+  it("names the event being created while it works (RF-46)", async () => {
+    const onStatus = vi.fn();
+    const { deps: d } = deps(
+      [
+        toolCall("create_events", { events: [{ title: "Comida Uni" }] }),
+        text("Creado."),
+      ],
+      { write, onStatus },
+    );
+    await runAssistant([{ role: "user", content: "Crea Comida Uni" }], d);
+    expect(onStatus).toHaveBeenCalledWith("Creando «Comida Uni»…");
+  });
+});

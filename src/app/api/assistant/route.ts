@@ -1,3 +1,6 @@
+import { writeTools } from "@/app/dashboard/assistant/assistant-writes";
+import type { AssistantAction } from "@/lib/assistant/actions";
+import type { Refs } from "@/lib/assistant/citations";
 import { quotaDayStart } from "@/lib/assistant/dates";
 import {
   INVALID_TEXT,
@@ -23,7 +26,7 @@ import {
   STATUS,
   type StreamLine,
 } from "@/lib/assistant/stream";
-import { runTool } from "@/lib/assistant/tools";
+import { runTool, type CitedEvent } from "@/lib/assistant/tools";
 import {
   getEventsInRange,
   getMyCalendars,
@@ -117,6 +120,23 @@ export async function POST(request: Request) {
         }
       };
       const status = (text: string) => send({ type: "status", text });
+      // Spec 036 (plan D12): each card goes out as soon as it exists, so a
+      // cancelled answer still shows what was already written (RF-44).
+      const actions: AssistantAction[] = [];
+      let writes: ReturnType<typeof writeTools> | null = null;
+      const writesFor = (refs: Refs<CitedEvent>) =>
+        (writes ??= writeTools({
+          supabase,
+          userId,
+          timeZone,
+          now,
+          refs,
+          signal: request.signal,
+          onAction: (action) => {
+            actions.push(action);
+            send({ type: "action", action });
+          },
+        }));
       status(
         !proposing
           ? STATUS.start
@@ -153,10 +173,18 @@ export async function POST(request: Request) {
                     now,
                     refs,
                     excludeSynced: PROVIDER_TRAINS_ON_DATA,
+                    writes: writesFor(refs),
                   }),
                 now,
                 timeZone,
                 onStatus: status,
+                // Spec 036 RF-18: where the user can create, for the prompt.
+                write: {
+                  calendars: async () =>
+                    (await getMyCalendars(supabase, userId))
+                      .filter(canWriteEvents)
+                      .map((calendar) => calendar.name),
+                },
               },
               request.signal,
             );
@@ -167,6 +195,7 @@ export async function POST(request: Request) {
           ...("proposal" in result && result.proposal
             ? { proposal: result.proposal as Proposal }
             : {}),
+          ...(actions.length ? { actions } : {}),
           remaining: DAILY_QUESTIONS - used - 1,
         });
         // Only answered questions count (plan D9 of 015). After the answer
