@@ -2,19 +2,19 @@
 
 Spec: `specs/040-recordatorios-y-notificaciones/spec.md`. Plan: `specs/040-recordatorios-y-notificaciones/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: pendiente.
+> Estado: en curso.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T3 y T4.
 
 ## Tareas
 
-- [ ] T1 Cifrado y firma VAPID
+- [x] T1 Cifrado y firma VAPID
   Hecho cuando: `npm test -- push-encrypt push-vapid` en verde.
   - `encryptPayload` reproduce byte a byte el ejemplo del RFC 8291 (sección 5) con sus claves y su sal.
   - `vapidJwt` produce un JWT cuya firma verifica `crypto.verify` con la clave pública; `aud` es el origen del endpoint y `exp` ≤ 24 h.
   - `scripts/make-vapid-keys.mjs`.
 
-  Cubre: RF-17, RNF-1 | Evidencia: —
+  Cubre: RF-17, RNF-1 | Evidencia: `npm test -- push-encrypt push-vapid` 4/4: `encryptPayload` reproduce byte a byte el cuerpo del ejemplo del RFC 8291 §5 y otro aleatorio se descifra; `vapidJwt` verificado con `crypto.verify`, `aud` el origen y `exp` 12 h; `scripts/make-vapid-keys.mjs`; P8 en verde (3.237 tests).
 - [ ] T2 Cálculo de recordatorios y textos
   Hecho cuando: `npm test -- push-reminders push-payload push-device` en verde.
   - `dueReminders`: con hora, días completos a las 9:00 en la zona, serie semanal, excepción movida, repetición borrada, cambio de hora en Europe/Madrid, retraso de más de 15 min descartado.
