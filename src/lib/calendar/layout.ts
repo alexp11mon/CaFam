@@ -49,11 +49,23 @@ export function eventDayKeys(
     return listKeys(first, last < first ? first : last);
   }
 
+  // The views ask for every event on every day, and the zone conversion is
+  // slow (Intl): once per event object and zone (spec 034 RNF-2). Callers
+  // only read the keys.
+  const cached = dayKeysCache.get(event);
+  if (cached?.timeZone === timeZone) return cached.keys;
   const first = zonedDateKey(start, timeZone);
   // An event ending exactly at midnight does not occupy the next day.
   const last = zonedDateKey(end > start ? end - 1 : start, timeZone);
-  return listKeys(first, last);
+  const keys = listKeys(first, last);
+  dayKeysCache.set(event, { timeZone, keys });
+  return keys;
 }
+
+const dayKeysCache = new WeakMap<
+  LayoutEventInput,
+  { timeZone: string; keys: string[] }
+>();
 
 /**
  * Shown in the highlighted strip instead of the time grid (RF-35): all-day
@@ -203,4 +215,6 @@ export interface CalendarEventItem extends LayoutEventInput {
   location?: string | null;
   /** Series of an occurrence: the views mark it as repeating (spec 013 RF-10). */
   seriesId?: string | null;
+  /** Changed on this device and not sent yet (spec 034 RF-28). */
+  pending?: boolean;
 }

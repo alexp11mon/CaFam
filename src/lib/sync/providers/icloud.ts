@@ -14,6 +14,7 @@ import {
   removeOccurrence,
   splitExternalId,
 } from "../icloud-ics";
+import { icloudWritable } from "../read-event";
 import {
   ProviderError,
   type FailureKind,
@@ -348,6 +349,21 @@ export function icloudSession(
         skipped += converted.skipped;
       }
       return { events, skipped, access };
+    },
+
+    async readEvent(calendarId, eventId) {
+      const { href } = splitExternalId(eventId);
+      try {
+        const response = await davFetch(resourceUrl(calendarId, href), {
+          method: "GET",
+        });
+        return icloudWritable(eventId, await response.text());
+      } catch (error) {
+        if (error instanceof ProviderError && error.kind === "missing") {
+          return null;
+        }
+        throw error;
+      }
     },
 
     async insertEvent(calendarId, event) {

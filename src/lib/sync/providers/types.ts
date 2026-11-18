@@ -60,6 +60,11 @@ export interface ProviderSession {
     calendarId: string,
     range: { from: Date; to: Date },
   ): Promise<ProviderEvents>;
+  /**
+   * One event as the provider has it now, or null when it is gone (spec 035
+   * RF-5, RF-6, plan D1). Throws `revoked` like any call.
+   */
+  readEvent(calendarId: string, eventId: string): Promise<WritableEvent | null>;
   /** Creates an event and returns its id in the provider. */
   insertEvent(calendarId: string, event: WritableEvent): Promise<string>;
   /** Writes only what changed between `before` and `after`. */

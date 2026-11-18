@@ -12,9 +12,11 @@ import {
 } from "@/lib/shell/nav";
 import { TAB_ITEM } from "./bar-styles";
 import { CreateButton } from "./create-fab";
+import { NavLink } from "./nav-link";
 import { SECTION_ICONS } from "./icons";
 import { MoreSheet } from "./more-sheet";
 import { ThemeToggle } from "./theme-toggle";
+import { ConnectionBadge } from "@/components/offline/connection-badge";
 
 const TABS = BAR_SECTIONS.map(
   (section) => NAV_ITEMS.find((entry) => entry.section === section) as NavItem,
@@ -55,8 +57,8 @@ export function TopNav({
               const ItemIcon = SECTION_ICONS[entry.section];
               return (
                 <li key={entry.section}>
-                  <Link
-                    href={entry.href}
+                  <NavLink
+                    item={entry}
                     aria-label={entry.label}
                     aria-current={
                       entry.section === current ? "page" : undefined
@@ -65,7 +67,7 @@ export function TopNav({
                   >
                     <ItemIcon />
                     <span className="max-lg:hidden">{entry.label}</span>
-                  </Link>
+                  </NavLink>
                 </li>
               );
             })}
@@ -80,6 +82,7 @@ export function TopNav({
         </nav>
         <div className="flex shrink-0 items-center gap-1">
           <CreateButton floating={false} />
+          <ConnectionBadge />
           <ThemeToggle className={ICON} labelClassName="sr-only" />
           <Link
             href="/dashboard/settings"

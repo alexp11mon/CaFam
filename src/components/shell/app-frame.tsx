@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { EventClipboardProvider } from "@/components/calendar/event-clipboard";
+import { OfflineProvider } from "@/components/offline/offline-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import type { AccentId } from "@/lib/theme/accents";
 import type { ThemeId } from "@/lib/theme/theme";
@@ -21,10 +22,16 @@ export function AppFrame({
   accent,
   theme,
   displayName,
+  userId,
   signOutAction,
+  offline = false,
   children,
 }: {
+  /** The offline app: no assistant, which needs the network (spec 034 RF-17, R2). */
+  offline?: boolean;
   accent: AccentId;
+  /** Whose copy and queue the device keeps (spec 034 RF-64). */
+  userId: string;
   /** For the avatar of the phone header (spec 016 RF-6, plan D13). */
   displayName: string;
   /** The theme of the profile, to fix a device with an old cookie (spec 011 RF-4). */
@@ -47,6 +54,7 @@ export function AppFrame({
       </a>
       <ThemeSync theme={theme} />
       <ToastProvider>
+        <OfflineProvider userId={userId} offlineApp={offline} />
         <EventClipboardProvider>
           <CalendarHeaderProvider>
             <TopNav displayName={displayName} signOutAction={signOutAction} />
@@ -61,7 +69,7 @@ export function AppFrame({
               {children}
             </div>
             <CreateButton floating />
-            <AssistantFab />
+            {offline ? null : <AssistantFab />}
             <BottomBar signOutAction={signOutAction} />
           </CalendarHeaderProvider>
         </EventClipboardProvider>

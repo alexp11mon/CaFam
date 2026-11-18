@@ -17,6 +17,7 @@ import { writeEvent, type EventRowInput } from "@/lib/sync/write-event";
 const session = {
   listCalendars: vi.fn(),
   listEvents: vi.fn(),
+  readEvent: vi.fn(),
   insertEvent: vi.fn(),
   updateEvent: vi.fn(),
   moveEvent: vi.fn(),

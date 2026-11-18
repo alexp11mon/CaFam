@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { createNoteOrQueue } from "@/lib/offline/note-actions";
 import type { NewNoteState } from "@/app/dashboard/notes/actions";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
@@ -30,7 +31,12 @@ export function NoteForm({
   /** Calendars where the user can write: a note there is shared with them. */
   calendars: readonly { id: string; name: string }[];
 }) {
-  const [state, formAction, pending] = useActionState(action, {});
+  // Offline the note waits on the device (spec 034 RF-31).
+  const [queued] = useState(
+    () => (state: NewNoteState, data: FormData) =>
+      createNoteOrQueue(state, data, action),
+  );
+  const [state, formAction, pending] = useActionState(queued, {});
   const values = state.values;
 
   return (

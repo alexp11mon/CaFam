@@ -103,10 +103,12 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 031  | Venito pasa a ser una morsa                                         | ✅ Cerrada                                        |
 | 032  | Panel lateral desplazable y calendarios plegables                   | ✅ Cerrada                                        |
 | 033  | Next.js 16.4.6 y `npm audit` sin vulnerabilidades                   | ✅ Cerrada                                        |
+| 034  | Modo sin conexión: copia en el dispositivo, cola y conflictos       | ✅ Cerrada                                        |
+| 035  | Sin conexión, fase 2: Google, iCloud, series, comentarios, imágenes | ✅ Cerrada                                        |
 | 036  | Venito crea eventos y propone cambios desde el chat                 | 🟡 Hecha, pendiente del eval y del cierre         |
 | 037  | El "+" no tapa "Enviar" en la pantalla del asistente                | ✅ Cerrada                                        |
 
-> Las specs 024 a 033 están en la rama `claude/eager-turing-5xgj2t`, pendientes de merge a `main`.
+> Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
 > Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -195,6 +197,14 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 - Bloque provisional en el móvil al arrastrar, detalle en hoja inferior, pellizcar para ampliar.
 - Mover y redimensionar eventos arrastrando, menú contextual, "Deshacer" (también con Ctrl/⌘+Z) y atajos de teclado (? muestra la ayuda).
 
+### 📴 Sin conexión
+
+- Con red, la app guarda en el dispositivo (IndexedDB) los eventos de 1 mes atrás a 3 meses adelante y todas las notas, y la copia se renueva cada 15 minutos como mucho.
+- Sin red, el service worker lleva a la app guardada: calendario, detalle de eventos y notas con los datos de la copia, con el indicador "Sin conexión · datos de las HH:MM".
+- Los cambios hechos sin red (eventos de calendarios normales, solo "Solo este evento" en las series, notas y listas) se ven al instante con "Pendiente de enviar" y se envían en orden al volver la red.
+- Si otra persona cambió lo mismo, la hoja "Cambios" enseña las dos versiones y el usuario elige; lo que el servidor rechaza queda en "Cambios no enviados".
+- Cerrar sesión, borrar la cuenta o entrar con otra cuenta borra los datos del dispositivo.
+
 ### 🎨 Identidad visual "Nexo"
 
 - Fondo lavanda, acento violeta con degradado (u otro de seis a elegir), tipografía Inter, tema claro, oscuro o como el sistema.
@@ -250,7 +260,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 │   │   │   ├── join/          # "Unirme con código"
 │   │   │   └── import/        # "Importar calendario" (.ics)
 │   │   ├── invite/[token]/    # vista previa y unión por token
-│   │   ├── offline/           # pantalla sin conexión
+│   │   ├── offline/           # la app sin conexión con la copia del dispositivo (spec 034)
 │   │   └── api/               # OAuth, sincronización, imágenes, asistente, keep-alive
 │   ├── components/            # componentes React (ui, shell, brand con Venito, calendar, groups, notes, assistant…)
 │   └── lib/                   # lógica pura, consultas, utilidades, auth, calendar, theme…
@@ -288,31 +298,31 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 
 ## 🛣️ Rutas principales
 
-| Ruta                                | Acceso                      | Contenido                                                 |
-| ----------------------------------- | --------------------------- | --------------------------------------------------------- |
-| `/`                                 | pública                     | Portada; con sesión redirige a `/dashboard/calendar`      |
-| `/signup`, `/login`                 | solo sin sesión             | Formularios de registro y login                           |
-| `/dashboard`                        | con sesión                  | Redirige al calendario                                    |
-| `/dashboard/calendar`               | con sesión                  | Vistas agenda/mes/semana/día                              |
-| `/dashboard/calendars`              | con sesión                  | "Mis calendarios"                                         |
-| `/dashboard/settings`               | con sesión                  | Ajustes: acento, perfil, email, contraseña, borrar cuenta |
-| `/dashboard/events/new`             | con sesión                  | Alta de evento                                            |
-| `/dashboard/events/[id]`            | con sesión                  | Detalle con editar, duplicar y borrar                     |
-| `/dashboard/calendars/[id]/share`   | solo propietario            | Invitaciones por enlace e ID/PIN                          |
-| `/dashboard/calendars/[id]/members` | cualquier miembro           | Lista de miembros                                         |
-| `/dashboard/join`                   | con sesión                  | Unirme con ID y PIN                                       |
-| `/dashboard/import`                 | con sesión                  | Importar `.ics`                                           |
-| `/dashboard/connections`            | con sesión                  | Cuentas de Google e iCloud conectadas                     |
-| `/dashboard/assistant`              | con sesión                  | Chat de Venito a página completa                          |
-| `/dashboard/notes`, `/new`, `/[id]` | con sesión                  | Notas y listas                                            |
-| `/invite/[token]`                   | pública/privada             | Vista previa y unión por token                            |
-| `/offline`                          | pública                     | Pantalla sin conexión                                     |
-| `/privacy`                          | pública                     | Política de privacidad                                    |
-| `/api/assistant`                    | con sesión (POST)           | Pregunta al asistente (respuesta en streaming NDJSON)     |
-| `/api/sync/google-push`             | pública (POST)              | Avisos de cambios de Google                               |
-| `/api/sync/run`                     | Bearer `CRON_SECRET` (POST) | Ejecutar sincronización                                   |
-| `/api/images/purge`                 | Bearer `CRON_SECRET` (POST) | Borrar imágenes de la cola de purga                       |
-| `/api/cron/keep-alive`              | Bearer `CRON_SECRET`        | Mantener Supabase activo                                  |
+| Ruta                                | Acceso                      | Contenido                                                               |
+| ----------------------------------- | --------------------------- | ----------------------------------------------------------------------- |
+| `/`                                 | pública                     | Portada; con sesión redirige a `/dashboard/calendar`                    |
+| `/signup`, `/login`                 | solo sin sesión             | Formularios de registro y login                                         |
+| `/dashboard`                        | con sesión                  | Redirige al calendario                                                  |
+| `/dashboard/calendar`               | con sesión                  | Vistas agenda/mes/semana/día                                            |
+| `/dashboard/calendars`              | con sesión                  | "Mis calendarios"                                                       |
+| `/dashboard/settings`               | con sesión                  | Ajustes: acento, perfil, email, contraseña, borrar cuenta               |
+| `/dashboard/events/new`             | con sesión                  | Alta de evento                                                          |
+| `/dashboard/events/[id]`            | con sesión                  | Detalle con editar, duplicar y borrar                                   |
+| `/dashboard/calendars/[id]/share`   | solo propietario            | Invitaciones por enlace e ID/PIN                                        |
+| `/dashboard/calendars/[id]/members` | cualquier miembro           | Lista de miembros                                                       |
+| `/dashboard/join`                   | con sesión                  | Unirme con ID y PIN                                                     |
+| `/dashboard/import`                 | con sesión                  | Importar `.ics`                                                         |
+| `/dashboard/connections`            | con sesión                  | Cuentas de Google e iCloud conectadas                                   |
+| `/dashboard/assistant`              | con sesión                  | Chat de Venito a página completa                                        |
+| `/dashboard/notes`, `/new`, `/[id]` | con sesión                  | Notas y listas                                                          |
+| `/invite/[token]`                   | pública/privada             | Vista previa y unión por token                                          |
+| `/offline`                          | pública                     | La app sin conexión con la copia (`?from=`), o "Sin conexión" sin copia |
+| `/privacy`                          | pública                     | Política de privacidad                                                  |
+| `/api/assistant`                    | con sesión (POST)           | Pregunta al asistente (respuesta en streaming NDJSON)                   |
+| `/api/sync/google-push`             | pública (POST)              | Avisos de cambios de Google                                             |
+| `/api/sync/run`                     | Bearer `CRON_SECRET` (POST) | Ejecutar sincronización                                                 |
+| `/api/images/purge`                 | Bearer `CRON_SECRET` (POST) | Borrar imágenes de la cola de purga                                     |
+| `/api/cron/keep-alive`              | Bearer `CRON_SECRET`        | Mantener Supabase activo                                                |
 
 ---
 
@@ -459,10 +469,10 @@ feat: registro de usuario (T7)
 - iOS: `appleWebApp` + `apple-touch-icon`. Ayuda de instalación solo en Safari iOS.
 - Service worker propio en `public/sw.js`:
   - Precachea `/offline`, iconos y estáticos de `/_next/static/`.
-  - Navegaciones: red primero, con `/offline` como respaldo.
+  - Navegaciones: red primero; sin red, `/dashboard/...` lleva a `/offline?from=...`, que abre la app con la copia del dispositivo (spec 034).
   - Caché primero para `/_next/static/` e `/icons/`.
   - **Nunca cachea HTML con sesión ni respuestas de Supabase.**
-  - Si cambias `sw.js` o los iconos, sube `CACHE_NAME` (`cafam-vN`; ahora `cafam-v5`).
+  - Si cambias `sw.js` o los iconos, sube `CACHE_NAME` (`cafam-vN`; ahora `cafam-v6`).
 
 ### Despliegue
 
@@ -484,7 +494,8 @@ feat: registro de usuario (T7)
 - Las imágenes adjuntas al asistente viajan en la petición y no se guardan.
 - `npm audit` sin vulnerabilidades conocidas (spec 033).
 - Cabeceras de seguridad (`frame-ancestors`, `nosniff`, `noindex`) en todas las rutas.
-- Política de privacidad pública en `/privacy`.
+- Política de privacidad pública en `/privacy`, con qué guarda la app en el dispositivo y cuándo lo borra.
+- La copia sin conexión nunca incluye imágenes, comentarios, conversaciones del asistente, "Ocupado" de otros, emails ni credenciales, y cada cambio enviado se comprueba de nuevo con RLS.
 
 ---
 
@@ -509,7 +520,7 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 - Login social.
 - Microsoft (quedó fuera en la Enmienda 1).
 - Notificaciones.
-- Uso offline con datos.
+- Envío de los cambios sin conexión con la app cerrada (envío en segundo plano).
 - i18n (internacionalización).
 
 > No se implementa nada de esto sin su spec aprobada.
@@ -524,7 +535,8 @@ Hasta que exista su spec aprobada:
 - Recordatorios push, compartir e integrar con el sistema.
 - Alta en lenguaje natural (las cuatro últimas, en la hoja de ruta de la constitución).
 - Zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario existente, exportar a `.ics`.
-- Verificación de email en el registro, traspaso voluntario de calendarios, exportar datos de la cuenta, login social, Microsoft, notificaciones, uso offline con datos, i18n.
+- Verificación de email en el registro, traspaso voluntario de calendarios, exportar datos de la cuenta, login social, Microsoft, notificaciones, i18n.
+- Sin conexión: envío en segundo plano, fechas fuera del rango guardado, series enteras, calendarios traídos, imágenes y comentarios (el resto, en "Fuera de alcance" de la spec 034).
 - Cambiar eventos desde el asistente (salvo crearlos desde una imagen), guardar conversaciones o responder por voz (necesitan otra spec).
 - En notas: fecha límite por elemento, reordenar arrastrando, vencimientos en el calendario, notas de un evento y notas desde el asistente.
 

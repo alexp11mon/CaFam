@@ -131,6 +131,56 @@ describe("spec 013 recurrence expansion (T5)", () => {
   });
 });
 
+// Spec 035 D2: the offline series overlay expands rules in the browser, but
+// ical.js only arrives with import(), never in the static graph of a client
+// component (plan R5).
+describe("spec 035 lazy expansion (T2)", () => {
+  const known = new Set(FILES.map(({ path }) => withoutExtension(path)));
+  const resolve = (target: string) =>
+    known.has(target)
+      ? target
+      : known.has(`${target}/index`)
+        ? `${target}/index`
+        : null;
+  const staticImports = new Map(
+    FILES.map(({ path, content }) => [
+      withoutExtension(path),
+      importsOf(path, content.replace(/import\s+type\s[^;]*;/g, ""))
+        .map(resolve)
+        .filter((target): target is string => target !== null),
+    ]),
+  );
+
+  const serverActions = new Set(
+    FILES.filter(({ content }) => /^\s*["']use server["']/.test(content)).map(
+      ({ path }) => withoutExtension(path),
+    ),
+  );
+
+  it("no client component reaches expand.ts without import()", () => {
+    const seen = new Set<string>();
+    const queue = FILES.filter(({ content }) => isClient(content)).map(
+      ({ path }) => withoutExtension(path),
+    );
+    while (queue.length > 0) {
+      const next = queue.pop()!;
+      if (seen.has(next)) continue;
+      seen.add(next);
+      // A Server Action module reaches the client as a reference, not code.
+      if (serverActions.has(next)) continue;
+      queue.push(...(staticImports.get(next) ?? []));
+    }
+    expect(seen.has("lib/recurrence/expand")).toBe(false);
+    expect(seen.has("lib/offline/series-overlay")).toBe(false);
+  });
+
+  it("the overlay is the offline module that expands rules", () => {
+    expect(staticImports.get("lib/offline/series-overlay")).toContain(
+      "lib/recurrence/read-series",
+    );
+  });
+});
+
 // Spec 009, T13: the write engine runs only on the server; client components
 // reach it through Server Actions, never by importing it.
 describe("spec 009 write engine (T13)", () => {

@@ -32,7 +32,12 @@ import { useToast } from "@/components/ui/toast";
 import { useEventClipboard } from "./event-clipboard";
 import { DONE_MESSAGES, useEventModal } from "./event-modal";
 import { useUndoToast } from "./use-undo-toast";
+import { deleteFromDetailOrQueue } from "@/lib/offline/event-actions";
+import { useOfflineQueue } from "@/lib/hooks/use-offline";
+import { entityOf } from "@/lib/offline/outbox";
 import { useHoldLive } from "@/lib/hooks/use-hold-live";
+import { useConnection } from "@/lib/hooks/use-connection";
+import { OfflineComments } from "@/components/offline/offline-comments";
 
 /**
  * An event's detail, which turns into its edit form in the same place
@@ -41,7 +46,7 @@ import { useHoldLive } from "@/lib/hooks/use-hold-live";
 export function EventPanel({
   detail,
   timeZone,
-  canEdit,
+  canEdit: canEditOnline,
   editInitial,
   calendars,
   categories,
@@ -71,6 +76,10 @@ export function EventPanel({
   series?: { limitReached: boolean } | null;
 }) {
   const modal = useEventModal();
+  // Offline as online: comments and images wait in the queue, Google and
+  // iCloud included (spec 035 RF-1, RF-18, RF-30).
+  const online = useConnection();
+  const canEdit = canEditOnline;
   const [editing, setEditingNow] = useState(startEditing);
   // The detail and the form cross-fade instead of swapping (spec 021 RF-52, D14).
   const setEditing = (next: boolean) =>
@@ -81,6 +90,14 @@ export function EventPanel({
   const { show } = useToast();
   const clipboard = useEventClipboard();
   const root = useRef<HTMLDivElement>(null);
+  const { queue } = useOfflineQueue();
+  const waiting = queue.some(
+    (entry) => entityOf(entry.change) === `event:${detail.id}`,
+  );
+  // Offline the delete waits on the device (spec 034 RF-22).
+  const [deleteFromDetail] = useState(() =>
+    deleteFromDetailOrQueue(detail.id, deleteAction),
+  );
 
   // E, Supr and Ctrl/⌘+C with the detail open (spec 017 RF-54, RF-55,
   // RF-57); never while typing or with another window over it (RF-63).
@@ -127,6 +144,7 @@ export function EventPanel({
           </Button>
           <EventForm
             action={updateAction}
+            eventId={detail.id}
             initial={editInitial}
             calendars={calendars}
             categories={categories}
@@ -144,10 +162,13 @@ export function EventPanel({
     <ViewTransition key="detail">
       <div ref={root} className="contents">
         <EventDetail
-          event={detail}
+          event={{
+            ...detail,
+            ...(waiting ? { pending: true } : {}),
+          }}
           timeZone={timeZone}
           canEdit={canEdit}
-          deleteAction={deleteAction}
+          deleteAction={deleteFromDetail}
           onDeleted={
             modal?.finish ??
             // A full page goes back to the calendar with the notice (spec 017 RF-25).
@@ -156,15 +177,28 @@ export function EventPanel({
               router.replace("/dashboard/calendar");
             })
           }
-          comments={<EventComments eventId={detail.id} timeZone={timeZone} />}
+          comments={
+            online ? (
+              <EventComments eventId={detail.id} timeZone={timeZone} />
+            ) : (
+              <OfflineComments
+                eventId={detail.id}
+                calendarId={editInitial.calendarId}
+                timeZone={timeZone}
+              />
+            )
+          }
           media={
             <>
               <EventImages
                 images={images}
                 title={detail.title}
                 timeZone={timeZone}
+                eventId={detail.id}
               />
-              {canAttach ? <ImageUploader eventId={detail.id} /> : null}
+              {canAttach ? (
+                <ImageUploader eventId={detail.id} saved={images.length} />
+              ) : null}
             </>
           }
           actions={

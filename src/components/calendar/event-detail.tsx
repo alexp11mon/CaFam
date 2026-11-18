@@ -6,9 +6,12 @@ import type { ConfirmState, Done, FormAction } from "@/lib/forms/form-state";
 import { SeriesDelete } from "@/components/recurrence/series-delete";
 import type { UndoToken } from "@/lib/calendar/undo";
 import { DeleteEventButton } from "./delete-event-button";
+import { PendingMark } from "@/components/offline/pending-mark";
 
 export interface EventDetailData {
   id: string;
+  /** Changed on this device and not sent yet (spec 034 RF-28). */
+  pending?: boolean;
   title: string;
   startsAt: string;
   endsAt: string;
@@ -78,9 +81,10 @@ export function EventDetail({
           className="mt-2 size-4 shrink-0 rounded-full ring-1 ring-pastel-ink/20"
           style={{ backgroundColor: event.color ?? event.calendarColor }}
         />
-        <h2 className="min-w-0 break-words text-xl font-semibold text-ink">
+        <h2 className="min-w-0 flex-1 break-words text-xl font-semibold text-ink">
           {event.title}
         </h2>
+        <PendingMark pending={event.pending} label />
       </header>
       <dl className="flex flex-col gap-3">
         <Row label="Cuándo">

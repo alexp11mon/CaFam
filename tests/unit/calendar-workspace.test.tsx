@@ -18,6 +18,7 @@ import {
   useCalendarHeader,
 } from "@/components/shell/calendar-header";
 import { TopBar } from "@/components/shell/top-bar";
+import { resetConnection, startWatching } from "@/lib/offline/connection";
 import { ToastProvider } from "@/components/ui/toast";
 import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
 import type { PersonGroup } from "@/lib/calendar/grouping";
@@ -247,6 +248,26 @@ describe("CalendarWorkspace filter motion", () => {
       screen.getByRole("checkbox", { name: "Mi calendario" }),
     );
     expect(transitionTypes).toEqual(["cal-filter", "cal-filter"]);
+  });
+});
+
+// Spec 034 RF-15: without a connection the filters change on this device
+// only, without saving and without an error.
+describe("CalendarWorkspace without a connection", () => {
+  afterEach(() => resetConnection());
+
+  it("hides a calendar without saving it", async () => {
+    startWatching();
+    act(() => {
+      window.dispatchEvent(new Event("offline"));
+    });
+    const setCalendarVisibility = vi.fn(async () => ({}));
+    setup(true, undefined, { setCalendarVisibility });
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "Familia" }));
+    expect(screen.getByRole("checkbox", { name: "Familia" })).not.toBeChecked();
+    expect(setCalendarVisibility).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
 

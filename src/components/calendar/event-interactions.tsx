@@ -12,11 +12,12 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
+import { isOnline } from "@/lib/offline/connection";
 import {
-  deleteForUndo,
-  pasteEvent,
-  quickChange,
-} from "@/app/dashboard/events/quick-actions";
+  deleteOrQueue as deleteForUndo,
+  pasteOrQueue as pasteEvent,
+  quickChangeOrQueue as quickChange,
+} from "@/lib/offline/event-actions";
 import type {
   QuickResult,
   ScopeOptions,
@@ -242,7 +243,8 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
         return next;
       });
       showUndo(notice, result.undo);
-      router.refresh();
+      // Offline the queue draws it; the server is not there (spec 034 RF-26).
+      if (isOnline()) router.refresh();
     },
     [router, setOverride, show, showUndo],
   );
@@ -406,7 +408,7 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
       }
       markPulse(result.id);
       showUndo(UNDO_NOTICES.pasted, result.undo);
-      router.refresh();
+      if (isOnline()) router.refresh();
     },
   });
 

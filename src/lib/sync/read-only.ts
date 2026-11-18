@@ -58,7 +58,9 @@ export function moveTargets<T extends CalendarAccess>(
 export function readOnlyReason(
   synced: SyncedInfo | null,
 ): "provider" | "reconnect" | null {
-  if (!synced || synced.canWrite) return null;
+  // Offline the same: the change waits and goes to the provider later (spec 035 RF-1).
+  if (!synced) return null;
+  if (synced.canWrite) return null;
   return synced.googleAccess === "reader" ? "provider" : "reconnect";
 }
 

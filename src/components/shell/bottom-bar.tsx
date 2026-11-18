@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   activeSection,
@@ -10,6 +9,7 @@ import {
   type NavItem,
 } from "@/lib/shell/nav";
 import { BAR_ICON, BAR_ITEM } from "./bar-styles";
+import { NavLink } from "./nav-link";
 import { SECTION_ICONS } from "./icons";
 import { MoreSheet } from "./more-sheet";
 
@@ -39,8 +39,8 @@ export function BottomBar({
           const ItemIcon = SECTION_ICONS[entry.section];
           return (
             <li key={entry.section} className="flex flex-1">
-              <Link
-                href={entry.href}
+              <NavLink
+                item={entry}
                 aria-current={entry.section === current ? "page" : undefined}
                 className={BAR_ITEM}
               >
@@ -48,7 +48,7 @@ export function BottomBar({
                   <ItemIcon />
                 </span>
                 {BAR_LABELS[entry.section] ?? entry.label}
-              </Link>
+              </NavLink>
             </li>
           );
         })}

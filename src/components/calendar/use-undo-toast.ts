@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { undoAction } from "@/app/dashboard/events/quick-actions";
 import { useToast } from "@/components/ui/toast";
-import type { UndoToken } from "@/lib/calendar/undo";
+import { UNDO_ERRORS, type UndoToken } from "@/lib/calendar/undo";
+import { isOnline } from "@/lib/offline/connection";
+import { undoChange } from "@/lib/offline/queue-store";
 import { captureReturn } from "@/lib/motion/marks";
 
 /**
@@ -21,6 +23,12 @@ export function useUndoToast() {
         undo
           ? {
               undo: async () => {
+                // Still waiting on the device: it leaves the queue (spec 034 RF-30).
+                if (undo.kind === "offline") {
+                  return (await undoChange(undo.changeId))
+                    ? null
+                    : UNDO_ERRORS.expired;
+                }
                 const result = await undoAction(undo);
                 // A moved or stretched event flies back to its place (spec 021 RF-20).
                 if (
@@ -29,7 +37,7 @@ export function useUndoToast() {
                   undo.before.kind === "times"
                 )
                   captureReturn(undo.id);
-                router.refresh();
+                if (isOnline()) router.refresh();
                 return result.ok ? null : result.error;
               },
             }

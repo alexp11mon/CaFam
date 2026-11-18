@@ -1,6 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { resetConnection, startWatching } from "@/lib/offline/connection";
 import type { EventDetailData } from "@/components/calendar/event-detail";
 import type { EventFormValues } from "@/components/calendar/event-form";
 import { EventClipboardProvider } from "@/components/calendar/event-clipboard";
@@ -79,6 +88,7 @@ const EDIT: EventFormValues = {
 };
 
 function setup({
+  detail = DETAIL,
   canAttach = false,
   canEdit = true,
   deleteAction = vi.fn(async (): Promise<ConfirmState> => ({})),
@@ -88,7 +98,7 @@ function setup({
   const panel = (
     <EventPanel
       startEditing={startEditing}
-      detail={DETAIL}
+      detail={detail}
       timeZone="Europe/Madrid"
       canEdit={canEdit}
       canAttach={canAttach}
@@ -264,5 +274,27 @@ describe("EventPanel keys", () => {
     expect(screen.queryByLabelText("Título")).toBeNull();
     await userEvent.keyboard("{Control>}c{/Control}");
     expect(await screen.findByText("Evento copiado")).toBeVisible();
+  });
+});
+
+// Spec 035 T10: comments, images and synced calendars offline.
+describe("EventPanel without a connection", () => {
+  afterEach(() => resetConnection());
+
+  it("lets comments be written offline (spec 035 RF-18)", async () => {
+    startWatching();
+    window.dispatchEvent(new Event("offline"));
+    setup({ canAttach: true });
+    expect(
+      await screen.findByRole("button", { name: "Comentar" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Disponible con conexión")).toBeNull();
+  });
+
+  it("keeps a synced event editable offline (spec 035 RF-1)", () => {
+    startWatching();
+    window.dispatchEvent(new Event("offline"));
+    setup({ detail: { ...DETAIL, provider: "google" } });
+    expect(screen.getByRole("button", { name: "Editar" })).toBeVisible();
   });
 });

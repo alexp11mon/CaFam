@@ -6,6 +6,8 @@ import type { CalendarEventRecord } from "./queries";
 export interface AgendaEvent extends CalendarEventItem {
   location?: string | null;
   calendarName?: string;
+  /** The event's own color, null when it takes its calendar's: for the offline copy (spec 034 D9). */
+  ownColor?: string | null;
 }
 
 /** Rows of the database to view events; one without its own color takes its calendar's (spec 002 RF-17). */
@@ -26,6 +28,7 @@ export function toViewEvents(
       record.color ??
       byId.get(record.calendarId)?.color ??
       DEFAULT_CALENDAR_COLOR,
+    ownColor: record.color,
     location: record.location,
     imageCount: record.imageCount,
     commentCount: record.commentCount,

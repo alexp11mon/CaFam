@@ -11,7 +11,13 @@ import {
   type ComponentProps,
 } from "react";
 import type { BusyInput } from "@/lib/availability/busy";
-import { eventsInRange, type EventWindow } from "@/lib/calendar/event-window";
+import {
+  eventsInRange,
+  type DayRange,
+  type EventWindow,
+} from "@/lib/calendar/event-window";
+import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
+import { coversRange } from "@/lib/offline/range";
 import { monthMarks } from "@/lib/calendar/month-marks";
 import {
   calendarHref,
@@ -22,6 +28,10 @@ import {
 import { CAL_NEXT, CAL_PREV } from "@/lib/calendar/transition-types";
 import { visibleDays } from "@/lib/calendar/view-options";
 import { useEventWindow } from "@/lib/hooks/use-event-window";
+import { useOfflineQueue, useOfflineSnapshot } from "@/lib/hooks/use-offline";
+import { pendingView, withSeries } from "@/lib/offline/describe";
+import { usePendingSeries } from "@/lib/hooks/use-pending-series";
+import { mergeIntoCopy } from "@/lib/offline/snapshot-store";
 import { useStableJson, useStableList } from "@/lib/hooks/use-stable-list";
 import { Button } from "@/components/ui/button";
 import type { AgendaEvent } from "./agenda-view";
@@ -74,8 +84,11 @@ export function CalendarClient({
   initialBusy,
   loadWindow,
   loadBusy,
+  availableRange,
   ...workspace
 }: {
+  /** The days the offline copy holds; others are not shown (spec 034 RF-11). */
+  availableRange?: DayRange;
   initialView: CalendarView;
   initialDate: string;
   /** Events from the weeks of the previous month to those of the next (RF-1). */
@@ -177,6 +190,28 @@ export function CalendarClient({
     load: loadWindow,
   });
 
+  // What waits on the device is drawn as it will be (spec 034 RF-26, RF-28).
+  const { queue } = useOfflineQueue();
+  const copy = useOfflineSnapshot();
+  const calendars = copy?.calendars ?? NO_CALENDARS;
+  // Series changed offline, as they will be (spec 035 RF-12).
+  const seriesView = usePendingSeries(copy, queue);
+  const withPending = useMemo(() => {
+    const view = pendingView(events.events, queue, calendars);
+    return seriesView
+      ? withSeries(view, seriesView.events, seriesView.touched)
+      : view;
+  }, [events.events, queue, calendars, seriesView]);
+  // A window the server read again keeps the device's copy fresh (RF-5, D9).
+  // Not in the offline app, whose window is the copy itself. Again once the
+  // copy is read from the device, which comes after the page.
+  const hasCopy = copy !== null;
+  useEffect(() => {
+    if (!availableRange && hasCopy) {
+      void mergeIntoCopy(serverWindow).catch(() => {});
+    }
+  }, [serverWindow, availableRange, hasCopy]);
+
   const range = useMemo(
     () => getVisibleRange(view, date, timeZone),
     [view, date, timeZone],
@@ -193,8 +228,8 @@ export function CalendarClient({
   // workspace hang from it (spec 017).
   const shown = useStableList(
     useMemo(
-      () => eventsInRange(events.events, range.from, range.to).sort(byStart),
-      [events.events, range],
+      () => eventsInRange(withPending, range.from, range.to).sort(byStart),
+      [withPending, range],
     ),
   );
   // Dots of the mini month, from the same window (RF-8).
@@ -203,11 +238,11 @@ export function CalendarClient({
     useMemo(() => {
       const monthRange = getVisibleRange("month", `${month}-01`, timeZone);
       return monthMarks(
-        eventsInRange(events.events, monthRange.from, monthRange.to),
+        eventsInRange(withPending, monthRange.from, monthRange.to),
         monthRange.days,
         timeZone,
       );
-    }, [events.events, month, timeZone]),
+    }, [withPending, month, timeZone]),
   );
 
   // "Ocupado" blocks: the server's for its own week or day, the rest asked
@@ -275,6 +310,18 @@ export function CalendarClient({
       <p role="status" className="sr-only">
         {events.loading ? "Cargando eventos…" : ""}
       </p>
+      {availableRange &&
+      !coversRange(availableRange, {
+        from: range.days[0]!,
+        to: range.days.at(-1)!,
+      }) ? (
+        <p
+          role="alert"
+          className="rounded-control border border-line bg-paper px-4 py-3 text-ink"
+        >
+          {OFFLINE_MESSAGES.outOfRange}
+        </p>
+      ) : null}
       {events.failed ? (
         <div
           role="alert"
@@ -307,6 +354,7 @@ export function CalendarClient({
 }
 
 const EMPTY_BUSY: BusyInput[] = [];
+const NO_CALENDARS: { id: string; name: string; color: string }[] = [];
 
 function rangeStart(view: CalendarView, date: string, timeZone: string) {
   return getVisibleRange(view, date, timeZone).days[0];

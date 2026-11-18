@@ -14,16 +14,22 @@ import type {
   EventFormValues,
 } from "@/lib/calendar/schemas";
 import type { ConfirmState, FormState, Loss } from "@/lib/forms/form-state";
+import { IMAGE_MESSAGES } from "@/lib/images/error-messages";
 import {
   RECURRENCE_MESSAGES,
   recurrenceErrorMessage,
 } from "@/lib/recurrence/error-messages";
+import { parseEventId } from "@/lib/recurrence/occurrence-id";
+import { findOccurrence } from "@/lib/recurrence/read-series";
+import type { RecurrenceRule } from "@/lib/recurrence/rule";
 import {
   planSeriesChange,
   planSeriesDelete,
+  seriesColumns,
   type LossQuery,
   type SeriesScope,
 } from "@/lib/recurrence/series-write";
+import { cronSecret } from "@/lib/recurrence/server-secret";
 import { writeEngineDeps } from "@/lib/sync/engine";
 import { goneDone, type GoneDone } from "@/lib/sync/provider-labels";
 import { writeErrorText } from "@/lib/sync/write-errors";
@@ -103,6 +109,8 @@ export async function createSingle(
   supabase: Supabase,
   userId: string,
   row: ReturnType<typeof toRow>,
+  /** Made in the browser for an event created offline: a resend is not a second one (spec 034 D6). */
+  id?: string,
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const synced = await syncedWrite(supabase, { op: "create", row });
   if (synced.status === "failed") {
@@ -117,7 +125,7 @@ export async function createSingle(
   if (synced.status === "done") return { ok: true, id: synced.eventId };
   const { data, error } = await supabase
     .from("events")
-    .insert({ ...row, created_by: userId })
+    .insert({ ...row, created_by: userId, ...(id ? { id } : {}) })
     .select("id")
     .single();
   if (error) return { ok: false, error: getCalendarErrorMessage(error) };
@@ -362,4 +370,146 @@ export async function deleteSingle(
     return { formError: getCalendarErrorMessage(error) };
   }
   return null;
+}
+
+/**
+ * A single event becomes a series (RF-21). With images it stays as the first
+ * occurrence of a new series row, which never holds images (plan D7); with
+ * comments too (spec 023 RF-12).
+ */
+export async function convertToSeries(
+  supabase: Supabase,
+  event: EventRecord,
+  input: {
+    data: EventData;
+    rule: RecurrenceRule;
+    timeZone: string;
+    values: EventFormValues;
+  },
+): Promise<Saved> {
+  const { data, rule, timeZone, values } = input;
+  if (await isSyncedCalendar(supabase, data.calendarId)) {
+    return { fieldErrors: { repeat: RECURRENCE_MESSAGES.synced }, values };
+  }
+  const columns = seriesColumns(data, rule, timeZone);
+  if (!columns) {
+    return { fieldErrors: { repeat: RECURRENCE_MESSAGES.empty }, values };
+  }
+  // Images and comments hang from the row of an occurrence, never from the
+  // series: with either, the event stays as its first occurrence (spec 023
+  // RF-12).
+  const [images, comments] = await Promise.all(
+    (["event_images", "event_comments"] as const).map((table) =>
+      supabase
+        .from(table)
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", event.id),
+    ),
+  );
+  if (images.error) throw images.error;
+  if (comments.error) throw comments.error;
+
+  if (!images.count && !comments.count) {
+    const { error } = await supabase
+      .from("events")
+      .update({ ...toRow(data), ...columns })
+      .eq("id", event.id);
+    return error ? seriesFailure(error, values) : { id: event.id };
+  }
+
+  const { data: series, error } = await supabase
+    .from("events")
+    .insert({ ...toRow(data), ...columns, created_by: event.createdBy })
+    .select("id")
+    .single();
+  if (error) return seriesFailure(error, values);
+  const { error: attachError } = await supabase
+    .from("events")
+    .update({
+      ...toRow(data),
+      starts_at: columns.starts_at,
+      ends_at: columns.ends_at,
+      series_id: series.id,
+      original_start: columns.starts_at,
+    })
+    .eq("id", event.id);
+  if (attachError) {
+    // Two writes: undo the first so the event is not shown twice.
+    await supabase.from("events").delete().eq("id", series.id);
+    return seriesFailure(attachError, values);
+  }
+  return { id: event.id };
+}
+
+/**
+ * A new series (spec 013 RF-6, RF-8): never in a calendar of Google (RF-29),
+ * starting at its first occurrence, with the creator's zone (RF-12).
+ */
+export async function createSeries(
+  supabase: Supabase,
+  userId: string,
+  input: {
+    data: EventData;
+    rule: RecurrenceRule;
+    timeZone: string;
+    values: EventFormValues;
+  },
+  /** Made in the browser for a series created offline (spec 035 RF-11). */
+  id?: string,
+): Promise<{ id: string } | EventFormState> {
+  const { data, rule, timeZone, values } = input;
+  if (await isSyncedCalendar(supabase, data.calendarId)) {
+    return { fieldErrors: { repeat: RECURRENCE_MESSAGES.synced }, values };
+  }
+  const columns = seriesColumns(data, rule, timeZone);
+  if (!columns) {
+    return { fieldErrors: { repeat: RECURRENCE_MESSAGES.empty }, values };
+  }
+  const { data: row, error } = await supabase
+    .from("events")
+    .insert({
+      ...toRow(data),
+      ...columns,
+      created_by: userId,
+      ...(id ? { id } : {}),
+    })
+    .select("id")
+    .single();
+  if (error) return seriesFailure(error, values);
+  return { id: row.id };
+}
+
+/**
+ * The row of an occurrence, created unchanged the first time: a series never
+ * holds images or comments, each occurrence keeps its own (spec 013 RF-24,
+ * plan D7). Any member may, so it goes through materialize_occurrence with
+ * the cron secret once ical.js confirms the occurrence (plan D8).
+ */
+export async function materializeWith(
+  supabase: Supabase,
+  occurrenceId: string,
+): Promise<{ eventId: string } | { error: string }> {
+  const parsed = parseEventId(occurrenceId);
+  if (parsed?.kind !== "occurrence") return { error: RECURRENCE_MESSAGES.gone };
+  // RLS: only a member reads the series.
+  const { data: series, error: readError } = await supabase
+    .from("events")
+    .select(
+      "id, starts_at, ends_at, all_day, recurrence, recurrence_tz, exdates",
+    )
+    .eq("id", parsed.seriesId)
+    .maybeSingle();
+  if (readError) return { error: IMAGE_MESSAGES.upload };
+  if (!series || !findOccurrence(series, parsed.originalStart)) {
+    return { error: RECURRENCE_MESSAGES.gone };
+  }
+  const { data, error } = await supabase.rpc("materialize_occurrence", {
+    p_secret: cronSecret(),
+    p_series_id: parsed.seriesId,
+    p_original_start: parsed.originalStart,
+  });
+  if (error) {
+    return { error: recurrenceErrorMessage(error) ?? IMAGE_MESSAGES.upload };
+  }
+  return { eventId: data };
 }

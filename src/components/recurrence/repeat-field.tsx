@@ -51,6 +51,8 @@ export function RepeatField({
       ? value
       : "none";
   const sent = disabledReason ? "none" : current;
+  // Offline as online: only a synced calendar locks it (spec 035 RF-11, RF-16).
+  const reason = disabledReason;
 
   const resolved = resolveRepeat(current, startDate);
   const editorStart =
@@ -64,7 +66,7 @@ export function RepeatField({
         name={`${name}-choice`}
         form="none"
         value={disabledReason ? "none" : current}
-        disabled={Boolean(disabledReason)}
+        disabled={Boolean(reason)}
         onChange={(event) => {
           if (event.target.value === "custom") setEditing(true);
           else setValue(event.target.value);
@@ -81,9 +83,7 @@ export function RepeatField({
         {custom ? <option value={value}>{summarizeRule(custom)}</option> : null}
         <option value="custom">Personalizado…</option>
       </Select>
-      {disabledReason ? (
-        <p className="text-sm text-muted">{disabledReason}</p>
-      ) : null}
+      {reason ? <p className="text-sm text-muted">{reason}</p> : null}
       <RecurrenceEditor
         open={editing}
         startDate={startDate}

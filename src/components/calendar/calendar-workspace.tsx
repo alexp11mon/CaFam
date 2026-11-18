@@ -28,6 +28,7 @@ import type { DraftRange } from "@/lib/calendar/draft-drag";
 import type { Box } from "@/lib/calendar/popover";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { useCalendarShortcuts } from "@/lib/hooks/use-calendar-shortcuts";
+import { useConnection } from "@/lib/hooks/use-connection";
 import { useIsPhone } from "@/lib/hooks/use-is-phone";
 import { useFollowDrag } from "@/lib/hooks/use-follow-drag";
 import { releaseDecision } from "@/lib/motion/release";
@@ -274,6 +275,7 @@ export function CalendarWorkspace({
     ),
   );
   const [groups, setGroups] = useState(initialGroups);
+  const online = useConnection();
   const [hiddenCategories, setHiddenCategories] = useState<ReadonlySet<string>>(
     new Set(),
   );
@@ -462,6 +464,8 @@ export function CalendarWorkspace({
     if (fade) fadeFilters(() => setGroups(next));
     else setGroups(next);
     setError(undefined);
+    // Without a connection, on this device only and unsaved (spec 034 RF-15).
+    if (!online) return;
     let result: Result;
     try {
       result = await persist();

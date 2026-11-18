@@ -155,4 +155,24 @@ describe("/privacy: images in the assistant (spec 022)", () => {
     expect(section).toHaveTextContent("hasta que pulsas «Confirmar»");
     expect(section).toHaveTextContent("Nunca borra eventos");
   });
+
+  // Spec 034 (RF-66, RF-67) and spec 035 (RF-48).
+  it("says what the device keeps, for how long and when it is deleted", () => {
+    render(<PrivacyPage />);
+    const section = screen
+      .getByRole("heading", { name: "Datos guardados en este dispositivo" })
+      .closest("section")!;
+    expect(section).toHaveTextContent("una copia de tus datos");
+    expect(section).toHaveTextContent(
+      "los comentarios de esos eventos y las miniaturas",
+    );
+    expect(section).toHaveTextContent(
+      "las imágenes pendientes de enviar se pierden",
+    );
+    expect(section).toHaveTextContent(
+      "No se guardan conversaciones del asistente",
+    );
+    expect(section).toHaveTextContent("cada 15 minutos");
+    expect(section).toHaveTextContent("Se borra entera al cerrar sesión");
+  });
 });

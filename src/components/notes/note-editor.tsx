@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
+import type { NoteResult } from "@/app/dashboard/notes/actions";
 import {
-  addItem,
-  clearDone,
-  deleteItem,
-  deleteNote,
-  moveItems,
-  updateItem,
-  updateNote,
-  type NoteResult,
-} from "@/app/dashboard/notes/actions";
+  addItemOrQueue,
+  clearDoneOrQueue,
+  deleteItemOrQueue,
+  deleteNoteOrQueue,
+  moveItemsOrQueue,
+  updateItemOrQueue,
+  updateNoteOrQueue,
+} from "@/lib/offline/note-actions";
 import {
   ArchiveIcon,
   ChevronIcon,
@@ -34,6 +34,11 @@ import type { NoteAccess } from "@/lib/notes/permissions";
 import { dueLabel } from "@/lib/notes/progress";
 import type { Note, NoteItem } from "@/lib/notes/types";
 import { Checklist } from "./checklist";
+import { PendingMark } from "@/components/offline/pending-mark";
+import { useOfflineQueue } from "@/lib/hooks/use-offline";
+import { noteOf } from "@/lib/offline/outbox";
+import { useConnection } from "@/lib/hooks/use-connection";
+import { networkReason } from "@/lib/offline/gates";
 import { TextNote } from "./text-note";
 
 type Fields = Partial<
@@ -117,7 +122,7 @@ export function NoteEditor({
   const setFields = (fields: Fields, said?: string) =>
     change(
       (current) => ({ ...current, ...fields }),
-      () => updateNote(note.id, fields),
+      () => updateNoteOrQueue(note, fields),
       said,
     );
 
@@ -138,7 +143,8 @@ export function NoteEditor({
     };
     void change(
       withItems((items) => [...items, item]),
-      () => addItem(note.id, { id: item.id, text, position: item.position }),
+      () =>
+        addItemOrQueue(note, { id: item.id, text, position: item.position }),
       `Añadido «${text}»`,
     );
   }
@@ -153,7 +159,7 @@ export function NoteEditor({
             : other,
         ),
       ),
-      () => updateItem(item.id, { done }),
+      () => updateItemOrQueue(note.id, item, { done }),
       done ? `Hecho: «${item.text}»` : `Pendiente otra vez: «${item.text}»`,
     );
   }
@@ -165,7 +171,7 @@ export function NoteEditor({
           other.id === item.id ? { ...other, text } : other,
         ),
       ),
-      () => updateItem(item.id, { text }),
+      () => updateItemOrQueue(note.id, item, { text }),
     );
   }
 
@@ -174,7 +180,7 @@ export function NoteEditor({
     if (!positions) return;
     void change(
       withItems((items) => applyPositions(items, positions)),
-      () => moveItems(note.id, positions),
+      () => moveItemsOrQueue(note.id, positions),
       direction === "up" ? `Subido «${item.text}»` : `Bajado «${item.text}»`,
     );
   }
@@ -182,7 +188,7 @@ export function NoteEditor({
   async function remove(item: NoteItem) {
     const removed = await change(
       withItems((items) => items.filter((other) => other.id !== item.id)),
-      () => deleteItem(item.id),
+      () => deleteItemOrQueue(note.id, item),
     );
     if (!removed) return;
     // "Deshacer" puts it back as it was (RF-6, plan D8).
@@ -191,7 +197,7 @@ export function NoteEditor({
         const back = await change(
           withItems((items) => [...items, item]),
           () =>
-            addItem(note.id, {
+            addItemOrQueue(note, {
               id: item.id,
               text: item.text,
               position: item.position,
@@ -206,7 +212,7 @@ export function NoteEditor({
   function clear() {
     void change(
       withItems((items) => items.filter((item) => !item.done)),
-      () => clearDone(note.id),
+      () => clearDoneOrQueue(note),
       "Completados borrados",
     );
   }
@@ -215,7 +221,7 @@ export function NoteEditor({
     setSaving((count) => count + 1);
     let result: NoteResult;
     try {
-      result = await deleteNote(note.id);
+      result = await deleteNoteOrQueue(note);
     } catch {
       result = { error: NOTE_MESSAGES.connection };
     }
@@ -229,6 +235,12 @@ export function NoteEditor({
     router.replace("/dashboard/notes");
   }
 
+  // Changes of this note still on the device (spec 034 RF-37).
+  const { queue } = useOfflineQueue();
+  // Personal to shared and back waits for the network (spec 034 RF-35).
+  const moveReason = networkReason(useConnection());
+  const moveId = useId();
+  const waiting = queue.some((entry) => noteOf(entry.change) === note.id);
   const due = dueLabel(note.dueDate, today);
   const { canWrite } = access;
 
@@ -250,6 +262,7 @@ export function NoteEditor({
           Notas
         </Link>
         <span className="flex-1" />
+        <PendingMark pending={waiting} label />
         {canWrite ? (
           <>
             <IconButton
@@ -422,6 +435,8 @@ export function NoteEditor({
               label="Dónde se guarda"
               name="calendarId"
               value={note.calendarId ?? ""}
+              disabled={Boolean(moveReason)}
+              aria-describedby={moveReason ? `${moveId}` : undefined}
               onChange={(event) => {
                 const calendarId = event.target.value || null;
                 const name =
@@ -429,7 +444,7 @@ export function NoteEditor({
                     ?.name ?? null;
                 void change(
                   (current) => ({ ...current, calendarId, calendarName: name }),
-                  () => updateNote(note.id, { calendarId }),
+                  () => updateNoteOrQueue(note, { calendarId }),
                   calendarId ? `Compartida en ${name}` : "Nota personal",
                 );
               }}
@@ -441,6 +456,11 @@ export function NoteEditor({
                 </option>
               ))}
             </Select>
+          ) : null}
+          {access.canMove && moveReason ? (
+            <p id={moveId} className="text-sm text-muted">
+              {moveReason}
+            </p>
           ) : null}
         </section>
       ) : null}

@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useId, useRef } from "react";
 import { NAV_ITEMS, SHEET_SECTIONS, type Section } from "@/lib/shell/nav";
 import { BAR_ICON, BAR_ITEM, TAB_ITEM } from "./bar-styles";
 import { MoreIcon, SECTION_ICONS, SignOutIcon } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
+import { NavLink } from "./nav-link";
+import { SignOutGuard } from "@/components/offline/sign-out-guard";
 
 const ROW =
   "press-quiet flex min-h-12 w-full items-center gap-3 rounded-control px-3 text-base font-medium text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:bg-stone";
@@ -76,15 +77,16 @@ export function MoreSheet({
             const ItemIcon = SECTION_ICONS[item.section];
             return (
               <li key={item.section}>
-                <Link
-                  href={item.href}
+                <NavLink
+                  item={item}
                   onClick={close}
                   aria-current={item.section === current ? "page" : undefined}
                   className={ROW}
+                  showReason
                 >
                   <ItemIcon />
                   {item.label}
-                </Link>
+                </NavLink>
               </li>
             );
           })}
@@ -92,12 +94,10 @@ export function MoreSheet({
             <ThemeToggle className={ROW} />
           </li>
           <li>
-            <form action={signOutAction}>
-              <button type="submit" className={ROW}>
-                <SignOutIcon />
-                Cerrar sesión
-              </button>
-            </form>
+            <SignOutGuard action={signOutAction} className={ROW}>
+              <SignOutIcon />
+              Cerrar sesión
+            </SignOutGuard>
           </li>
         </ul>
       </dialog>

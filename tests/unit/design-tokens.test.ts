@@ -26,6 +26,8 @@ const SOURCES = files(ROOT).map((path) => ({
 // the round buttons (spec 016 and 015) and the note of a busy block (spec 020).
 const FLOATING = new Set([
   "src/components/calendar/busy-block.tsx",
+  // The confirmation of signing out with changes waiting (spec 034 RF-61).
+  "src/components/offline/sign-out-guard.tsx",
   "src/components/calendar/calendar-dock.tsx",
   "src/components/calendar/confirm-dialog.tsx",
   "src/components/calendar/calendar-workspace.tsx",

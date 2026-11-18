@@ -3,6 +3,7 @@ import { PinIcon } from "@/components/shell/icons";
 import { sortItems } from "@/lib/notes/order";
 import { dueLabel, progress } from "@/lib/notes/progress";
 import type { Note } from "@/lib/notes/types";
+import { PendingMark } from "@/components/offline/pending-mark";
 
 /** How many pending items a card shows before "y N más". */
 const SHOWN_ITEMS = 3;
@@ -12,7 +13,13 @@ const SHOWN_ITEMS = 3;
  * when it is due, and a look inside: the first pending items of a list with
  * "X de Y", or the start of a text.
  */
-export function NoteCard({ note, today }: { note: Note; today: string }) {
+export function NoteCard({
+  note,
+  today,
+}: {
+  note: Note & { pending?: boolean };
+  today: string;
+}) {
   const due = dueLabel(note.dueDate, today);
   const done = progress(note.items);
   const pending = sortItems(note.items).filter((item) => !item.done);
@@ -35,6 +42,7 @@ export function NoteCard({ note, today }: { note: Note; today: string }) {
         <span className="min-w-0 flex-1 text-lg leading-snug font-semibold text-ink">
           {title}
         </span>
+        <PendingMark pending={note.pending} />
         {note.pinned ? (
           <span className="text-accent-ink">
             <PinIcon filled />

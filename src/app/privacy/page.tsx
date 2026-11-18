@@ -275,6 +275,37 @@ export default function PrivacyPage() {
           <p>Las notas no se envían a Google, a iCloud ni al asistente.</p>
         </Section>
 
+        <Section title="Datos guardados en este dispositivo">
+          <p>
+            Para que puedas usar CaFam sin conexión, el navegador guarda en tu
+            dispositivo una copia de tus datos: tu perfil (nombre, zona horaria,
+            color y tema), los calendarios que ves con sus categorías y grupos,
+            los eventos desde un mes atrás hasta tres meses adelante y tus
+            notas, los comentarios de esos eventos y las miniaturas de sus
+            imágenes, además de las imágenes grandes que hayas abierto (como
+            mucho 30). También guarda lo que haces sin conexión hasta que llega
+            al servidor, incluidas las imágenes que añades.
+          </p>
+          <p>
+            Si el navegador borra los datos del sitio antes de que vuelva la
+            conexión, las imágenes pendientes de enviar se pierden. Lo pendiente
+            se puede enviar con la app cerrada en los navegadores que lo
+            permiten.
+          </p>
+          <p>
+            No se guardan conversaciones del asistente, los bloques «Ocupado» de
+            otras personas, los emails de otros miembros ni las credenciales de
+            las cuentas conectadas.
+          </p>
+          <p>
+            La copia se renueva cada vez que abres CaFam con conexión y como
+            mucho cada 15 minutos mientras la usas. Se borra entera al cerrar
+            sesión, al borrar tu cuenta y cuando otra cuenta inicia sesión en el
+            mismo navegador. También puedes borrarla desde el navegador,
+            borrando los datos del sitio.
+          </p>
+        </Section>
+
         <Section title="Contacto">
           <p>
             Para cualquier duda, escribe al correo de asistencia que muestra

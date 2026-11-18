@@ -44,6 +44,51 @@ export function ImageIcon() {
   );
 }
 
+/** A change waiting on the device (spec 034 RF-28): an arrow up a cloud, the size of ImageIcon. */
+export function PendingIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      data-icon="pending"
+      className="inline-block shrink-0 align-[-2px]"
+    >
+      <path d="M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 7.9" />
+      <path d="M12 21v-8m-3 3 3-3 3 3" />
+    </svg>
+  );
+}
+
+/** No connection (spec 034 RF-9): a cloud crossed out. */
+export function OfflineIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      className="inline-block shrink-0"
+    >
+      <path d="M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 10a4 4 0 0 1 0 8H7Z" />
+      <path d="m3 3 18 18" />
+    </svg>
+  );
+}
+
 /** Comments (spec 014 RF-5): a speech bubble, the size of ImageIcon. */
 export function CommentIcon() {
   return (

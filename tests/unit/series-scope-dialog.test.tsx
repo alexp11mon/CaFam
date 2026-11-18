@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { resetConnection, startWatching } from "@/lib/offline/connection";
 import {
   lossText,
   SeriesScopeDialog,
@@ -138,5 +139,24 @@ describe("lossText", () => {
     ],
   ])("%o → %s", (loss, text) => {
     expect(lossText(loss)).toBe(text);
+  });
+});
+
+// Spec 035 T10: offline the three scopes, as online (RF-10).
+describe("SeriesScopeDialog without a connection", () => {
+  afterEach(() => resetConnection());
+
+  it("offers the three scopes, with no reason to give", () => {
+    startWatching();
+    window.dispatchEvent(new Event("offline"));
+    setup({});
+    for (const name of [
+      "Solo este evento",
+      "Este y los siguientes",
+      "Todos los eventos",
+    ]) {
+      expect(screen.getByRole("button", { name })).toBeEnabled();
+    }
+    expect(screen.queryByText(/necesita conexión/i)).not.toBeInTheDocument();
   });
 });

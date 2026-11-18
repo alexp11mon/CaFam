@@ -1,9 +1,11 @@
 import { convertGoogleEvents } from "../google-events";
 import { toGoogleEvent, toGooglePatch } from "../google-payload";
+import { googleWritable } from "../read-event";
 import {
   calendarVersion,
   deleteCalendar,
   deleteEvent,
+  getEvent,
   insertCalendar,
   insertEvent,
   listCalendars,
@@ -44,6 +46,11 @@ export function googleSession(
       );
       const converted = convertGoogleEvents(events);
       return { ...converted, access: accessRole };
+    },
+
+    async readEvent(calendarId, eventId) {
+      const event = await getEvent(accessToken, calendarId, eventId, fetchFn);
+      return event ? googleWritable(event) : null;
     },
 
     insertEvent: (calendarId, event) =>

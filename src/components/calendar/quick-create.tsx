@@ -14,7 +14,9 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { Select } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { TimeField } from "@/components/ui/time-field";
-import { useToast } from "@/components/ui/toast";
+import { eventFormOrQueue } from "@/lib/offline/event-actions";
+import { isOnline } from "@/lib/offline/connection";
+import { useUndoToast } from "./use-undo-toast";
 import type { Draft } from "@/lib/calendar/draft";
 import { formatDayHeading } from "@/lib/calendar/format";
 import { placePopover, type Box } from "@/lib/calendar/popover";
@@ -69,11 +71,13 @@ export function QuickCreate({
   onTitleChange: (title: string) => void;
 }) {
   const router = useRouter();
-  const { show } = useToast();
   const dialog = useRef<HTMLDialogElement>(null);
   const headingId = useId();
   const modal = useRef(true);
-  const [state, formAction, pending] = useActionState(action, {
+  const showUndo = useUndoToast();
+  // Offline it waits on the device (spec 034 RF-19, plan D17).
+  const [queued] = useState(() => eventFormOrQueue(action));
+  const [state, formAction, pending] = useActionState(queued, {
     values: {} as State["values"],
   });
   const [title, setTitle] = useState("");
@@ -164,10 +168,10 @@ export function QuickCreate({
     handled.current = state;
     // The new block pulses once the refresh draws it (spec 021 RF-48).
     if (state.eventId) markPulse(state.eventId);
-    show("Evento creado");
-    router.refresh();
+    showUndo("Evento creado", state.undo);
+    if (isOnline()) router.refresh();
     onClose();
-  }, [state, show, router, onClose]);
+  }, [state, showUndo, router, onClose]);
 
   function moreOptions() {
     // Everything typed goes to the full form (RF-39, plan D4).
