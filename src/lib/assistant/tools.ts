@@ -97,7 +97,7 @@ function visible(
   });
 }
 
-interface EventLike {
+export interface EventLike {
   id: string;
   calendarId: string;
   title: string;
@@ -167,15 +167,106 @@ const SEARCH_COLUMNS =
 const likePattern = (query: string) =>
   `%${query.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
 
+type SearchRow = {
+  id: string;
+  calendar_id: string;
+  title: string;
+  location: string | null;
+  starts_at: string;
+  ends_at: string;
+  all_day: boolean;
+  recurrence: string | null;
+  recurrence_tz: string | null;
+  exdates: string[] | null;
+  event_comments: { count: number }[];
+};
+
+/** Single events that end after `from`, and series expanded in the window. */
+async function toFound(
+  supabase: Client,
+  all: readonly SearchRow[],
+  from: Date,
+  to: Date,
+): Promise<EventLike[]> {
+  const series = all.filter((row) => row.recurrence !== null);
+  const { data: keys, error } = series.length
+    ? await supabase
+        .from("events")
+        .select("series_id, original_start")
+        .in(
+          "series_id",
+          series.map((row) => row.id),
+        )
+    : { data: [], error: null };
+  if (error) throw error;
+
+  return [
+    ...all
+      .filter(
+        (row) =>
+          row.recurrence === null && Date.parse(row.ends_at) > from.getTime(),
+      )
+      .map((row) => ({
+        id: row.id,
+        calendarId: row.calendar_id,
+        title: row.title,
+        startsAt: row.starts_at,
+        endsAt: row.ends_at,
+        allDay: row.all_day,
+        location: row.location,
+        commentCount: row.event_comments[0]?.count ?? 0,
+      })),
+    ...expandRows(
+      series.map((row) => ({ ...row, exdates: row.exdates ?? [] })),
+      keys ?? [],
+      from,
+      to,
+    ).map(({ row, occurrence }) => ({
+      id: occurrenceId(row.id, occurrence.originalStart),
+      calendarId: row.calendar_id,
+      title: row.title,
+      startsAt: occurrence.startsAt,
+      endsAt: occurrence.endsAt,
+      allDay: row.all_day,
+      location: row.location,
+    })),
+  ];
+}
+
+/** The search window of search_events: a year back and a year ahead (D11). */
+function searchWindow(now: Date, timeZone: string) {
+  const today = todayKey(timeZone, now);
+  return {
+    from: dayBounds(addDays(today, -SEARCH_WINDOW_DAYS), timeZone).start,
+    to: dayBounds(addDays(today, SEARCH_WINDOW_DAYS), timeZone).end,
+  };
+}
+
+/**
+ * Spec 036 (plan D1, D13): the events the user sees whose title contains
+ * `query`, series expanded, in the window of search_events. RLS decides.
+ */
+export async function findEventsByTitle(
+  supabase: Client,
+  query: string,
+  now: Date,
+  timeZone: string,
+): Promise<EventLike[]> {
+  const { from, to } = searchWindow(now, timeZone);
+  const { data, error } = await supabase
+    .from("events")
+    .select(SEARCH_COLUMNS)
+    .ilike("title", likePattern(query.trim()))
+    .lt("starts_at", to.toISOString())
+    .limit(200);
+  if (error) throw error;
+  return toFound(supabase, data ?? [], from, to);
+}
+
 async function searchEvents(args: unknown, ctx: ToolContext) {
   const parsed = searchArgsSchema.safeParse(args);
   if (!parsed.success) return { status: "invalid_arguments" };
-  const today = todayKey(ctx.timeZone, ctx.now);
-  const from = dayBounds(
-    addDays(today, -SEARCH_WINDOW_DAYS),
-    ctx.timeZone,
-  ).start;
-  const to = dayBounds(addDays(today, SEARCH_WINDOW_DAYS), ctx.timeZone).end;
+  const { from, to } = searchWindow(ctx.now, ctx.timeZone);
   const pattern = likePattern(parsed.data.query);
 
   // One query per column: no PostgREST `or` string to escape.
@@ -218,46 +309,7 @@ async function searchEvents(args: unknown, ctx: ToolContext) {
     for (const row of data ?? []) rows.set(row.id, row);
   }
   const calendars = await calendarsOf(ctx);
-  const all = [...rows.values()];
-
-  const series = all.filter((row) => row.recurrence !== null);
-  const { data: keys, error } = series.length
-    ? await ctx.supabase
-        .from("events")
-        .select("series_id, original_start")
-        .in(
-          "series_id",
-          series.map((row) => row.id),
-        )
-    : { data: [], error: null };
-  if (error) throw error;
-
-  const found: EventLike[] = [
-    ...all
-      .filter(
-        (row) =>
-          row.recurrence === null && Date.parse(row.ends_at) > from.getTime(),
-      )
-      .map((row) => ({
-        id: row.id,
-        calendarId: row.calendar_id,
-        title: row.title,
-        startsAt: row.starts_at,
-        endsAt: row.ends_at,
-        allDay: row.all_day,
-        location: row.location,
-        commentCount: row.event_comments[0]?.count ?? 0,
-      })),
-    ...expandRows(series, keys ?? [], from, to).map(({ row, occurrence }) => ({
-      id: occurrenceId(row.id, occurrence.originalStart),
-      calendarId: row.calendar_id,
-      title: row.title,
-      startsAt: occurrence.startsAt,
-      endsAt: occurrence.endsAt,
-      allDay: row.all_day,
-      location: row.location,
-    })),
-  ];
+  const found = await toFound(ctx.supabase, [...rows.values()], from, to);
   const matches = visible(found, calendars, ctx);
   // The closest to today first, then shown in date order (RF-9).
   const now = ctx.now.getTime();

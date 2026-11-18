@@ -39,7 +39,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
 
   Cubre: RF-17, RF-31, RF-41, RF-46, RF-47 | Módulo: schemas, tool-definitions, prompt, actions, stream, suggestions
   Evidencia (2026-11-18): `assistant-write-schemas` (14) y los casos nuevos de `assistant-core` (5), `assistant-stream` (2) y `assistant-suggestions` en verde, primero en rojo. El chat solo cambia el tipo de línea (las acciones se pintan en la T7) y sus dos tests cuentan la sugerencia nueva. Las herramientas admiten `null` en cada campo (`["string","null"]`), porque Groq rechaza con `tool_use_failed` una llamada que no cumple el esquema. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 293 archivos y 2.876 tests, build.
-- [ ] T4 Crear eventos desde el asistente
+- [x] T4 Crear eventos desde el asistente
   Hecho cuando: `npm test -- assistant-writes` (dependencias simuladas) y `npm run test:db -- assistant-writes` en verde.
   - Crea con hora fija y al acabar otro evento, en el calendario nombrado.
   - Como Lector da `read_only` con su motivo, y nada se crea.
@@ -49,6 +49,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
   - En un calendario traído escribe primero en el proveedor (simulado) y su fallo se devuelve con `notice`.
 
   Cubre: RF-1 a RF-23, RF-39, RF-41, RF-42, RF-44 | Módulo: assistant-writes, tools (D1, D3)
+  Evidencia (2026-11-18): `assistant-writes` (14, unitarios con dependencias simuladas) en verde, primero en rojo (módulo inexistente). `npm run test:db -- assistant proposed` en verde contra un Supabase local (4 archivos, 42 tests: `assistant-writes` 5 nuevos, más `assistant-tools`, `assistant` y `proposed-events` tras extraer `findEventsByTitle`/`toFound` de `search_events`). La semilla de la serie necesitó `BYDAY`: una regla semanal sin él no da repeticiones (la app siempre lo escribe). P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 294 archivos y 2.890 tests, build.
 - [ ] T5 Preparar, confirmar y deshacer cambios
   Hecho cuando: `npm test -- assistant-write-actions` y `npm run test:db -- assistant-writes` en verde.
   - `proposeChanges` no escribe y devuelve antes y después (con la duración conservada al mover) y la pérdida de una serie.
