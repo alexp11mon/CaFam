@@ -15,14 +15,14 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - `highlight` con varias palabras y tildes; `recent` con 5 como máximo, sin repetidas y tolerando `localStorage` que lanza.
 
   Cubre: RF-3, RF-6, RF-7, RF-9 | Evidencia: `npm test -- search-normalize search-group search-highlight search-recent` 13/13 (rojo antes: módulos inexistentes); P8 en verde (3.214 tests).
-- [ ] T2 Índices y función `search_events`
+- [x] T2 Índices y función `search_events`
   Hecho cuando: `npm run test:db -- event-search` en verde.
   - Migración, `db:push` y `db:types`.
   - Encuentra por título, lugar, descripción y comentario; "medico" encuentra "Médico"; prefijo "denti".
   - Un usuario ajeno, un expulsado y `anon` no ven nada; un Lector sí.
   - `EXPLAIN` con 20.000 eventos sembrados usa los índices (anotado en la evidencia).
 
-  Cubre: RF-3, RF-4, RF-11, RNF-1 | Evidencia: —
+  Cubre: RF-3, RF-4, RF-11, RNF-1 | Evidencia: migración `20261120100000_event_search` aplicada en dev y tipos regenerados; `npm run test:db -- event-search` 4/4; `EXPLAIN ANALYZE` con 20.000 eventos sembrados en una transacción deshecha (`supabase db query --linked`): `Bitmap Index Scan on events_search_idx`, 6,4 ms; P8 en verde.
 - [ ] T3 `searchEvents` con series
   Hecho cuando: `npm test -- search-queries` (con Supabase simulado) en verde.
   - Una serie semanal que coincide da sus repeticiones del periodo; una excepción con otro título solo cuando coincide la excepción.

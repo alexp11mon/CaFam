@@ -1385,6 +1385,19 @@ export type Database = {
         Returns: string
       }
       revoke_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      search_events: {
+        Args: {
+          p_from: string
+          p_limit?: number
+          p_query: string
+          p_to: string
+        }
+        Returns: {
+          event_id: string
+          matched_comment: string
+        }[]
+      }
+      search_text: { Args: { t: string }; Returns: string }
       select_synced_calendars: {
         Args: { p_calendars: Json; p_connection_id: string }
         Returns: Json
