@@ -37,6 +37,10 @@ const COPY = {
   range: { from: "2026-10-17", to: "2027-02-17" },
   profile: { timeZone: "UTC" },
   calendars: [],
+  series: [],
+  exceptions: [],
+  comments: [],
+  images: [],
   events: [],
   notes: [],
 } as unknown as Snapshot;

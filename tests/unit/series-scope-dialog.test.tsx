@@ -142,23 +142,21 @@ describe("lossText", () => {
   });
 });
 
-// Spec 034 T10: offline only "Solo este evento" (RF-23, RF-24).
+// Spec 035 T10: offline the three scopes, as online (RF-10).
 describe("SeriesScopeDialog without a connection", () => {
   afterEach(() => resetConnection());
 
-  it("leaves only 'Solo este evento' and says why", () => {
+  it("offers the three scopes, with no reason to give", () => {
     startWatching();
     window.dispatchEvent(new Event("offline"));
     setup({});
-    expect(
-      screen.getByRole("button", { name: "Solo este evento" }),
-    ).toBeEnabled();
-    expect(
-      screen.getByRole("button", { name: "Este y los siguientes" }),
-    ).toBeDisabled();
-    expect(
-      screen.getByRole("button", { name: "Todos los eventos" }),
-    ).toBeDisabled();
-    expect(screen.getByText(/necesita conexión/)).toBeInTheDocument();
+    for (const name of [
+      "Solo este evento",
+      "Este y los siguientes",
+      "Todos los eventos",
+    ]) {
+      expect(screen.getByRole("button", { name })).toBeEnabled();
+    }
+    expect(screen.queryByText(/necesita conexión/i)).not.toBeInTheDocument();
   });
 });

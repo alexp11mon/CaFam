@@ -15,6 +15,9 @@ import { flush } from "@/lib/offline/flush";
 import { loadQueue } from "@/lib/offline/queue-store";
 import { getSnapshot, setSnapshot } from "@/lib/offline/snapshot-store";
 import { loadPage } from "@/lib/offline/navigate";
+import { syncThumbs } from "@/lib/offline/thumbs";
+import { downloadImage } from "@/lib/images/download-image";
+import { objectPath } from "@/lib/images/paths";
 import { ConnectionAnnouncer } from "./connection-announcer";
 import { useLinkCapture } from "./offline-router";
 
@@ -90,6 +93,10 @@ export function OfflineProvider({
         if ("snapshot" in result && result.snapshot.userId === userId) {
           await setSnapshot(result.snapshot, true);
           refreshOfflineApp();
+          // The thumbnails of the range, in the background (spec 035 RF-29).
+          void syncThumbs(result.snapshot.images, (objectId) =>
+            downloadImage(objectPath(objectId, "thumb")),
+          ).catch(() => {});
         }
       } catch {
         // Offline or failed: the copy there is kept.

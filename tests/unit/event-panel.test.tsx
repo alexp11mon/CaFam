@@ -277,25 +277,24 @@ describe("EventPanel keys", () => {
   });
 });
 
-// Spec 034 T10: images, comments and synced calendars offline (RF-14, RF-25).
+// Spec 035 T10: comments, images and synced calendars offline.
 describe("EventPanel without a connection", () => {
   afterEach(() => resetConnection());
 
-  it("shows images and comments as available with a connection", () => {
+  it("lets comments be written offline (spec 035 RF-18)", async () => {
     startWatching();
     window.dispatchEvent(new Event("offline"));
     setup({ canAttach: true });
-    expect(screen.getAllByText("Disponible con conexión")).toHaveLength(2);
-    expect(screen.queryByRole("button", { name: "Comentar" })).toBeNull();
+    expect(
+      await screen.findByRole("button", { name: "Comentar" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Disponible con conexión")).toBeNull();
   });
 
-  it("leaves a synced event read-only with the provider's reason", () => {
+  it("keeps a synced event editable offline (spec 035 RF-1)", () => {
     startWatching();
     window.dispatchEvent(new Event("offline"));
     setup({ detail: { ...DETAIL, provider: "google" } });
-    expect(screen.queryByRole("button", { name: "Editar" })).toBeNull();
-    expect(
-      screen.getByText("Sin conexión no se puede escribir en Google"),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Editar" })).toBeVisible();
   });
 });

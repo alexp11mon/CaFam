@@ -11,8 +11,6 @@ export const OFFLINE_MESSAGES = {
   needsNetworkPage:
     "Esta pantalla necesita conexión. Vuelve cuando tengas red o sigue con el calendario y las notas.",
   pending: "Pendiente de enviar",
-  readOnly: (provider: "google" | "icloud") =>
-    `Sin conexión no se puede escribir en ${provider === "icloud" ? "iCloud" : "Google"}`,
   unsent: "Cambios no enviados",
   conflicts: "Cambios por revisar",
   discard: "Descartar",
@@ -42,5 +40,13 @@ export const OFFLINE_MESSAGES = {
   goneByOther: "Otra persona lo ha borrado.",
   pendingImagesFull:
     "Sin conexión puedes dejar como mucho 20 imágenes pendientes de enviar.",
+  fullImageNeedsNetwork: "La imagen completa necesita conexión",
+  deviceFull:
+    "Este dispositivo no tiene espacio para guardar más imágenes sin conexión.",
+  imageRemoved: "Imagen quitada",
+  imageDeleted: "Imagen borrada",
+  imagesKept: (n: number) =>
+    `${plural(n, "imagen guardada", "imágenes guardadas")} para enviar con conexión`,
+  remove: "Quitar",
   changedByOther: "Otra persona lo ha cambiado mientras no tenías conexión.",
 } as const;

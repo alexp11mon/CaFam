@@ -10,8 +10,12 @@ import { parseNewEventQuery } from "@/lib/calendar/new-event-query";
 import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
 import { daysRange, getVisibleRange } from "@/lib/calendar/ranges";
 import { toViewEvents, type AgendaEvent } from "@/lib/calendar/to-view-events";
+import { authorLabel } from "@/lib/account/author-label";
+import type { EventImage } from "@/lib/images/queries";
 import type { Note } from "@/lib/notes/types";
 import { canWriteEvents, readOnlyReason } from "@/lib/sync/read-only";
+import { repeatOfSeries } from "./describe";
+import { canDeleteImage, offlineMoveTargets } from "./gates";
 import { OFFLINE_MESSAGES } from "./messages";
 import type { OutboxEntry } from "./outbox";
 import { pendingEvents, pendingNotes } from "./overlay";
@@ -96,9 +100,15 @@ export function detailFromSnapshot(
   const calendar = copy.calendars.find((c) => c.id === event?.calendarId);
   if (!event || !calendar) return null;
   const { timeZone } = copy.profile;
-  // Offline only normal calendars take writes (RF-25).
-  const canEdit = canWriteEvents(calendar) && !calendar.synced;
-  const editable = copy.calendars.filter((c) => canWriteEvents(c) && !c.synced);
+  // Offline the rules of always, Google and iCloud included (spec 035 RF-1).
+  const canEdit = canWriteEvents(calendar);
+  // Moves within the same account, as online (spec 035 RF-3).
+  const editable = offlineMoveTargets(calendar, copy.calendars);
+  const series = copy.series.find((s) => s.id === event.seriesId);
+  // An occurrence without its own row at 100 changes takes no more (spec 013 RF-32).
+  const limitReached =
+    !copy.exceptions.some((e) => e.id === event.id) &&
+    (series?.totals.exceptions ?? 0) >= 100;
   return {
     detail: {
       id: event.id,
@@ -118,13 +128,13 @@ export function detailFromSnapshot(
       categoryName:
         copy.categories.find((c) => c.id === event.categoryId)?.name ?? null,
       author: event.createdByName ?? "",
-      readOnly: readOnlyReason(calendar.synced, false),
+      readOnly: readOnlyReason(calendar.synced),
       provider: calendar.synced?.provider,
       repeat: event.seriesId
         ? {
             summary: event.seriesSummary ?? "",
             changed: event.seriesChanged,
-            limitReached: false,
+            limitReached,
           }
         : null,
     },
@@ -139,22 +149,47 @@ export function detailFromSnapshot(
       location: event.location ?? "",
       color: event.color ?? "",
       categoryId: event.categoryId ?? "",
-      // No series can be made or changed offline (RF-24).
-      repeat: "none",
+      // Series are changed offline too (spec 035 RF-10, RF-11).
+      repeat: series ? repeatOfSeries(series) : "none",
     },
-    calendars: editable.map(({ id, name, color }) => ({
+    calendars: editable.map(({ id, name, color, synced }) => ({
       id,
       name,
       color,
-      synced: false,
+      synced: Boolean(synced),
     })),
     categories: copy.categories.filter((c) =>
       editable.some((calendar) => calendar.id === c.calendarId),
     ),
-    images: [],
-    canAttach: false,
-    series: event.seriesId ? { limitReached: false } : null,
+    images: imagesFromSnapshot(copy, event.id, calendar.role),
+    // Any member adds images, viewers included (spec 035 RF-32).
+    canAttach: true,
+    series: event.seriesId ? { limitReached } : null,
   };
+}
+
+/** The saved images of an event as the detail shows them (spec 035 RF-30, RF-36). */
+export function imagesFromSnapshot(
+  copy: Snapshot,
+  eventId: string,
+  role: "owner" | "editor" | "viewer",
+): EventImage[] {
+  const members = copy.people.map((person) => ({
+    userId: person.id,
+    name: person.displayName,
+  }));
+  return copy.images
+    .filter((image) => image.eventId === eventId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map((image) => ({
+      id: image.id,
+      objectId: image.objectId,
+      width: image.width,
+      height: image.height,
+      createdAt: image.createdAt,
+      author: authorLabel(image.uploadedBy, members),
+      canDelete: canDeleteImage(image, copy.userId, role),
+    }));
 }
 
 /** The notes of the copy with what waits, as the board and the editor see them. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
 import { Avatar } from "@/components/people/avatar";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ export function CommentItem({
   onDelete,
   onEditingChange,
   arrived = false,
+  mark,
 }: {
   comment: CommentView;
   tint: string;
@@ -38,6 +39,8 @@ export function CommentItem({
   onEditingChange?: (editing: boolean) => void;
   /** Brought by the polling or "Ver anteriores": it lands on its own (spec 021 RF-18). */
   arrived?: boolean;
+  /** "Pendiente de enviar" of a comment made offline (spec 035 RF-20). */
+  mark?: ReactNode;
 }) {
   const [editing, setEditingState] = useState(false);
   const setEditing = (value: boolean) => {
@@ -91,6 +94,7 @@ export function CommentItem({
           {comment.edited ? (
             <span className="text-muted">(editado)</span>
           ) : null}
+          {mark}
         </p>
         {editing ? (
           <form onSubmit={save} noValidate className="flex flex-col gap-2">

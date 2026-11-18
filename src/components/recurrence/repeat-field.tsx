@@ -9,8 +9,6 @@ import {
 } from "@/lib/recurrence/presets";
 import { fromRRule, toRRule } from "@/lib/recurrence/rule";
 import { summarizeRule } from "@/lib/recurrence/summary";
-import { useConnection } from "@/lib/hooks/use-connection";
-import { networkReason } from "@/lib/offline/gates";
 import { RecurrenceEditor } from "./recurrence-editor";
 
 /**
@@ -53,10 +51,8 @@ export function RepeatField({
       ? value
       : "none";
   const sent = disabledReason ? "none" : current;
-  // Offline no series is made or changed: the field shows what it has, locked
-  // (spec 034 RF-24).
-  const offlineReason = networkReason(useConnection());
-  const reason = disabledReason ?? offlineReason;
+  // Offline as online: only a synced calendar locks it (spec 035 RF-11, RF-16).
+  const reason = disabledReason;
 
   const resolved = resolveRepeat(current, startDate);
   const editorStart =

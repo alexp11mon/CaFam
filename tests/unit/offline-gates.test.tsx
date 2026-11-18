@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { NavLink } from "@/components/shell/nav-link";
 import { resetConnection, startWatching } from "@/lib/offline/connection";
 import {
-  allowedScopes,
   canDeleteComment,
   canDeleteImage,
   canEditComment,
@@ -15,11 +14,7 @@ import {
   seriesOffline,
 } from "@/lib/offline/gates";
 import { NAV_ITEMS } from "@/lib/shell/nav";
-import {
-  readOnlyEventText,
-  readOnlyPasteText,
-  readOnlyReason,
-} from "@/lib/sync/read-only";
+import { readOnlyReason } from "@/lib/sync/read-only";
 
 // Spec 034 T10: what works without a connection (RF-17, RF-23 to RF-25,
 // RF-35, plan D15).
@@ -47,40 +42,24 @@ describe("gates", () => {
     expect(navReason(item("notes"), false)).toBeNull();
   });
 
-  it("leaves only 'Solo este evento' offline (RF-23)", () => {
-    expect(allowedScopes(false)).toEqual(["this"]);
-    expect(allowedScopes(true)).toEqual(["this", "following", "all"]);
-  });
-
-  it("gives the reason for series and moving notes offline (RF-24, RF-35)", () => {
+  it("gives the reason for moving notes offline (RF-35)", () => {
     expect(networkReason(false)).toBe("Necesita conexión");
     expect(networkReason(true)).toBeNull();
   });
 });
 
-describe("readOnlyReason without a connection (RF-25)", () => {
-  const synced = {
-    lastSyncedAt: null,
-    accountEmail: null,
-    connectionId: "c",
-    canWrite: true,
-    googleAccess: null,
-    provider: "icloud" as const,
-  };
-
-  it("makes every synced calendar read-only, and no other", () => {
-    expect(readOnlyReason(synced, false)).toBe("offline");
-    expect(readOnlyReason(null, false)).toBeNull();
-    expect(readOnlyReason(synced, true)).toBeNull();
-  });
-
-  it("names the provider in the reason", () => {
-    expect(readOnlyEventText("offline", "google")).toBe(
-      "Sin conexión no se puede escribir en Google",
-    );
-    expect(readOnlyPasteText("offline", "icloud")).toBe(
-      "Sin conexión no se puede escribir en iCloud",
-    );
+describe("readOnlyReason without a connection (spec 035 RF-1)", () => {
+  it("is the same as with one: a writable synced calendar takes changes", () => {
+    const synced = {
+      lastSyncedAt: null,
+      accountEmail: null,
+      connectionId: "c",
+      canWrite: true,
+      googleAccess: null,
+      provider: "icloud" as const,
+    };
+    expect(readOnlyReason(synced)).toBeNull();
+    expect(readOnlyReason({ ...synced, canWrite: false })).toBe("reconnect");
   });
 });
 

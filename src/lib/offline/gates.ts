@@ -16,15 +16,7 @@ export function navReason(item: NavItem, online: boolean): string | null {
   return !online && item.needsNetwork ? OFFLINE_MESSAGES.needsNetwork : null;
 }
 
-/** The scopes of a change to an occurrence: offline, only this one (RF-23, D8). */
-export function allowedScopes(online: boolean): readonly SeriesScope[] {
-  return online ? ["this", "following", "all"] : ["this"];
-}
-
-/**
- * Why a series cannot be made, changed as a whole or split (RF-24), or why
- * a note cannot change between personal and shared (RF-35): the same reason.
- */
+/** Why a note cannot change between personal and shared offline (RF-35). */
 export function networkReason(online: boolean): string | null {
   return online ? null : OFFLINE_MESSAGES.needsNetwork;
 }
@@ -50,7 +42,7 @@ export function canWriteOffline(calendar: CalendarGate): boolean {
 
 /** Why a synced calendar stays read-only offline: the reasons of always (RF-2). */
 export function offlineReadOnly(calendar: CalendarGate) {
-  return readOnlyReason(calendar.synced, true);
+  return readOnlyReason(calendar.synced);
 }
 
 /** Where an event may move offline: within the same account, as online (RF-3). */

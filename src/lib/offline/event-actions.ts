@@ -16,27 +16,82 @@ import type {
   ConfirmState,
   FormAction,
   FormState,
+  Loss,
 } from "@/lib/forms/form-state";
 import { readString } from "@/lib/forms/form-state";
+import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
+import { resolveRepeat } from "@/lib/recurrence/presets";
+import { readOnlyEventText } from "@/lib/sync/read-only";
 import { isNetworkError, isOnline } from "./connection";
-import { deleteOf, pasteOf, quickChangeOf, updateOf } from "./describe";
+import {
+  deleteOf,
+  pasteOf,
+  quickChangeOf,
+  seriesDeleteOf,
+  seriesUpdateOf,
+  updateOf,
+} from "./describe";
+import { canWriteOffline, offlineReadOnly } from "./gates";
 import { OFFLINE_MESSAGES } from "./messages";
-import type { OfflineChange } from "./outbox";
-import type { OfflineEvent } from "./snapshot";
+import type { OfflineChange, SeriesScope } from "./outbox";
+import { pendingEvents } from "./overlay";
+import { lossInCopy } from "./series-loss";
+import type { OfflineEvent, OfflineSeries } from "./snapshot";
 import { findEvent, getSnapshot } from "./snapshot-store";
+import { getQueueState } from "./queue-store";
 import { isQueued, withOutbox, type Queued } from "./with-outbox";
 
-/** Why the copy cannot take this write offline, or null (RF-19, RF-25). */
+/**
+ * Why the copy cannot take this write offline, or null: the rules of always,
+ * Google and iCloud included (spec 035 RF-1, RF-2).
+ */
 function blockedIn(calendarId: string): string | null {
   const calendar = getSnapshot()?.calendars.find((c) => c.id === calendarId);
-  if (!calendar || calendar.role === "viewer")
-    return OFFLINE_MESSAGES.needsNetwork;
-  if (calendar.synced) {
-    return OFFLINE_MESSAGES.readOnly(
-      calendar.synced.provider === "icloud" ? "icloud" : "google",
-    );
-  }
-  return null;
+  if (!calendar) return OFFLINE_MESSAGES.needsNetwork;
+  if (canWriteOffline(calendar)) return null;
+  const reason = offlineReadOnly(calendar);
+  return reason && calendar.synced
+    ? readOnlyEventText(reason, calendar.synced.provider)
+    : OFFLINE_MESSAGES.needsNetwork;
+}
+
+/** The change goes to the queue rather than to the server (spec 034 RF-40). */
+const willQueue = () => !isOnline() || getQueueState().queue.length > 0;
+
+/** An occurrence changed in "Este y los siguientes" or "Todos" (spec 035 RF-10). */
+function seriesTarget(
+  id: string,
+  scope: string | undefined,
+): { event: OfflineEvent; series: OfflineSeries; scope: SeriesScope } | null {
+  if (scope !== "following" && scope !== "all") return null;
+  const event = findEvent(id);
+  if (!event?.seriesId || blockedIn(event.calendarId)) return null;
+  const series = getSnapshot()?.series.find((s) => s.id === event.seriesId);
+  return series ? { event, series, scope } : null;
+}
+
+/**
+ * What a series change would lose, counted in the copy, to confirm first as
+ * with a connection (spec 035 RF-13). Null when nothing is lost.
+ */
+async function lossOf(
+  change: OfflineChange,
+  seriesId: string,
+): Promise<Loss | null> {
+  const copy = getSnapshot();
+  if (!copy) return null;
+  // ical.js only when a series change is made offline (plan R5).
+  const { seriesLossQuery } = await import("./series-overlay");
+  const query = seriesLossQuery(
+    {
+      events: pendingEvents(copy.events, getQueueState().queue),
+      series: copy.series,
+      exceptions: copy.exceptions,
+      timeZone: copy.profile.timeZone,
+    },
+    change,
+  );
+  return query === undefined ? null : lossInCopy(seriesId, query, copy);
 }
 
 /** An event of the copy this write may change offline (an occurrence only alone, RF-23). */
@@ -75,14 +130,21 @@ export async function quickChangeOrQueue(
   change: Change,
   options: ScopeOptions = {},
 ): Promise<QuickResult> {
+  const target = seriesTarget(id, options.scope);
   const event = writable(id, options.scope);
+  let queued = event ? quickChangeOf(event, change) : null;
+  if (target) {
+    const moved = quickChangeOf(target.event, change);
+    if (moved.type !== "event.update") return quickFailure("");
+    queued = seriesUpdateOf(id, target.series, target.scope, moved.data);
+    if (willQueue() && !options.confirmLoss) {
+      const loss = await lossOf(queued, target.series.id);
+      if (loss) return { ok: false, error: "", loss };
+    }
+  }
   return quick(
     id,
-    await run(
-      () => quickChange(id, change, options),
-      event ? quickChangeOf(event, change) : null,
-      quickFailure,
-    ),
+    await run(() => quickChange(id, change, options), queued, quickFailure),
   );
 }
 
@@ -90,14 +152,20 @@ export async function deleteOrQueue(
   id: string,
   options: ScopeOptions = {},
 ): Promise<QuickResult> {
+  const target = seriesTarget(id, options.scope);
   const event = writable(id, options.scope);
+  const change = target
+    ? seriesDeleteOf(id, target.series, target.scope)
+    : event
+      ? deleteOf(event)
+      : null;
+  if (target && change && willQueue() && !options.confirmLoss) {
+    const loss = await lossOf(change, target.series.id);
+    if (loss) return { ok: false, error: "", loss };
+  }
   return quick(
     id,
-    await run(
-      () => deleteForUndo(id, options),
-      event ? deleteOf(event) : null,
-      quickFailure,
-    ),
+    await run(() => deleteForUndo(id, options), change, quickFailure),
   );
 }
 
@@ -124,10 +192,21 @@ export function deleteFromDetailOrQueue(
   action: (state: ConfirmState, formData: FormData) => Promise<ConfirmState>,
 ): (state: ConfirmState, formData: FormData) => Promise<ConfirmState> {
   return async (state, formData) => {
-    const event = writable(id, readString(formData, "scope") || undefined);
+    const scope = readString(formData, "scope") || undefined;
+    const target = seriesTarget(id, scope);
+    const event = writable(id, scope);
+    const change = target
+      ? seriesDeleteOf(id, target.series, target.scope)
+      : event
+        ? deleteOf(event)
+        : null;
+    if (target && change && willQueue() && !formData.get("confirmLoss")) {
+      const loss = await lossOf(change, target.series.id);
+      if (loss) return { loss };
+    }
     const result = await run(
       () => action(state, formData),
-      event ? deleteOf(event) : null,
+      change,
       (formError): ConfirmState => ({ formError }),
     );
     return isQueued(result) ? { done: "deleted", undo: result.undo } : result;
@@ -171,7 +250,7 @@ export function eventFormOrQueue(
     const values = readValues(formData);
     const timeZone = getSnapshot()?.profile.timeZone;
     let change: OfflineChange | null = null;
-    if (timeZone && values.repeat === "none") {
+    if (timeZone) {
       const parsed = parseEventInput(
         { ...values, allDay: values.allDay === "on" },
         timeZone,
@@ -180,21 +259,46 @@ export function eventFormOrQueue(
       if (!parsed.ok && !isOnline()) {
         return { fieldErrors: parsed.fieldErrors, values };
       }
+      // "Repetir" works offline too (spec 035 RF-11).
+      const repeatOk = resolveRepeat(values.repeat, values.startDate).ok;
+      if (!repeatOk && !isOnline()) {
+        return {
+          fieldErrors: { repeat: RECURRENCE_MESSAGES.invalid },
+          values,
+        };
+      }
       const blocked = parsed.ok ? blockedIn(parsed.data.calendarId) : null;
       if (blocked && !isOnline()) return { formError: blocked, values };
-      if (parsed.ok && !blocked) {
+      const repeat = values.repeat === "none" ? {} : { repeat: values.repeat };
+      if (parsed.ok && repeatOk && !blocked) {
+        const scope = readString(formData, "scope") || undefined;
+        const target = eventId ? seriesTarget(eventId, scope) : null;
         if (!eventId) {
           change = {
             type: "event.create",
             id: crypto.randomUUID(),
             data: parsed.data,
+            ...repeat,
           };
-        } else {
-          const event = writable(
+        } else if (target) {
+          change = seriesUpdateOf(
             eventId,
-            readString(formData, "scope") || undefined,
+            target.series,
+            target.scope,
+            parsed.data,
+            values.repeat,
           );
-          if (event) change = updateOf(event, parsed.data);
+          if (willQueue() && !formData.get("confirmLoss")) {
+            const loss = await lossOf(change, target.series.id);
+            if (loss) return { loss, values };
+          }
+        } else {
+          const event = writable(eventId, scope);
+          // An occurrence alone keeps its series: no rule of its own.
+          if (event) {
+            const update = updateOf(event, parsed.data);
+            change = event.seriesId ? update : { ...update, ...repeat };
+          }
         }
       }
     }

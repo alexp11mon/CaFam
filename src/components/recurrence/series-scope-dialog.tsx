@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import type { Loss } from "@/lib/forms/form-state";
 import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
 import type { SeriesScope } from "@/lib/recurrence/series-write";
-import { useConnection } from "@/lib/hooks/use-connection";
-import { allowedScopes, networkReason } from "@/lib/offline/gates";
 
 const SCOPES: { value: SeriesScope; label: string }[] = [
   { value: "this", label: "Solo este evento" },
@@ -64,10 +62,6 @@ export function SeriesScopeDialog({
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-  // Offline only "Solo este evento" (spec 034 RF-23, RF-24).
-  const online = useConnection();
-  const allowed = allowedScopes(online);
-  const offlineReason = networkReason(online);
 
   useEffect(() => {
     const element = dialog.current;
@@ -127,9 +121,7 @@ export function SeriesScopeDialog({
                     value={option.value}
                     variant="secondary"
                     disabled={
-                      pending ||
-                      !allowed.includes(option.value) ||
-                      (option.value === "this" && limitReached)
+                      pending || (option.value === "this" && limitReached)
                     }
                     onClick={() => onChoose(option.value)}
                   >
@@ -138,13 +130,6 @@ export function SeriesScopeDialog({
                 ),
               )}
             </div>
-            {offlineReason ? (
-              <p className="text-sm text-muted">
-                {allowThis
-                  ? `Las demás opciones: ${offlineReason.toLowerCase()}.`
-                  : `${offlineReason}.`}
-              </p>
-            ) : null}
             {allowThis && limitReached ? (
               <p className="text-sm text-muted">
                 {RECURRENCE_MESSAGES.exceptions}

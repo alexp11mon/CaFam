@@ -14,13 +14,48 @@ import { useFollowDrag } from "@/lib/hooks/use-follow-drag";
 import { EASE_IN_OUT, motionMs, motionToken, play } from "@/lib/motion/play";
 import { releaseDecision } from "@/lib/motion/release";
 import { banded } from "@/lib/motion/rubber-band";
+import { useUndoToast } from "@/components/calendar/use-undo-toast";
+import { useConnection } from "@/lib/hooks/use-connection";
+import { isOnline } from "@/lib/offline/connection";
+import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
+import { isQueued, withOutbox } from "@/lib/offline/with-outbox";
 import { useImageBlob } from "./use-image-blob";
 
 const LINK_BUTTON =
   "inline-flex min-h-11 items-center justify-center rounded-control border border-control bg-paper px-5 py-2 text-base font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
+/** Offline without the full image: its thumbnail and why (spec 035 RF-31). */
+function ThumbInstead({ image, alt }: { image: EventImage; alt: string }) {
+  const blob = useImageBlob(objectPath(image.objectId, "thumb"), {
+    id: image.id,
+    kind: "thumb",
+  });
+  return (
+    <div className="flex max-h-full flex-col items-center gap-3">
+      {blob.status === "ready" ? (
+        <Image
+          src={blob.url}
+          alt={alt}
+          width={image.width}
+          height={image.height}
+          unoptimized
+          className="max-h-full w-auto max-w-full rounded-control bg-paper object-contain p-1.5 ring-1 ring-line"
+        />
+      ) : null}
+      <p className="text-muted">{OFFLINE_MESSAGES.fullImageNeedsNetwork}</p>
+    </div>
+  );
+}
+
 function FullImage({ image, alt }: { image: EventImage; alt: string }) {
-  const blob = useImageBlob(objectPath(image.objectId, "full"));
+  const online = useConnection();
+  const blob = useImageBlob(objectPath(image.objectId, "full"), {
+    id: image.id,
+    kind: "full",
+  });
+  if (blob.status === "denied" && !online) {
+    return <ThumbInstead image={image} alt={alt} />;
+  }
   if (blob.status === "denied") {
     return <p className="text-muted">Esta imagen ya no está disponible.</p>;
   }
@@ -47,7 +82,10 @@ function DownloadLink({
   image: EventImage;
   fileName: string;
 }) {
-  const blob = useImageBlob(objectPath(image.objectId, "full"));
+  const blob = useImageBlob(objectPath(image.objectId, "full"), {
+    id: image.id,
+    kind: "full",
+  });
   if (blob.status !== "ready") return null;
   return (
     <a href={blob.url} download={fileName} className={LINK_BUTTON}>
@@ -65,15 +103,19 @@ export function ImageViewer({
   start,
   title,
   timeZone,
+  eventId,
   onClose,
 }: {
   images: EventImage[];
   start: number;
   title: string;
   timeZone: string;
+  /** Lets a delete wait in the queue without a connection (spec 035 RF-36). */
+  eventId?: string;
   onClose: () => void;
 }) {
   const router = useRouter();
+  const showUndo = useUndoToast();
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [index, setIndex] = useState(start);
@@ -135,7 +177,15 @@ export function ImageViewer({
     timeZone,
   }).format(new Date(image.createdAt));
   const remove = async (): Promise<ConfirmState> => {
-    const result = await deleteImage(image.id);
+    const result = await withOutbox(
+      () => deleteImage(image.id),
+      eventId ? { type: "image.delete", id: image.id, eventId } : null,
+    ).catch(() => ({ error: OFFLINE_MESSAGES.needsNetwork }));
+    if (isQueued(result)) {
+      // Gone from the gallery at once, with its "Deshacer" (RF-37).
+      showUndo(OFFLINE_MESSAGES.imageDeleted, result.undo);
+      return { done: "deleted" };
+    }
     return result.error ? { formError: result.error } : { done: "deleted" };
   };
 
@@ -217,7 +267,7 @@ export function ImageViewer({
             action={remove}
             onDone={() => {
               dialog.current?.close();
-              router.refresh();
+              if (isOnline()) router.refresh();
             }}
           />
         ) : null}

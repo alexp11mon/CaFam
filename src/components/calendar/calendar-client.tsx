@@ -29,7 +29,8 @@ import { CAL_NEXT, CAL_PREV } from "@/lib/calendar/transition-types";
 import { visibleDays } from "@/lib/calendar/view-options";
 import { useEventWindow } from "@/lib/hooks/use-event-window";
 import { useOfflineQueue, useOfflineSnapshot } from "@/lib/hooks/use-offline";
-import { pendingView } from "@/lib/offline/describe";
+import { pendingView, withSeries } from "@/lib/offline/describe";
+import { usePendingSeries } from "@/lib/hooks/use-pending-series";
 import { mergeIntoCopy } from "@/lib/offline/snapshot-store";
 import { useStableJson, useStableList } from "@/lib/hooks/use-stable-list";
 import { Button } from "@/components/ui/button";
@@ -193,10 +194,14 @@ export function CalendarClient({
   const { queue } = useOfflineQueue();
   const copy = useOfflineSnapshot();
   const calendars = copy?.calendars ?? NO_CALENDARS;
-  const withPending = useMemo(
-    () => pendingView(events.events, queue, calendars),
-    [events.events, queue, calendars],
-  );
+  // Series changed offline, as they will be (spec 035 RF-12).
+  const seriesView = usePendingSeries(copy, queue);
+  const withPending = useMemo(() => {
+    const view = pendingView(events.events, queue, calendars);
+    return seriesView
+      ? withSeries(view, seriesView.events, seriesView.touched)
+      : view;
+  }, [events.events, queue, calendars, seriesView]);
   // A window the server read again keeps the device's copy fresh (RF-5, D9).
   // Not in the offline app, whose window is the copy itself. Again once the
   // copy is read from the device, which comes after the page.

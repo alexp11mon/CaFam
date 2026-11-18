@@ -43,6 +43,10 @@ const COPY = {
   groups: [],
   people: [],
   preferences: { calendarPreferences: [], personPreferences: [] },
+  series: [],
+  exceptions: [],
+  comments: [],
+  images: [],
   events: [],
   notes: [
     {

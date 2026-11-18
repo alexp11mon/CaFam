@@ -131,16 +131,17 @@ describe("RepeatField (RF-1, RF-2, RF-29)", () => {
   });
 });
 
-// Spec 034 T10: no series is made or changed offline (RF-24).
+// Spec 035 T10: series are made and changed offline too (RF-11).
 describe("RepeatField without a connection", () => {
   afterEach(() => resetConnection());
 
-  it("is locked with 'Necesita conexión' and keeps what it had", () => {
+  it("works as with a connection", async () => {
     startWatching();
     window.dispatchEvent(new Event("offline"));
     render(<Harness defaultValue="weekly" />);
-    expect(screen.getByLabelText("Repetir")).toBeDisabled();
-    expect(screen.getByText("Necesita conexión")).toBeInTheDocument();
-    expect(submitted()).toBe("weekly");
+    expect(screen.getByLabelText("Repetir")).toBeEnabled();
+    expect(screen.queryByText("Necesita conexión")).not.toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText("Repetir"), "daily");
+    expect(submitted()).toBe("daily");
   });
 });
