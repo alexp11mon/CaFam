@@ -2,7 +2,7 @@
 
 Spec: `specs/038-sincronizacion-sin-borrar-fuera-de-ventana/spec.md`. Plan: `specs/038-sincronizacion-sin-borrar-fuera-de-ventana/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: en curso.
+> Estado: cerrada (2026-11-18), T1–T4. Pendiente del usuario: `db push` a prod antes de desplegar.
 
 Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con P8 en verde y su salida: `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`, y `npm run test:db` en T1.
 
@@ -30,10 +30,10 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con P8
 
   Cubre: RF-6, RF-7, RF-9 | Módulo: window, provider-labels, event-panel (D4)
   Evidencia: `npm test -- sync-window event-panel` 22/22 (rojo antes: 4 fallos); `StaleCopyNote` en `event-detail.tsx`; capturas `capturas/detalle-copia-antigua-{390,1440}-{claro,oscuro}.png` con `scripts/screenshots-038.mjs` (kit común `scripts/capture-kit.mjs`); P8 en verde. RF-7 y RF-9 no cambian (comprobado en el código: escritura y desconexión no dependen de la ventana).
-- [ ] T4 Cierre
+- [x] T4 Cierre
   Hecho cuando: AGENTS.md (§2, "Añadido por la spec 038", base de datos y trampas), README (hoja de ruta y fuera de alcance) y "Diferido" de la 023 citan la 038; `python -m graphify update .`; P8 completa.
 
-  Cubre: todos | Evidencia: —
+  Cubre: todos | Evidencia: AGENTS.md, README y "Diferido" de la 023 actualizados; `python -m graphify update .`; P8 en verde (3.201 tests, build correcto) y `npm run test:db` completo 56 archivos / 619 tests.
 
 ## Trazabilidad
 

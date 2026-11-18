@@ -107,6 +107,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 035  | Sin conexión, fase 2: Google, iCloud, series, comentarios, imágenes | ✅ Cerrada                                        |
 | 036  | Venito crea eventos y propone cambios desde el chat                 | 🟡 Hecha, pendiente del eval y del cierre         |
 | 037  | El "+" no tapa "Enviar" en la pantalla del asistente                | ✅ Cerrada                                        |
+| 038  | La sincronización no borra lo que queda fuera de la ventana         | ✅ Cerrada (migración pendiente en prod)          |
 
 > Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
@@ -152,6 +153,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 - **Google:** conexión por OAuth 2.0, hasta 5 cuentas, elegir hasta 20 calendarios, actualización en minutos gracias a los avisos de Google (cada 15 minutos como respaldo) y manual. Escritura completa: crear, cambiar, mover y borrar eventos, renombrar, crear y subir calendarios.
 - **iCloud:** por CalDAV con contraseña específica de app, mismo alcance que Google (leer, escribir, renombrar, crear y subir), cada 15 minutos.
 - Antes de leer se comprueba la versión del calendario: si no cambió, no se descarga nada.
+- Lo que queda fuera de la ventana de lectura (6 meses atrás, 12 adelante) no se borra: se conserva como copia antigua, con sus imágenes y comentarios.
 - Avisos de permiso revocado o fallos de sincronización en "Mis calendarios".
 
 ### 🖼️ Imágenes en eventos
@@ -503,7 +505,6 @@ feat: registro de usuario (T7)
 
 El proyecto **aún no está terminado**. Existen specs pendientes y funcionalidades planificadas para versiones futuras:
 
-- Que la sincronización no borre los eventos creados en CaFam fuera de la ventana de 12 meses (pendiente de la 023).
 - Vistas de año y de 4 días.
 - Búsqueda de eventos.
 - Papelera o deshacer de más de una acción.

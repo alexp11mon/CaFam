@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Contexto completo del proyecto para cualquier IA que empiece a trabajar en él. Léelo entero antes de tocar código. El bloque de arriba lo gestiona `next dev`: no lo edites; todo lo de debajo es documentación del proyecto y `next dev` lo respeta.
 
-> Última actualización: 2026-11-18, al integrar en la rama de las specs 036 y 037 (Venito crea y edita eventos; el "+" no tapa "Enviar") las specs 034 y 035 ya en `main`, y graphify (enmienda 13).
+> Última actualización: 2026-11-18, al integrar en la rama de las specs 036 y 037 (Venito crea y edita eventos; el "+" no tapa "Enviar") las specs 034 y 035 ya en `main`, y graphify (enmienda 13); y spec 038 (sincronización sin borrar fuera de la ventana).
 
 ## 0. Mapa del proyecto: graphify (obligatorio)
 
@@ -89,6 +89,7 @@ Reglas:
 | 035-sin-conexion-fase-2 | Sin conexión también en calendarios de Google e iCloud (se escribe primero en el proveedor al volver la red), series con sus tres alcances y "Repetir", comentarios, miniaturas e imágenes (añadir y borrar), envío con la app cerrada (Background Sync, Chromium) y "Volver a conectar" para la cuenta retenida | **Cerrada** (2026-11-18), T1–T12; sin migraciones ni dependencias. Pendientes del usuario las pruebas con cuentas reales de Google e iCloud, Chrome de Android y el iPhone |
 | 036-venito-crea-y-edita | Venito crea eventos (hora fija o relativa a otro evento, "justo cuando acabe PIAE") y propone cambios que se confirman; calendario y evento por su nombre, "Deshacer", nunca borra, 3 por mensaje | **Hecha** (2026-11-18), T1–T10; sin migraciones ni dependencias. Pendientes del usuario: `EVAL_PART=write npm run eval:assistant` contra Groq y el cierre. |
 | 037-boton-crear-en-el-chat | En `/dashboard/assistant` el "+" flotante del móvil tapaba "Enviar", y desde 1024 px la página medía toda la pantalla bajo la barra superior (barra de entrada cortada). `CreateButton` flotante no se pinta en el asistente; la página pierde `lg:h-dvh` | **Cerrada** (2026-11-18), T1; sin migraciones. Pendiente la prueba en el iPhone tras el merge |
+| 038-sincronizacion-sin-borrar-fuera-de-ventana | La sincronización solo borra los eventos traídos que solapan la ventana leída (6 meses atrás, 12 adelante) y no omitidos por el límite de 2.000; lo antiguo queda como copia con la nota "Copia antigua: ya no se actualiza desde Google/iCloud" | **Cerrada** (2026-11-18), T1–T4; migración `sync_apply_window` aplicada en dev (pendiente `db push` a prod **antes** de desplegar) |
 
 Las specs 001–004 (cerradas, no se editan) citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": hoy son la 006 y la 007.
 
@@ -357,6 +358,12 @@ Añadido por la spec 035 (sin conexión, fase 2; sin migraciones ni dependencias
 - **Envío con la app cerrada** (Background Sync, solo Chromium): encolar registra la etiqueta `cafam-offline` (`background.ts`). `sw.js` (`cafam-v7`) atiende `sync` con su propia copia del bucle de `flush.ts` y llama a `POST /api/offline/apply` y `/api/offline/image` con la cookie de sesión (`offline-session.ts`; sin sesión `401` y se conserva todo). Escribe en `meta` `lastBackgroundSync`, y al abrir la app `OfflineProvider` avisa "N cambios sincronizados". El cerrojo `cafam-offline-flush` (Web Locks) impide enviar a la vez desde la app y el service worker. Safari y Firefox envían al abrir.
 - **`/privacy`**: la sección del dispositivo cuenta los comentarios, las miniaturas, las imágenes abiertas, lo pendiente y que las imágenes pendientes se pierden si el navegador borra los datos del sitio.
 - **Pruebas en el navegador**: `scripts/e2e-offline-detail.mjs` (detalle sin red a 390 y 1440 px), `scripts/e2e-offline-background.mjs` (envío con la app cerrada), `scripts/screenshots-035.mjs` y `scripts/perf/offline-measure-035.mjs` (RNF-2), todos con Edge.
+
+Añadido por la spec 038 (migración `sync_apply_window`):
+
+- **`sync_apply_events`** recibe `p_from`, `p_to` (la ventana que se pidió al proveedor) y `p_keep` (los `external_id` que `limitEvents` dejó fuera, `omittedIds`). Solo borra eventos con `external_id` que **solapan** la ventana y no están en `p_keep`; sin `p_from` borra como antes (llamadas viejas durante el despliegue). El resumen no cuenta lo conservado.
+- **Copia antigua**: un evento traído que empezó antes de la ventana (`isOutsideWindow`, `lib/sync/window.ts`) ya no se actualiza; si se borró en el proveedor, CaFam lo conserva con imágenes y comentarios. El detalle lo dice con `StaleCopyNote` (`staleCopyText` de `provider-labels.ts`). Si vuelve a entrar en la ventana, se actualiza por `external_id` sin duplicarse.
+- **Capturas**: `scripts/capture-kit.mjs` (registro, siembra con la clave secreta, 390 y 1440 px en claro y oscuro, borrado del usuario) lo usan los `scripts/screenshots-0NN.mjs` desde la 038.
 
 Añadido por la spec 036 (sin migraciones):
 
@@ -667,6 +674,7 @@ La decisión de acceso es una función pura, `getRouteAccess(pathname, hasSessio
   - `profiles.share_busy` y `person_preferences.show_busy` (`boolean`, por defecto `false`). `busy_people()` (`id`, `display_name`, `shown` de quien consiente y comparte calendario) y `grid_busy(p_from, p_to)` (`SECURITY DEFINER`: de las personas marcadas, como mucho 8, solo `person_id`, inicio, fin, `all_day` y regla de repetición de los eventos de sus calendarios propios y de los que creó donde sigue siendo miembro, plan D13; las excepciones vuelven como filas sueltas y sus fechas se suman a `exdates`; `22023` si el periodo pasa de 32 días).
   - `synced_calendars` gana `remote_version`, `full_read_at` y `push_pending_at`. Tablas `sync_channels` (un canal por calendario, `token_hash` SHA-256) y `sync_channel_stops` (cola sin FK que llena el trigger `sync_channels_queue_stop`), con RLS y sin permisos para clientes.
   - `sync_due_calendars` (15 min o aviso con 1 min desde el último intento y sin fallos), `sync_claim_due` (devuelve también versión, lectura completa, aviso y caducidad del canal), `sync_push`, `sync_store_channel`, `sync_mark_checked`, `sync_claim_stops` (tira las paradas de cuentas que no están activas) y `sync_done_stop`, todas con `p_secret`. `sync_trigger` despierta también por paradas; `connect_account` borra los canales de la cuenta al reconectar.
+- Añadido por la spec 038 (migración `sync_apply_window`): `sync_apply_events` gana `p_from timestamptz`, `p_to timestamptz` y `p_keep text[]` (todos `default null`; firma de 10 argumentos, la de 7 se borró). El borrado exige solape con `[p_from, p_to)` y que el `external_id` no esté en `p_keep`.
 - La evolución prevista (`calendar_invites`, `calendar_access_codes`, …) está en el Anexo A de `specs/001-base-aplicacion/plan.md`.
 
 ### PWA
@@ -916,6 +924,7 @@ python -m graphify query "<pregunta>"   # mapa del proyecto (§0); también expl
 - **Reglas de prueba de series** (spec 036): escribe la RRULE como la escribe la app (`FREQ=WEEKLY;INTERVAL=1;BYDAY=TH`). Una semanal sin `BYDAY` no da repeticiones, y una no canónica hace creer a `planSeriesChange` que cambió la regla ("Solo este evento" falla).
 - **El prototipo de la 030** carga Tailwind desde un CDN: sin red a ese CDN no se pinta; se interpretó leyendo su código.
 - **El panel del navegador de la app no registra service workers** (spec 034): el modo sin conexión se prueba con Playwright y Edge (`context.setOffline(true)`), como en `scripts/e2e-offline.mjs`. Para mirar IndexedDB desde un script, comprueba antes `indexedDB.databases()`: abrir `cafam-offline` si no existe la crea vacía y la app ya no la actualiza.
+- **Copias antiguas de calendarios traídos** (spec 038): un evento traído anterior a la ventana nunca se borra al sincronizar aunque ya no exista en el proveedor. Si "reaparece" algo borrado en Google hace tiempo, no es un fallo. **Orden de despliegue**: la migración `sync_apply_window` va a prod antes que la app (la función vieja no conoce `p_from`).
 - **`eventDayKeys` guarda sus días por objeto y zona** (`WeakMap`, spec 034 RNF-2): la agenda pedía cada evento en cada día y tardaba 4 s con 2.000 eventos. Si algún día se cambia un evento en su sitio (`event.startsAt = …`), el resultado sale viejo: crea siempre un objeto nuevo.
 - **En la app sin conexión, una pantalla que se lee de la cola** (como el detalle) puede quedarse vacía en cuanto se encola su propio borrado: conserva la última versión mientras se cierra (`EventScreen`).
 - **Background Sync (spec 035)** solo existe en Chromium (Chrome, Edge, Android). Safari y Firefox envían al abrir la app. El service worker no puede llamar a Server Actions (su id cambia en cada despliegue): por eso existen `/api/offline/apply` e `/api/offline/image`. Tampoco tiene `document.cookie` ni el cliente de Supabase: las imágenes van con URL firmadas. Para probarlo, en Playwright con Edge basta encolar sin red, cerrar la página (no el contexto) y `context.setOffline(false)`: el evento `sync` llega sin ninguna página abierta (`scripts/e2e-offline-background.mjs`). El panel del navegador de la app no registra service workers.

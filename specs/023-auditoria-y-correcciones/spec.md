@@ -137,7 +137,7 @@ La sección "Interacción del calendario" dice que los únicos atajos con modifi
 
 | Hallazgo | Motivo |
 |----------|--------|
-| Un evento creado desde CaFam fuera de la ventana de sincronización (más de 12 meses) se borra de CaFam en la siguiente lectura, con sus imágenes y comentarios (`sync_apply_events_v2.sql:61-65`) | El borrado de lo que sale de la ventana es RF-25 de la spec 007. Arreglarlo (borrar solo lo que solapa la ventana) deja copias antiguas que ya no se actualizan: es una decisión de producto que cambia una spec cerrada. Necesita spec propia. **Es el pendiente más importante.** |
+| Un evento creado desde CaFam fuera de la ventana de sincronización (más de 12 meses) se borra de CaFam en la siguiente lectura, con sus imágenes y comentarios (`sync_apply_events_v2.sql:61-65`) | El borrado de lo que sale de la ventana es RF-25 de la spec 007. Arreglarlo (borrar solo lo que solapa la ventana) deja copias antiguas que ya no se actualizan: es una decisión de producto que cambia una spec cerrada. Necesita spec propia. **Es el pendiente más importante.** Resuelto en la spec 038. |
 | `events.created_by` lo elige el cliente (un Editor puede falsear "Creado por") | La propia app escribe un autor distinto del llamante al convertir un evento en serie (`actions.ts:133`); un trigger que lo fuerce rompería ese flujo. Necesita diseño. |
 | La cuota del asistente se salta con peticiones en paralelo y no cuenta las fallidas | Contarlas antes de responder contradice "solo cuentan las respondidas" (spec 015, D9), y los clientes no pueden borrar su fila si falla. |
 | `request_recovery` permite bloquear la recuperación de otra persona | Inherente a limitar por cuenta sin limitar por IP; no hay arreglo pequeño. |
