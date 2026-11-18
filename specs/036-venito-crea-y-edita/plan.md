@@ -144,6 +144,7 @@ Editar: el paso 3 es `propose_changes` y la tarjeta queda pendiente. "Confirmar"
 - **D10 Resumen de tarjetas en el hilo.** El servidor no guarda nada, así que el navegador añade al contenido del mensaje de Venito una línea por tarjeta ("[Creado: Comida Uni, jueves 19 de noviembre, 13:30–14:30, en alexponmon@gmail.com]") al enviar el hilo. Así "muévelo a mañana" y las correcciones de un cambio pendiente funcionan (RF-45, RF-24c). Esas líneas son de Venito, no del usuario: no activan `wantsWrite`.
 - **D11 Refresco del calendario** con `router.refresh()` desde el marco (`onChanged`), porque lo escrito en una ruta API no revalida la vista del cliente y el tiempo real ignora los cambios propios. Confirmar y deshacer son Server Actions con `refresh()`, que refrescan por sí mismas; `onChanged` se llama igualmente.
 - **D12 Cancelar.** La ruta comprueba `request.signal` antes de cada escritura (RF-44). Las líneas `action` llegan según se escriben, así que al cancelar el chat conserva las acciones recibidas en un mensaje "He parado. Esto ya estaba hecho:", en lugar de devolver la pregunta.
+- **D14 Sin fecha y sin ninguno por delante** (añadida en la T2), `pickEvent` toma el último que ya pasó, para que "cambia el título de la cena" encuentre la de ayer. RF-14 sigue mandando cuando hay alguno por delante.
 - **D13 Repeticiones como evento de referencia** y como evento a cambiar: se expanden con la misma lectura que `search_events` (un año atrás y uno adelante).
 
 ## Trazabilidad RF → módulo

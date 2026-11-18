@@ -17,7 +17,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
 
   Cubre: RF-18 a RF-23, RF-24a, RF-24b, RF-40, RF-45 | Módulo: write-intent, calendar-match (D2, D5)
   Evidencia (2026-11-18): `assistant-write-intent` (34) y `assistant-calendar-match` (10) en verde, primero en rojo (módulos inexistentes). El seguimiento acepta una pregunta de Venito con "?" en cualquier sitio, porque las preguntas del servidor acaban con las opciones ("¿En qué calendario…? Puedes elegir: …"). P8 en verde: typecheck (tras `next typegen`), lint 0 errores (1 aviso previo), format:check, `npm test` 290 archivos y 2.831 tests, build.
-- [ ] T2 Evento de referencia y horas resultantes
+- [x] T2 Evento de referencia y horas resultantes
   Hecho cuando: `npm test -- assistant-event-pick assistant-write-times` en verde.
   - `pickEvent`: exacto antes que parcial, por día, el próximo que no ha terminado (también en curso y repeticiones), ambiguo el mismo día y no encontrado.
   - `resolveTimes`:
@@ -27,6 +27,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
     - Días completos y cambio de hora en Europe/Madrid.
 
   Cubre: RF-4 a RF-16, RF-26 | Módulo: event-pick, write-times
+  Evidencia (2026-11-18): `assistant-event-pick` (9) y `assistant-write-times` (17) en verde, primero en rojo (módulos inexistentes). Añadido: sin fecha y sin ninguno por delante, `pickEvent` toma el último pasado, para que "cambia la cena" encuentre la de ayer (anotado en el plan, D14). P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 292 archivos y 2.857 tests, build.
 - [ ] T3 Contratos: argumentos, herramientas, prompt, flujo y tarjetas
   Hecho cuando: `npm test -- assistant-write-schemas assistant-core assistant-stream assistant-suggestions` en verde.
   - Esquemas de `create_events` y `propose_changes` (1–3; 4 → error).
