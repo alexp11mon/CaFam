@@ -1,6 +1,6 @@
 # Spec 036 — Venito crea y edita eventos
 
-> Estado: **Borrador** (2026-11-17), con las dudas resueltas por el usuario el 2026-11-17 y pendiente de su aprobación. Las specs 034 y 035 están en curso en otras ramas. Parte de su petición del 2026-11-17: "Me gustaría que creara eventos y los editara si se los pido […] Me gustaría que él solo pudiera creármelo". Constitución: `docs/constitution.md`. Amplía las specs 015 (asistente), 022 (propuesta desde una imagen) y 027 (Venito); reutiliza las escrituras de las specs 009, 013, 017 y 018.
+> Estado: **Aprobada** por el usuario el 2026-11-17, con las dudas resueltas ese día. Las specs 034 y 035 están en curso en otras ramas. Parte de su petición del 2026-11-17: "Me gustaría que creara eventos y los editara si se los pido […] Me gustaría que él solo pudiera creármelo". Constitución: `docs/constitution.md`. Amplía las specs 015 (asistente), 022 (propuesta desde una imagen) y 027 (Venito); reutiliza las escrituras de las specs 009, 013, 017 y 018.
 
 ## Contexto y objetivo
 
