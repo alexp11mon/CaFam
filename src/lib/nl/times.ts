@@ -90,9 +90,14 @@ function range(
     if (!first || !second) return null;
     // "de 9 a 11 de la noche": the end says it for both.
     let [startHour, assumedStart] = toDay(first, second.meridiem);
-    const [endHour, assumedEnd] = toDay(second);
+    let [endHour, assumedEnd] = toDay(second);
     if (!first.meridiem && second.meridiem && startHour > endHour) {
       [startHour, assumedStart] = toDay(first);
+    }
+    // "de 22 a 1": an end before the start is past midnight, not 13:00.
+    if (assumedEnd && !assumedStart && endHour < startHour) {
+      endHour -= 12;
+      assumedEnd = false;
     }
     // "de 7 a 9": a start after the end was a morning after all.
     if (assumedStart && !assumedEnd && startHour > endHour) {

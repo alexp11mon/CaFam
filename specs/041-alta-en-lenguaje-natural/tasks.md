@@ -23,11 +23,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - "en 2 semanas" no es lugar; "@fam" elige Familia; ambiguo avisa; título limpio con mayúscula.
 
   Cubre: RF-7 a RF-10, RNF-1, RNF-2 | Evidencia: `npm test -- nl-parse` 165/165 sobre la batería `tests/unit/nl-cases.ts` (161 frases: las de la spec, 61 a mano y 100 combinaciones de fecha y hora en los dos órdenes), en menos de 1 ms por frase: "en 2 semanas" no es lugar, lugar hasta la siguiente parte, "@familia" como pista de calendario (no en un correo), repeticiones sencillas ("cada lunes", "todos los días", "de lunes a viernes", "cada mes", "cada año") y título limpio con mayúscula; P8 en verde.
-- [ ] T4 Resolución y vista previa
+- [x] T4 Resolución y vista previa
   Hecho cuando: `npm test -- nl-resolve nl-preview` en verde.
   - Valores del formulario en la zona del perfil (también con cambio de hora) y duración de Ajustes; tramos resaltados en el texto original.
 
-  Cubre: RF-11, RF-12 | Evidencia: —
+  Cubre: RF-11, RF-12 | Evidencia: `npm test -- nl-resolve nl-preview` 15/15: valores del formulario con la duración de Ajustes o la dicha, el hueco del formulario si la frase no da fecha ni hora, "hasta las" cuenta hacia atrás, fin al día siguiente pasada la medianoche ("de 22 a 1"), todo el día y varios días, `@calendario` con `matchCalendar` (ambiguo, solo lectura y desconocido avisan), cambio de hora en Europe/Madrid (las 2:30 que no existen pasan a las 3:30 con aviso; las que se repiten se conservan), repetición propuesta; vista previa ("Dentista · Jueves, 19 de noviembre · 10:30–11:30 · Calle Mayor · @Familia") y tramos resaltados sobre el texto original; P8 en verde.
 - [ ] T5 Campo en el alta rápida y en el formulario
   Hecho cuando: `npm test -- nl-field quick-create event-form` en verde y capturas a 390 y 1440 px en claro y oscuro en `capturas/`.
   - Vista previa en vivo, `aria-live`, "Aplicar"/Intro, no pisa lo tocado a mano, "+" y N enfocan la frase, funciona en la app sin conexión.
