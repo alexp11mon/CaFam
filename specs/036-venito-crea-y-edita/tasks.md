@@ -9,13 +9,14 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
 
 ## Tareas
 
-- [ ] T1 Intención de escribir y calendario por su nombre
+- [x] T1 Intención de escribir y calendario por su nombre
   Hecho cuando: `npm test -- assistant-write-intent assistant-calendar-match` en verde.
   - `wantsWrite`: verbos de crear y cambiar, seguimiento tras una pregunta de Venito (como mucho 3 mensajes atrás) y nunca por texto de Venito o de lectura.
   - `isYes` e `isNo`.
   - `matchCalendar`: sin mayúsculas ni tildes, una parte del nombre, un correo, exacto antes que parcial, ambiguo, no encontrado, de solo lectura con su motivo, sin nombre con uno o varios escribibles, y ninguno escribible.
 
   Cubre: RF-18 a RF-23, RF-24a, RF-24b, RF-40, RF-45 | Módulo: write-intent, calendar-match (D2, D5)
+  Evidencia (2026-11-18): `assistant-write-intent` (34) y `assistant-calendar-match` (10) en verde, primero en rojo (módulos inexistentes). El seguimiento acepta una pregunta de Venito con "?" en cualquier sitio, porque las preguntas del servidor acaban con las opciones ("¿En qué calendario…? Puedes elegir: …"). P8 en verde: typecheck (tras `next typegen`), lint 0 errores (1 aviso previo), format:check, `npm test` 290 archivos y 2.831 tests, build.
 - [ ] T2 Evento de referencia y horas resultantes
   Hecho cuando: `npm test -- assistant-event-pick assistant-write-times` en verde.
   - `pickEvent`: exacto antes que parcial, por día, el próximo que no ha terminado (también en curso y repeticiones), ambiguo el mismo día y no encontrado.
