@@ -2,19 +2,19 @@
 
 Spec: `specs/039-busqueda-de-eventos/spec.md`. Plan: `specs/039-busqueda-de-eventos/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: pendiente.
+> Estado: en curso.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T2.
 
 ## Tareas
 
-- [ ] T1 Lógica pura de búsqueda
+- [x] T1 Lógica pura de búsqueda
   Hecho cuando: `npm test -- search-normalize search-group search-highlight search-recent` en verde.
   - `normalize` igual que `search_text` (tildes, ñ conservada, mayúsculas, espacios).
   - `group`: próximos por día ascendente, pasados descendente, zona del perfil y días completos por fecha UTC.
   - `highlight` con varias palabras y tildes; `recent` con 5 como máximo, sin repetidas y tolerando `localStorage` que lanza.
 
-  Cubre: RF-3, RF-6, RF-7, RF-9 | Evidencia: —
+  Cubre: RF-3, RF-6, RF-7, RF-9 | Evidencia: `npm test -- search-normalize search-group search-highlight search-recent` 13/13 (rojo antes: módulos inexistentes); P8 en verde (3.214 tests).
 - [ ] T2 Índices y función `search_events`
   Hecho cuando: `npm run test:db -- event-search` en verde.
   - Migración, `db:push` y `db:types`.
