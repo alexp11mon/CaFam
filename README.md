@@ -104,6 +104,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 032  | Panel lateral desplazable y calendarios plegables                   | ✅ Cerrada                                        |
 | 033  | Next.js 16.4.6 y `npm audit` sin vulnerabilidades                   | ✅ Cerrada                                        |
 | 036  | Venito crea eventos y propone cambios desde el chat                 | 🟡 Hecha, pendiente del eval y del cierre         |
+| 037  | El "+" no tapa "Enviar" en la pantalla del asistente                | 🟡 Hecha, pendiente del cierre                    |
 
 > Las specs 024 a 033 están en la rama `claude/eager-turing-5xgj2t`, pendientes de merge a `main`.
 

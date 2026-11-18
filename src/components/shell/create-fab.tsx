@@ -16,6 +16,9 @@ export function CreateButton({ floating }: { floating: boolean }) {
   const router = useRouter();
   const section = activeSection(pathname);
   const creates = section === "notes" ? "Nueva nota" : "Nuevo evento";
+  // Spec 037 (D1): on the chat it covered "Enviar"; there one writes to
+  // Venito, and the top bar keeps its own "+" from 769 px.
+  if (floating && section === "assistant") return null;
 
   return (
     <Link

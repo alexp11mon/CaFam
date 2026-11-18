@@ -4,8 +4,9 @@ import { AppFrame, FrameSkeleton } from "@/components/shell/app-frame";
 
 // Spec 005, T5: the frame of every screen with a session carries the user's
 // accent from the first HTML (RF-9; plan D3), with the rail and the bottom bar (T6).
+const navigation = vi.hoisted(() => ({ pathname: "/dashboard/calendar" }));
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard/calendar",
+  usePathname: () => navigation.pathname,
   useRouter: () => ({ push: vi.fn() }),
 }));
 describe("AppFrame (RF-9)", () => {
@@ -94,5 +95,29 @@ describe("AppFrame skip link", () => {
     const target = document.querySelector(skip.getAttribute("href")!);
     expect(target).toContainElement(screen.getByText("Contenido"));
     expect(target).toHaveAttribute("tabindex", "-1");
+  });
+});
+
+// Spec 037: on the assistant's page the floating "+" covered "Enviar".
+describe("AppFrame on the assistant's page (spec 037 RF-1, RF-2)", () => {
+  it("leaves out the floating «+» and keeps the one of the top bar", () => {
+    navigation.pathname = "/dashboard/assistant";
+    try {
+      render(
+        <AppFrame
+          accent="red"
+          theme="system"
+          displayName="Ana López"
+          signOutAction={vi.fn(async () => {})}
+        >
+          <p>Chat</p>
+        </AppFrame>,
+      );
+      const links = screen.getAllByRole("link", { name: "Nuevo evento" });
+      expect(links).toHaveLength(1);
+      expect(screen.getAllByRole("banner")[0]).toContainElement(links[0]!);
+    } finally {
+      navigation.pathname = "/dashboard/calendar";
+    }
   });
 });
