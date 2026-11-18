@@ -15,11 +15,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Y y X en `SHORTCUTS`.
 
   Cubre: RF-4, RF-6, RF-8, RF-9, RF-12 | Evidencia: `npm test -- ranges format event-window shortcuts calendar-year` 96/96: `year` del 1 de enero al 31 de diciembre (365 o 366 días), navega de año en año (29 de febrero → 28) y su título es el año; `4days` son 4 días seguidos desde la fecha (fines de semana incluidos), navega de 4 en 4 y su título es "20 nov – 23 nov 2026"; `eventDays` hace que el año no lea eventos (solo marcas, RF-5) y `warmRange` precarga 4 días a cada lado; `parseViewParams` acepta las dos vistas en la URL y como guardada; Y y X en `SHORTCUTS`. P8 en verde.
-- [ ] T2 Marcas del año en la base de datos
+- [x] T2 Marcas del año en la base de datos
   Hecho cuando: `npm run test:db -- day-marks` en verde.
   - Migración, `db:push`, `db:types`. `calendar_day_marks` respeta RLS, da días distintos por calendario, días completos por fecha UTC y `22023` con más de 370 días; `last_view` acepta las nuevas.
 
-  Cubre: RF-5, RF-11 | Evidencia: —
+  Cubre: RF-5, RF-11 | Evidencia: Migración `20261123100000_views_year.sql` aplicada en dev (`db:push`, `db:types`); `npm run test:db -- day-marks profile-last-view` 10/10: `calendar_day_marks` da (día, calendario) distintos con hora en la zona del perfil (23:30 UTC es el día siguiente en Madrid) y días completos por fecha UTC con fin exclusivo, recorta un evento largo a los días pedidos, no cuenta las series (las expande la app), respeta RLS (el Lector ve sus calendarios, un ajeno nada, `anon` no puede llamarla) y da `22023` con más de 370 días o un rango al revés; `last_view` acepta `year` y `4days` y rechaza otros (23514). `test:db` completo 636/636; P8 en verde.
 - [ ] T3 Vista 4 días
   Hecho cuando: `npm test -- four-day-view` en verde: crear, mover, tarjeta y "Ocupado" funcionan como en la semana.
 

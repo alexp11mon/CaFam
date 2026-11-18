@@ -1375,6 +1375,13 @@ export type Database = {
           shown: boolean
         }[]
       }
+      calendar_day_marks: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          calendar_id: string
+          day: string
+        }[]
+      }
       calendar_members_with_names: {
         Args: { p_calendar_ids: string[] }
         Returns: {

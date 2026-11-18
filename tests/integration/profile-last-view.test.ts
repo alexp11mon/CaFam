@@ -52,7 +52,7 @@ describe("profiles.last_view", () => {
   it("rejects a value outside the list", async () => {
     const { error } = await ana.client
       .from("profiles")
-      .update({ last_view: "year" })
+      .update({ last_view: "decade" })
       .eq("id", ana.id);
 
     expect(error?.code).toBe("23514");
