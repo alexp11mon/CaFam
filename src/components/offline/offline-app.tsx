@@ -17,6 +17,7 @@ import { useUndoToast } from "@/components/calendar/use-undo-toast";
 import { NoteEditor } from "@/components/notes/note-editor";
 import { NoteForm } from "@/components/notes/note-form";
 import { NotesBoard } from "@/components/notes/notes-board";
+import { SearchScreen } from "@/components/search/search-screen";
 import { AppFrame } from "@/components/shell/app-frame";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -33,8 +34,10 @@ import {
   detailFromSnapshot,
   newEventFromSnapshot,
   offlineCalendarProps,
+  OFFLINE_SEARCH_NOTE,
   offlineNotes,
   roleIn,
+  searchOffline,
 } from "@/lib/offline/offline-sources";
 import { loadQueue } from "@/lib/offline/queue-store";
 import type { Snapshot } from "@/lib/offline/snapshot";
@@ -194,6 +197,44 @@ function NoteScreen({ copy, id }: { copy: Snapshot; id: string }) {
   );
 }
 
+/** "Buscar" on the device's copy (spec 039 RF-10). */
+function OfflineSearch({
+  copy,
+  query,
+}: {
+  copy: Snapshot;
+  query: string | null;
+}) {
+  const search = useMemo(
+    () => async (text: string) => searchOffline(copy, text),
+    [copy],
+  );
+  const hidden = new Set(
+    copy.preferences.calendarPreferences
+      .filter((preference) => !preference.visible)
+      .map((preference) => preference.calendarId),
+  );
+  return (
+    <main className={NARROW}>
+      <h1 className="text-2xl font-semibold text-ink max-tab:sr-only">
+        Buscar
+      </h1>
+      <SearchScreen
+        initialQuery={query ?? ""}
+        timeZone={copy.profile.timeZone}
+        calendars={copy.calendars.map((calendar) => ({
+          id: calendar.id,
+          name: calendar.name,
+          color: calendar.color,
+          hidden: hidden.has(calendar.id),
+        }))}
+        search={search}
+        note={OFFLINE_SEARCH_NOTE}
+      />
+    </main>
+  );
+}
+
 function Screen({ copy }: { copy: Snapshot }) {
   const location = useOfflineLocation();
   const url = new URL(location, "http://local");
@@ -225,6 +266,8 @@ function Screen({ copy }: { copy: Snapshot }) {
       );
     case "note":
       return <NoteScreen key={route.id} copy={copy} id={route.id} />;
+    case "search":
+      return <OfflineSearch copy={copy} query={url.searchParams.get("q")} />;
     default:
       return <NeedsNetwork />;
   }

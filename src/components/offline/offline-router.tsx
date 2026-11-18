@@ -13,6 +13,7 @@ export type OfflineRoute =
   | { kind: "notes" }
   | { kind: "newNote" }
   | { kind: "note"; id: string }
+  | { kind: "search" }
   | { kind: "needsNetwork" };
 
 /** What the offline app shows for an address; null outside the panel. */
@@ -23,6 +24,7 @@ export function matchRoute(pathname: string): OfflineRoute | null {
   if (pathname === "/dashboard/events/new") return { kind: "newEvent" };
   if (pathname === "/dashboard/notes") return { kind: "notes" };
   if (pathname === "/dashboard/notes/new") return { kind: "newNote" };
+  if (pathname === "/dashboard/search") return { kind: "search" };
   const event = /^\/dashboard\/events\/([^/]+)$/.exec(pathname);
   if (event) return { kind: "event", id: decodeURIComponent(event[1]!) };
   const note = /^\/dashboard\/notes\/([^/]+)$/.exec(pathname);

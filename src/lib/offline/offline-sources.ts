@@ -13,6 +13,9 @@ import { toViewEvents, type AgendaEvent } from "@/lib/calendar/to-view-events";
 import { authorLabel } from "@/lib/account/author-label";
 import type { EventImage } from "@/lib/images/queries";
 import type { Note } from "@/lib/notes/types";
+import { MAX_RESULTS, MIN_QUERY } from "@/lib/search/limits";
+import { matchesAll, queryTerms } from "@/lib/search/normalize";
+import type { SearchResult } from "@/lib/search/queries";
 import { canWriteEvents, readOnlyReason } from "@/lib/sync/read-only";
 import { repeatOfSeries } from "./describe";
 import { canDeleteImage, offlineMoveTargets } from "./gates";
@@ -261,5 +264,50 @@ export function newEventFromSnapshot(
       categoryId: "",
       repeat: "none",
     },
+  };
+}
+
+/** "Buscar" without a connection: the note above the results (spec 039 RF-10). */
+export const OFFLINE_SEARCH_NOTE =
+  "Buscando solo en los datos de este dispositivo (de hoy −1 mes a +3 meses)";
+
+/**
+ * The search on the copy, with the same criterion as the server (spec 039
+ * RF-10): its events (occurrences already expanded) and their comments.
+ * shortcut: changes still in the queue are not searched; they are a few and
+ * are sent as soon as the network is back.
+ */
+export function searchOffline(
+  copy: Snapshot,
+  query: string,
+): { results: SearchResult[]; more: boolean } {
+  const terms = queryTerms(query);
+  if (query.trim().length < MIN_QUERY || terms.length === 0) {
+    return { results: [], more: false };
+  }
+  const comments = new Map<string, string>();
+  // Newest last, so the newest matching comment wins.
+  for (const comment of [...copy.comments].sort((a, b) =>
+    a.createdAt.localeCompare(b.createdAt),
+  )) {
+    if (matchesAll(comment.body, terms))
+      comments.set(comment.eventId, comment.body);
+  }
+  const results = copy.events
+    .filter(
+      (event) =>
+        comments.has(event.id) ||
+        matchesAll(
+          `${event.title} ${event.location ?? ""} ${event.description ?? ""}`,
+          terms,
+        ),
+    )
+    .map((event) => ({
+      ...event,
+      matchedComment: comments.get(event.id) ?? null,
+    }));
+  return {
+    results: results.slice(0, MAX_RESULTS),
+    more: results.length > MAX_RESULTS,
   };
 }

@@ -21,6 +21,8 @@ describe("matchRoute", () => {
       id: "abc_20261102T080000Z",
     });
     expect(matchRoute("/dashboard/notes")).toEqual({ kind: "notes" });
+    // Spec 039 RF-10.
+    expect(matchRoute("/dashboard/search")).toEqual({ kind: "search" });
     expect(matchRoute("/dashboard/notes/new")).toEqual({ kind: "newNote" });
     expect(matchRoute("/dashboard/notes/n1")).toEqual({
       kind: "note",

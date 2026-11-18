@@ -195,6 +195,17 @@ try {
     await visible(page.getByText("Necesita conexión")).waitFor();
   });
 
+  // Spec 039 RF-10: the search works on the device's copy.
+  await step("buscar sin red", async () => {
+    await page.goto(`${BASE}/dashboard/search?q=dentis`);
+    await visible(
+      page.getByText("Buscando solo en los datos de este dispositivo", {
+        exact: false,
+      }),
+    ).waitFor({ timeout: 15_000 });
+    await visible(page.getByRole("link", { name: /Dentista/ })).waitFor();
+  });
+
   await step("nota nueva sin red", async () => {
     await page.goto(`${BASE}/dashboard/notes/new`);
     await visible(page.getByLabel("Título (opcional)")).fill("Lista sin red");

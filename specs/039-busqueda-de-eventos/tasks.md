@@ -35,12 +35,12 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Botón en las dos cabeceras y tecla `/` (no escribiendo ni con ventana abierta).
 
   Cubre: RF-1, RF-2, RF-6 a RF-9, RF-12, RNF-3 | Evidencia: `npm test -- search-screen calendar-heading top-nav shortcuts` en verde (52 tests); ruta `/dashboard/search` con `SearchScreen` y `runSearch`; lupa en `CalendarHeading` y `TopNav`, tecla `/` en `SHORTCUTS`; capturas `capturas/busqueda{,-vacia}-{390,768,1440}-{claro,oscuro}-{violeta,ambar}.png` con `scripts/screenshots-039.mjs`; P8 en verde (3.230 tests).
-- [ ] T5 Búsqueda sin conexión
+- [x] T5 Búsqueda sin conexión
   Hecho cuando: `npm test -- offline-search` en verde y prueba con `scripts/e2e-offline.mjs` ampliado (buscar sin red).
   - `searchOffline` sobre la copia con eventos, repeticiones y comentarios, con la nota del rango.
   - La ruta abre en `OfflineApp`.
 
-  Cubre: RF-10 | Evidencia: —
+  Cubre: RF-10 | Evidencia: `npm test -- offline-search offline-router` 8/8; `searchOffline` y `OFFLINE_SEARCH_NOTE` en `offline-sources.ts`, ruta `search` en `offline-router.tsx` y `OfflineSearch` en `OfflineApp`; `scripts/e2e-offline.mjs` con el paso "buscar sin red": 17/17 pasos en verde con Edge; P8 en verde.
 - [ ] T6 Cierre
   Hecho cuando: AGENTS.md (§2, sección de la spec, rutas, estructura), README y constitución (hoja de ruta: "Búsqueda" pasa a 039) actualizados; `python -m graphify update .`; P8 completa.
 
