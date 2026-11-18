@@ -1,3 +1,4 @@
+import type { AssistantAction } from "@/lib/assistant/actions";
 import type { ChatMessage } from "@/lib/assistant/schemas";
 import type { CitedEvent } from "@/lib/assistant/tools";
 
@@ -8,6 +9,8 @@ import type { CitedEvent } from "@/lib/assistant/tools";
 export interface EvalResult {
   answer: string;
   events: CitedEvent[];
+  /** Spec 036: what was created or proposed while answering. */
+  actions?: AssistantAction[];
 }
 
 /** Returns why the answer is wrong, or null when it is right. */
@@ -65,10 +68,6 @@ export const saysNot =
     pattern.test(normalize(answer)) ? `dice ${pattern}` : null;
 
 const SATURDAY = ["Fútbol de Pablo", "Reunión de Google", "Dentista"];
-// RF-25: it says it cannot change the calendar, not that the question is off topic.
-const CANNOT = says(
-  /no puedo (crear|borrar|cambiar|modificar|anadir|eliminar)/,
-);
 
 export const QUESTIONS: EvalQuestion[] = [
   // One day and one week (RF-7, RF-8).
@@ -221,8 +220,12 @@ export const QUESTIONS: EvalQuestion[] = [
     checks: [says(/31 dias|mas corto|acota|periodo|un mes/)],
   },
   // Read only (RF-25), off topic (RF-26), other language, rules (RF-29).
-  { question: "Crea una cena el sábado a las 21:00", checks: [CANNOT] },
-  { question: "Borra el dentista del sábado", checks: [CANNOT] },
+  // Spec 036 RF-31: it never deletes; it points to the event instead.
+  // Creating is evaluated in write-questions.ts, with the write tools.
+  {
+    question: "Borra el dentista del sábado",
+    checks: [cites("Dentista"), says(/desde el propio evento/)],
+  },
   {
     question: "¿Qué tiempo hará mañana en Madrid?",
     noEvents: true,

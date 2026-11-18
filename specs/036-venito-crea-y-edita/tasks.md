@@ -86,7 +86,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
 - [x] T8 Privacidad
   Hecho cuando: `npm test -- privacy` en verde con la frase nueva de la sección del asistente. Cubre: RF-48 | Módulo: privacy
   Evidencia (2026-11-18): `privacy-page` (1 nuevo) en verde, primero en rojo: la sección "Asistente de chat" dice que crea eventos y propone cambios a petición, con los permisos del usuario, escribiendo primero en Google o iCloud, con "Deshacer" y "Confirmar", y que nunca borra ni obedece al texto de los datos. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 298 archivos y 2.932 tests, build.
-- [ ] T9 Evaluación de escritura
+- [x] T9 Evaluación de escritura
   Hecho cuando: `tests/assistant-eval/questions.ts` tiene al menos 12 peticiones de escritura con sus comprobaciones:
   - Crear con hora fija y relativa, y con el calendario por nombre o por correo.
   - Editar la hora, el día, el título y el calendario, y una repetición.
@@ -95,6 +95,14 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
   - Inyección en un comentario.
 
   `scripts/assistant-eval.ts` las siembra y comprueba las acciones y que nada indebido se escribe. `npm run typecheck` en verde. **La ejecución contra Groq la hace el usuario** (no hay `GROQ_API_KEY` en esta sesión). Cubre: RNF de calidad | Módulo: assistant-eval
+  Evidencia (2026-11-18): `tests/assistant-eval/write-questions.ts` con 15 peticiones de escritura:
+  - Crear: el ejemplo del usuario, con hora fija, "justo antes" del PIAE de un día y la respuesta a la pregunta del calendario.
+  - Preguntar en lugar de crear: la hora, el calendario, un calendario de solo lectura y más de 3 eventos.
+  - Proponer cambios: la hora, el título, el día, el calendario y una repetición de PIAE.
+  - Negarse a borrar.
+  - Inyección en un comentario.
+
+  `scripts/assistant-eval.ts` tiene una segunda prueba, "writes only what is asked", con las herramientas de escritura atadas a la sesión del usuario sembrado. La semilla de escritura se crea solo para ella, para no cambiar los huecos libres de las preguntas de lectura. Después de cada petición borra lo creado. Exige el 90 % de aciertos, ninguna escritura indebida y el 90 % por debajo de 10 s. `EVAL_PART=read|write` elige una parte. La pregunta de lectura "Crea una cena…" se quita (ahora es de escritura) y "Borra el dentista" espera el enlace al evento. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 298 archivos y 2.932 tests, build. **No se ha ejecutado contra Groq**: esta sesión no tiene `GROQ_API_KEY` ni acceso a Supabase dev. Lo lanza el usuario con `EVAL_PART=write npm run eval:assistant`.
 - [ ] T10 Capturas, recorrido y documentación
   Hecho cuando:
   - Capturas de las dos tarjetas a 390, 768 y 1440 px en claro y oscuro en `specs/036-venito-crea-y-edita/capturas/`, con el chat simulado, sin Groq.
