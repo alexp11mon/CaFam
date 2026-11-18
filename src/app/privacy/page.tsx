@@ -271,13 +271,21 @@ export default function PrivacyPage() {
             dispositivo una copia de tus datos: tu perfil (nombre, zona horaria,
             color y tema), los calendarios que ves con sus categorías y grupos,
             los eventos desde un mes atrás hasta tres meses adelante y tus
-            notas. También guarda los cambios que haces sin conexión hasta que
-            llegan al servidor.
+            notas, los comentarios de esos eventos y las miniaturas de sus
+            imágenes, además de las imágenes grandes que hayas abierto (como
+            mucho 30). También guarda lo que haces sin conexión hasta que llega
+            al servidor, incluidas las imágenes que añades.
           </p>
           <p>
-            No se guardan imágenes, comentarios, conversaciones del asistente,
-            los bloques «Ocupado» de otras personas, los emails de otros
-            miembros ni las credenciales de las cuentas conectadas.
+            Si el navegador borra los datos del sitio antes de que vuelva la
+            conexión, las imágenes pendientes de enviar se pierden. Lo pendiente
+            se puede enviar con la app cerrada en los navegadores que lo
+            permiten.
+          </p>
+          <p>
+            No se guardan conversaciones del asistente, los bloques «Ocupado» de
+            otras personas, los emails de otros miembros ni las credenciales de
+            las cuentas conectadas.
           </p>
           <p>
             La copia se renueva cada vez que abres CaFam con conexión y como

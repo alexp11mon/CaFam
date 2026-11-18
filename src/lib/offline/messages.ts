@@ -48,5 +48,9 @@ export const OFFLINE_MESSAGES = {
   imagesKept: (n: number) =>
     `${plural(n, "imagen guardada", "imágenes guardadas")} para enviar con conexión`,
   remove: "Quitar",
+  held: "La cuenta de este calendario necesita volver a conectarse. Tus cambios esperan y se enviarán al conectarla.",
+  reconnect: "Volver a conectar",
+  download: "Descargar",
+  repeatsNow: (summary: string) => `Ahora se repite: ${summary}`,
   changedByOther: "Otra persona lo ha cambiado mientras no tenías conexión.",
 } as const;

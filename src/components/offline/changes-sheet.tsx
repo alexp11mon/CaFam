@@ -1,9 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import { applyOfflineChange } from "@/app/dashboard/offline-actions";
+import { lossText } from "@/components/recurrence/series-scope-dialog";
 import { Button } from "@/components/ui/button";
+import { BUTTON_BASE, BUTTON_VARIANTS } from "@/components/ui/button-styles";
+import type { Loss } from "@/lib/forms/form-state";
+import { fromRRule } from "@/lib/recurrence/rule";
+import { summarizeRule } from "@/lib/recurrence/summary";
 import { Sheet } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/toast";
 import { useConnection } from "@/lib/hooks/use-connection";
@@ -18,7 +24,12 @@ import {
   versionRows,
 } from "@/lib/offline/changes";
 import { withTimeout } from "@/lib/offline/connection";
-import type { Conflict, Rejected } from "@/lib/offline/db";
+import {
+  deletePendingImages,
+  getPendingImage,
+  type Conflict,
+  type Rejected,
+} from "@/lib/offline/db";
 import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 import {
   addConflict,
@@ -62,6 +73,36 @@ function Versions({
   );
 }
 
+/** A series in conflict: how it repeats now and what keeping mine would lose (spec 035 RF-14, RF-15). */
+function SeriesNow({ server }: { server: Record<string, unknown> | null }) {
+  const rule =
+    typeof server?.recurrence === "string"
+      ? fromRRule(server.recurrence)
+      : null;
+  const loss = server?.loss as Loss | null | undefined;
+  if (!rule && !loss) return null;
+  return (
+    <div className="flex flex-col gap-1 text-sm">
+      {rule ? (
+        <p className="text-muted">{M.repeatsNow(summarizeRule(rule))}</p>
+      ) : null}
+      {loss ? <p className="text-danger">{lossText(loss)}</p> : null}
+    </div>
+  );
+}
+
+/** "Descargar" of an image the server refused, so it is not lost (spec 035 RF-40). */
+async function downloadPending(localId: string) {
+  const image = await getPendingImage(localId);
+  if (!image) return;
+  const url = URL.createObjectURL(image.full);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "imagen-cafam.jpg";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function ConflictItem({
   conflict,
   timeZone,
@@ -101,6 +142,7 @@ function ConflictItem({
           />
         </>
       ) : null}
+      <SeriesNow server={conflict.server} />
       <div className="flex flex-wrap gap-2">
         {canKeepMine ? (
           <Button disabled={busy} onClick={() => void run(true)}>
@@ -126,6 +168,7 @@ function RejectedItem({
   rejected: Rejected;
   timeZone: string;
 }) {
+  const image = rejected.change.type === "image.add" ? rejected.change : null;
   return (
     <li className="flex flex-col gap-2 rounded-control border border-line p-4">
       <h4 className="font-semibold text-ink">{changeTitle(rejected.change)}</h4>
@@ -135,13 +178,26 @@ function RejectedItem({
         rows={versionRows(mineOf(rejected.change), null, timeZone)}
         mineLabel={M.mine}
       />
-      <Button
-        variant="secondary"
-        className="self-start"
-        onClick={() => void dropRejected(rejected.changeId)}
-      >
-        {M.discard}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        {image ? (
+          <Button
+            variant="secondary"
+            onClick={() => void downloadPending(image.localId)}
+          >
+            {M.download}
+          </Button>
+        ) : null}
+        <Button
+          variant="secondary"
+          onClick={async () => {
+            await dropRejected(rejected.changeId);
+            // Its bytes go with it (RF-47).
+            if (image) await deletePendingImages([image.localId]);
+          }}
+        >
+          {M.discard}
+        </Button>
+      </div>
     </li>
   );
 }
@@ -161,7 +217,8 @@ export function ChangesSheet({
   const router = useRouter();
   const { show } = useToast();
   const online = useConnection();
-  const { queue, conflicts, rejected } = useOfflineQueue();
+  const { queue, conflicts, rejected, held } = useOfflineQueue();
+  const heldAccounts = [...new Set(held.map((item) => item.connectionId))];
   const timeZone = useOfflineSnapshot()?.profile.timeZone ?? "Europe/Madrid";
 
   const resolve = async (conflict: Conflict, keepMine: boolean) => {
@@ -181,11 +238,11 @@ export function ChangesSheet({
       const result = await withTimeout(
         applyOfflineChange(change, { force: true }),
       );
-      if (
-        "unauthenticated" in result ||
-        result.status === "retry" ||
-        result.status === "held"
-      ) {
+      // The account must be connected again first (spec 035 RF-7).
+      if (!("unauthenticated" in result) && result.status === "held") {
+        return show(M.held);
+      }
+      if ("unauthenticated" in result || result.status === "retry") {
         return show(M.needsNetwork);
       }
       await dropConflict(conflict.changeId);
@@ -215,6 +272,38 @@ export function ChangesSheet({
               ? "se están enviando."
               : "se enviarán al volver la conexión."}
           </p>
+        ) : null}
+        {heldAccounts.length > 0 ? (
+          <section className="flex flex-col gap-3">
+            <p className="text-sm text-muted">{M.held}</p>
+            <ul className="flex flex-col gap-3">
+              {heldAccounts.map((connectionId) => (
+                <li key={connectionId} className="flex flex-col gap-2">
+                  <ul className="text-sm text-ink">
+                    {queue
+                      .filter((entry) =>
+                        held.some(
+                          (item) =>
+                            item.changeId === entry.changeId &&
+                            item.connectionId === connectionId,
+                        ),
+                      )
+                      .map((entry) => (
+                        <li key={entry.changeId}>
+                          {changeTitle(entry.change)}
+                        </li>
+                      ))}
+                  </ul>
+                  <Link
+                    href={`/dashboard/connections/${connectionId}`}
+                    className={`${BUTTON_BASE} ${BUTTON_VARIANTS.secondary} self-start`}
+                  >
+                    {M.reconnect}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
         ) : null}
         {conflicts.length > 0 ? (
           <section className="flex flex-col gap-3">

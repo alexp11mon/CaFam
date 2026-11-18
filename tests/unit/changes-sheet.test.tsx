@@ -16,9 +16,11 @@ import { conflictRows, versionRows } from "@/lib/offline/changes";
 import { resetConnection } from "@/lib/offline/connection";
 import * as db from "@/lib/offline/db";
 import {
+  addChange,
   addConflict,
   addRejected,
   clearQueue,
+  setHeld,
   getQueueState,
   loadQueue,
 } from "@/lib/offline/queue-store";
@@ -183,6 +185,125 @@ describe("ChangesSheet", () => {
     await addConflict({ changeId: "k1", change: UPDATE, server: THEIRS });
     expect((await db.loadState()).conflicts).toHaveLength(1);
     await loadQueue();
+    expect(getQueueState().conflicts).toHaveLength(1);
+  });
+});
+
+// Spec 035 T11: series, comments, images and held accounts (RF-7, RF-14,
+// RF-15, RF-21, RF-27, RF-40).
+describe("ChangesSheet, spec 035", () => {
+  it("shows a series in conflict with how it repeats now and what would be lost", async () => {
+    await addConflict({
+      changeId: "k1",
+      change: {
+        type: "series.update",
+        id: "s1",
+        scope: "all",
+        base: { fields: BASE },
+        data: MINE,
+        repeat: "none",
+      } as never,
+      server: {
+        ...THEIRS,
+        recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=MO",
+        loss: { exceptions: 2, images: 1, comments: 3 },
+      },
+    });
+    mount();
+    const item = screen.getByRole("listitem");
+    expect(item).toHaveTextContent("Serie cambiada: Cena");
+    expect(item).toHaveTextContent("Restaurante");
+    expect(item).toHaveTextContent("Casa de Luis");
+    expect(item).toHaveTextContent(/Ahora se repite: .*lunes/i);
+    expect(item).toHaveTextContent(
+      "Se perderán 2 cambios, 1 imagen y 3 comentarios.",
+    );
+    expect(
+      within(item).getByRole("button", { name: "Conservar la mía" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the text of a refused comment to copy it (RF-21, RF-27)", async () => {
+    await addRejected({
+      changeId: "r1",
+      change: {
+        type: "comment.update",
+        id: "c1",
+        eventId: "e1",
+        base: { body: "Antes" },
+        body: "Llevo el postre",
+      },
+      reason: "Este comentario ya no existe.",
+    });
+    mount();
+    const item = screen.getByRole("listitem");
+    expect(item).toHaveTextContent("Este comentario ya no existe.");
+    expect(within(item).getByText("Llevo el postre")).toBeVisible();
+  });
+
+  it("offers Descargar for a refused image and discards its bytes (RF-40)", async () => {
+    await db.savePendingImage({
+      localId: "l1",
+      eventId: "e1",
+      full: new Blob(["full"], { type: "image/jpeg" }),
+      thumb: new Blob(["thumb"], { type: "image/jpeg" }),
+      width: 10,
+      height: 10,
+      bytes: 9,
+      reservedId: null,
+    });
+    await addRejected({
+      changeId: "r1",
+      change: { type: "image.add", eventId: "e1", localId: "l1" },
+      reason: "Este evento ya tiene 10 imágenes.",
+    });
+    URL.createObjectURL = vi.fn(() => "blob:imagen");
+    URL.revokeObjectURL = vi.fn();
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+    mount();
+    await userEvent.click(screen.getByRole("button", { name: "Descargar" }));
+    await waitFor(() => expect(click).toHaveBeenCalled());
+    expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+
+    await userEvent.click(screen.getByRole("button", { name: "Descartar" }));
+    await waitFor(async () =>
+      expect(await db.getPendingImage("l1")).toBeUndefined(),
+    );
+    click.mockRestore();
+  });
+
+  it("names the changes of an account to connect again, with Volver a conectar (RF-7)", async () => {
+    const changeId = await addChange({
+      type: "event.create",
+      id: "e3",
+      data: MINE,
+    });
+    setHeld([{ changeId, connectionId: "conn-1" }]);
+    mount();
+    expect(
+      screen.getByText(/necesita volver a conectarse/),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Evento nuevo: Cena")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Volver a conectar" }),
+    ).toHaveAttribute("href", "/dashboard/connections/conn-1");
+  });
+
+  it("says the account must be connected when keeping mine is held", async () => {
+    server.applyOfflineChange.mockResolvedValue({
+      status: "held",
+      connectionId: "conn-1",
+    });
+    await addConflict({ changeId: "k1", change: UPDATE, server: THEIRS });
+    mount();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Conservar la mía" }),
+    );
+    expect(
+      await screen.findByText(/necesita volver a conectarse/),
+    ).toBeInTheDocument();
     expect(getQueueState().conflicts).toHaveLength(1);
   });
 });

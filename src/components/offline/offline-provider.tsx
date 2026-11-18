@@ -12,6 +12,7 @@ import { useOfflineQueue } from "@/lib/hooks/use-offline";
 import { startWatching, withTimeout } from "@/lib/offline/connection";
 import * as db from "@/lib/offline/db";
 import { flush } from "@/lib/offline/flush";
+import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 import { loadQueue } from "@/lib/offline/queue-store";
 import { getSnapshot, setSnapshot } from "@/lib/offline/snapshot-store";
 import { loadPage } from "@/lib/offline/navigate";
@@ -74,6 +75,15 @@ export function OfflineProvider({
         if (alive && state.snapshot?.userId === userId) {
           await setSnapshot(state.snapshot);
         }
+        // What the service worker sent with the app closed; the conflicts
+        // and refused changes it left are in the queue just read (spec 035 RF-43).
+        const background = await db.readBackgroundSync();
+        if (background) {
+          await db.clearBackgroundSync();
+          if (alive && background.applied > 0) {
+            show(OFFLINE_MESSAGES.synced(background.applied));
+          }
+        }
       } catch {
         // No IndexedDB (private mode, tests): the app works as before.
       }
@@ -82,7 +92,7 @@ export function OfflineProvider({
     return () => {
       alive = false;
     };
-  }, [userId]);
+  }, [userId, show]);
 
   const readCopy = useCallback(
     async (force = false) => {
