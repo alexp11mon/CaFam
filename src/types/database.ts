@@ -641,6 +641,45 @@ export type Database = {
           },
         ]
       }
+      event_reminders: {
+        Row: {
+          created_at: string
+          event_id: string
+          minutes: number[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          minutes: number[]
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          minutes?: number[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reminders_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reminders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_trash: {
         Row: {
           calendar_id: string
@@ -994,6 +1033,9 @@ export type Database = {
           display_name: string
           id: string
           last_view: string | null
+          notify: Json
+          reminder_all_day_minutes: number | null
+          reminder_minutes: number | null
           share_availability: boolean
           share_busy: boolean
           show_weekends: boolean
@@ -1008,6 +1050,9 @@ export type Database = {
           display_name: string
           id: string
           last_view?: string | null
+          notify?: Json
+          reminder_all_day_minutes?: number | null
+          reminder_minutes?: number | null
           share_availability?: boolean
           share_busy?: boolean
           show_weekends?: boolean
@@ -1022,6 +1067,9 @@ export type Database = {
           display_name?: string
           id?: string
           last_view?: string | null
+          notify?: Json
+          reminder_all_day_minutes?: number | null
+          reminder_minutes?: number | null
           share_availability?: boolean
           share_busy?: boolean
           show_weekends?: boolean
@@ -1030,6 +1078,117 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      push_deliveries: {
+        Row: {
+          event_id: string
+          minutes: number
+          occurrence_start: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          minutes: number
+          occurrence_start: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          minutes?: number
+          occurrence_start?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_deliveries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_outbox: {
+        Row: {
+          claimed_at: string | null
+          collapse_key: string | null
+          created_at: string
+          id: string
+          kind: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          collapse_key?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          payload: Json
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          collapse_key?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_outbox_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          device: string
+          endpoint: string
+          id: string
+          last_used_at: string | null
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          device?: string
+          endpoint: string
+          id?: string
+          last_used_at?: string | null
+          p256dh: string
+          user_id?: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          device?: string
+          endpoint?: string
+          id?: string
+          last_used_at?: string | null
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sync_channel_stops: {
         Row: {
@@ -1375,6 +1534,80 @@ export type Database = {
         }
         Returns: string
       }
+      push_claim_notifications: {
+        Args: { p_limit?: number; p_secret: string }
+        Returns: {
+          id: string
+          kind: string
+          payload: Json
+          user_id: string
+        }[]
+      }
+      push_display_name: { Args: { p_user: string }; Returns: string }
+      push_drop_subscription: {
+        Args: { p_ids: string[]; p_secret: string }
+        Returns: undefined
+      }
+      push_due_reminders: {
+        Args: { p_from: string; p_secret: string; p_to: string }
+        Returns: {
+          all_day: boolean
+          ends_at: string
+          event_id: string
+          exceptions: string[]
+          exdates: string[]
+          location: string
+          minutes: number[]
+          recurrence: string
+          recurrence_tz: string
+          series_id: string
+          starts_at: string
+          time_zone: string
+          title: string
+          user_id: string
+        }[]
+      }
+      push_enqueue: {
+        Args: {
+          p_collapse?: string
+          p_kind: string
+          p_payload: Json
+          p_user: string
+        }
+        Returns: undefined
+      }
+      push_mark_sent: {
+        Args: { p_keys: Json; p_secret: string }
+        Returns: {
+          event_id: string
+          minutes: number
+          occurrence_start: string
+          user_id: string
+        }[]
+      }
+      push_purge: { Args: never; Returns: undefined }
+      push_scheduled_jobs: {
+        Args: never
+        Returns: {
+          jobname: string
+          schedule: string
+        }[]
+      }
+      push_subscriptions_for: {
+        Args: { p_secret: string; p_user_ids: string[] }
+        Returns: {
+          auth: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }[]
+      }
+      push_touch_subscription: {
+        Args: { p_ids: string[]; p_secret: string }
+        Returns: undefined
+      }
+      push_trigger: { Args: { p_dry_run?: boolean }; Returns: Json }
       request_recovery: { Args: { p_email: string }; Returns: boolean }
       reserve_event_images: {
         Args: { p_event_id: string; p_images: Json }
@@ -1385,6 +1618,15 @@ export type Database = {
         Returns: string
       }
       revoke_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      save_push_subscription: {
+        Args: {
+          p_auth: string
+          p_device: string
+          p_endpoint: string
+          p_p256dh: string
+        }
+        Returns: string
+      }
       search_events: {
         Args: {
           p_from: string

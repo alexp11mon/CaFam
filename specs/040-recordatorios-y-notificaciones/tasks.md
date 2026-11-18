@@ -21,14 +21,14 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Textos ("Hoy a las…", "Mañana…", lugar opcional) y sociales; `pushSupport` para iOS sin instalar, denegado y listo.
 
   Cubre: RF-5, RF-8, RF-9, RF-10, RF-11, RF-12 | Evidencia: `npm test -- push-reminders push-payload push-device` 20/20: con hora, día completo a las 9:00 en la zona del perfil (los minutos de un día completo cuentan desde las 9:00 de su día: el valor por defecto es 1440, "El día anterior a las 9:00", en lugar del 900 del plan), serie semanal con cambio de hora, repetición borrada, excepción movida, retraso de más de 15 min descartado; textos de recordatorio y sociales; `deviceName` y `pushSupport`; P8 en verde (3.257 tests).
-- [ ] T3 Esquema, RLS y funciones
+- [x] T3 Esquema, RLS y funciones
   Hecho cuando: `npm run test:db -- push` en verde.
   - Migración, `db:push`, `db:types`.
   - RLS: suscripciones y recordatorios solo propios; un no miembro no puede poner recordatorios; al salir del calendario se borran.
   - `push_mark_sent` no duplica con dos llamadas a la vez; funciones con secreto erróneo → `42501`.
   - Triggers sociales: comentario ajeno encola, el propio no; sin suscripción no encola; tipo desactivado no encola; cambio por sincronización no encola.
 
-  Cubre: RF-2, RF-7, RF-10, RF-13 a RF-16, RF-18 | Evidencia: —
+  Cubre: RF-2, RF-7, RF-10, RF-13 a RF-16, RF-18 | Evidencia: migración `20261121100000_push.sql` aplicada en dev (`db:push`, `db:types`); `npm run test:db -- push.test` 8/8: suscripciones solo propias y por `save_push_subscription` (un endpoint pasa a la última cuenta), recordatorios personales con pertenencia, máximo 3 y borrados al salir del calendario, aviso por defecto materializado por el trigger `event_reminders_default` (también cubre las altas de T4), `push_mark_sent` sin duplicar con dos llamadas a la vez, secreto erróneo → 42501, comentario ajeno encola y el propio no, sin dispositivo no encola, tipo desactivado no encola, cambios juntados en 2 min, sincronización (sin sesión) no encola, unirse y cambio de rol. `test:db` completo: 630/631 (`live-changes` dio timeout una vez y pasa al repetirlo, trampa conocida); P8 en verde (3.257 tests).
 - [ ] T4 Ruta de envío y aviso por defecto al crear
   Hecho cuando: `npm test -- push-run-route` (fetch simulado) y `npm run test:db -- push` en verde.
   - `/api/push/run`: 401 sin secreto; envía recordatorios y cola; 410 borra la suscripción; un fallo de una no para las demás.
