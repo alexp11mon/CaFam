@@ -94,6 +94,7 @@ describe("ProviderNotice (RF-48)", () => {
 describe("navigation", () => {
   it("has a section for connected accounts", () => {
     expect(NAV_ITEMS).toContainEqual({
+      needsNetwork: true,
       section: "connections",
       href: "/dashboard/connections",
       label: "Cuentas conectadas",

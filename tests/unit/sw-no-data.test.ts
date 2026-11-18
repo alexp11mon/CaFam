@@ -17,16 +17,26 @@ type FetchListener = (event: {
 let cached: string[];
 let handleFetch: FetchListener;
 let networkDown: boolean;
+let addAllCalls: number;
+let handleMessage: (event: {
+  data: unknown;
+  waitUntil: (work: Promise<unknown>) => void;
+}) => void;
+let lastResponse: Response | undefined;
 
 beforeEach(() => {
   cached = [];
   networkDown = false;
+  addAllCalls = 0;
   const cache = {
-    match: async () => undefined,
+    match: async (url: string) =>
+      url === "/offline" ? new Response("<html>offline</html>") : undefined,
     put: async (request: { url: string }) => {
       cached.push(request.url);
     },
-    addAll: async () => {},
+    addAll: async () => {
+      addAllCalls += 1;
+    },
   };
   const listeners: Record<string, FetchListener> = {};
   runInNewContext(code, {
@@ -52,12 +62,14 @@ beforeEach(() => {
     Promise,
   });
   handleFetch = listeners.fetch!;
+  handleMessage = listeners.message as unknown as typeof handleMessage;
 });
 
 /** Dispatches a request; resolves to whether the worker took it over. */
 async function request(url: string, mode = "cors", method = "GET") {
   let handled = false;
   let response: Promise<Response> | undefined;
+  lastResponse = undefined;
   handleFetch({
     request: { method, url: `${ORIGIN}${url}`, mode },
     respondWith: (value) => {
@@ -65,7 +77,7 @@ async function request(url: string, mode = "cors", method = "GET") {
       response = value;
     },
   });
-  await response?.catch(() => undefined);
+  lastResponse = await response?.catch(() => undefined);
   return handled;
 }
 
@@ -143,5 +155,39 @@ describe("service worker keeps no calendar data", () => {
     await request("/_next/static/chunks/app.js");
 
     expect(cached).toEqual([`${ORIGIN}/_next/static/chunks/app.js`]);
+  });
+
+  // Spec 034 RF-8, plan D3: a panel page opens the offline app at its address.
+  it("sends a failed panel page to /offline with where it came from", async () => {
+    networkDown = true;
+
+    await request("/dashboard/calendar?view=month&date=2026-11-02", "navigate");
+
+    expect(lastResponse?.status).toBe(302);
+    expect(lastResponse?.headers.get("location")).toBe(
+      `${ORIGIN}/offline?from=%2Fdashboard%2Fcalendar%3Fview%3Dmonth%26date%3D2026-11-02`,
+    );
+    expect(cached).toEqual([]);
+  });
+
+  it("answers /offline?from= with the cached offline page", async () => {
+    networkDown = true;
+
+    await request("/offline?from=%2Fdashboard%2Fnotes", "navigate");
+
+    expect(await lastResponse?.text()).toBe("<html>offline</html>");
+  });
+
+  it("caches the offline page again when the app asks for it", async () => {
+    let work: Promise<unknown> | undefined;
+    handleMessage({
+      data: { type: "refresh-offline" },
+      waitUntil: (value) => {
+        work = value;
+      },
+    });
+    await work;
+
+    expect(addAllCalls).toBeGreaterThan(0);
   });
 });

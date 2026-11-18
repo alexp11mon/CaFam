@@ -15,6 +15,8 @@ export interface NavItem {
   section: Section;
   href: string;
   label: string;
+  /** Not in the offline app: shown disabled without a connection (spec 034 RF-17). */
+  needsNetwork?: boolean;
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
@@ -25,21 +27,39 @@ export const NAV_ITEMS: readonly NavItem[] = [
     section: "calendars",
     href: "/dashboard/calendars",
     label: "Mis calendarios",
+    needsNetwork: true,
   },
   // Spec 015 (RF-1).
-  { section: "assistant", href: "/dashboard/assistant", label: "Asistente" },
+  {
+    section: "assistant",
+    href: "/dashboard/assistant",
+    label: "Asistente",
+    needsNetwork: true,
+  },
   {
     section: "connections",
     href: "/dashboard/connections",
     label: "Cuentas conectadas",
+    needsNetwork: true,
   },
-  { section: "join", href: "/dashboard/join", label: "Unirme con código" },
+  {
+    section: "join",
+    href: "/dashboard/join",
+    label: "Unirme con código",
+    needsNetwork: true,
+  },
   {
     section: "import",
     href: "/dashboard/import",
     label: "Importar calendario",
+    needsNetwork: true,
   },
-  { section: "settings", href: "/dashboard/settings", label: "Ajustes" },
+  {
+    section: "settings",
+    href: "/dashboard/settings",
+    label: "Ajustes",
+    needsNetwork: true,
+  },
 ];
 
 /**

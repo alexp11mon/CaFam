@@ -1,6 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { resetConnection, startWatching } from "@/lib/offline/connection";
 import type { EventDetailData } from "@/components/calendar/event-detail";
 import type { EventFormValues } from "@/components/calendar/event-form";
 import { EventClipboardProvider } from "@/components/calendar/event-clipboard";
@@ -79,6 +88,7 @@ const EDIT: EventFormValues = {
 };
 
 function setup({
+  detail = DETAIL,
   canAttach = false,
   canEdit = true,
   deleteAction = vi.fn(async (): Promise<ConfirmState> => ({})),
@@ -88,7 +98,7 @@ function setup({
   const panel = (
     <EventPanel
       startEditing={startEditing}
-      detail={DETAIL}
+      detail={detail}
       timeZone="Europe/Madrid"
       canEdit={canEdit}
       canAttach={canAttach}
@@ -264,5 +274,28 @@ describe("EventPanel keys", () => {
     expect(screen.queryByLabelText("Título")).toBeNull();
     await userEvent.keyboard("{Control>}c{/Control}");
     expect(await screen.findByText("Evento copiado")).toBeVisible();
+  });
+});
+
+// Spec 034 T10: images, comments and synced calendars offline (RF-14, RF-25).
+describe("EventPanel without a connection", () => {
+  afterEach(() => resetConnection());
+
+  it("shows images and comments as available with a connection", () => {
+    startWatching();
+    window.dispatchEvent(new Event("offline"));
+    setup({ canAttach: true });
+    expect(screen.getAllByText("Disponible con conexión")).toHaveLength(2);
+    expect(screen.queryByRole("button", { name: "Comentar" })).toBeNull();
+  });
+
+  it("leaves a synced event read-only with the provider's reason", () => {
+    startWatching();
+    window.dispatchEvent(new Event("offline"));
+    setup({ detail: { ...DETAIL, provider: "google" } });
+    expect(screen.queryByRole("button", { name: "Editar" })).toBeNull();
+    expect(
+      screen.getByText("Sin conexión no se puede escribir en Google"),
+    ).toBeInTheDocument();
   });
 });

@@ -36,6 +36,8 @@ import { deleteFromDetailOrQueue } from "@/lib/offline/event-actions";
 import { useOfflineQueue } from "@/lib/hooks/use-offline";
 import { entityOf } from "@/lib/offline/outbox";
 import { useHoldLive } from "@/lib/hooks/use-hold-live";
+import { useConnection } from "@/lib/hooks/use-connection";
+import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 
 /**
  * An event's detail, which turns into its edit form in the same place
@@ -44,7 +46,7 @@ import { useHoldLive } from "@/lib/hooks/use-hold-live";
 export function EventPanel({
   detail,
   timeZone,
-  canEdit,
+  canEdit: canEditOnline,
   editInitial,
   calendars,
   categories,
@@ -74,6 +76,11 @@ export function EventPanel({
   series?: { limitReached: boolean } | null;
 }) {
   const modal = useEventModal();
+  // Offline a synced calendar takes no writes (spec 034 RF-25), and images
+  // and comments wait for the network (RF-14).
+  const online = useConnection();
+  const offlineSynced = !online && Boolean(detail.provider);
+  const canEdit = canEditOnline && !offlineSynced;
   const [editing, setEditingNow] = useState(startEditing);
   // The detail and the form cross-fade instead of swapping (spec 021 RF-52, D14).
   const setEditing = (next: boolean) =>
@@ -156,7 +163,11 @@ export function EventPanel({
     <ViewTransition key="detail">
       <div ref={root} className="contents">
         <EventDetail
-          event={waiting ? { ...detail, pending: true } : detail}
+          event={{
+            ...detail,
+            ...(waiting ? { pending: true } : {}),
+            ...(offlineSynced ? { readOnly: "offline" as const } : {}),
+          }}
           timeZone={timeZone}
           canEdit={canEdit}
           deleteAction={deleteFromDetail}
@@ -168,16 +179,26 @@ export function EventPanel({
               router.replace("/dashboard/calendar");
             })
           }
-          comments={<EventComments eventId={detail.id} timeZone={timeZone} />}
+          comments={
+            online ? (
+              <EventComments eventId={detail.id} timeZone={timeZone} />
+            ) : (
+              <OnlyOnline title="Comentarios" />
+            )
+          }
           media={
-            <>
-              <EventImages
-                images={images}
-                title={detail.title}
-                timeZone={timeZone}
-              />
-              {canAttach ? <ImageUploader eventId={detail.id} /> : null}
-            </>
+            !online ? (
+              <OnlyOnline title="Imágenes" />
+            ) : (
+              <>
+                <EventImages
+                  images={images}
+                  title={detail.title}
+                  timeZone={timeZone}
+                />
+                {canAttach ? <ImageUploader eventId={detail.id} /> : null}
+              </>
+            )
           }
           actions={
             <>
@@ -204,5 +225,15 @@ export function EventPanel({
         />
       </div>
     </ViewTransition>
+  );
+}
+
+/** Images and comments without a connection (spec 034 RF-14). */
+function OnlyOnline({ title }: { title: string }) {
+  return (
+    <section aria-label={title} className="flex flex-col gap-1">
+      <h3 className="text-sm font-semibold text-ink">{title}</h3>
+      <p className="text-sm text-muted">{OFFLINE_MESSAGES.onlyOnline}</p>
+    </section>
   );
 }

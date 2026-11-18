@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { resetConnection, startWatching } from "@/lib/offline/connection";
 import { RepeatField } from "@/components/recurrence/repeat-field";
 
 beforeAll(() => {
@@ -127,5 +128,19 @@ describe("RepeatField (RF-1, RF-2, RF-29)", () => {
       ),
     ).toBeInTheDocument();
     expect(submitted()).toBe("none");
+  });
+});
+
+// Spec 034 T10: no series is made or changed offline (RF-24).
+describe("RepeatField without a connection", () => {
+  afterEach(() => resetConnection());
+
+  it("is locked with 'Necesita conexión' and keeps what it had", () => {
+    startWatching();
+    window.dispatchEvent(new Event("offline"));
+    render(<Harness defaultValue="weekly" />);
+    expect(screen.getByLabelText("Repetir")).toBeDisabled();
+    expect(screen.getByText("Necesita conexión")).toBeInTheDocument();
+    expect(submitted()).toBe("weekly");
   });
 });

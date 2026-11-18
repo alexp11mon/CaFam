@@ -1,8 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import Link from "next/link";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OfflineProvider } from "@/components/offline/offline-provider";
 import { ToastProvider } from "@/components/ui/toast";
-import { resetConnection } from "@/lib/offline/connection";
+import { resetConnection, startWatching } from "@/lib/offline/connection";
 import * as db from "@/lib/offline/db";
 import {
   addChange,
@@ -17,6 +18,8 @@ import { memoryIndexedDb } from "./memory-indexeddb";
 // connection (RF-4, RF-6, RF-38, RF-39, RF-45, RF-64).
 const router = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
+const nav = vi.hoisted(() => ({ loadPage: vi.fn() }));
+vi.mock("@/lib/offline/navigate", () => nav);
 const server = vi.hoisted(() => ({
   loadOfflineSnapshot: vi.fn(),
   applyOfflineChange: vi.fn(),
@@ -73,6 +76,14 @@ describe("OfflineProvider", () => {
     expect(server.loadOfflineSnapshot).not.toHaveBeenCalled();
   });
 
+  it("reads again a copy older than 15 minutes (RF-6)", async () => {
+    await db.saveSnapshot(
+      copy("u1", new Date(Date.now() - 16 * 60_000).toISOString()),
+    );
+    mount();
+    await waitFor(() => expect(server.loadOfflineSnapshot).toHaveBeenCalled());
+  });
+
   it("sends what waits, says so and refreshes (RF-39, RF-44, RF-45)", async () => {
     await addChange({ type: "note.delete", id: "n", base: {} as never });
     mount();
@@ -91,5 +102,21 @@ describe("OfflineProvider", () => {
     await waitFor(() => expect(getSnapshot()?.userId).toBe("u1"));
     expect(server.applyOfflineChange).not.toHaveBeenCalled();
     expect((await db.loadState()).queue).toEqual([]);
+  });
+
+  // Plan R10: offline, a link loads the page, which opens the offline app.
+  it("loads a panel link without the network instead of a Next navigation", async () => {
+    const { getByText } = render(
+      <ToastProvider>
+        <OfflineProvider userId="u1" />
+        <Link href="/dashboard/notes">Notas</Link>
+      </ToastProvider>,
+    );
+    startWatching();
+    window.dispatchEvent(new Event("offline"));
+    await waitFor(() => {
+      getByText("Notas").click();
+      expect(nav.loadPage).toHaveBeenCalledWith("/dashboard/notes");
+    });
   });
 });

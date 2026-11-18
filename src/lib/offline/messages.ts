@@ -7,6 +7,9 @@ export const OFFLINE_MESSAGES = {
   needsNetwork: "Necesita conexión",
   onlyOnline: "Disponible con conexión",
   outOfRange: "Estas fechas no están disponibles sin conexión",
+  descriptionOnline: "Descripción disponible con conexión",
+  needsNetworkPage:
+    "Esta pantalla necesita conexión. Vuelve cuando tengas red o sigue con el calendario y las notas.",
   pending: "Pendiente de enviar",
   syncedRejected: "Sin conexión no se puede escribir en Google ni en iCloud",
   readOnly: (provider: "google" | "icloud") =>

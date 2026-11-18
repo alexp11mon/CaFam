@@ -9,6 +9,8 @@ import {
 } from "@/lib/recurrence/presets";
 import { fromRRule, toRRule } from "@/lib/recurrence/rule";
 import { summarizeRule } from "@/lib/recurrence/summary";
+import { useConnection } from "@/lib/hooks/use-connection";
+import { networkReason } from "@/lib/offline/gates";
 import { RecurrenceEditor } from "./recurrence-editor";
 
 /**
@@ -51,6 +53,10 @@ export function RepeatField({
       ? value
       : "none";
   const sent = disabledReason ? "none" : current;
+  // Offline no series is made or changed: the field shows what it has, locked
+  // (spec 034 RF-24).
+  const offlineReason = networkReason(useConnection());
+  const reason = disabledReason ?? offlineReason;
 
   const resolved = resolveRepeat(current, startDate);
   const editorStart =
@@ -64,7 +70,7 @@ export function RepeatField({
         name={`${name}-choice`}
         form="none"
         value={disabledReason ? "none" : current}
-        disabled={Boolean(disabledReason)}
+        disabled={Boolean(reason)}
         onChange={(event) => {
           if (event.target.value === "custom") setEditing(true);
           else setValue(event.target.value);
@@ -81,9 +87,7 @@ export function RepeatField({
         {custom ? <option value={value}>{summarizeRule(custom)}</option> : null}
         <option value="custom">Personalizado…</option>
       </Select>
-      {disabledReason ? (
-        <p className="text-sm text-muted">{disabledReason}</p>
-      ) : null}
+      {reason ? <p className="text-sm text-muted">{reason}</p> : null}
       <RecurrenceEditor
         open={editing}
         startDate={startDate}

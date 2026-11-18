@@ -44,7 +44,7 @@ export const DONE_MESSAGES: Record<Done, string> = {
   goneIcloud: goneText("goneIcloud"),
 };
 
-interface EventModalApi {
+export interface EventModalApi {
   /** A form inside has unsaved changes: closing asks first (RF-7). */
   setDirty: (dirty: boolean) => void;
   /** Close as the user asked, with the unsaved-changes check. */
@@ -56,6 +56,9 @@ interface EventModalApi {
 }
 
 const EventModalContext = createContext<EventModalApi | null>(null);
+
+/** The same API without a window: the offline app closes by navigating (spec 034). */
+export const EventModalProvider = EventModalContext;
 
 /** The window around a form, or null on a full page. */
 export function useEventModal() {

@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { resetConnection, startWatching } from "@/lib/offline/connection";
 import {
   lossText,
   SeriesScopeDialog,
@@ -138,5 +139,26 @@ describe("lossText", () => {
     ],
   ])("%o → %s", (loss, text) => {
     expect(lossText(loss)).toBe(text);
+  });
+});
+
+// Spec 034 T10: offline only "Solo este evento" (RF-23, RF-24).
+describe("SeriesScopeDialog without a connection", () => {
+  afterEach(() => resetConnection());
+
+  it("leaves only 'Solo este evento' and says why", () => {
+    startWatching();
+    window.dispatchEvent(new Event("offline"));
+    setup({});
+    expect(
+      screen.getByRole("button", { name: "Solo este evento" }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Este y los siguientes" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Todos los eventos" }),
+    ).toBeDisabled();
+    expect(screen.getByText(/necesita conexión/)).toBeInTheDocument();
   });
 });

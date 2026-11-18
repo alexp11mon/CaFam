@@ -12,6 +12,7 @@ import {
 } from "@/lib/shell/nav";
 import { TAB_ITEM } from "./bar-styles";
 import { CreateButton } from "./create-fab";
+import { NavLink } from "./nav-link";
 import { SECTION_ICONS } from "./icons";
 import { MoreSheet } from "./more-sheet";
 import { ThemeToggle } from "./theme-toggle";
@@ -56,8 +57,8 @@ export function TopNav({
               const ItemIcon = SECTION_ICONS[entry.section];
               return (
                 <li key={entry.section}>
-                  <Link
-                    href={entry.href}
+                  <NavLink
+                    item={entry}
                     aria-label={entry.label}
                     aria-current={
                       entry.section === current ? "page" : undefined
@@ -66,7 +67,7 @@ export function TopNav({
                   >
                     <ItemIcon />
                     <span className="max-lg:hidden">{entry.label}</span>
-                  </Link>
+                  </NavLink>
                 </li>
               );
             })}

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   dayEvents,
   eventDayKeys,
@@ -21,6 +21,28 @@ function allDay(id: string, startsAt: string, endsAt: string) {
 }
 
 describe("eventDayKeys (RF-21, casos límite)", () => {
+  // Spec 034 RNF-2: the agenda asks for every event on every day; the zone
+  // conversion is done once per event and zone.
+  it("converts each event to the zone only once", () => {
+    const formatToParts = vi.spyOn(
+      Intl.DateTimeFormat.prototype,
+      "formatToParts",
+    );
+    const event = timed("m", "2026-11-05T09:00:00Z", "2026-11-05T10:00:00Z");
+    eventDayKeys(event, MADRID);
+    const calls = formatToParts.mock.calls.length;
+    eventDayKeys(event, MADRID);
+    expect(formatToParts.mock.calls.length).toBe(calls);
+    // Another zone is not served from the cache.
+    expect(
+      eventDayKeys(
+        timed("m", "2026-11-05T03:00:00Z", "2026-11-05T04:00:00Z"),
+        NEW_YORK,
+      ),
+    ).toEqual(["2026-11-04"]);
+    formatToParts.mockRestore();
+  });
+
   it("returns a single day for a same-day event", () => {
     const event = timed("a", "2026-11-02T09:00:00Z", "2026-11-02T10:00:00Z");
 

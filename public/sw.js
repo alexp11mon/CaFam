@@ -1,10 +1,11 @@
 // CaFam service worker (plan D7; RF-21, RF-23).
 // Caches only the offline page, icons and hashed static assets. HTML pages
 // and Supabase responses are never cached, so no user data stays on the
-// device (plan R6).
+// device (plan R6). Since spec 034 the offline page runs the app from the
+// copy in IndexedDB, which the app (not this worker) keeps (plan D3).
 
 // Bump the version to drop old caches after a change (plan R5).
-const CACHE_NAME = "cafam-v5";
+const CACHE_NAME = "cafam-v6";
 const OFFLINE_URL = "/offline";
 const PRECACHE_URLS = [
   OFFLINE_URL,
@@ -61,6 +62,23 @@ self.addEventListener("fetch", (event) => {
     // Network first; the cached offline page only when the network fails.
     event.respondWith(
       fetch(request).catch(async () => {
+        // A panel page opens the offline app at that address (spec 034 RF-8).
+        if (url.pathname.startsWith("/dashboard")) {
+          const from = encodeURIComponent(url.pathname + url.search);
+          const target = `${self.location.origin}${OFFLINE_URL}?from=${from}`;
+          return Response.redirect(target, 302);
+        }
+        const cache = await caches.open(CACHE_NAME);
+        return (await cache.match(OFFLINE_URL)) ?? Response.error();
+      }),
+    );
+    return;
+  }
+
+  if (url.pathname === OFFLINE_URL) {
+    // The redirect above carries ?from=: the cached page, whatever the query.
+    event.respondWith(
+      fetch(request).catch(async () => {
         const cache = await caches.open(CACHE_NAME);
         return (await cache.match(OFFLINE_URL)) ?? Response.error();
       }),
@@ -79,5 +97,13 @@ self.addEventListener("fetch", (event) => {
         return response;
       }),
     );
+  }
+});
+
+// After a deploy, the open app asks for the offline page of this version and
+// its files (spec 034 RF-6, plan D14).
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "refresh-offline") {
+    event.waitUntil(precache().catch(() => {}));
   }
 });

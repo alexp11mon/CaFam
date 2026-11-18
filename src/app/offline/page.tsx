@@ -2,11 +2,12 @@ import { Logo } from "@/components/brand/logo";
 import { Venito } from "@/components/brand/venito";
 import type { Metadata } from "next";
 import { RetryButton } from "@/components/pwa/retry-button";
+import { OfflineApp } from "@/components/offline/offline-app";
 
 export const metadata: Metadata = { title: "Sin conexión" };
 
-/** Static page the service worker shows when a navigation fails (RF-23). */
-export default function OfflinePage() {
+/** Without a copy on the device: nothing to show (spec 001 RF-23, spec 034 RF-12). */
+function NoCopy() {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-10">
       <div className="flex w-full max-w-sm flex-col items-center gap-4 text-center">
@@ -21,4 +22,12 @@ export default function OfflinePage() {
       </div>
     </main>
   );
+}
+
+/**
+ * Static page the service worker opens when a navigation fails (spec 034
+ * plan D3): no data in its HTML; the offline app reads them from the device.
+ */
+export default function OfflinePage() {
+  return <OfflineApp fallback={<NoCopy />} />;
 }

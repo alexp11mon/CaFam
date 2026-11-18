@@ -1,6 +1,7 @@
 import type { Database } from "@/types/database";
 import { providerName } from "./provider-labels";
 import type { ProviderAccess, ProviderName } from "./providers/types";
+import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 
 // What the screens offer in synced calendars; the database decides anyway
 // (spec 007 T2, spec 009 T3). Since spec 009 they are writable when the
@@ -57,8 +58,12 @@ export function moveTargets<T extends CalendarAccess>(
  */
 export function readOnlyReason(
   synced: SyncedInfo | null,
-): "provider" | "reconnect" | null {
-  if (!synced || synced.canWrite) return null;
+  online = true,
+): "provider" | "reconnect" | "offline" | null {
+  if (!synced) return null;
+  // Writes go to the provider first: none without a connection (spec 034 RF-25).
+  if (!online) return "offline";
+  if (synced.canWrite) return null;
   return synced.googleAccess === "reader" ? "provider" : "reconnect";
 }
 
@@ -70,6 +75,7 @@ export function readOnlyEventText(
   provider: ProviderName,
 ): string {
   const name = providerName(provider);
+  if (reason === "offline") return OFFLINE_MESSAGES.readOnly(provider);
   return reason === "provider"
     ? `La cuenta de ${name} solo puede ver este calendario, así que este evento solo se puede cambiar en ${name}.`
     : `Este evento viene de ${name}. Para cambiarlo desde CaFam, el propietario tiene que volver a conectar la cuenta.`;
@@ -81,6 +87,7 @@ export function readOnlyPasteText(
   provider: ProviderName,
 ): string {
   const name = providerName(provider);
+  if (reason === "offline") return OFFLINE_MESSAGES.readOnly(provider);
   return reason === "provider"
     ? `La cuenta de ${name} solo puede ver este calendario, así que no se puede pegar en él.`
     : `Para pegar en este calendario, el propietario tiene que volver a conectar la cuenta de ${name}.`;

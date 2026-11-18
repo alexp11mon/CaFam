@@ -24,8 +24,11 @@ export function AppFrame({
   displayName,
   userId,
   signOutAction,
+  offline = false,
   children,
 }: {
+  /** The offline app: no assistant, which needs the network (spec 034 RF-17, R2). */
+  offline?: boolean;
   accent: AccentId;
   /** Whose copy and queue the device keeps (spec 034 RF-64). */
   userId: string;
@@ -51,7 +54,7 @@ export function AppFrame({
       </a>
       <ThemeSync theme={theme} />
       <ToastProvider>
-        <OfflineProvider userId={userId} />
+        <OfflineProvider userId={userId} offlineApp={offline} />
         <EventClipboardProvider>
           <CalendarHeaderProvider>
             <TopNav displayName={displayName} signOutAction={signOutAction} />
@@ -66,7 +69,7 @@ export function AppFrame({
               {children}
             </div>
             <CreateButton floating />
-            <AssistantFab />
+            {offline ? null : <AssistantFab />}
             <BottomBar signOutAction={signOutAction} />
           </CalendarHeaderProvider>
         </EventClipboardProvider>
