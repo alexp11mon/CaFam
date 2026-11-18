@@ -16,6 +16,8 @@ const EMPTY: Suggestion[] = [
   { label: "¿Qué tengo hoy?", kind: "send" },
   { label: "¿Qué tengo esta semana?", kind: "send" },
   { label: "¿Cuándo estamos todos libres?", kind: "send" },
+  // Spec 036 RF-47.
+  { label: "Crear un evento", kind: "fill", text: "Crea un evento " },
   { label: "Buscar un evento", kind: "fill", text: "Busca el evento " },
   { label: "Crear eventos desde una foto", kind: "attach" },
   { label: "¿Qué se ha comentado últimamente?", kind: "send" },
@@ -24,6 +26,7 @@ const EMPTY: Suggestion[] = [
 const AFTER_ANSWER: Suggestion[] = [
   { label: "¿Y mañana?", kind: "send" },
   { label: "¿Qué tardes tengo libres esta semana?", kind: "send" },
+  { label: "Crear un evento", kind: "fill", text: "Crea un evento " },
   { label: "Buscar un evento", kind: "fill", text: "Busca el evento " },
 ];
 

@@ -88,3 +88,111 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
 ];
+
+// Spec 036: the write tools, offered only when the user asks to write
+// (plan D2). The server finds the events and calendars by name (plan D1).
+
+const nullableString = (description: string) => ({
+  type: ["string", "null"],
+  description,
+});
+
+const timeProperties = {
+  calendar: nullableString(
+    "Nombre del calendario tal como lo dice el usuario; null si no dice ninguno",
+  ),
+  date: nullableString("Día AAAA-MM-DD; null si sale de after o before"),
+  start: nullableString("Hora de inicio HH:MM de 24 horas"),
+  end: nullableString("Hora de fin HH:MM de 24 horas"),
+  endDate: nullableString("Día de fin AAAA-MM-DD si no es el de inicio"),
+  allDay: {
+    type: ["boolean", "null"],
+    description: "true si el usuario dice que es de todo el día",
+  },
+  durationMinutes: {
+    type: ["integer", "null"],
+    description: "Duración en minutos si el usuario la dice",
+  },
+  after: nullableString(
+    "Título del evento tras el que empieza: «cuando acabe PIAE» es PIAE",
+  ),
+  before: nullableString(
+    "Título del evento antes del que acaba: «justo antes de PIAE» o «hasta PIAE» es PIAE",
+  ),
+  anchorDate: nullableString(
+    "Día AAAA-MM-DD del evento de after o before si el usuario lo dice",
+  ),
+  location: nullableString("Lugar"),
+  description: nullableString("Descripción"),
+};
+
+export const WRITE_TOOL_DEFINITIONS: ToolDefinition[] = [
+  {
+    type: "function",
+    function: {
+      name: "create_events",
+      description:
+        'Crea en el acto de 1 a 3 eventos sueltos. Todos en una sola llamada. Ejemplo: «Crea Comida Uni cuando acabe PIAE hasta las 14:30» es {"events":[{"title":"Comida Uni","after":"PIAE","end":"14:30"}]}.',
+      parameters: {
+        type: "object",
+        properties: {
+          events: {
+            type: "array",
+            maxItems: 3,
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "Título del evento" },
+                ...timeProperties,
+              },
+              required: ["title"],
+            },
+          },
+        },
+        required: ["events"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "propose_changes",
+      description:
+        "Prepara de 1 a 3 cambios de eventos que ya existen. No cambia nada: el usuario los confirma. Pon solo lo que cambia.",
+      parameters: {
+        type: "object",
+        properties: {
+          changes: {
+            type: "array",
+            maxItems: 3,
+            items: {
+              type: "object",
+              properties: {
+                event: {
+                  type: "string",
+                  description: "Título del evento que hay que cambiar",
+                },
+                eventDate: nullableString(
+                  "Día AAAA-MM-DD de ese evento si el usuario lo dice",
+                ),
+                scope: {
+                  type: ["string", "null"],
+                  enum: ["this", "following", "all", null],
+                  description:
+                    "Solo en eventos que se repiten: all si dice todos, following si dice a partir de este; si no, null",
+                },
+                title: nullableString("Título nuevo"),
+                ...timeProperties,
+                calendar: nullableString(
+                  "Calendario nuevo si hay que moverlo; si no, null",
+                ),
+              },
+              required: ["event"],
+            },
+          },
+        },
+        required: ["changes"],
+      },
+    },
+  },
+];

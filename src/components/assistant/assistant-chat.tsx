@@ -265,7 +265,7 @@ export function AssistantChat({
         for await (const line of readLines(response.body)) {
           if (line.type === "status") setStatus(line.text);
           else if (line.type === "done") body = line;
-          else failed = line;
+          else if (line.type === "error") failed = line;
         }
       }
       if (!body) {

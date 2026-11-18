@@ -7,11 +7,12 @@ const labels = (messages: number, attachments = 0) =>
   suggestionsFor({ messages, attachments }).map((s) => s.label);
 
 describe("suggestionsFor", () => {
-  it("offers the six starters in an empty conversation", () => {
+  it("offers the starters in an empty conversation", () => {
     expect(labels(0)).toEqual([
       "¿Qué tengo hoy?",
       "¿Qué tengo esta semana?",
       "¿Cuándo estamos todos libres?",
+      "Crear un evento",
       "Buscar un evento",
       "Crear eventos desde una foto",
       "¿Qué se ha comentado últimamente?",
@@ -22,6 +23,7 @@ describe("suggestionsFor", () => {
     expect(labels(2)).toEqual([
       "¿Y mañana?",
       "¿Qué tardes tengo libres esta semana?",
+      "Crear un evento",
       "Buscar un evento",
     ]);
   });

@@ -28,7 +28,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
 
   Cubre: RF-4 a RF-16, RF-26 | Módulo: event-pick, write-times
   Evidencia (2026-11-18): `assistant-event-pick` (9) y `assistant-write-times` (17) en verde, primero en rojo (módulos inexistentes). Añadido: sin fecha y sin ninguno por delante, `pickEvent` toma el último pasado, para que "cambia la cena" encuentre la de ayer (anotado en el plan, D14). P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 292 archivos y 2.857 tests, build.
-- [ ] T3 Contratos: argumentos, herramientas, prompt, flujo y tarjetas
+- [x] T3 Contratos: argumentos, herramientas, prompt, flujo y tarjetas
   Hecho cuando: `npm test -- assistant-write-schemas assistant-core assistant-stream assistant-suggestions` en verde.
   - Esquemas de `create_events` y `propose_changes` (1–3; 4 → error).
   - `WRITE_TOOL_DEFINITIONS`.
@@ -38,6 +38,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
   - Sugerencia "Crear un evento".
 
   Cubre: RF-17, RF-31, RF-41, RF-46, RF-47 | Módulo: schemas, tool-definitions, prompt, actions, stream, suggestions
+  Evidencia (2026-11-18): `assistant-write-schemas` (14) y los casos nuevos de `assistant-core` (5), `assistant-stream` (2) y `assistant-suggestions` en verde, primero en rojo. El chat solo cambia el tipo de línea (las acciones se pintan en la T7) y sus dos tests cuentan la sugerencia nueva. Las herramientas admiten `null` en cada campo (`["string","null"]`), porque Groq rechaza con `tool_use_failed` una llamada que no cumple el esquema. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 293 archivos y 2.876 tests, build.
 - [ ] T4 Crear eventos desde el asistente
   Hecho cuando: `npm test -- assistant-writes` (dependencias simuladas) y `npm run test:db -- assistant-writes` en verde.
   - Crea con hora fija y al acabar otro evento, en el calendario nombrado.

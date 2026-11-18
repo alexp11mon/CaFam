@@ -104,3 +104,45 @@ describe("statusFor", () => {
     );
   });
 });
+
+// Spec 036, T3: writing steps and the action lines (RF-46, plan D12).
+describe("writing", () => {
+  it("names the event being created and the change being prepared", () => {
+    expect(
+      statusFor(
+        "create_events",
+        JSON.stringify({ events: [{ title: " Comida Uni " }] }),
+      ),
+    ).toBe("Creando «Comida Uni»…");
+    expect(statusFor("create_events", "{oops")).toBe("Creando el evento…");
+    expect(statusFor("propose_changes", "{}")).toBe("Preparando el cambio…");
+  });
+
+  it("reads back an action line", async () => {
+    const action = {
+      kind: "created" as const,
+      key: "a1",
+      event: {
+        id: "e",
+        title: "Comida Uni",
+        startsAt: "2026-11-19T12:30:00.000Z",
+        endsAt: "2026-11-19T13:30:00.000Z",
+        allDay: false,
+        calendarName: "Uni",
+        color: "#A0C4FF",
+      },
+      undo: { kind: "uncreate" as const, id: "e", updatedAt: "x" },
+    };
+    const lines = await collect([
+      encodeLine({ type: "action", action }),
+      encodeLine({
+        type: "done",
+        answer: "Hecho",
+        events: [],
+        actions: [action],
+        remaining: 3,
+      }),
+    ]);
+    expect(lines.map((line) => line.type)).toEqual(["action", "done"]);
+  });
+});

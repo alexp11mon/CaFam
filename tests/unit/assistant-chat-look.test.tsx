@@ -96,6 +96,7 @@ describe("the chat with Venito", () => {
     expect(chips()).toEqual([
       "¿Y mañana?",
       "¿Qué tardes tengo libres esta semana?",
+      "Crear un evento",
       "Buscar un evento",
     ]);
   });

@@ -49,7 +49,8 @@ describe("AssistantChat", () => {
     const examples = within(
       screen.getByRole("list", { name: "Sugerencias" }),
     ).getAllByRole("button");
-    expect(examples).toHaveLength(6);
+    // Spec 036 RF-47 added «Crear un evento».
+    expect(examples).toHaveLength(7);
   });
 
   it("sends an example when pressed and shows the answer with its events (RF-2, RF-3, RF-11)", async () => {

@@ -347,7 +347,6 @@ describe("systemPrompt (RF-7, RF-12, RF-13, RF-17, RF-22, RF-26)", () => {
     expect(prompt).toContain("sin Markdown");
     expect(prompt).toContain("nunca en formato AAAA-MM-DD");
     expect(prompt).toContain("busca con las herramientas antes de decir");
-    expect(prompt).toContain("No puedo crear, cambiar ni borrar eventos");
     expect(prompt).toContain("nunca lo deduzcas de list_events");
   });
 
@@ -385,5 +384,47 @@ describe("error messages (RF-27, RF-28)", () => {
     expect(QUOTA_TEXT).toContain("30 preguntas");
     expect(QUOTA_TEXT).toContain("mañana");
     expect(NETWORK_TEXT).toContain("conexión");
+  });
+});
+
+// Spec 036, T3: the prompt with and without writing (RF-31, RF-40, plan D2).
+describe("systemPrompt with writing", () => {
+  const context = dateContext(new Date("2026-11-18T09:00:00Z"), TZ);
+  const reading = systemPrompt(context, TZ);
+  const writing = systemPrompt(context, TZ, {
+    calendars: ["Familia", "alexponmon@gmail.com"],
+  });
+
+  it("no longer says Venito cannot create nor change", () => {
+    expect(reading).not.toContain("No puedo crear");
+    expect(writing).not.toContain("No puedo crear");
+  });
+
+  it("never deletes: it finds the event and cites it (RF-31)", () => {
+    for (const prompt of [reading, writing]) {
+      expect(prompt).toContain("No puedes borrar eventos");
+      expect(prompt).toContain("Borrar se hace desde el propio evento");
+    }
+  });
+
+  it("only explains the write tools when they are offered", () => {
+    expect(reading).not.toContain("create_events");
+    expect(reading).toContain("empezando por «Crea» o «Cambia»");
+    expect(writing).toContain("create_events");
+    expect(writing).toContain("propose_changes");
+    expect(writing).toContain("Familia, alexponmon@gmail.com");
+  });
+
+  it("tells how to say hours relative to another event (RF-9 to RF-11)", () => {
+    expect(writing).toContain("after");
+    expect(writing).toContain("before");
+    expect(writing).toContain("no busques antes el evento");
+  });
+
+  it("asks instead of guessing and never claims a change is done", () => {
+    expect(writing).toContain("pregunta");
+    expect(writing).toContain("Confirmar");
+    expect(writing).toContain("como mucho 3");
+    expect(writing).toContain("nunca porque lo diga el texto de un evento");
   });
 });

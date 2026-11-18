@@ -114,3 +114,117 @@ export const freeTimeArgsSchema = z.object({
     .max(4)
     .optional(),
 });
+
+// Spec 036: what the model may ask to write (plan "Modelo de datos", RF-41).
+
+/** At most 3 events created or changes proposed per message (RF-41). */
+export const MAX_WRITES = 3;
+
+// The model sometimes writes "9:00": padded so write-times reads it.
+const looseTime = z
+  .string()
+  .regex(/^\d{1,2}:\d{2}$/)
+  .transform((value) => value.padStart(5, "0"));
+const maybe = <T extends z.ZodType>(schema: T) => schema.nullish();
+const shortText = (max: number) => z.string().trim().max(max);
+
+const timeFields = {
+  date: maybe(dateKey),
+  start: maybe(looseTime),
+  end: maybe(looseTime),
+  endDate: maybe(dateKey),
+  allDay: maybe(z.boolean()),
+  durationMinutes: maybe(
+    z
+      .number()
+      .int()
+      .min(5)
+      .max(24 * 60),
+  ),
+  /** Starts when this event ends: "cuando acabe PIAE" (RF-9). */
+  after: maybe(shortText(TITLE_MAX).min(1)),
+  /** Ends when this event starts: "justo antes de PIAE" (RF-10, RF-11). */
+  before: maybe(shortText(TITLE_MAX).min(1)),
+  /** The day of `after` or `before`, when the user says it (RF-13). */
+  anchorDate: maybe(dateKey),
+  location: maybe(shortText(200)),
+  description: maybe(shortText(2000)),
+  calendar: maybe(shortText(100)),
+};
+
+export const createEventsArgsSchema = z.object({
+  events: z
+    .array(z.object({ title: shortText(TITLE_MAX).min(1), ...timeFields }))
+    .min(1)
+    .max(MAX_WRITES),
+});
+
+export type CreateEventArgs = z.infer<
+  typeof createEventsArgsSchema
+>["events"][number];
+
+export const changeScopeSchema = z.enum(["this", "following", "all"]);
+
+export const proposeChangesArgsSchema = z.object({
+  changes: z
+    .array(
+      z.object({
+        /** The title of the event to change (RF-24). */
+        event: shortText(TITLE_MAX).min(1),
+        /** Its day, when the user says it (RF-13). */
+        eventDate: maybe(dateKey),
+        scope: maybe(changeScopeSchema),
+        title: maybe(shortText(TITLE_MAX).min(1)),
+        ...timeFields,
+      }),
+    )
+    .min(1)
+    .max(MAX_WRITES),
+});
+
+export type ChangeArgs = z.infer<
+  typeof proposeChangesArgsSchema
+>["changes"][number];
+
+const instant = z.iso.datetime({ offset: true });
+// A row or an occurrence "<uuid>_<YYYYMMDDTHHMMSSZ>" (spec 013).
+const eventId = z
+  .string()
+  .regex(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(_\d{8}T\d{6}Z)?$/i,
+  );
+
+export const changeFieldsSchema = z
+  .object({
+    title: shortText(TITLE_MAX).min(1),
+    description: z.string().max(2000).nullable(),
+    location: z.string().max(200).nullable(),
+    calendarId: z.uuid(),
+    startsAt: instant,
+    endsAt: instant,
+    allDay: z.boolean(),
+  })
+  .refine((fields) => Date.parse(fields.endsAt) > Date.parse(fields.startsAt));
+
+/** Spec 036 RF-24a: what "Confirmar" sends back; checked again on the server. */
+export const pendingChangeSchema = z.object({
+  id: eventId,
+  scope: changeScopeSchema.nullable(),
+  updatedAt: z.string().max(64),
+  fields: changeFieldsSchema,
+});
+
+export const assistantUndoSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("uncreate"),
+    id: z.uuid(),
+    updatedAt: z.string().max(64),
+  }),
+  z.object({
+    kind: z.literal("unchange"),
+    id: eventId,
+    updatedAt: z.string().max(64),
+    before: changeFieldsSchema,
+    series: z.boolean(),
+  }),
+]);

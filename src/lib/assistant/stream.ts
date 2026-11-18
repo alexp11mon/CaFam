@@ -1,5 +1,6 @@
 // What POST /api/assistant sends while it works (spec 024 RF-16, plan D7):
 // one JSON object per line. Pure, shared by the route and the chat.
+import type { AssistantAction } from "./actions";
 import type { Proposal } from "./proposal";
 import type { CitedEvent } from "./tools";
 
@@ -14,8 +15,12 @@ export type StreamLine =
       answer: string;
       events: CitedEvent[];
       proposal?: Proposal;
+      /** Spec 036: what was created or proposed in this answer. */
+      actions?: AssistantAction[];
       remaining: number;
     }
+  /** Spec 036 (plan D12): sent as soon as something is written or proposed. */
+  | { type: "action"; action: AssistantAction }
   /** A failure once the stream has started; `retry` offers "Reintentar". */
   | { type: "error"; text: string; retry: boolean };
 
@@ -27,7 +32,35 @@ export const STATUS = {
   writing: "Escribiendo la respuesta…",
   image: "Leyendo la imagen…",
   proposal: "Revisando la propuesta…",
+  creating: "Creando el evento…",
+  change: "Preparando el cambio…",
 } as const;
+
+/** The first title of a create_events call, for "Creando «…»…" (spec 036 RF-46). */
+function firstTitle(args: string): string {
+  try {
+    const parsed: unknown = JSON.parse(args);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      "events" in parsed &&
+      Array.isArray(parsed.events)
+    ) {
+      const first: unknown = parsed.events[0];
+      if (
+        first &&
+        typeof first === "object" &&
+        "title" in first &&
+        typeof first.title === "string"
+      ) {
+        return first.title.trim().slice(0, 40);
+      }
+    }
+  } catch {
+    // A malformed call: the tool will say so; the status stays generic.
+  }
+  return "";
+}
 
 /** The step a tool call stands for, in the user's words. */
 export function statusFor(tool: string, args: string): string {
@@ -48,6 +81,11 @@ export function statusFor(tool: string, args: string): string {
     }
     return query ? `Buscando «${query}»…` : "Buscando en tus eventos…";
   }
+  if (tool === "create_events") {
+    const title = firstTitle(args);
+    return title ? `Creando «${title}»…` : STATUS.creating;
+  }
+  if (tool === "propose_changes") return STATUS.change;
   if (tool === "find_free_time") return STATUS.free;
   if (tool === "get_comments") return STATUS.comments;
   return STATUS.events;
@@ -78,6 +116,7 @@ export async function* readLines(
         "type" in line &&
         (line.type === "status" ||
           line.type === "done" ||
+          line.type === "action" ||
           line.type === "error")
       ) {
         return line as StreamLine;
