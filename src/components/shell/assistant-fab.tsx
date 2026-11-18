@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   lazy,
   Suspense,
@@ -35,6 +35,7 @@ const CLOSE_SWIPE_PX = 80;
  */
 export function AssistantFab() {
   const pathname = usePathname();
+  const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const warmed = useRef(false);
@@ -192,6 +193,8 @@ export function AssistantFab() {
               <Chat
                 loadContext={opened ? loadAssistantContext : undefined}
                 onClose={close}
+                // Spec 036 RF-38 (plan D11): what Venito wrote shows behind.
+                onChanged={() => router.refresh()}
                 onActivity={(state) =>
                   // A reply that arrives with the chat on screen is seen.
                   setActivity(

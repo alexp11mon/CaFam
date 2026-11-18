@@ -12,8 +12,14 @@ import {
 import { AssistantFab } from "@/components/shell/assistant-fab";
 
 // Venito's button and the chat panel (spec 015 RF-39; spec 027 RF-2, RF-3).
-const navigation = vi.hoisted(() => ({ pathname: "/dashboard/calendar" }));
-vi.mock("next/navigation", () => ({ usePathname: () => navigation.pathname }));
+const navigation = vi.hoisted(() => ({
+  pathname: "/dashboard/calendar",
+  refresh: () => {},
+}));
+vi.mock("next/navigation", () => ({
+  usePathname: () => navigation.pathname,
+  useRouter: () => ({ refresh: navigation.refresh }),
+}));
 vi.mock("@/app/dashboard/assistant/context-actions", () => ({
   loadAssistantContext: async () => ({
     timeZone: "Europe/Madrid",

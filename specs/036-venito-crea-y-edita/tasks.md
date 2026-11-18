@@ -70,7 +70,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
 
   Cubre: RF-40, RF-42, RF-43, RF-44, RF-46 | Módulo: run, route (D2, D6, D12)
   Evidencia (2026-11-18): `assistant-run` (6 nuevos), `assistant-route` (3 nuevos) y `assistant-run-tool` (3) en verde, primero en rojo. Sin intención de escribir, o sin dependencias de escritura, no se ofrecen las herramientas; con ella se ofrecen junto con los calendarios escribibles del prompt; una ronda con escritura va en serie; los `notice` de cada resultado llegan a la respuesta; la ruta manda una línea `action` por tarjeta y las repite en `done.actions`, da a `writeTools` la sesión, la zona y `request.signal`, y cuenta una sola pregunta. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 296 archivos y 2.915 tests, build.
-- [ ] T7 Tarjetas en el chat
+- [x] T7 Tarjetas en el chat
   Hecho cuando: `npm test -- assistant-action-card assistant-chat-actions` en verde.
   - Tarjeta de evento creado con su referencia, "Abrir" y "Deshacer", y el estado "Deshecho".
   - Tarjeta de cambio con "Ahora" y "Quedará", "Confirmar" y "Cancelar", y los estados aplicado, cancelado y sustituido.
@@ -82,6 +82,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
   - Etiquetas para lectores de pantalla y botones de 44 px.
 
   Cubre: RF-17, RF-24 a RF-24d, RF-32 a RF-38, RF-44, RF-45 | Módulo: action-card, assistant-chat, assistant-fab (D5, D10, D11, D12)
+  Evidencia (2026-11-18): `assistant-action-card` (9) y `assistant-chat-actions` (7) en verde, primero en rojo. La tarjeta de evento creado muestra su referencia («Al acabar PIAE (…)»), "Abrir" y "Deshacer"; la de cambio, "Ahora" y "Quedará", el alcance y la pérdida de la serie, "Confirmar" y "Cancelar", y los estados aplicado, cancelado, sustituido, deshecho y no aplicado. "sí" y "no" se resuelven sin llamar a la API; otro texto cancela o sustituye el pendiente; el hilo enviado lleva el resumen de las tarjetas; al cancelar con tarjetas recibidas, se conservan con "He parado. Esto ya estaba hecho:"; `onChanged` (en el marco, `router.refresh()`) tras crear, confirmar o deshacer. El saludo del chat dice ya que Venito crea y cambia eventos. La prueba en el navegador va con las capturas de la T10. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 298 archivos y 2.931 tests, build.
 - [ ] T8 Privacidad
   Hecho cuando: `npm test -- privacy` en verde con la frase nueva de la sección del asistente. Cubre: RF-48 | Módulo: privacy
 - [ ] T9 Evaluación de escritura

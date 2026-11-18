@@ -35,6 +35,9 @@ import {
   type Suggestion,
 } from "@/lib/assistant/suggestions";
 import { prepareForAssistant } from "@/lib/images/prepare-image";
+import { describeAction, type AssistantAction } from "@/lib/assistant/actions";
+import { isNo, isYes } from "@/lib/assistant/write-intent";
+import { ActionCard, runCardStep, type ChatAction } from "./action-card";
 import { CitedEvents } from "./cited-events";
 import {
   AttachNote,
@@ -57,6 +60,8 @@ interface Message {
   /** Spec 022 RF-11: the images sent with this message, as data URLs. */
   images?: string[];
   proposal?: ChatProposal;
+  /** Spec 036: what Venito created or proposes in this answer. */
+  actions?: ChatAction[];
 }
 
 /** Spec 022: a proposal in the thread; only the last pending one is live. */
@@ -75,6 +80,29 @@ export interface ChatCalendar {
 /** When a message was sent or arrived; only ever called from handlers. */
 const clock = () => Date.now();
 
+/** Spec 036: a fresh card for an action that just arrived. */
+const cardOf = (action: AssistantAction): ChatAction => ({
+  action,
+  status: action.kind === "created" ? "done" : "pending",
+});
+
+const pendingChange = (card: ChatAction) =>
+  card.action.kind === "change" &&
+  (card.status === "pending" || card.status === "failed");
+
+/** Plan D10: the cards travel inside Venito's words, one line each. */
+function threadContent(message: Message, timeZone: string): string {
+  if (message.role !== "assistant" || !message.actions?.length) {
+    return message.content;
+  }
+  return [
+    message.content,
+    ...message.actions.map((card) =>
+      describeAction(card.action, timeZone, card.status),
+    ),
+  ].join("\n");
+}
+
 /** What the chat needs from the account, read after it is on screen. */
 export interface ChatContext {
   timeZone: string;
@@ -87,7 +115,10 @@ export function AssistantChat({
   loadContext,
   onClose,
   onActivity,
+  onChanged,
 }: {
+  /** Spec 036 RF-38: Venito wrote something; the calendar must refresh. */
+  onChanged?: () => void;
   /** In the panel: its "Cerrar" (spec 027 RF-2). The full page has none. */
   onClose?: () => void;
   /** Tells the button of Venito that an answer is on its way, or has come. */
@@ -204,9 +235,24 @@ export function AssistantChat({
       at: clock(),
       ...(attached.length ? { images } : {}),
     };
+    // Spec 036 D5: a plain "sí" or "no" to a pending change needs no Venito.
+    const waiting = messages.flatMap((message) =>
+      (message.actions ?? []).filter(pendingChange),
+    );
+    if (
+      waiting.length > 0 &&
+      attached.length === 0 &&
+      (isYes(question) || isNo(question))
+    ) {
+      await answerPending(asked, isYes(question) ? "confirm" : "cancel", text);
+      return;
+    }
     // Plan D2: images travel only with the last message.
     const thread = [
-      ...messages.map(({ role, content }) => ({ role, content })),
+      ...messages.map((message) => ({
+        role: message.role,
+        content: threadContent(message, timeZone),
+      })),
       { role: "user", content: question, ...(images.length ? { images } : {}) },
     ].slice(-MAX_MESSAGES);
     // RF-33: a correction carries the proposal as the user left it.
@@ -223,12 +269,31 @@ export function AssistantChat({
     setPending(true);
     onActivity?.("thinking");
     let answered = false;
+    // Spec 036 D12: cards that arrived before the answer, kept on cancel.
+    const arrived: ChatAction[] = [];
     const abort = new AbortController();
     controller.current = abort;
 
     // On failure or cancel the question and its images go back (RF-4, RF-28;
     // spec 022 RF-54, RF-55).
     const giveBack = () => {
+      if (arrived.length > 0) {
+        // RF-44: part of it is done: say so instead of giving it back.
+        answered = true;
+        setMessages((current) => [
+          ...current,
+          {
+            role: "assistant",
+            content: "He parado. Esto ya estaba hecho:",
+            at: clock(),
+            actions: arrived,
+          },
+        ]);
+        if (arrived.some((card) => card.action.kind === "created")) {
+          onChanged?.();
+        }
+        return;
+      }
       setMessages((current) => current.filter((message) => message !== asked));
       setDraft(text);
       setAttachments(attached);
@@ -264,6 +329,7 @@ export function AssistantChat({
       } else if (response.body) {
         for await (const line of readLines(response.body)) {
           if (line.type === "status") setStatus(line.text);
+          else if (line.type === "action") arrived.push(cardOf(line.action));
           else if (line.type === "done") body = line;
           else if (line.type === "error") failed = line;
         }
@@ -279,21 +345,44 @@ export function AssistantChat({
       }
       answered = true;
       const proposal: Proposal | undefined = body.proposal;
+      const cards = (body.actions ?? arrived.map((card) => card.action)).map(
+        cardOf,
+      );
+      const newChange = cards.some((card) => card.action.kind === "change");
       // Plan D2: the assistant asked something before proposing.
       carried.current = !proposal && images.length ? images : [];
       setMessages((current) => [
         // RF-34: a new proposal replaces the pending one.
-        ...current.map((message) =>
-          proposal && message.proposal?.status === "pending"
+        ...current.map((message) => {
+          const replaced =
+            proposal && message.proposal?.status === "pending"
+              ? {
+                  ...message,
+                  proposal: {
+                    ...message.proposal,
+                    status: "superseded" as const,
+                  },
+                }
+              : message;
+          // Spec 036 RF-24b, RF-24c: a pending change is replaced by a new
+          // one, or dropped when the user asked something else.
+          return replaced.actions?.some(pendingChange)
             ? {
-                ...message,
-                proposal: {
-                  ...message.proposal,
-                  status: "superseded" as const,
-                },
+                ...replaced,
+                actions: replaced.actions.map((card) =>
+                  pendingChange(card)
+                    ? {
+                        ...card,
+                        status: newChange
+                          ? ("superseded" as const)
+                          : ("cancelled" as const),
+                        error: undefined,
+                      }
+                    : card,
+                ),
               }
-            : message,
-        ),
+            : replaced;
+        }),
         {
           role: "assistant",
           content: body.answer,
@@ -302,8 +391,10 @@ export function AssistantChat({
           ...(proposal
             ? { proposal: { ...proposal, status: "pending" as const } }
             : {}),
+          ...(cards.length ? { actions: cards } : {}),
         },
       ]);
+      if (cards.some((card) => card.action.kind === "created")) onChanged?.();
     } catch {
       giveBack();
       if (!abort.signal.aborted) setError({ text: NETWORK_TEXT, retry: true });
@@ -311,6 +402,72 @@ export function AssistantChat({
       if (controller.current === abort) controller.current = null;
       setPending(false);
       onActivity?.(answered ? "answered" : "idle");
+      field.current?.focus();
+    }
+  }
+
+  /** Spec 036 D5: "sí" confirms and "no" cancels the pending changes. */
+  async function answerPending(
+    asked: Message,
+    step: "confirm" | "cancel",
+    text: string,
+  ) {
+    setFieldError(undefined);
+    setError(undefined);
+    setDraft("");
+    setMessages((current) => [...current, asked]);
+    const steps: Promise<{ index: number; key: string; card: ChatAction }>[] =
+      [];
+    messages.forEach((message, index) => {
+      for (const card of message.actions ?? []) {
+        if (pendingChange(card)) {
+          steps.push(
+            runCardStep(card, step)
+              .catch(() => ({ ...card, error: NETWORK_TEXT }))
+              .then((next) => ({ index, key: card.action.key, card: next })),
+          );
+        }
+      }
+    });
+    setPending(true);
+    try {
+      const done = await Promise.all(steps);
+      const applied = done.filter(
+        ({ card }) => card.status === "applied",
+      ).length;
+      const failed = done.find(({ card }) => card.error)?.card.error;
+      setMessages((current) => [
+        ...current.map((message, index) => {
+          const mine = done.filter((step) => step.index === index);
+          return mine.length && message.actions
+            ? {
+                ...message,
+                actions: message.actions.map(
+                  (card) =>
+                    mine.find((step) => step.key === card.action.key)?.card ??
+                    card,
+                ),
+              }
+            : message;
+        }),
+        {
+          role: "assistant",
+          content:
+            step === "cancel"
+              ? "Vale, no lo cambio."
+              : failed
+                ? `No he podido aplicar el cambio: ${failed}`
+                : applied > 1
+                  ? "Hecho: he aplicado los cambios."
+                  : "Hecho: he aplicado el cambio.",
+          at: clock(),
+        },
+      ]);
+      if (applied > 0) onChanged?.();
+    } catch {
+      setDraft(text);
+    } finally {
+      setPending(false);
       field.current?.focus();
     }
   }
@@ -417,9 +574,10 @@ export function AssistantChat({
             <p className="text-lg font-semibold text-ink">¡Hola! Soy Venito</p>
             {/* RF-33 of spec 015: say where the data goes before the first question. */}
             <p className="text-sm text-muted">
-              Pregúntame por tus eventos o por cuándo estáis libres. Tus
-              preguntas y los eventos necesarios para responderlas se envían a
-              Groq, que no los usa para entrenar. Más detalles en la{" "}
+              Pregúntame por tus eventos o por cuándo estáis libres, o pídeme
+              que cree o cambie uno. Tus preguntas y los eventos necesarios para
+              responderlas se envían a Groq, que no los usa para entrenar. Más
+              detalles en la{" "}
               <Link
                 href="/privacy"
                 className="font-semibold text-ink underline decoration-control underline-offset-4"
@@ -476,6 +634,30 @@ export function AssistantChat({
                       events={message.events ?? []}
                       timeZone={timeZone}
                     />
+                    {message.actions?.map((card) => (
+                      <ActionCard
+                        key={card.action.key}
+                        card={card}
+                        timeZone={timeZone}
+                        onChanged={onChanged}
+                        onChange={(next) =>
+                          setMessages((current) =>
+                            current.map((item, i) =>
+                              i === index && item.actions
+                                ? {
+                                    ...item,
+                                    actions: item.actions.map((other) =>
+                                      other.action.key === card.action.key
+                                        ? next
+                                        : other,
+                                    ),
+                                  }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                    ))}
                     {message.proposal ? (
                       <ProposalCard
                         proposal={message.proposal}
