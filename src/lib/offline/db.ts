@@ -5,13 +5,17 @@ import type { OfflineChange, OutboxEntry } from "./outbox";
 import { isUsable, SNAPSHOT_FORMAT, type Snapshot } from "./snapshot";
 
 export const DB_NAME = "cafam-offline";
-const VERSION = 1;
+// Version 2 (spec 035): thumbnails, opened images and images added offline.
+const VERSION = 2;
 export const STORES = [
   "meta",
   "snapshot",
   "outbox",
   "conflicts",
   "rejected",
+  "thumbs",
+  "images",
+  "pending-images",
 ] as const;
 type Store = (typeof STORES)[number];
 
@@ -34,6 +38,25 @@ export interface Meta {
   format: number;
   userId: string;
   savedAt: string;
+}
+
+/** An image added offline, reduced as always, waiting to go up (spec 035 RF-32). */
+export interface PendingImage {
+  localId: string;
+  eventId: string;
+  full: Blob;
+  thumb: Blob;
+  width: number;
+  height: number;
+  bytes: number;
+  /** The reservation, saved before uploading so a retry reuses it (D7, RF-41). */
+  reservedId: string | null;
+}
+
+/** A full image opened with a connection, kept for offline (D10). */
+export interface CachedImage {
+  blob: Blob;
+  usedAt: number;
 }
 
 export interface OfflineState {
@@ -152,6 +175,96 @@ export function removeRejected(changeId: string): Promise<void> {
   return transact(["rejected"], "readwrite", (tx) => {
     tx.objectStore("rejected").delete(changeId);
   });
+}
+
+function getOne<T>(store: Store, key: string): Promise<T | undefined> {
+  return transact([store], "readonly", (tx) => {
+    const request = tx.objectStore(store).get(key);
+    return () => request.result as T | undefined;
+  });
+}
+
+function keysOf(store: Store): Promise<string[]> {
+  return transact([store], "readonly", (tx) => {
+    const request = tx.objectStore(store).getAllKeys();
+    return () => request.result as string[];
+  });
+}
+
+function putOne(store: Store, key: string, value: unknown): Promise<void> {
+  return transact([store], "readwrite", (tx) => {
+    tx.objectStore(store).put(value, key);
+  });
+}
+
+function deleteMany(store: Store, keys: readonly string[]): Promise<void> {
+  return transact([store], "readwrite", (tx) => {
+    for (const key of keys) tx.objectStore(store).delete(key);
+  });
+}
+
+export const getThumb = (id: string) => getOne<Blob>("thumbs", id);
+export const thumbIds = () => keysOf("thumbs");
+export const putThumb = (id: string, blob: Blob) => putOne("thumbs", id, blob);
+export const deleteThumbs = (ids: readonly string[]) =>
+  deleteMany("thumbs", ids);
+
+export const getCachedImage = (id: string) => getOne<CachedImage>("images", id);
+export const putCachedImage = (id: string, image: CachedImage) =>
+  putOne("images", id, image);
+export const deleteCachedImages = (ids: readonly string[]) =>
+  deleteMany("images", ids);
+/** Ids and last use of the opened images, to drop the oldest (D10). */
+export function cachedImageUses(): Promise<{ id: string; usedAt: number }[]> {
+  return transact(["images"], "readonly", (tx) => {
+    const keys = tx.objectStore("images").getAllKeys();
+    const values = tx.objectStore("images").getAll();
+    return () =>
+      (keys.result as string[]).map((id, i) => ({
+        id,
+        usedAt: (values.result[i] as CachedImage).usedAt,
+      }));
+  });
+}
+
+export const getPendingImage = (localId: string) =>
+  getOne<PendingImage>("pending-images", localId);
+export function pendingImages(): Promise<PendingImage[]> {
+  return transact(["pending-images"], "readonly", (tx) => {
+    const request = tx.objectStore("pending-images").getAll();
+    return () => request.result as PendingImage[];
+  });
+}
+export const deletePendingImages = (localIds: readonly string[]) =>
+  deleteMany("pending-images", localIds);
+
+/** Whether a write failed because the device is full (R4). */
+export function isQuotaError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { name?: unknown }).name === "QuotaExceededError"
+  );
+}
+
+/** Keeps an image added offline; false when the device has no room (R4). */
+export async function savePendingImage(image: PendingImage): Promise<boolean> {
+  try {
+    await putOne("pending-images", image.localId, image);
+    return true;
+  } catch (error) {
+    if (isQuotaError(error)) return false;
+    throw error;
+  }
+}
+
+/** The reservation of a pending image, before its upload (D7). */
+export async function setReservedId(
+  localId: string,
+  reservedId: string | null,
+): Promise<void> {
+  const image = await getPendingImage(localId);
+  if (image) await putOne("pending-images", localId, { ...image, reservedId });
 }
 
 /** Nothing of the user stays on the device (RF-62, RF-65). */

@@ -59,7 +59,7 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 
   Evidencia (2026-11-18): `npm run test:db -- offline-snapshot` 6 en verde, con una excepción, 52 comentarios (quedan los 50 últimos, el último editado), imágenes `ready` y `pending` y un evento de Sam que Ana no ve. Lo nuevo está en `app/dashboard/offline-reads-detail.ts` (`seriesOf`, `commentsOf`, `imagesOf`), con lecturas por trozos de 150 ids y páginas de 1.000. Los totales cuentan todas las excepciones de la serie, también fuera del rango (D3). Cada imagen lleva su `objectId` para descargar la miniatura. `SNAPSHOT_FORMAT` pasa a 2: `offline-db.test.ts` comprueba que una copia de formato 1 se descarta y la cola se conserva. El test de RF-66 de la 034 ya no prohíbe comentarios e imágenes, que la 035 guarda a propósito. Verificación completa en verde y `npm run test:db` entero: 51 archivos, 573 tests.
 
-- [ ] T4 Guardar miniaturas, imágenes abiertas e imágenes pendientes en el dispositivo (`db.ts` versión 2, `thumbs.ts`, `image-cache.ts`)
+- [x] T4 Guardar miniaturas, imágenes abiertas e imágenes pendientes en el dispositivo (`db.ts` versión 2, `thumbs.ts`, `image-cache.ts`)
   Hecho cuando: `npm test -- offline-db offline-thumbs offline-image-cache` en verde, con el IndexedDB en memoria de los tests de la 034. Los tests cubren:
   - el paso de la versión 1 a la 2 sin perder la cola;
   - descargar solo las miniaturas que faltan, 4 a la vez, y borrar las que ya no están;
@@ -69,6 +69,8 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
   - un `QuotaExceededError` se avisa sin guardar.
 
   Cubre: RF-29, RF-31, RF-35, RF-41, RF-47 | Módulo: db, thumbs, image-cache
+
+  Evidencia (2026-11-18): `npm test -- offline-db offline-thumbs offline-image-cache` 15 en verde. El IndexedDB en memoria de los tests ahora conoce versiones (el paso de la 1 a la 2 crea los tres almacenes nuevos y conserva la cola), guarda los `Blob` sin clonarlos (jsdom no sabe) y simula un disco lleno (`quotaExceeded`). `syncThumbs` descarga por `objectId`, nunca más de 4 a la vez (medido en el test), y borra las que ya no están. La caché de imágenes grandes guarda 30 y sale la usada hace más tiempo; abrir una la marca como usada. `savePendingImage` devuelve `false` con el disco lleno y `rememberImage` lo ignora. Verificación completa en verde (316 archivos, 2.962 tests).
 
 - [ ] T5 Leer un evento en Google e iCloud (`readEvent`, `read-event.ts`)
   Hecho cuando: `npm test -- google-read-event icloud-read-event` en verde con respuestas sintéticas en `tests/fixtures/sync/`. Los tests cubren:
