@@ -23,12 +23,12 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - `EXPLAIN` con 20.000 eventos sembrados usa los índices (anotado en la evidencia).
 
   Cubre: RF-3, RF-4, RF-11, RNF-1 | Evidencia: migración `20261120100000_event_search` aplicada en dev y tipos regenerados; `npm run test:db -- event-search` 4/4; `EXPLAIN ANALYZE` con 20.000 eventos sembrados en una transacción deshecha (`supabase db query --linked`): `Bitmap Index Scan on events_search_idx`, 6,4 ms; P8 en verde.
-- [ ] T3 `searchEvents` con series
+- [x] T3 `searchEvents` con series
   Hecho cuando: `npm test -- search-queries` (con Supabase simulado) en verde.
   - Una serie semanal que coincide da sus repeticiones del periodo; una excepción con otro título solo cuando coincide la excepción.
   - Máximo 100 con `more: true`; "Buscar más atrás" amplía `from` 2 años.
 
-  Cubre: RF-5, RF-8 | Evidencia: —
+  Cubre: RF-5, RF-8 | Evidencia: `npm test -- search-queries` 6/6 con Supabase simulado (serie semanal sin la repetición renombrada, excepción que coincide, 100 con `more`, `searchRange` y "Buscar más atrás"); P8 en verde (3.220 tests).
 - [ ] T4 Pantalla de búsqueda y accesos
   Hecho cuando: `npm test -- search-screen calendar-heading top-nav shortcuts` en verde y capturas a 390, 768 y 1440 px en claro y oscuro (Violeta y Ámbar) en `capturas/`.
   - Campo enfocado, espera de 350 ms, estados (recientes, buscando, vacío, error con "Reintentar"), agrupado, "Oculto en el calendario", extracto del comentario, `aria-live`.
