@@ -9,6 +9,8 @@ import { pickEvent } from "@/lib/assistant/event-pick";
 import {
   createEventsArgsSchema,
   MAX_WRITES,
+  proposeChangesArgsSchema,
+  type ChangeArgs,
   type CreateEventArgs,
 } from "@/lib/assistant/schemas";
 import {
@@ -17,13 +19,29 @@ import {
   type EventLike,
 } from "@/lib/assistant/tools";
 import { resolveTimes, type Times } from "@/lib/assistant/write-times";
-import { getMyCalendars, getViewOptions } from "@/lib/calendar/queries";
+import {
+  getEvent,
+  getMyCalendars,
+  getViewOptions,
+  type CalendarRecord,
+  type EventRecord,
+} from "@/lib/calendar/queries";
+import { planSeriesChange } from "@/lib/recurrence/series-write";
 import { formatTime, zonedDateKey } from "@/lib/calendar/time-zone";
 import { providerName } from "@/lib/sync/provider-labels";
-import { canWriteEvents, readOnlyReason } from "@/lib/sync/read-only";
+import {
+  canWriteEvents,
+  moveTargets,
+  readOnlyReason,
+} from "@/lib/sync/read-only";
 import type { ProviderName } from "@/lib/sync/providers/types";
-import { createSingle, toRow, type Supabase } from "../events/event-writes";
-import { updatedAtOf } from "../events/quick-writes";
+import {
+  createSingle,
+  toRow,
+  unconfirmedLoss,
+  type Supabase,
+} from "../events/event-writes";
+import { seriesValues, updatedAtOf } from "../events/quick-writes";
 
 // Spec 036: the write tools of the assistant (plan "assistant-writes", D1,
 // D3). Not a "use server" file: nothing here is an endpoint. Everything goes
@@ -46,6 +64,7 @@ export interface WriteToolsContext {
 interface WritableCalendar extends MatchableCalendar {
   color: string;
   provider: ProviderName | null;
+  record: CalendarRecord;
 }
 
 type ToolAnswer = Record<string, unknown> & { status: string };
@@ -141,6 +160,7 @@ export function writeTools(ctx: WriteToolsContext) {
             ? "viewer"
             : readOnlyReason(calendar.synced),
         provider: calendar.synced?.provider ?? null,
+        record: calendar,
       })),
     ));
   const loadDefault = () =>
@@ -306,27 +326,244 @@ export function writeTools(ctx: WriteToolsContext) {
     };
   }
 
+  /** RF-28: why this event cannot be changed, or null. */
+  function cannotChange(
+    event: EventRecord,
+    calendar: WritableCalendar | undefined,
+  ): ToolAnswer | null {
+    if (calendar?.writable) return null;
+    const why = !calendar
+      ? "ya no lo ves"
+      : calendar.reason === "provider"
+        ? `la cuenta de ${providerName(calendar.provider ?? "google")} solo puede ver «${calendar.name}»`
+        : calendar.reason === "reconnect"
+          ? `hay que volver a conectar la cuenta de «${calendar.name}»`
+          : `solo puedes ver «${calendar.name}»`;
+    return {
+      status: "forbidden",
+      notice: `No puedes cambiar «${event.title}»: ${why}.`,
+    };
+  }
+
+  const cardOf = (
+    event: Pick<
+      EventRecord,
+      "id" | "title" | "startsAt" | "endsAt" | "allDay" | "location"
+    >,
+    calendar: WritableCalendar,
+  ) => ({
+    id: event.id,
+    title: event.title,
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    allDay: event.allDay,
+    calendarName: calendar.name,
+    color: calendar.color,
+    location: event.location,
+  });
+
+  async function proposeOne(input: ChangeArgs): Promise<ToolAnswer> {
+    if (ctx.signal?.aborted) return { status: "cancelled" };
+    const target = await anchorOf(input.event, input.eventDate ?? null);
+    if (!target.ok) return target.answer;
+    const event = await getEvent(ctx.supabase, target.event.id);
+    if (!event) return { status: "event_not_found", title: input.event };
+    const all = await loadCalendars();
+    const source = all.find((calendar) => calendar.id === event.calendarId);
+    const forbidden = cannotChange(event, source);
+    if (forbidden || !source) return forbidden!;
+
+    // RF-27: only where an event of this calendar may go (spec 009, 018).
+    let destination = source;
+    if (input.calendar) {
+      const match = matchCalendar(input.calendar, all);
+      const problem = calendarProblem(match, all, "mover");
+      if (problem || match.status !== "ok") return problem!;
+      const allowed = moveTargets(
+        source.record,
+        all.map((calendar) => calendar.record),
+      );
+      if (!allowed.some((calendar) => calendar.id === match.calendar.id)) {
+        return {
+          status: "cannot_move",
+          notice: `No puedo mover «${event.title}» a «${match.calendar.name}»: los eventos de una cuenta de Google o iCloud solo se mueven entre calendarios de esa cuenta, y los de CaFam entre calendarios de CaFam.`,
+        };
+      }
+      destination = match.calendar;
+    }
+
+    const anchorDay = input.anchorDate ?? input.date ?? null;
+    let after: EventLike | undefined;
+    let before: EventLike | undefined;
+    if (input.after) {
+      const found = await anchorOf(input.after, anchorDay);
+      if (!found.ok) return found.answer;
+      after = found.event;
+    }
+    if (input.before) {
+      const found = await anchorOf(input.before, anchorDay);
+      if (!found.ok) return found.answer;
+      before = found.event;
+    }
+    const times = resolveTimes(input, {
+      timeZone: ctx.timeZone,
+      defaultMinutes: await loadDefault(),
+      base: event,
+      after,
+      before,
+    });
+    if (times.status === "end_before_start") {
+      return {
+        status: times.status,
+        notice: `La hora de fin (${times.end}) no es posterior a la de inicio (${times.start}): no he preparado el cambio de «${event.title}».`,
+      };
+    }
+    if (times.status !== "ok") return { status: times.status };
+
+    const fields = {
+      title: input.title ?? event.title,
+      description:
+        input.description === undefined || input.description === null
+          ? event.description
+          : input.description || null,
+      location:
+        input.location === undefined || input.location === null
+          ? event.location
+          : input.location || null,
+      calendarId: destination.id,
+      startsAt: times.startsAt,
+      endsAt: times.endsAt,
+      allDay: times.allDay,
+    };
+    const same =
+      fields.title === event.title &&
+      fields.description === event.description &&
+      fields.location === event.location &&
+      fields.calendarId === event.calendarId &&
+      Date.parse(fields.startsAt) === Date.parse(event.startsAt) &&
+      Date.parse(fields.endsAt) === Date.parse(event.endsAt) &&
+      fields.allDay === event.allDay;
+    if (same) return { status: "no_change" };
+
+    // RF-29: an occurrence changes alone unless the user says otherwise.
+    const scope = event.series ? (input.scope ?? "this") : null;
+    let loss: Awaited<ReturnType<typeof unconfirmedLoss>> = null;
+    if (event.series && scope) {
+      const data = {
+        ...fields,
+        color: event.color,
+        categoryId:
+          fields.calendarId === event.calendarId ? event.categoryId : null,
+      };
+      const values = seriesValues(event, data, ctx.timeZone);
+      const plan = planSeriesChange({
+        series: event.series,
+        occurrence: event,
+        row: toRow(data),
+        repeat: values.repeat,
+        startDate: values.startDate,
+        scope,
+        timeZone: ctx.timeZone,
+      });
+      if (plan.kind === "error") {
+        return {
+          status: "failed",
+          notice: `No puedo cambiar «${event.title}» así: ${plan.message}`,
+        };
+      }
+      // RF-30: shown on the card; confirming it confirms the loss (D9).
+      loss = await unconfirmedLoss(
+        ctx.supabase,
+        event.series.id,
+        plan.loss,
+        false,
+      );
+    }
+
+    const updatedAt = await updatedAtOf(
+      ctx.supabase,
+      event.rowId ?? event.series?.id ?? event.id,
+    );
+    const ref = ctx.refs.add({
+      id: event.id,
+      title: event.title,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      allDay: event.allDay,
+      calendarName: source.name,
+      color: source.color,
+    });
+    ctx.onAction({
+      kind: "change",
+      key: crypto.randomUUID(),
+      before: cardOf(event, source),
+      after: cardOf({ ...fields, id: event.id }, destination),
+      scope,
+      ...(loss ? { loss } : {}),
+      change: { id: event.id, scope, updatedAt, fields },
+    });
+    return {
+      status: "proposed",
+      ref,
+      title: fields.title,
+      before: modelTimes(event, ctx.timeZone),
+      after: modelTimes(times, ctx.timeZone),
+      calendar: destination.name,
+    };
+  }
+
+  /** Shared by both tools: too many, malformed, or one by one in order (D3, D6). */
+  async function each<T>(
+    args: unknown,
+    key: "events" | "changes",
+    parse: (args: unknown) => { success: true; data: T[] } | { success: false },
+    run: (input: T) => Promise<ToolAnswer>,
+  ): Promise<ToolAnswer> {
+    const raw =
+      args && typeof args === "object" && key in args
+        ? (args as Record<string, unknown>)[key]
+        : null;
+    if (Array.isArray(raw) && raw.length > MAX_WRITES) {
+      return { status: "too_many", notice: WRITE_TEXTS.tooMany };
+    }
+    const parsed = parse(args);
+    if (!parsed.success) return { status: "invalid_arguments" };
+    if (!reserve(parsed.data.length)) {
+      return { status: "too_many", notice: WRITE_TEXTS.tooMany };
+    }
+    const results: ToolAnswer[] = [];
+    for (const input of parsed.data) results.push(await run(input));
+    return results.length === 1 ? results[0]! : { status: "done", results };
+  }
+
   return {
     /** RF-1 to RF-23: creates 1 to 3 events right away. */
     async create_events(args: unknown): Promise<ToolAnswer> {
-      const raw =
-        args && typeof args === "object" && "events" in args
-          ? args.events
-          : null;
-      if (Array.isArray(raw) && raw.length > MAX_WRITES) {
-        return { status: "too_many", notice: WRITE_TEXTS.tooMany };
-      }
-      const parsed = createEventsArgsSchema.safeParse(args);
-      if (!parsed.success) return { status: "invalid_arguments" };
-      if (!reserve(parsed.data.events.length)) {
-        return { status: "too_many", notice: WRITE_TEXTS.tooMany };
-      }
-      // One by one, in order: the cards follow what was asked (D6).
-      const results: ToolAnswer[] = [];
-      for (const input of parsed.data.events) {
-        results.push(await createOne(input));
-      }
-      return results.length === 1 ? results[0]! : { status: "done", results };
+      return each(
+        args,
+        "events",
+        (value) => {
+          const parsed = createEventsArgsSchema.safeParse(value);
+          return parsed.success
+            ? { success: true, data: parsed.data.events }
+            : { success: false };
+        },
+        createOne,
+      );
+    },
+    /** RF-24 to RF-30: prepares 1 to 3 changes; nothing is written (D4). */
+    async propose_changes(args: unknown): Promise<ToolAnswer> {
+      return each(
+        args,
+        "changes",
+        (value) => {
+          const parsed = proposeChangesArgsSchema.safeParse(value);
+          return parsed.success
+            ? { success: true, data: parsed.data.changes }
+            : { success: false };
+        },
+        proposeOne,
+      );
     },
   };
 }

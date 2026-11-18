@@ -50,7 +50,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
 
   Cubre: RF-1 a RF-23, RF-39, RF-41, RF-42, RF-44 | Módulo: assistant-writes, tools (D1, D3)
   Evidencia (2026-11-18): `assistant-writes` (14, unitarios con dependencias simuladas) en verde, primero en rojo (módulo inexistente). `npm run test:db -- assistant proposed` en verde contra un Supabase local (4 archivos, 42 tests: `assistant-writes` 5 nuevos, más `assistant-tools`, `assistant` y `proposed-events` tras extraer `findEventsByTitle`/`toFound` de `search_events`). La semilla de la serie necesitó `BYDAY`: una regla semanal sin él no da repeticiones (la app siempre lo escribe). P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 294 archivos y 2.890 tests, build.
-- [ ] T5 Preparar, confirmar y deshacer cambios
+- [x] T5 Preparar, confirmar y deshacer cambios
   Hecho cuando: `npm test -- assistant-write-actions` y `npm run test:db -- assistant-writes` en verde.
   - `proposeChanges` no escribe y devuelve antes y después (con la duración conservada al mover) y la pérdida de una serie.
   - Sin permiso, `forbidden`; un destino fuera de `moveTargets`, rechazado.
@@ -59,6 +59,7 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con la
   - `undoAssistantAction` deshace una creación y un cambio, y no lo hace si el evento cambió entretanto.
 
   Cubre: RF-24 a RF-30, RF-33 a RF-37, RF-39 | Módulo: assistant-writes, write-actions (D4, D7, D8, D9)
+  Evidencia (2026-11-18): `assistant-writes` (8 nuevos de `propose_changes`) y `assistant-write-actions` (5) en verde, primero en rojo. `npm run test:db -- assistant proposed` en verde contra Supabase local (4 archivos, 47 tests; `assistant-writes` con 5 nuevos): nada se escribe hasta confirmar, se aplica y se deshace, un cambio ajeno entre medias impide aplicarlo, una sola repetición de PIAE (excepción creada y deshecha), una creación se deshace salvo si alguien la tocó, y un Lector no puede confirmar. La lógica de confirmar y deshacer vive en `change-writes.ts` (sin `"use server"`) y las acciones en `write-actions.ts`; `seriesValues` de `quick-writes.ts` pasa a exportarse. Las series de prueba usan la regla canónica (`INTERVAL=1`): con otra, `planSeriesChange` cree que cambió la regla. P8 en verde: typecheck, lint 0 errores (1 aviso previo), format:check, `npm test` 295 archivos y 2.903 tests, build.
 - [ ] T6 Bucle y ruta con escritura
   Hecho cuando: `npm test -- assistant-run assistant-route` en verde.
   - Sin intención no se ofrecen las herramientas de escritura; con ella, sí, y el prompt de escritura.

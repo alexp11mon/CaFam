@@ -383,3 +383,202 @@ describe("create_events", () => {
     });
   });
 });
+
+// Spec 036, T5: changes are prepared, never written in the loop (RF-24 to
+// RF-30; plan D4, D7, D9).
+describe("propose_changes", () => {
+  const DENTISTA = {
+    id: "d1",
+    rowId: "d1",
+    calendarId: "c-uni",
+    title: "Dentista",
+    description: null,
+    location: "Clínica",
+    startsAt: "2026-11-20T16:00:00.000Z",
+    endsAt: "2026-11-20T17:00:00.000Z",
+    allDay: false,
+    color: null,
+    categoryId: null,
+    createdBy: "u1",
+    series: null,
+  };
+
+  beforeEach(() => {
+    mocks.findEventsByTitle.mockResolvedValue([
+      {
+        id: "d1",
+        calendarId: "c-uni",
+        title: "Dentista",
+        startsAt: DENTISTA.startsAt,
+        endsAt: DENTISTA.endsAt,
+        allDay: false,
+        location: "Clínica",
+      },
+    ]);
+    mocks.getEvent.mockResolvedValue(DENTISTA);
+    mocks.updatedAtOf.mockResolvedValue("2026-11-18T08:00:00+00:00");
+  });
+
+  it("prepares the change keeping the duration, and writes nothing (RF-24, RF-26)", async () => {
+    const { tools, actions } = setup();
+    const result = await tools.propose_changes({
+      changes: [{ event: "Dentista", start: "18:00" }],
+    });
+    expect(mocks.createSingle).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      status: "proposed",
+      title: "Dentista",
+      before: { date: "2026-11-20", start: "17:00", end: "18:00" },
+      after: { date: "2026-11-20", start: "18:00", end: "19:00" },
+    });
+    expect(actions).toEqual([
+      expect.objectContaining({
+        kind: "change",
+        before: expect.objectContaining({ title: "Dentista" }),
+        after: expect.objectContaining({
+          startsAt: "2026-11-20T17:00:00.000Z",
+          endsAt: "2026-11-20T18:00:00.000Z",
+          calendarName: "Uni",
+          location: "Clínica",
+        }),
+        scope: null,
+        change: {
+          id: "d1",
+          scope: null,
+          updatedAt: "2026-11-18T08:00:00+00:00",
+          fields: {
+            title: "Dentista",
+            description: null,
+            location: "Clínica",
+            calendarId: "c-uni",
+            startsAt: "2026-11-20T17:00:00.000Z",
+            endsAt: "2026-11-20T18:00:00.000Z",
+            allDay: false,
+          },
+        },
+      }),
+    ]);
+  });
+
+  it("changes the title and moves to another calendar it may go to (RF-25, RF-27)", async () => {
+    const { tools, actions } = setup();
+    await tools.propose_changes({
+      changes: [{ event: "Dentista", title: "Dentista Ana", calendar: "Uni" }],
+    });
+    expect(actions[0]).toMatchObject({
+      change: { fields: { title: "Dentista Ana", calendarId: "c-uni" } },
+    });
+  });
+
+  it("refuses a destination of another kind: Google from a normal calendar (RF-27)", async () => {
+    const { tools, actions } = setup();
+    expect(
+      await tools.propose_changes({
+        changes: [{ event: "Dentista", calendar: "alexponmon@gmail.com" }],
+      }),
+    ).toMatchObject({ status: "cannot_move" });
+    expect(actions).toEqual([]);
+  });
+
+  it("refuses an event the user only reads (RF-28)", async () => {
+    mocks.getEvent.mockResolvedValue({ ...DENTISTA, calendarId: "c-ana" });
+    const { tools, actions } = setup();
+    expect(
+      await tools.propose_changes({
+        changes: [{ event: "Dentista", start: "18:00" }],
+      }),
+    ).toEqual({
+      status: "forbidden",
+      notice: "No puedes cambiar «Dentista»: solo puedes ver «Trabajo de Ana».",
+    });
+    expect(actions).toEqual([]);
+  });
+
+  it("says when nothing would change", async () => {
+    const { tools } = setup();
+    expect(
+      await tools.propose_changes({
+        changes: [{ event: "Dentista", start: "17:00" }],
+      }),
+    ).toEqual({ status: "no_change" });
+  });
+
+  it("changes only this occurrence of a series unless told otherwise (RF-29)", async () => {
+    mocks.getEvent.mockResolvedValue({
+      ...DENTISTA,
+      id: "s1_20261120T160000Z",
+      rowId: null,
+      series: {
+        id: "s1",
+        recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=FR",
+        recurrenceTz: TZ,
+        summary: "Cada semana el viernes",
+        originalStart: DENTISTA.startsAt,
+        changed: false,
+        exceptions: 0,
+        startsAt: "2026-11-06T16:00:00.000Z",
+        endsAt: "2026-11-06T17:00:00.000Z",
+        allDay: false,
+      },
+    });
+    const { tools, actions } = setup();
+    const result = await tools.propose_changes({
+      changes: [{ event: "Dentista", start: "18:00" }],
+    });
+    expect(result).toMatchObject({ status: "proposed" });
+    // The occurrence has no row yet: its series' updated_at guards it (D7).
+    expect(mocks.updatedAtOf).toHaveBeenCalledWith(expect.anything(), "s1");
+    expect(actions[0]).toMatchObject({
+      scope: "this",
+      change: { id: "s1_20261120T160000Z", scope: "this" },
+    });
+  });
+
+  it("asks which event when two are the same day", async () => {
+    mocks.findEventsByTitle.mockResolvedValue([
+      {
+        id: "d1",
+        calendarId: "c-uni",
+        title: "Dentista",
+        startsAt: DENTISTA.startsAt,
+        endsAt: DENTISTA.endsAt,
+        allDay: false,
+        location: null,
+      },
+      {
+        id: "d2",
+        calendarId: "c-uni",
+        title: "Dentista",
+        startsAt: "2026-11-20T08:00:00.000Z",
+        endsAt: "2026-11-20T09:00:00.000Z",
+        allDay: false,
+        location: null,
+      },
+    ]);
+    const { tools } = setup();
+    expect(
+      await tools.propose_changes({
+        changes: [{ event: "Dentista", start: "18:00" }],
+      }),
+    ).toMatchObject({ status: "ambiguous_event" });
+  });
+
+  it("shares the limit of 3 writes with create_events (RF-41)", async () => {
+    const { tools } = setup();
+    const one = {
+      title: "X",
+      calendar: "Uni",
+      date: "2026-11-20",
+      start: "08:00",
+    };
+    await tools.create_events({ events: [one, one] });
+    expect(
+      await tools.propose_changes({
+        changes: [
+          { event: "Dentista", start: "18:00" },
+          { event: "Dentista", start: "19:00" },
+        ],
+      }),
+    ).toMatchObject({ status: "too_many" });
+  });
+});

@@ -1,5 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { writeTools } from "@/app/dashboard/assistant/assistant-writes";
+import {
+  applyPendingChange,
+  undoWrite,
+} from "@/app/dashboard/assistant/change-writes";
+import type { AssistantUndo, PendingChange } from "@/lib/assistant/actions";
 import type { AssistantAction } from "@/lib/assistant/actions";
 import { createRefs } from "@/lib/assistant/citations";
 import type { CitedEvent } from "@/lib/assistant/tools";
@@ -24,6 +29,12 @@ let sam: TestUser;
 let anaCal: string;
 let luisCal: string; // Ana is an editor
 let samCal: string; // Ana is a reader
+
+/** What "Confirmar" runs, with the user's session (write-actions.ts). */
+const confirmPending = (user: TestUser, change: PendingChange) =>
+  applyPendingChange(user.client, TZ, change);
+const undoWith = (user: TestUser, undo: AssistantUndo) =>
+  undoWrite(user.client, TZ, undo);
 
 function tools(user: TestUser) {
   const actions: AssistantAction[] = [];
@@ -67,7 +78,7 @@ beforeAll(async () => {
     title: "PIAE",
     starts_at: "2026-12-03T11:00:00Z",
     ends_at: "2026-12-03T12:30:00Z",
-    recurrence: "FREQ=WEEKLY;BYDAY=TH;COUNT=4",
+    recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=TH;COUNT=4",
     recurrence_tz: TZ,
     recurrence_until: "2026-12-24T12:30:00Z",
     created_by: ana.id,
@@ -205,5 +216,197 @@ describe("create_events against the database", () => {
     } finally {
       await deleteTestUser(stranger.id);
     }
+  });
+});
+
+// Spec 036, T5: what "Confirmar" and "Deshacer" write (RF-24a, RF-24d,
+// RF-29, RF-33 to RF-37; plan D7, D8).
+describe("changes and undo against the database", () => {
+  async function dentist(day = "2026-12-11") {
+    const { data, error } = await admin
+      .from("events")
+      .insert({
+        calendar_id: anaCal,
+        title: "Dentista",
+        starts_at: `${day}T16:00:00Z`,
+        ends_at: `${day}T17:00:00Z`,
+        created_by: ana.id,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return data.id;
+  }
+
+  async function proposeFor(title: string, change: object) {
+    const { api, actions } = tools(ana);
+    const result = await api.propose_changes({
+      changes: [{ event: title, ...change }],
+    });
+    const action = actions[0];
+    if (action?.kind !== "change") throw new Error(JSON.stringify(result));
+    return action;
+  }
+
+  it("writes nothing until confirmed, then applies it and undoes it", async () => {
+    const id = await dentist();
+    const action = await proposeFor("Dentista", { start: "18:00" });
+    const { data: before } = await admin
+      .from("events")
+      .select("starts_at")
+      .eq("id", id)
+      .single();
+    expect(before!.starts_at).toBe("2026-12-11T16:00:00+00:00");
+
+    const confirmed = await confirmPending(ana, action.change);
+    expect(confirmed).toMatchObject({ ok: true });
+    const { data: after } = await admin
+      .from("events")
+      .select("starts_at, ends_at")
+      .eq("id", id)
+      .single();
+    expect(after).toEqual({
+      starts_at: "2026-12-11T17:00:00+00:00",
+      ends_at: "2026-12-11T18:00:00+00:00",
+    });
+
+    if (!confirmed.ok || !confirmed.undo) throw new Error("no undo");
+    expect(await undoWith(ana, confirmed.undo)).toEqual({ ok: true });
+    const { data: undone } = await admin
+      .from("events")
+      .select("starts_at")
+      .eq("id", id)
+      .single();
+    expect(undone!.starts_at).toBe("2026-12-11T16:00:00+00:00");
+  });
+
+  it("does not apply a change if the event changed meanwhile (RF-24d)", async () => {
+    const id = await dentist("2026-12-18");
+    const action = await proposeFor("Dentista", {
+      eventDate: "2026-12-18",
+      start: "19:00",
+    });
+    // Someone else moves it first (the clock of the database moves on).
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await admin
+      .from("events")
+      .update({ title: "Dentista (Luis)" })
+      .eq("id", id);
+    expect(await confirmPending(ana, action.change)).toEqual({
+      ok: false,
+      error:
+        "Este evento ha cambiado desde que te propuse el cambio; no lo he aplicado. Pídemelo otra vez.",
+    });
+    const { data } = await admin
+      .from("events")
+      .select("starts_at")
+      .eq("id", id)
+      .single();
+    expect(data!.starts_at).toBe("2026-12-18T16:00:00+00:00");
+  });
+
+  it("changes one PIAE only, and undoes it (RF-29)", async () => {
+    const action = await proposeFor("PIAE", {
+      eventDate: "2026-12-10",
+      start: "12:30",
+    });
+    expect(action.scope).toBe("this");
+    const confirmed = await confirmPending(ana, action.change);
+    expect(confirmed).toMatchObject({ ok: true });
+    const { data } = await admin
+      .from("events")
+      .select("starts_at, series_id")
+      .eq("title", "PIAE")
+      .not("series_id", "is", null);
+    expect(data).toEqual([
+      expect.objectContaining({ starts_at: "2026-12-10T11:30:00+00:00" }),
+    ]);
+    if (!confirmed.ok || !confirmed.undo) throw new Error("no undo");
+    expect(await undoWith(ana, confirmed.undo)).toEqual({ ok: true });
+    const { data: back } = await admin
+      .from("events")
+      .select("starts_at")
+      .eq("title", "PIAE")
+      .not("series_id", "is", null);
+    expect(back).toEqual([{ starts_at: "2026-12-10T11:00:00+00:00" }]);
+  });
+
+  it("undoes a creation unless someone changed it (RF-34, RF-36)", async () => {
+    const { api, actions } = tools(ana);
+    await api.create_events({
+      events: [
+        {
+          title: "Borrable",
+          calendar: "Uni",
+          date: "2026-12-12",
+          start: "10:00",
+        },
+      ],
+    });
+    await api.create_events({
+      events: [
+        {
+          title: "Tocado",
+          calendar: "Uni",
+          date: "2026-12-12",
+          start: "12:00",
+        },
+      ],
+    });
+    const [first, second] = actions;
+    if (first?.kind !== "created" || second?.kind !== "created") {
+      throw new Error("not created");
+    }
+    expect(await undoWith(ana, first.undo)).toEqual({ ok: true });
+    const { count } = await admin
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("id", first.event.id);
+    expect(count).toBe(0);
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await admin
+      .from("events")
+      .update({ location: "Aula 3" })
+      .eq("id", second.event.id);
+    expect(await undoWith(ana, second.undo)).toEqual({
+      ok: false,
+      error: "Este evento ha cambiado entretanto; no se ha deshecho.",
+    });
+  });
+
+  it("refuses to confirm as a reader (RLS decides, RF-39)", async () => {
+    const { data: samEvent } = await admin
+      .from("events")
+      .insert({
+        calendar_id: samCal,
+        title: "Turno Sam",
+        starts_at: "2026-12-14T07:00:00Z",
+        ends_at: "2026-12-14T14:00:00Z",
+        created_by: sam.id,
+      })
+      .select("id, updated_at")
+      .single();
+    const result = await confirmPending(ana, {
+      id: samEvent!.id,
+      scope: null,
+      updatedAt: samEvent!.updated_at,
+      fields: {
+        title: "Turno Sam",
+        description: null,
+        location: null,
+        calendarId: samCal,
+        startsAt: "2026-12-14T08:00:00.000Z",
+        endsAt: "2026-12-14T15:00:00.000Z",
+        allDay: false,
+      },
+    });
+    expect(result).toMatchObject({ ok: false });
+    const { data } = await admin
+      .from("events")
+      .select("starts_at")
+      .eq("id", samEvent!.id)
+      .single();
+    expect(data!.starts_at).toBe("2026-12-14T07:00:00+00:00");
   });
 });
