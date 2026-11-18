@@ -23,13 +23,13 @@ Cada tarea se hace sola y con el test primero (rojo → verde). Se cierra con P8
 
   Cubre: RF-1, RF-3 | Módulo: limit-events, run-sync
   Evidencia: `npm test -- run-sync sync-core` 50/50 (rojo antes: 4 fallos); P8 en verde (3.196 tests).
-- [ ] T3 Nota de copia antigua en el detalle
+- [x] T3 Nota de copia antigua en el detalle
   Hecho cuando: `npm test -- sync-window event-panel` en verde y capturas a 390 y 1440 px en claro y oscuro en `capturas/`.
   - `isOutsideWindow` (borde exacto incluido) y `staleCopyText` para Google e iCloud.
   - El detalle de un traído antiguo muestra la nota; uno reciente y uno normal, no.
 
   Cubre: RF-6, RF-7, RF-9 | Módulo: window, provider-labels, event-panel (D4)
-  Evidencia: —
+  Evidencia: `npm test -- sync-window event-panel` 22/22 (rojo antes: 4 fallos); `StaleCopyNote` en `event-detail.tsx`; capturas `capturas/detalle-copia-antigua-{390,1440}-{claro,oscuro}.png` con `scripts/screenshots-038.mjs` (kit común `scripts/capture-kit.mjs`); P8 en verde. RF-7 y RF-9 no cambian (comprobado en el código: escritura y desconexión no dependen de la ventana).
 - [ ] T4 Cierre
   Hecho cuando: AGENTS.md (§2, "Añadido por la spec 038", base de datos y trampas), README (hoja de ruta y fuera de alcance) y "Diferido" de la 023 citan la 038; `python -m graphify update .`; P8 completa.
 

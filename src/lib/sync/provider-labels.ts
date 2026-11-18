@@ -27,3 +27,8 @@ export function goneDone(provider: ProviderName): GoneDone {
 export function isGoneDone(value: unknown): value is GoneDone {
   return value === "gone" || value === "goneIcloud";
 }
+
+/** The detail's note on an old synced event (spec 038 RF-6). */
+export function staleCopyText(provider: ProviderName): string {
+  return `Copia antigua: ya no se actualiza desde ${NAMES[provider]}`;
+}

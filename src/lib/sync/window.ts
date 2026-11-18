@@ -15,3 +15,11 @@ export function syncWindow(now: Date): { from: Date; to: Date } {
     to: addMonths(now, MONTHS_AHEAD),
   };
 }
+
+/**
+ * Whether a synced event started before the window that is read today, so it
+ * is an old copy that is no longer updated (spec 038 RF-6, plan D4).
+ */
+export function isOutsideWindow(startsAt: string, now: Date): boolean {
+  return Date.parse(startsAt) < syncWindow(now).from.getTime();
+}

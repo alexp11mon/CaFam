@@ -7,6 +7,7 @@ import { SeriesDelete } from "@/components/recurrence/series-delete";
 import type { UndoToken } from "@/lib/calendar/undo";
 import { DeleteEventButton } from "./delete-event-button";
 import { PendingMark } from "@/components/offline/pending-mark";
+import { StaleCopyNote } from "./stale-copy-note";
 
 export interface EventDetailData {
   id: string;
@@ -113,6 +114,9 @@ export function EventDetail({
         <Row label="Creado por">{event.author}</Row>
       </dl>
       {media}
+      {event.provider ? (
+        <StaleCopyNote startsAt={event.startsAt} provider={event.provider} />
+      ) : null}
       {event.readOnly ? (
         <p className="text-sm text-muted">
           {readOnlyEventText(event.readOnly, event.provider ?? "google")}

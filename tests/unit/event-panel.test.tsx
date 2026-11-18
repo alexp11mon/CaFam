@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   afterEach,
@@ -296,5 +296,44 @@ describe("EventPanel without a connection", () => {
     window.dispatchEvent(new Event("offline"));
     setup({ detail: { ...DETAIL, provider: "google" } });
     expect(screen.getByRole("button", { name: "Editar" })).toBeVisible();
+  });
+});
+
+// Spec 038, T3: old copies of synced events say so (RF-6).
+describe("EventPanel and old synced copies", () => {
+  it("says an old synced event is no longer updated (spec 038 RF-6)", () => {
+    setup({
+      detail: {
+        ...DETAIL,
+        provider: "icloud",
+        startsAt: "2020-01-01T10:00:00Z",
+        endsAt: "2020-01-01T11:00:00Z",
+      },
+    });
+    expect(
+      screen.getByText("Copia antigua: ya no se actualiza desde iCloud"),
+    ).toBeVisible();
+  });
+
+  it("does not say it for a recent synced event or a normal old one", () => {
+    const recent = new Date(Date.now() - 86_400_000).toISOString();
+    setup({
+      detail: {
+        ...DETAIL,
+        provider: "google",
+        startsAt: recent,
+        endsAt: recent,
+      },
+    });
+    expect(screen.queryByText(/Copia antigua/)).toBeNull();
+    cleanup();
+    setup({
+      detail: {
+        ...DETAIL,
+        startsAt: "2020-01-01T10:00:00Z",
+        endsAt: "2020-01-01T11:00:00Z",
+      },
+    });
+    expect(screen.queryByText(/Copia antigua/)).toBeNull();
   });
 });
