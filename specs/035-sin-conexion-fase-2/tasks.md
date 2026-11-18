@@ -1,6 +1,6 @@
 # Tasks 035 — Modo sin conexión, fase 2
 
-> Estado: **Borrador** (2026-11-17), pendiente de aprobación. No se empieza hasta cerrar la spec 034, porque estas tareas amplían sus módulos.
+> Estado: **Aprobadas** (2026-11-17). El usuario pidió hacerlas todas seguidas, con un commit por tarea.
 
 Spec: `specs/035-sin-conexion-fase-2/spec.md`. Plan: `specs/035-sin-conexion-fase-2/plan.md`.
 
@@ -19,7 +19,7 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
 
 ## Tareas
 
-- [ ] T1 Ampliar la cola y sus esquemas con series, comentarios e imágenes (`outbox.ts`, `schemas.ts`)
+- [x] T1 Ampliar la cola y sus esquemas con series, comentarios e imágenes (`outbox.ts`, `schemas.ts`)
   Hecho cuando: `npm test -- offline-outbox offline-schemas` en verde. Los tests cubren:
   - los tipos nuevos `series.update`, `series.delete`, `comment.add`, `comment.update`, `comment.delete`, `image.add` e `image.delete`, y `repeat` en `event.create` y `event.update`;
   - fundir un comentario añadido y luego editado (llega uno, con el último texto) y uno añadido y luego borrado (no llega nada);
@@ -29,6 +29,8 @@ Rama: `035-sin-conexion-fase-2`, creada desde la de la 034 una vez cerrada.
   - zod acepta los cambios válidos y rechaza un comentario vacío o de más de 1.000 caracteres, un alcance desconocido y un `repeat` mal formado.
 
   Cubre: RF-11, RF-19, RF-22, RF-23, RF-24, RF-32, RF-36, RNF-3 | Módulo: outbox, schemas
+
+  Evidencia (2026-11-18): `npm test -- offline-outbox offline-schemas` 26 en verde (10 casos nuevos de la cola y 5 de los esquemas). `image.add` no pasa por el esquema del servidor: la imagen va por su ruta (D5). Las series se funden por alcance y ocurrencia (`series:<alcance>:<id>`). Verificación completa: typecheck, lint (el aviso de siempre en `event-form.tsx`), format, 312 archivos y 2.931 tests, y build en verde. Se arregló de paso el error sin capturar de `offline-app.test.tsx` (`scrollIntoView` en jsdom).
 
 - [ ] T2 Decidir sin red qué se puede hacer y cómo queda una serie (`gates.ts`, `image-limits.ts`, `series-loss.ts`, `series-overlay.ts`)
   Hecho cuando: `npm test -- offline-gates offline-image-limits offline-series no-secrets` en verde. Los tests cubren:

@@ -7,6 +7,9 @@ import { itemTextSchema, noteIdSchema as uuid } from "@/lib/notes/schemas";
 import { NOTE_BODY_MAX, NOTE_TITLE_MAX } from "@/lib/notes/limits";
 import { parseDateKey } from "@/lib/calendar/time-zone";
 import { parseEventId } from "@/lib/recurrence/occurrence-id";
+import { CUSTOM_PREFIX, resolveRepeat } from "@/lib/recurrence/presets";
+import { MAX_RRULE_LENGTH } from "@/lib/recurrence/limits";
+import { commentBodySchema } from "@/lib/comments/schemas";
 
 const eventId = z.string().refine((id) => parseEventId(id) !== null);
 const color = z.string().refine(isPaletteColor).nullable();
@@ -38,6 +41,39 @@ const noteFields = z.object({
     .nullable(),
 });
 const itemFields = z.object({ text: itemTextSchema, done: z.boolean() });
+
+const PRESETS = [
+  "none",
+  "daily",
+  "weekly",
+  "monthly-day",
+  "monthly-pos",
+  "monthly-last",
+  "yearly",
+  "weekdays",
+];
+/** "Repetir" as the form sends it; the server resolves it with the date (spec 035 RF-11). */
+const repeat = z
+  .string()
+  .refine(
+    (value) =>
+      PRESETS.includes(value) ||
+      (value.startsWith(CUSTOM_PREFIX) &&
+        resolveRepeat(value, "2026-01-05").ok),
+  );
+const seriesBase = z.object({
+  fields: eventDataSchema,
+  recurrence: z.string().min(1).max(MAX_RRULE_LENGTH),
+  exdates: z.array(z.iso.datetime({ offset: true })).max(500),
+  totals: z.object({
+    exceptions: z.number().int().min(0),
+    images: z.number().int().min(0),
+    comments: z.number().int().min(0),
+    latest: z.iso.datetime({ offset: true }).nullable(),
+  }),
+});
+const scope = z.enum(["this", "following", "all"]);
+const commentBase = z.object({ body: z.string().max(4000) });
 const position = z.number().int().min(0).max(100_000);
 
 export const offlineChangeSchema = z.discriminatedUnion("type", [
@@ -45,12 +81,14 @@ export const offlineChangeSchema = z.discriminatedUnion("type", [
     type: z.literal("event.create"),
     id: uuid,
     data: eventDataSchema,
+    repeat: repeat.optional(),
   }),
   z.object({
     type: z.literal("event.update"),
     id: eventId,
     base: eventDataSchema,
     data: eventDataSchema,
+    repeat: repeat.optional(),
   }),
   z.object({
     type: z.literal("event.delete"),
@@ -100,6 +138,41 @@ export const offlineChangeSchema = z.discriminatedUnion("type", [
       .min(1)
       .max(200),
   }),
+  z.object({
+    type: z.literal("series.update"),
+    id: eventId,
+    scope,
+    base: seriesBase,
+    data: eventDataSchema,
+    repeat,
+  }),
+  z.object({
+    type: z.literal("series.delete"),
+    id: eventId,
+    scope,
+    base: seriesBase,
+  }),
+  z.object({
+    type: z.literal("comment.add"),
+    eventId,
+    clientId: uuid,
+    body: commentBodySchema,
+  }),
+  z.object({
+    type: z.literal("comment.update"),
+    id: uuid,
+    eventId,
+    base: commentBase,
+    body: commentBodySchema,
+  }),
+  z.object({
+    type: z.literal("comment.delete"),
+    id: uuid,
+    eventId,
+    base: commentBase,
+  }),
+  // "image.add" never reaches here: its bytes go by /api/offline/image (D5).
+  z.object({ type: z.literal("image.delete"), id: uuid, eventId }),
 ]);
 
 export type ParsedChange = z.infer<typeof offlineChangeSchema>;

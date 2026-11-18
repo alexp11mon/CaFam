@@ -185,7 +185,10 @@ async function noteWrite(
   return data && data.length > 0 ? APPLIED : failed(NOTE_MESSAGES.gone);
 }
 
-type NoteChange = Exclude<ParsedChange, EventChange>;
+type NoteChange = Extract<
+  ParsedChange,
+  { type: `note.${string}` | `item.${string}` }
+>;
 
 async function applyNote(
   supabase: Supabase,
@@ -318,15 +321,20 @@ export async function applyChange(
   force = false,
 ): Promise<ApplyResult> {
   try {
-    return change.type.startsWith("event.")
-      ? await applyEvent(
-          supabase,
-          userId,
-          timeZone,
-          change as EventChange,
-          force,
-        )
-      : await applyNote(supabase, change as NoteChange, force);
+    if (change.type.startsWith("event.")) {
+      return await applyEvent(
+        supabase,
+        userId,
+        timeZone,
+        change as EventChange,
+        force,
+      );
+    }
+    if (change.type.startsWith("note.") || change.type.startsWith("item.")) {
+      return await applyNote(supabase, change as NoteChange, force);
+    }
+    // Series, comments and images arrive in spec 035 T6 and T7.
+    return failed(OFFLINE_MESSAGES.needsNetwork);
   } catch {
     // The network or Supabase failed: keep it for later (RF-46).
     return { status: "retry" };

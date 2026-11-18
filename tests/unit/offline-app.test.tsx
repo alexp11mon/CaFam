@@ -78,6 +78,8 @@ async function open(from: string) {
 }
 
 beforeEach(async () => {
+  // jsdom has no scrollIntoView; the agenda calls it after the test ends.
+  HTMLElement.prototype.scrollIntoView = () => {};
   vi.stubGlobal("indexedDB", memoryIndexedDb());
   db.forgetConnection();
   await clearQueue();

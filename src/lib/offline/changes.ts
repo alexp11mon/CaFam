@@ -28,6 +28,20 @@ export function changeTitle(change: OfflineChange): string {
       return `Elemento borrado: ${change.base.text}`;
     case "item.move":
       return "Orden de la lista";
+    case "series.update":
+      return `Serie cambiada: ${change.data.title}`;
+    case "series.delete":
+      return `Serie borrada: ${change.base.fields.title}`;
+    case "comment.add":
+      return `Comentario nuevo: ${change.body}`;
+    case "comment.update":
+      return `Comentario cambiado: ${change.body}`;
+    case "comment.delete":
+      return `Comentario borrado: ${change.base.body}`;
+    case "image.add":
+      return "Imagen nueva";
+    case "image.delete":
+      return "Imagen borrada";
   }
 }
 
@@ -47,6 +61,11 @@ export function mineOf(change: OfflineChange): Fields | null {
       return { ...change.base, ...change.change };
     case "item.move":
       return { positions: change.positions };
+    case "series.update":
+      return { ...change.data };
+    case "comment.add":
+    case "comment.update":
+      return { body: change.body };
     default:
       return null;
   }

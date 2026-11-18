@@ -3,6 +3,7 @@
 // the result, `flush` sends it.
 import type { EventData } from "@/lib/calendar/schemas";
 import type { NoteKind } from "@/lib/notes/types";
+import { parseEventId } from "@/lib/recurrence/occurrence-id";
 
 /** What a note can change; the same keys as `noteFieldsSchema` but the calendar (RF-35). */
 export interface NoteFields {
@@ -19,9 +20,34 @@ export interface ItemFields {
   done?: boolean;
 }
 
+/** What another person could have changed in a whole series (spec 035 D3). */
+export interface SeriesTotals {
+  exceptions: number;
+  images: number;
+  comments: number;
+  /** The latest change among its exceptions, or null. */
+  latest: string | null;
+}
+
+/** The series as the copy had it when the change was made (spec 035 D3). */
+export interface SeriesBase {
+  fields: EventData;
+  recurrence: string;
+  exdates: string[];
+  totals: SeriesTotals;
+}
+
+export type SeriesScope = "this" | "following" | "all";
+
 export type OfflineChange =
-  | { type: "event.create"; id: string; data: EventData }
-  | { type: "event.update"; id: string; base: EventData; data: EventData }
+  | { type: "event.create"; id: string; data: EventData; repeat?: string }
+  | {
+      type: "event.update";
+      id: string;
+      base: EventData;
+      data: EventData;
+      repeat?: string;
+    }
   | { type: "event.delete"; id: string; base: EventData }
   | {
       type: "note.create";
@@ -62,7 +88,36 @@ export type OfflineChange =
       type: "item.move";
       noteId: string;
       positions: { id: string; position: number }[];
-    };
+    }
+  | {
+      type: "series.update";
+      /** The occurrence the change was made from. */
+      id: string;
+      scope: SeriesScope;
+      base: SeriesBase;
+      data: EventData;
+      repeat: string;
+    }
+  | { type: "series.delete"; id: string; scope: SeriesScope; base: SeriesBase }
+  | { type: "comment.add"; eventId: string; clientId: string; body: string }
+  | {
+      type: "comment.update";
+      /** The saved id, or the clientId of a comment still in the queue. */
+      id: string;
+      eventId: string;
+      base: { body: string };
+      body: string;
+    }
+  | {
+      type: "comment.delete";
+      id: string;
+      eventId: string;
+      base: { body: string };
+    }
+  /** The image itself waits in the store "pending-images" under localId. */
+  | { type: "image.add"; eventId: string; localId: string }
+  /** id: the saved image, or the localId of one still in the queue. */
+  | { type: "image.delete"; id: string; eventId: string };
 
 export interface OutboxEntry {
   /** Stable id of the change: the key of "Deshacer" and of the lists (RF-30, RF-48). */
@@ -85,6 +140,18 @@ export function entityOf(change: OfflineChange): string {
       return `note:${change.id}`;
     case "item.move":
       return `order:${change.noteId}`;
+    case "series.update":
+    case "series.delete":
+      return `series:${change.scope}:${change.id}`;
+    case "comment.add":
+      return `comment:${change.clientId}`;
+    case "comment.update":
+    case "comment.delete":
+      return `comment:${change.id}`;
+    case "image.add":
+      return `image:${change.localId}`;
+    case "image.delete":
+      return `image:${change.id}`;
     default:
       return `item:${change.id}`;
   }
@@ -99,6 +166,29 @@ export function noteOf(change: OfflineChange): string | null {
   return null;
 }
 
+/** The event a comment or an image belongs to, if any (spec 035). */
+export function eventOf(change: OfflineChange): string | null {
+  return "eventId" in change ? change.eventId : null;
+}
+
+/** The series of an event id: its own uuid, or the one of an occurrence. */
+function seriesKey(id: string): string {
+  const parsed = parseEventId(id);
+  return parsed?.kind === "occurrence" ? parsed.seriesId : id;
+}
+
+/** Whether a comment or image of `eventId` goes with the deleted `change`. */
+function goesWith(change: OfflineChange, eventId: string): boolean {
+  if (change.type === "event.delete") return eventId === change.id;
+  if (change.type === "series.delete") {
+    // A whole series takes every occurrence; other scopes only the one opened.
+    return change.scope === "all"
+      ? seriesKey(eventId) === seriesKey(change.id)
+      : eventId === change.id;
+  }
+  return false;
+}
+
 /**
  * Two changes to the same thing as one (RF-42, RF-43): the base of the first
  * and the data of the last; `null` = nothing to send.
@@ -108,11 +198,15 @@ function combine(
   next: OfflineChange,
 ): OfflineChange | null | "keep" {
   if (first.type === "event.create") {
-    if (next.type === "event.update") return { ...first, data: next.data };
+    if (next.type === "event.update") {
+      return { ...first, data: next.data, ...repeatOf(next) };
+    }
     if (next.type === "event.delete") return null;
   }
   if (first.type === "event.update") {
-    if (next.type === "event.update") return { ...first, data: next.data };
+    if (next.type === "event.update") {
+      return { ...first, data: next.data, ...repeatOf(next) };
+    }
     if (next.type === "event.delete") {
       return { type: "event.delete", id: first.id, base: first.base };
     }
@@ -150,8 +244,28 @@ function combine(
     }
   }
   if (first.type === "item.move" && next.type === "item.move") return next;
+  if (first.type === "series.update") {
+    if (next.type === "series.update") {
+      return { ...first, data: next.data, repeat: next.repeat };
+    }
+    if (next.type === "series.delete") return { ...next, base: first.base };
+  }
+  if (first.type === "comment.add") {
+    if (next.type === "comment.update") return { ...first, body: next.body };
+    if (next.type === "comment.delete") return null;
+  }
+  if (first.type === "comment.update") {
+    if (next.type === "comment.update") return { ...first, body: next.body };
+    if (next.type === "comment.delete") return { ...next, base: first.base };
+  }
+  if (first.type === "image.add" && next.type === "image.delete") return null;
   // Anything else (a change after a delete) is kept as it came.
   return "keep";
+}
+
+/** The rule of an event update, when it has one. */
+function repeatOf(change: { repeat?: string }): { repeat?: string } {
+  return change.repeat === undefined ? {} : { repeat: change.repeat };
 }
 
 /** The queue with one more change, merged into the one about the same thing. */
@@ -183,6 +297,13 @@ export function enqueue(
         noteOf(queued.change) !== noteId,
     );
   }
+  // A deleted event takes its pending comments and images (spec 035 RF-23,
+  // RF-36). The caller frees the images in "pending-images".
+  const deleted = entry.change;
+  next = next.filter((queued) => {
+    const eventId = eventOf(queued.change);
+    return eventId === null || !goesWith(deleted, eventId);
+  });
   return next;
 }
 
@@ -204,12 +325,15 @@ export function dependentsOf(
 ): OutboxEntry[] {
   const key = entityOf(failed.change);
   const note = failed.change.type === "note.create" ? failed.change.id : null;
+  // An event never created takes its comments and images (spec 035).
+  const event = failed.change.type === "event.create" ? failed.change.id : null;
   const at = queue.findIndex((entry) => entry.changeId === failed.changeId);
   return queue
     .slice(at + 1)
     .filter(
       (entry) =>
         entityOf(entry.change) === key ||
-        (note !== null && noteOf(entry.change) === note),
+        (note !== null && noteOf(entry.change) === note) ||
+        (event !== null && eventOf(entry.change) === event),
     );
 }
