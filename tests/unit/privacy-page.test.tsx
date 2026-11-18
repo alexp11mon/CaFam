@@ -141,4 +141,18 @@ describe("/privacy: images in the assistant (spec 022)", () => {
       "no se envían a Google, a iCloud ni al asistente",
     );
   });
+
+  // Spec 036 (RF-48).
+  it("says Venito creates and changes events only when asked, with the user's permissions", () => {
+    render(<PrivacyPage />);
+    const section = screen
+      .getByRole("heading", { name: "Asistente de chat" })
+      .closest("section")!;
+    expect(section).toHaveTextContent(
+      "Si se lo pides, el asistente crea eventos y te propone cambios",
+    );
+    expect(section).toHaveTextContent("con tus mismos permisos");
+    expect(section).toHaveTextContent("hasta que pulsas «Confirmar»");
+    expect(section).toHaveTextContent("Nunca borra eventos");
+  });
 });

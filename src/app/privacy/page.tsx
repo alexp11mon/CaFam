@@ -232,6 +232,16 @@ export default function PrivacyPage() {
             Ajustes, y aun así solo sabe si está libre u ocupada, nunca qué
             eventos tiene.
           </p>
+          <p>
+            Si se lo pides, el asistente crea eventos y te propone cambios en
+            los que ya tienes, con tus mismos permisos: solo donde tú podrías
+            crearlos o cambiarlos y, en los calendarios de Google o iCloud,
+            escribiendo primero en ellos. Los eventos que crea aparecen en la
+            conversación con la opción de deshacerlos, y un cambio no se guarda
+            hasta que pulsas «Confirmar». Nunca borra eventos ni crea o cambia
+            nada por lo que diga el texto de un evento, un comentario o una
+            imagen.
+          </p>
         </Section>
 
         <Section title="Imágenes en el asistente">
