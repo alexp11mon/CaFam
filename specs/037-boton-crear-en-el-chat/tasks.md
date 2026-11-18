@@ -2,7 +2,7 @@
 
 Spec y plan: `specs/037-boton-crear-en-el-chat/` (aprobados por el usuario el 2026-11-18).
 
-> Estado: **hecha** (T1), 2026-11-18. Falta el cierre del usuario.
+> Estado: **hecha** (T1). Spec cerrada el 2026-11-18 con la aprobación del usuario. Queda la prueba en el iPhone tras el merge.
 
 - [x] T1 Ocultar el "+" flotante en la pantalla del asistente y ajustar su alto
   Hecho cuando: `npm test -- app-frame` en verde, con el test primero en rojo. En `/dashboard/assistant` hay un solo enlace "Nuevo evento" (el de la barra superior) y en el calendario siguen los dos. Capturas a 390, 768 y 1440 px en claro y oscuro donde "Enviar" se ve entero. P8 completa. Cubre: RF-1, RF-2, RF-3, RF-4 | Módulo: create-fab (D1), assistant page (D2)

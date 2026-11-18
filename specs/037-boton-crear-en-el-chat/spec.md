@@ -1,6 +1,6 @@
 # Spec 037 — El "+" no tapa el botón Enviar del chat
 
-> Estado: **Aprobada** por el usuario el 2026-11-18 con su petición "Haz esta tarea aquí: Fix '+' button covering Send in the chat", sobre la tarea sugerida al cerrar la spec 036. Constitución: `docs/constitution.md`. Corrige el marco de la spec 030.
+> Estado: **Cerrada** (2026-11-18) por decisión del usuario. **Aprobada** por el usuario el 2026-11-18 con su petición "Haz esta tarea aquí: Fix '+' button covering Send in the chat", sobre la tarea sugerida al cerrar la spec 036. Constitución: `docs/constitution.md`. Corrige el marco de la spec 030.
 
 ## Contexto y objetivo
 
