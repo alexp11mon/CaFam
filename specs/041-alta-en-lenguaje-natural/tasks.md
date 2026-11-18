@@ -8,11 +8,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
 
 ## Tareas
 
-- [ ] T1 Tokenizador y fechas
+- [x] T1 Tokenizador y fechas
   Hecho cuando: `npm test -- nl-dates` en verde con al menos 50 frases.
   - Relativas, días de la semana (también hoy y "que viene"), fechas con y sin año, `d/m`, rangos de varios días.
 
-  Cubre: RF-1, RF-2, RF-3, RF-6 | Evidencia: —
+  Cubre: RF-1, RF-2, RF-3, RF-6 | Evidencia: `npm test -- nl-dates` 63/63 (57 frases: relativas, días de la semana con "próximo" y "que viene", abreviados, fechas con y sin año, `d/m` en orden español, rangos de varios días, "ayer" marcado como pasado, "por la mañana" no es una fecha y "10-12" sin año tampoco); `normalizeText` conserva la longitud y la ñ; P8 en verde (3.346 tests).
 - [ ] T2 Horas y duraciones
   Hecho cuando: `npm test -- nl-times` en verde con al menos 50 frases.
   - "y media", "y cuarto", "menos cuarto", franjas, am/pm, rangos, "hasta", duraciones y ambigüedad de la tarde.
