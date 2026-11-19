@@ -8,7 +8,7 @@ const events = (n: number) => (n === 1 ? "1 evento" : `${n} eventos`);
 
 /** What a finished import did: created, skipped and cut series (RF-31). */
 export function ImportSummary({ result }: { result: ImportSummaryData }) {
-  const { calendarId, created, skipped, cutSeries, into } = result;
+  const { calendarId, created, skipped, cutSeries, into, kept } = result;
 
   return (
     <div
@@ -49,6 +49,14 @@ export function ImportSummary({ result }: { result: ImportSummaryData }) {
             ? "1 serie sin fin se ha cortado"
             : `${cutSeries} series sin fin se han cortado`}{" "}
           a un año desde hoy.
+        </p>
+      ) : null}
+      {kept === "yes" ? (
+        <p>Se actualizará desde el enlace cada 6 horas.</p>
+      ) : kept === "failed" ? (
+        <p>
+          No se ha podido guardar el enlace para mantenerlo actualizado. Los
+          eventos sí se han importado.
         </p>
       ) : null}
       <div className="flex flex-wrap gap-x-4">

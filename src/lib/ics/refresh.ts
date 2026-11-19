@@ -7,7 +7,7 @@ import { parseSourceUrl } from "./source-url";
 
 // Keeps an imported calendar updated from its link (spec 044 RF-7, RF-10,
 // RNF-1). Like run-sync.ts, every dependency is injected: the real ones
-// (refresh-engine.ts) call the secret-protected functions without service_role.
+// (refresh-engine.ts) call the secret-protected functions without the secret key.
 
 const BUDGET_MS = 50_000;
 

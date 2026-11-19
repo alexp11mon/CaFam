@@ -2,7 +2,7 @@ import { DEFAULT_CALENDAR_COLOR, isPaletteColor } from "@/lib/calendar/palette";
 import type { ParseResult } from "@/lib/forms/form-state";
 
 export type ImportField =
-  "url" | "file" | "name" | "color" | "destination" | "calendar";
+  "url" | "file" | "name" | "color" | "destination" | "calendar" | "keep";
 
 export interface ImportFormInput {
   url: string;
@@ -13,6 +13,8 @@ export interface ImportFormInput {
   /** "existing" imports into `calendarId` (spec 044 RF-1). */
   destination?: string;
   calendarId?: string;
+  /** "Mantener actualizado desde este enlace" (spec 044 RF-5). */
+  keep?: boolean;
 }
 
 export interface ImportFormData {
@@ -22,6 +24,7 @@ export interface ImportFormData {
   color: string;
   /** The calendar to import into, or null for a new one (spec 044 RF-1). */
   into: string | null;
+  keep: boolean;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -29,6 +32,8 @@ const CALENDAR_MESSAGE = "Elige el calendario.";
 const SOURCE_MESSAGE = "Indica un enlace o sube un archivo, no los dos.";
 const NAME_MESSAGE = "Escribe un nombre de 1 a 50 caracteres.";
 const COLOR_MESSAGE = "Elige uno de los colores de la paleta.";
+const KEEP_MESSAGE =
+  "Solo se puede mantener actualizado desde un enlace, no desde un archivo.";
 
 /**
  * Validates the import form: exactly one of link and file (RF-1, RF-2), an
@@ -52,6 +57,9 @@ export function parseImportForm(
     input.destination === "existing" ? (input.calendarId ?? "") : null;
   if (into !== null && !UUID.test(into)) errors.calendar = CALENDAR_MESSAGE;
 
+  const keep = input.keep === true;
+  if (keep && input.hasFile) errors.keep = KEEP_MESSAGE;
+
   if (Object.keys(errors).length > 0) return { ok: false, fieldErrors: errors };
   return {
     ok: true,
@@ -60,6 +68,7 @@ export function parseImportForm(
       name: name === "" ? null : name,
       color: color === "" ? DEFAULT_CALENDAR_COLOR : color.toUpperCase(),
       into,
+      keep,
     },
   };
 }

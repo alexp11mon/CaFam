@@ -10,9 +10,10 @@ import { getFile, readIcsSource } from "@/lib/ics/read-source";
 import { parseImportForm } from "@/lib/ics/schemas";
 import type { Json } from "@/types/database";
 
-// Reads an .ics once (a link or a file) and creates a new calendar from it
-// (spec 004). Neither the link nor the file is stored, and no message carries
-// the link (RF-6).
+// Reads an .ics (a link or a file) into a new calendar (spec 004) or one that
+// exists (spec 044). The link is stored only when the user asks to keep the
+// calendar updated, and then in Vault (spec 044 plan D3); no message carries
+// it (RF-6).
 export async function importCalendar(
   _prevState: ImportState,
   formData: FormData,
@@ -24,6 +25,7 @@ export async function importCalendar(
     color: readString(formData, "color"),
     destination: readString(formData, "destination") || "new",
     calendar: readString(formData, "calendar"),
+    keep: readString(formData, "keep"),
   };
 
   const parsed = parseImportForm({
@@ -33,6 +35,7 @@ export async function importCalendar(
     color: values.color,
     destination: values.destination,
     calendarId: values.calendar,
+    keep: values.keep === "on",
   });
   if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values };
 
@@ -60,6 +63,18 @@ export async function importCalendar(
     return { formError: getImportErrorMessage(imported.error), values };
   }
 
+  // Saves the link to keep the calendar updated (spec 044 RF-5). The events are
+  // already in: a failure here only says so in the summary.
+  const subscribe = async (calendarId: string) => {
+    if (!parsed.data.keep || source.source.kind !== "url") return undefined;
+    const { error } = await supabase.rpc("create_ics_subscription", {
+      p_calendar_id: calendarId,
+      p_url: source.source.url.href,
+      p_ids: imported.events.map((event) => event.external_id),
+    });
+    return error ? ("failed" as const) : ("yes" as const);
+  };
+
   const into = parsed.data.into;
   if (into) {
     // Into a calendar that exists: what is already there stays (spec 044 RF-2).
@@ -80,6 +95,7 @@ export async function importCalendar(
       return { formError: getImportErrorMessage({ kind }), values };
     }
     const counts = data as { added: number; existing: number };
+    const kept = await subscribe(into);
     revalidatePath("/dashboard", "layout");
     return {
       values: {
@@ -93,6 +109,7 @@ export async function importCalendar(
         created: counts.added,
         skipped: imported.skipped,
         cutSeries: imported.cutSeries,
+        kept,
       },
     };
   }
@@ -110,6 +127,7 @@ export async function importCalendar(
     };
   }
 
+  const kept = await subscribe(data);
   revalidatePath("/dashboard", "layout");
   return {
     values: EMPTY_IMPORT_VALUES,
@@ -118,6 +136,7 @@ export async function importCalendar(
       created: imported.events.length,
       skipped: imported.skipped,
       cutSeries: imported.cutSeries,
+      kept,
     },
   };
 }

@@ -28,10 +28,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Crear (URL en Vault), solo `created_by` lee la URL, reconciliar (añadir, cambiar, borrar, no pisar lo cambiado en CaFam, no tocar lo propio, conservar color e imágenes), fallos y pausa, pausa al perder el rol, borrado con el calendario.
 
   Cubre: RF-5, RF-7 a RF-11, RF-13 | Evidencia: migración `ics_subscriptions` aplicada en dev y tipos regenerados; `npm run test:db -- ics-subscriptions` 8 tests en verde (URL en Vault y solo con el secreto, Lector `CF404`, añadir/cambiar/borrar solo lo del enlace conservando el color y lo de otro archivo o propio, no pisa lo cambiado tras la lectura, aviso y pausa al 3.er `gone`, "Reintentar" con 5 minutos, tanda vencida, pausa al pasar a Lector, "Dejar de actualizar" borra el secreto y conserva los eventos, se borra al quedar sin propietario, `pg_cron` cada 15 minutos). La identidad que borra el enlace se guarda en `feed_ids` para no tocar lo importado de otro archivo (2026-11-19)
-- [ ] T5 Ruta, acciones e interfaz
+- [x] T5 Ruta, acciones e interfaz
   Hecho cuando: `npm test -- ics-refresh-route ics-subscription-status` en verde, prueba real con un `.ics` servido en local (cambiarlo y "Actualizar ahora") y capturas a 390 y 1440 px en claro y oscuro.
 
-  Cubre: RF-5, RF-6, RF-10 | Evidencia: —
+  Cubre: RF-5, RF-6, RF-10 | Evidencia: `npm test -- ics-refresh-route ics-subscription-status import-form import-action notice-list` en verde y `npm test` 376 archivos, 3.690 tests en verde. Prueba real contra `next start` con el `.ics` público de festivos de España de Google (un `.ics` servido en local lo rechaza la protección anti-SSRF de la 004): importar a "Mi calendario" con "Mantener actualizado" guardó la suscripción con 386 identidades; tras borrar un festivo dentro de la ventana y añadir uno que el enlace ya no tiene, "Actualizar ahora" dio `{added: 1, changed: 0, removed: 1}` y una segunda pulsación "espera unos minutos". Capturas a 390 y 1440 px en claro y oscuro en `capturas/` (`scripts/screenshots-044.mjs`) (2026-11-19)
 - [ ] T6 Cierre
   Hecho cuando: AGENTS.md, README y constitución actualizados; `python -m graphify update .`; P8 completa.
 

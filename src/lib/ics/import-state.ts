@@ -9,6 +9,8 @@ export interface ImportSummaryData {
   created: number;
   skipped: number;
   cutSeries: number;
+  /** Kept updated from its link, or the link could not be saved (spec 044 RF-5). */
+  kept?: "yes" | "failed";
 }
 
 /** Result of the `importCalendar` Server Action: the usual form state plus the summary. */
@@ -23,4 +25,5 @@ export const EMPTY_IMPORT_VALUES: ImportState["values"] = {
   color: "",
   destination: "new",
   calendar: "",
+  keep: "",
 };

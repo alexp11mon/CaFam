@@ -5,6 +5,8 @@ import { useId, useState } from "react";
 import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
 import { formatWhen } from "@/components/connections/sync-status";
 import { AssignGroupSelect } from "@/components/groups/assign-group-select";
+import { IcsSubscriptionStatus } from "@/components/import/ics-subscription-status";
+import type { IcsSubscriptionInfo } from "@/lib/ics/subscription-queries";
 import { LinkButton } from "@/components/ui/link-button";
 import type { ConfirmState } from "@/lib/forms/form-state";
 import { providerName } from "@/lib/sync/provider-labels";
@@ -26,6 +28,8 @@ export interface CalendarListItem {
   groupId?: string | null;
   /** Own, normal and with an account that writes (spec 009 RF-34, RF-38). */
   canUpload?: boolean;
+  /** Kept updated from an .ics link (spec 044 RF-6). */
+  ics?: IcsSubscriptionInfo | null;
 }
 
 const ROLE_LABELS: Record<CalendarRole, string> = {
@@ -199,6 +203,15 @@ function CalendarRow({
               ? ` Cuenta: ${calendar.synced.accountEmail}.`
               : null}
           </p>
+        ) : null}
+        {calendar.ics ? (
+          <IcsSubscriptionStatus
+            calendarId={calendar.id}
+            calendarName={calendar.name}
+            info={calendar.ics}
+            canWrite={calendar.role !== "viewer"}
+            timeZone={timeZone}
+          />
         ) : null}
         {groups && groups.length > 0 && assignAction ? (
           <AssignGroupSelect

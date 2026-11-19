@@ -14,6 +14,7 @@ const EMPTY: ImportState = {
     color: "",
     destination: "",
     calendar: "",
+    keep: "",
   },
 };
 
@@ -93,6 +94,7 @@ describe("ImportForm errors", () => {
           color: "",
           destination: "",
           calendar: "",
+          keep: "",
         },
       })),
     );
@@ -120,6 +122,7 @@ describe("ImportForm errors", () => {
           color: "",
           destination: "new",
           calendar: "",
+          keep: "",
         },
       })),
     );
@@ -215,6 +218,7 @@ describe("ImportForm progress (RF-31, RF-32)", () => {
           color: "",
           destination: "",
           calendar: "",
+          keep: "",
         },
         result: {
           calendarId: "11111111-1111-4111-8111-111111111111",
@@ -267,5 +271,23 @@ describe("ImportForm destination (spec 044 RF-1)", () => {
   it("offers no choice without calendars to write", () => {
     setup();
     expect(screen.queryByLabelText("Un calendario nuevo")).toBeNull();
+  });
+});
+
+describe("ImportForm keep updated (spec 044 RF-5)", () => {
+  it("sends the choice, off by default", async () => {
+    const action = setup(vi.fn<FormAction<ImportState>>(async () => EMPTY));
+    const keep = screen.getByRole("checkbox", {
+      name: "Mantener actualizado desde este enlace",
+    });
+    expect(keep).not.toBeChecked();
+    await userEvent.click(keep);
+    await userEvent.type(
+      screen.getByLabelText("Enlace .ics"),
+      "https://example.com/a.ics",
+    );
+    await userEvent.click(submit());
+    const formData = vi.mocked(action).mock.calls[0]?.[1] as FormData;
+    expect(formData.get("keep")).toBe("on");
   });
 });

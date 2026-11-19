@@ -43,6 +43,7 @@ export function ImportForm({
   const existing = destination === "existing" && destinations.length > 0;
   const errors = state.fieldErrors ?? {};
   const fileId = useId();
+  const keepHintId = useId();
   const fileErrorId = `${fileId}-error`;
   // The server decides, but a file over the limit is announced before it is sent (RF-26).
   const [fileError, setFileError] = useState<string>();
@@ -140,6 +141,27 @@ export function ImportForm({
           />
         </>
       )}
+      <div className="flex flex-col gap-1">
+        <label className="flex min-h-11 items-center gap-3 text-ink">
+          <input
+            type="checkbox"
+            name="keep"
+            aria-describedby={keepHintId}
+            aria-invalid={Boolean(errors.keep)}
+            className="size-5 shrink-0 accent-ink"
+          />
+          Mantener actualizado desde este enlace
+        </label>
+        <p id={keepHintId} className="text-sm text-muted">
+          Cada 6 horas se añaden, cambian y quitan los eventos que vienen del
+          enlace. Lo que crees tú en el calendario no se toca.
+        </p>
+        {errors.keep ? (
+          <p role="alert" className="text-sm text-danger">
+            {errors.keep}
+          </p>
+        ) : null}
+      </div>
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={pending || Boolean(fileError)}>
           <SwapLabel

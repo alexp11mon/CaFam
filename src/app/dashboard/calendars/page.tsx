@@ -1,3 +1,4 @@
+import { getIcsSubscriptions } from "@/lib/ics/subscription-queries";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { NoticeList } from "@/components/account/notice-list";
@@ -43,7 +44,7 @@ export const metadata: Metadata = { title: "Mis calendarios" };
 // Reads the session cookies, so it streams behind <Suspense> (cacheComponents).
 async function Calendars() {
   const { supabase, userId } = await requireUser();
-  const [records, people, preferences, timeZone, groups, connections] =
+  const [records, people, preferences, timeZone, groups, connections, ics] =
     await Promise.all([
       getMyCalendars(supabase, userId),
       getPeople(supabase),
@@ -52,6 +53,7 @@ async function Calendars() {
       getGroups(supabase, userId),
       // RLS returns only the user's own accounts (spec 009 RF-3).
       getConnections(supabase),
+      getIcsSubscriptions(supabase),
     ]);
   const readOnlyAccounts = connections.filter(
     (c) => c.status === "active" && !c.canWrite,
@@ -76,6 +78,7 @@ async function Calendars() {
     orphan: calendar.ownerId === null,
     groupId: groupOf.get(calendar.id) ?? null,
     canUpload: canUploadSome && calendar.ownerId === userId && !calendar.synced,
+    ics: ics.get(calendar.id) ?? null,
   });
   const sections = organized.groups.map((section) => ({
     group: { id: section.group.id, name: section.group.name },

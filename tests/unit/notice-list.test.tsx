@@ -115,3 +115,28 @@ describe("NoticeList: sync notices", () => {
     expect(dismissAction.mock.calls[0][0]).toBe("s2");
   });
 });
+
+describe("NoticeList for an imported link (spec 044 RF-10)", () => {
+  it("names the calendar and the reason", () => {
+    render(
+      <NoticeList
+        notices={[
+          {
+            id: "n9",
+            kind: "ics_failing",
+            personName: "",
+            calendarName: "Colegio",
+            createdAt: "2026-11-19T10:00:00Z",
+            detail: "El enlace ya no existe.",
+          },
+        ]}
+        dismissAction={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByText(
+        "No se pudo actualizar «Colegio» desde su enlace. El enlace ya no existe.",
+      ),
+    ).toBeInTheDocument();
+  });
+});

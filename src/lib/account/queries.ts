@@ -39,7 +39,8 @@ export type NoticeKind =
   | "kept_copy"
   | "deleted_calendar"
   | "sync_revoked"
-  | "sync_failing";
+  | "sync_failing"
+  | "ics_failing";
 
 export interface AccountNotice {
   id: string;
@@ -50,6 +51,8 @@ export interface AccountNotice {
   /** sync_revoked only: the account to reconnect (spec 018 RF-62). */
   provider?: ProviderName;
   connectionId?: string;
+  /** ics_failing only: why the link could not be read (spec 044 RF-10). */
+  detail?: string;
 }
 
 const NOTICE_KINDS = new Set<string>([
@@ -58,13 +61,14 @@ const NOTICE_KINDS = new Set<string>([
   "deleted_calendar",
   "sync_revoked",
   "sync_failing",
+  "ics_failing",
 ]);
 
 /** Unread notices of the user, newest first; RLS only returns the own ones (RF-23). */
 export async function getNotices(supabase: Client): Promise<AccountNotice[]> {
   const { data, error } = await supabase
     .from("account_notices")
-    .select("id, kind, person_name, calendar_name, created_at")
+    .select("id, kind, person_name, calendar_name, created_at, detail")
     .is("read_at", null)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -91,6 +95,7 @@ export async function getNotices(supabase: Client): Promise<AccountNotice[]> {
       calendarName: row.calendar_name,
       createdAt: row.created_at,
     };
+    if (row.detail) notice.detail = row.detail;
     const account =
       row.kind === "sync_revoked" ? accountOf(row.calendar_name) : undefined;
     if (account) {

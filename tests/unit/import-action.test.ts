@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   runImportResult: null as unknown,
   profileZoneCalls: 0,
   revalidated: [] as unknown[],
+  subscribeFails: false,
 }));
 
 vi.mock("next/cache", () => ({
@@ -24,6 +25,9 @@ vi.mock("@/lib/calendar/queries", () => ({
     supabase: {
       rpc: async (name: string, args: unknown) => {
         state.rpcCalls.push({ name, args });
+        if (name === "create_ics_subscription" && state.subscribeFails) {
+          return { data: null, error: { code: "42501" } };
+        }
         return state.rpcResult;
       },
       from: () => ({
@@ -77,6 +81,7 @@ const INITIAL = {
     color: "",
     destination: "",
     calendar: "",
+    keep: "",
   },
 };
 
@@ -97,6 +102,7 @@ beforeEach(() => {
   state.profileZoneCalls = 0;
   state.runImportResult = OK;
   state.rpcResult = { data: ID, error: null };
+  state.subscribeFails = false;
 });
 
 describe("importCalendar action success (RF-7, RF-31)", () => {
@@ -296,5 +302,47 @@ describe("importCalendar into an existing calendar (spec 044 RF-1..RF-3)", () =>
     expect(full.formError).toBe(
       "El calendario pasaría de 10.000 eventos importados. No se ha guardado nada.",
     );
+  });
+});
+
+describe("importCalendar keeps the calendar updated (spec 044 RF-5)", () => {
+  it("saves the link after the import when asked", async () => {
+    const result = await importCalendar(
+      INITIAL,
+      form({ url: SECRET_URL, keep: "on" }),
+    );
+    expect(state.rpcCalls[1]).toEqual({
+      name: "create_ics_subscription",
+      args: { p_calendar_id: ID, p_url: SECRET_URL, p_ids: [undefined] },
+    });
+    expect(result.result?.kept).toBe("yes");
+  });
+
+  it("says so when the link cannot be saved, keeping the events", async () => {
+    state.subscribeFails = true;
+    const result = await importCalendar(
+      INITIAL,
+      form({ url: SECRET_URL, keep: "on" }),
+    );
+    expect(result.result).toMatchObject({ created: 1, kept: "failed" });
+    expect(result.formError).toBeUndefined();
+  });
+
+  it("refuses to keep a file updated", async () => {
+    const result = await importCalendar(
+      INITIAL,
+      form({ file: FILE(), keep: "on" }),
+    );
+    expect(result.fieldErrors?.keep).toBe(
+      "Solo se puede mantener actualizado desde un enlace, no desde un archivo.",
+    );
+    expect(state.rpcCalls).toEqual([]);
+  });
+
+  it("does not save the link unless asked", async () => {
+    await importCalendar(INITIAL, form({ url: SECRET_URL }));
+    expect(state.rpcCalls.map((call) => call.name)).toEqual([
+      "import_calendar",
+    ]);
   });
 });

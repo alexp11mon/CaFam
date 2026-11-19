@@ -23,6 +23,8 @@ function noticeText(notice: AccountNotice): string {
         : `Google ha retirado el permiso de CaFam en la cuenta ${notice.calendarName}. Sus calendarios se conservan, pero no se actualizan.`;
     case "sync_failing":
       return `La actualización de «${notice.calendarName}» ha fallado 3 veces seguidas. Se seguirá intentando.`;
+    case "ics_failing":
+      return `No se pudo actualizar «${notice.calendarName}» desde su enlace.${notice.detail ? ` ${notice.detail}` : ""}`;
   }
 }
 
