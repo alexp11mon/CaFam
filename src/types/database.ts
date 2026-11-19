@@ -43,6 +43,7 @@ export type Database = {
         Row: {
           calendar_name: string
           created_at: string
+          detail: string | null
           id: string
           kind: string
           person_name: string
@@ -52,6 +53,7 @@ export type Database = {
         Insert: {
           calendar_name: string
           created_at?: string
+          detail?: string | null
           id?: string
           kind: string
           person_name?: string
@@ -61,6 +63,7 @@ export type Database = {
         Update: {
           calendar_name?: string
           created_at?: string
+          detail?: string | null
           id?: string
           kind?: string
           person_name?: string
@@ -871,6 +874,63 @@ export type Database = {
           },
         ]
       }
+      ics_subscriptions: {
+        Row: {
+          attempted_at: string | null
+          calendar_id: string
+          consecutive_failures: number
+          created_at: string
+          created_by: string | null
+          feed_ids: string[]
+          last_error: string | null
+          last_read_at: string | null
+          last_summary: Json | null
+          secret_id: string
+          state: string
+        }
+        Insert: {
+          attempted_at?: string | null
+          calendar_id: string
+          consecutive_failures?: number
+          created_at?: string
+          created_by?: string | null
+          feed_ids?: string[]
+          last_error?: string | null
+          last_read_at?: string | null
+          last_summary?: Json | null
+          secret_id: string
+          state?: string
+        }
+        Update: {
+          attempted_at?: string | null
+          calendar_id?: string
+          consecutive_failures?: number
+          created_at?: string
+          created_by?: string | null
+          feed_ids?: string[]
+          last_error?: string | null
+          last_read_at?: string | null
+          last_summary?: Json | null
+          secret_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ics_subscriptions_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: true
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ics_subscriptions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       image_purge_queue: {
         Row: {
           attempts: number
@@ -1463,6 +1523,10 @@ export type Database = {
         Returns: string
       }
       create_ics_feed: { Args: { p_calendar_id: string }; Returns: string }
+      create_ics_subscription: {
+        Args: { p_calendar_id: string; p_ids: string[]; p_url: string }
+        Returns: undefined
+      }
       create_invite: {
         Args: {
           p_calendar_id: string
@@ -1525,7 +1589,51 @@ export type Database = {
           starts_at: string
         }[]
       }
+      ics_apply_events: {
+        Args: {
+          p_calendar_id: string
+          p_events: Json
+          p_from: string
+          p_read_at: string
+          p_secret: string
+          p_to: string
+        }
+        Returns: Json
+      }
+      ics_claim_due: {
+        Args: { p_limit?: number; p_secret: string }
+        Returns: {
+          calendar_id: string
+          last_read_at: string
+          time_zone: string
+        }[]
+      }
+      ics_claim_one: {
+        Args: { p_calendar_id: string; p_secret: string }
+        Returns: Json
+      }
+      ics_fail: {
+        Args: {
+          p_calendar_id: string
+          p_kind: string
+          p_message: string
+          p_secret: string
+        }
+        Returns: undefined
+      }
       ics_feed: { Args: { p_token: string }; Returns: Json }
+      ics_get_url: {
+        Args: { p_calendar_id: string; p_secret: string }
+        Returns: string
+      }
+      ics_scheduled_jobs: {
+        Args: never
+        Returns: {
+          jobname: string
+          schedule: string
+        }[]
+      }
+      ics_trigger: { Args: { p_dry_run?: boolean }; Returns: Json }
       image_object_id: { Args: { p_name: string }; Returns: string }
       image_purge_pending: { Args: { p_name: string }; Returns: boolean }
       image_upload_allowed: { Args: { p_name: string }; Returns: boolean }
@@ -1777,6 +1885,10 @@ export type Database = {
           p_series_id: string
         }
         Returns: string
+      }
+      stop_ics_subscription: {
+        Args: { p_calendar_id: string }
+        Returns: undefined
       }
       sync_apply_events: {
         Args: {

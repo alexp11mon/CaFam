@@ -23,11 +23,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Lee, convierte y aplica; fallo de red → `transient`; 404/410 → `gone`; respeta el plazo de 50 s y las tandas.
 
   Cubre: RF-7, RF-10, RF-12, RNF-1 | Evidencia: `npm test -- ics-refresh` 7 tests en verde (solo la ventana leída, ventana vacía, red → `transient`, 404/410 → `gone`, archivo inválido y fallo al guardar → `transient`, enlace no https sin descargar, tandas y plazo de 50 s); `fetch-ics` da `gone` con 404/410 y `npm test -- ics import` 278 tests en verde (2026-11-19)
-- [ ] T4 Suscripciones en la base de datos
+- [x] T4 Suscripciones en la base de datos
   Hecho cuando: `npm run test:db -- ics-subscriptions` en verde.
   - Crear (URL en Vault), solo `created_by` lee la URL, reconciliar (añadir, cambiar, borrar, no pisar lo cambiado en CaFam, no tocar lo propio, conservar color e imágenes), fallos y pausa, pausa al perder el rol, borrado con el calendario.
 
-  Cubre: RF-5, RF-7 a RF-11, RF-13 | Evidencia: —
+  Cubre: RF-5, RF-7 a RF-11, RF-13 | Evidencia: migración `ics_subscriptions` aplicada en dev y tipos regenerados; `npm run test:db -- ics-subscriptions` 8 tests en verde (URL en Vault y solo con el secreto, Lector `CF404`, añadir/cambiar/borrar solo lo del enlace conservando el color y lo de otro archivo o propio, no pisa lo cambiado tras la lectura, aviso y pausa al 3.er `gone`, "Reintentar" con 5 minutos, tanda vencida, pausa al pasar a Lector, "Dejar de actualizar" borra el secreto y conserva los eventos, se borra al quedar sin propietario, `pg_cron` cada 15 minutos). La identidad que borra el enlace se guarda en `feed_ids` para no tocar lo importado de otro archivo (2026-11-19)
 - [ ] T5 Ruta, acciones e interfaz
   Hecho cuando: `npm test -- ics-refresh-route ics-subscription-status` en verde, prueba real con un `.ics` servido en local (cambiarlo y "Actualizar ahora") y capturas a 390 y 1440 px en claro y oscuro.
 
