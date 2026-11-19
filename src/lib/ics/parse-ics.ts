@@ -28,6 +28,8 @@ export interface IcsOccurrence {
   start: IcsTime;
   /** Null when the event gives neither DTEND nor DURATION. */
   end: IcsTime | null;
+  /** Original start of a repetition, its identity with the UID (spec 044 RF-2). */
+  recurrenceId?: IcsTime | null;
 }
 
 export type ParseIcsResult =
@@ -94,6 +96,7 @@ export function occurrenceOf(
   component: ICAL.Component,
   start: ICAL.Time,
   end: ICAL.Time,
+  recurrence?: { time: ICAL.Time; zone: IcsZone },
 ): IcsOccurrence {
   const event = new ICAL.Event(component);
   const startZone = zoneOf(component, "dtstart") ?? { kind: "floating" };
@@ -106,6 +109,19 @@ export function occurrenceOf(
     location: event.location ?? "",
     start: toTime(start, startZone),
     end: hasEnd ? toTime(end, zoneOf(component, "dtend") ?? startZone) : null,
+    recurrenceId: recurrence ? toTime(recurrence.time, recurrence.zone) : null,
+  };
+}
+
+/** The RECURRENCE-ID of a modified repetition, if it has one. */
+function ownRecurrence(
+  component: ICAL.Component,
+): { time: ICAL.Time; zone: IcsZone } | undefined {
+  const value = component.getFirstPropertyValue("recurrence-id");
+  if (!(value instanceof ICAL.Time)) return undefined;
+  return {
+    time: value,
+    zone: zoneOf(component, "recurrence-id") ?? { kind: "floating" },
   };
 }
 
@@ -188,7 +204,12 @@ export function parseIcs(
         }
         const event = new ICAL.Event(component);
         occurrences.push(
-          occurrenceOf(component, event.startDate, event.endDate),
+          occurrenceOf(
+            component,
+            event.startDate,
+            event.endDate,
+            ownRecurrence(component),
+          ),
         );
       }
       continue;
@@ -219,7 +240,10 @@ export function parseIcs(
         const item = details.item.component;
         if (isCancelled(item)) continue;
         occurrences.push(
-          occurrenceOf(item, details.startDate, details.endDate),
+          occurrenceOf(item, details.startDate, details.endDate, {
+            time: details.recurrenceId,
+            zone: zoneOf(master, "dtstart") ?? { kind: "floating" },
+          }),
         );
         if (occurrences.length > cap) {
           capped = true;

@@ -8,10 +8,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
 
 ## Tareas
 
-- [ ] T1 Identidad de cada evento importado
+- [x] T1 Identidad de cada evento importado
   Hecho cuando: `npm test -- convert-events parse-ics` en verde: `UID` en sueltos, `UID#<instante>` en repeticiones y en repeticiones cambiadas, estable entre dos lecturas del mismo archivo.
 
-  Cubre: RF-2 | Evidencia: —
+  Cubre: RF-2 | Evidencia: `npm test -- parse-ics-identity ics-convert ics-parse ics-import import-action` 80 tests en verde; un `.ics` que repite una identidad conserva la primera y la cuenta como omitida (2026-11-19)
 - [ ] T2 Importar a un calendario existente
   Hecho cuando: `npm run test:db -- import-into` y `npm test -- import-form import-actions` en verde.
   - Migración (parte de importación), `db:push`, `db:types`. Añade y cuenta los que ya estaban; Lector → error; traído → error; tope de 10.000.

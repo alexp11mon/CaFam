@@ -11,6 +11,8 @@ export interface EventRow {
   starts_at: string;
   ends_at: string;
   all_day: boolean;
+  /** UID, or UID#<instant> in a repetition (spec 044 RF-2). */
+  external_id: string;
 }
 
 const DAY_MS = 86_400_000;
@@ -111,6 +113,37 @@ function rangeOf(
   return { start: from, end: to };
 }
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** 20261102T170000Z for a time, 20261208 for a date: like spec 018 ids. */
+function stamp(time: IcsTime, profileTimeZone: string): string {
+  const date = `${time.year}${pad(time.month)}${pad(time.day)}`;
+  if (time.allDay) return date;
+  const instant = instantOf(time, profileTimeZone);
+  // A zone Intl does not know keeps its wall clock: still stable.
+  if (instant === null) {
+    return `${date}T${pad(time.hour)}${pad(time.minute)}${pad(time.second)}`;
+  }
+  return `${new Date(instant).toISOString().slice(0, 19).replace(/[-:]/g, "")}Z`;
+}
+
+/**
+ * The identity of an occurrence in its .ics, stable between two reads
+ * (spec 044 RF-2). Without a UID, its title and start stand in for it.
+ */
+export function externalIdOf(
+  occurrence: IcsOccurrence,
+  profileTimeZone: string,
+): string {
+  if (occurrence.recurrenceId) {
+    return `${occurrence.uid || `sin-uid:${occurrence.summary}`}#${stamp(occurrence.recurrenceId, profileTimeZone)}`;
+  }
+  return (
+    occurrence.uid ||
+    `sin-uid:${occurrence.summary}#${stamp(occurrence.start, profileTimeZone)}`
+  );
+}
+
 /**
  * Turns occurrences into event rows. Occurrences that cannot be converted
  * (unknown zone, end before start) are left out and counted in `skipped`.
@@ -135,6 +168,7 @@ export function convertOccurrences(
       starts_at: new Date(range.start).toISOString(),
       ends_at: new Date(range.end).toISOString(),
       all_day: occurrence.start.allDay,
+      external_id: externalIdOf(occurrence, profileTimeZone),
     });
   }
 

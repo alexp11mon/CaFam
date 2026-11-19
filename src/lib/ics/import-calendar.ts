@@ -52,10 +52,17 @@ export async function runImport(
   const parsed = parseIcs(text, { today: input.today });
   if (!parsed.ok) return { ok: false, error: { kind: parsed.error } };
 
-  const { events, skipped } = convertOccurrences(
+  const converted = convertOccurrences(
     parsed.occurrences,
     input.profileTimeZone,
   );
+  // A file that repeats an identity keeps the first one: the calendar holds
+  // each external_id once (spec 044 RF-2).
+  const seen = new Set<string>();
+  const events = converted.events.filter(
+    (event) => !seen.has(event.external_id) && seen.add(event.external_id),
+  );
+  const skipped = converted.skipped + converted.events.length - events.length;
   if (events.length === 0) return { ok: false, error: { kind: "no-events" } };
   if (parsed.capped || events.length > MAX_EVENTS) {
     return {

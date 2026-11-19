@@ -251,6 +251,7 @@ describe("convertOccurrences texts (RF-13..RF-15)", () => {
         "all_day",
         "description",
         "ends_at",
+        "external_id",
         "location",
         "starts_at",
         "title",
