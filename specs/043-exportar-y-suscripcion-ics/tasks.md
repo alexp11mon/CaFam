@@ -2,7 +2,7 @@
 
 Spec: `specs/043-exportar-y-suscripcion-ics/spec.md`. Plan: `specs/043-exportar-y-suscripcion-ics/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: pendiente.
+> Estado: cerrada (2026-11-19). Migración `ics_feeds` aplicada en dev; pendiente `db push` a prod.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T2 y T3.
 
@@ -29,8 +29,9 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- ics-feed-panel calendar-list calendar-filters` en verde y capturas a 390 y 1440 px en claro y oscuro en `capturas/`; prueba manual de suscripción desde un `.ics` servido por `next start` abierto en el navegador.
 
   Cubre: RF-1, RF-2, RF-7, RF-8, RF-12, RF-13 | Evidencia: `npm test -- ics-feed-panel calendar-list calendar-filters share-actions` 48 tests en verde; `scripts/screenshots-043.mjs` con `next start`: capturas en `capturas/`, la suscripción servida responde 200 con `text/calendar`, `private, max-age=900` y `noindex`, un token falso 404 sin cuerpo y la descarga con sesión `attachment; filename="Mi calendario.ics"` (2026-11-19)
-- [ ] T5 Cierre
+- [x] T5 Cierre
   Hecho cuando: AGENTS.md (rutas públicas, base de datos), README y constitución actualizados; `python -m graphify update .`; P8 completa.
+  Evidencia: docs actualizadas; `python -m graphify update .` correcto; `typecheck` y `lint` sin errores (1 aviso previo en `event-form.tsx`), `format:check` limpio, `npm test` 372 archivos y 3.660 tests en verde, `npm run build` correcto; `test:db` de `ics-export` e `ics-feeds` en verde (2026-11-19).
 
 ## Trazabilidad
 

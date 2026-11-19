@@ -112,6 +112,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 040  | Recordatorios y notificaciones push                                 | ✅ Cerrada (migración y claves VAPID pendientes)  |
 | 041  | Alta de eventos en lenguaje natural, sin IA                         | ✅ Cerrada                                        |
 | 042  | Vistas de año y de 4 días                                           | ✅ Cerrada (migración pendiente en prod)          |
+| 043  | Exportar a `.ics` y enlace de suscripción de solo lectura           | ✅ Cerrada (migración pendiente en prod)          |
 
 > Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
@@ -342,6 +343,8 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | `/invite/[token]`                   | pública/privada             | Vista previa y unión por token                                          |
 | `/offline`                          | pública                     | La app sin conexión con la copia (`?from=`), o "Sin conexión" sin copia |
 | `/privacy`                          | pública                     | Política de privacidad                                                  |
+| `/api/ics/export`                   | con sesión                  | Descargar un calendario o los visibles como `.ics`                      |
+| `/api/ics/[token].ics`              | pública (token secreto)     | Suscripción de solo lectura a un calendario                             |
 | `/api/assistant`                    | con sesión (POST)           | Pregunta al asistente (respuesta en streaming NDJSON)                   |
 | `/api/sync/google-push`             | pública (POST)              | Avisos de cambios de Google                                             |
 | `/api/sync/run`                     | Bearer `CRON_SECRET` (POST) | Ejecutar sincronización                                                 |
@@ -535,7 +538,6 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 - Zona horaria por evento.
 - Sincronizar o actualizar un calendario importado.
 - Importar a un calendario que ya existe.
-- Exportar a `.ics`.
 - Verificación de email en el registro.
 - Traspaso voluntario de calendarios.
 - Exportar los datos de la cuenta.
@@ -553,7 +555,7 @@ Hasta que exista su spec aprobada:
 
 - Papelera o deshacer de más de una acción.
 - Compartir e integrar con el sistema (las dos últimas, en la hoja de ruta de la constitución).
-- Zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario existente, exportar a `.ics`.
+- Zona horaria por evento, sincronizar o actualizar un calendario importado, importar a un calendario existente.
 - Verificación de email en el registro, traspaso voluntario de calendarios, exportar datos de la cuenta, login social, Microsoft, i18n.
 - Sin conexión: envío en segundo plano, fechas fuera del rango guardado, series enteras, calendarios traídos, imágenes y comentarios (el resto, en "Fuera de alcance" de la spec 034).
 - Cambiar eventos desde el asistente (salvo crearlos desde una imagen), guardar conversaciones o responder por voz (necesitan otra spec).
