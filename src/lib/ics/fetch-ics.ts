@@ -7,7 +7,7 @@ import { parseSourceUrl } from "./source-url";
 // Downloads an .ics link once, from the server (RF-1). Nothing here stores or
 // logs the URL, and no error carries it (RF-6).
 
-export type FetchError = "invalid-url" | "unreachable" | "too-large";
+export type FetchError = "invalid-url" | "unreachable" | "too-large" | "gone";
 export type FetchResult =
   { ok: true; text: string } | { ok: false; error: FetchError };
 
@@ -132,7 +132,15 @@ async function download(
 
     if (response.status !== 200) {
       response.destroy();
-      return { ok: false, error: "unreachable" };
+      // 404 and 410 say the link no longer exists: an updated link pauses
+      // after three of them (spec 044 RF-10).
+      return {
+        ok: false,
+        error:
+          response.status === 404 || response.status === 410
+            ? "gone"
+            : "unreachable",
+      };
     }
     const text = await readBody(response);
     return text === null

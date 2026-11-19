@@ -163,7 +163,18 @@ describe("fetchIcs (RF-1, RF-4, RF-5, RF-26)", () => {
     expect(result).toEqual({ ok: false, error: "invalid-url" });
   });
 
-  it.each([404, 403, 500, 503])(
+  it.each([404, 410])(
+    "maps a %i response to gone (spec 044 RF-10)",
+    async (status) => {
+      const result = await fetchIcs(URL_OK, {
+        request: async () => response(status),
+      });
+
+      expect(result).toEqual({ ok: false, error: "gone" });
+    },
+  );
+
+  it.each([403, 500, 503])(
     "maps a %i response to unreachable (RF-5)",
     async (status) => {
       const result = await fetchIcs(URL_OK, {

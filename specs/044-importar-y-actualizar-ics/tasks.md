@@ -18,11 +18,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Formulario con destino y resumen.
 
   Cubre: RF-1, RF-3, RF-4 | Evidencia: migración `ics_import_into` aplicada en dev y tipos regenerados; `npm run test:db -- import-into` 4 tests en verde (añade y cuenta los que ya estaban, Lector `CF404`, traído `22023`, tope de 10.000 sin dejar nada); `npm test -- import ics` 270 tests en verde; typecheck y lint sin errores (2026-11-19)
-- [ ] T3 Motor de actualización
+- [x] T3 Motor de actualización
   Hecho cuando: `npm test -- ics-refresh` (dependencias simuladas) en verde.
   - Lee, convierte y aplica; fallo de red → `transient`; 404/410 → `gone`; respeta el plazo de 50 s y las tandas.
 
-  Cubre: RF-7, RF-10, RF-12, RNF-1 | Evidencia: —
+  Cubre: RF-7, RF-10, RF-12, RNF-1 | Evidencia: `npm test -- ics-refresh` 7 tests en verde (solo la ventana leída, ventana vacía, red → `transient`, 404/410 → `gone`, archivo inválido y fallo al guardar → `transient`, enlace no https sin descargar, tandas y plazo de 50 s); `fetch-ics` da `gone` con 404/410 y `npm test -- ics import` 278 tests en verde (2026-11-19)
 - [ ] T4 Suscripciones en la base de datos
   Hecho cuando: `npm run test:db -- ics-subscriptions` en verde.
   - Crear (URL en Vault), solo `created_by` lee la URL, reconciliar (añadir, cambiar, borrar, no pisar lo cambiado en CaFam, no tocar lo propio, conservar color e imágenes), fallos y pausa, pausa al perder el rol, borrado con el calendario.

@@ -15,6 +15,12 @@ export interface RunImportInput {
   today: { year: number; month: number; day: number };
   /** The name typed in the form, or null to use the one of the .ics (RF-8, RF-9). */
   name: string | null;
+  /**
+   * Only the events that overlap it, before the 2,000 limit: an updated link
+   * reads today −6 to +12 months, so a long history does not stop it (spec 044
+   * RF-7).
+   */
+  window?: { from: Date; to: Date };
 }
 
 export type RunImportResult =
@@ -58,11 +64,19 @@ export async function runImport(
   );
   // A file that repeats an identity keeps the first one: the calendar holds
   // each external_id once (spec 044 RF-2).
+  const { window } = input;
+  const candidates = window
+    ? converted.events.filter(
+        (event) =>
+          Date.parse(event.ends_at) > window.from.getTime() &&
+          Date.parse(event.starts_at) < window.to.getTime(),
+      )
+    : converted.events;
   const seen = new Set<string>();
-  const events = converted.events.filter(
+  const events = candidates.filter(
     (event) => !seen.has(event.external_id) && seen.add(event.external_id),
   );
-  const skipped = converted.skipped + converted.events.length - events.length;
+  const skipped = converted.skipped + candidates.length - events.length;
   if (events.length === 0) return { ok: false, error: { kind: "no-events" } };
   if (parsed.capped || events.length > MAX_EVENTS) {
     return {
