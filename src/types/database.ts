@@ -226,6 +226,48 @@ export type Database = {
           },
         ]
       }
+      calendar_feeds: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          created_by: string | null
+          hits: number
+          hits_window: string
+          token_hash: string
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          created_by?: string | null
+          hits?: number
+          hits_window?: string
+          token_hash: string
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          created_by?: string | null
+          hits?: number
+          hits_window?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_feeds_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: true
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_feeds_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_groups: {
         Row: {
           created_at: string
@@ -1420,6 +1462,7 @@ export type Database = {
         Args: { p_calendar_id: string; p_user_id: string }
         Returns: string
       }
+      create_ics_feed: { Args: { p_calendar_id: string }; Returns: string }
       create_invite: {
         Args: {
           p_calendar_id: string
@@ -1455,6 +1498,7 @@ export type Database = {
         Args: { p_calendar_id: string }
         Returns: undefined
       }
+      disable_ics_feed: { Args: { p_calendar_id: string }; Returns: undefined }
       disconnect_account: {
         Args: { p_connection_id: string; p_delete: boolean }
         Returns: undefined
@@ -1481,6 +1525,7 @@ export type Database = {
           starts_at: string
         }[]
       }
+      ics_feed: { Args: { p_token: string }; Returns: Json }
       image_object_id: { Args: { p_name: string }; Returns: string }
       image_purge_pending: { Args: { p_name: string }; Returns: boolean }
       image_upload_allowed: { Args: { p_name: string }; Returns: boolean }

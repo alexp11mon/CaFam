@@ -36,6 +36,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // The subscription token is in the URL too (spec 043 RF-9).
+        source: "/api/ics/:path*",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex" },
+        ],
+      },
+      {
         // The browser must always fetch the latest service worker (plan R5).
         source: "/sw.js",
         headers: [
