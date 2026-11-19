@@ -6,7 +6,7 @@ const ID = "11111111-1111-4111-8111-111111111111";
 const state = vi.hoisted(() => ({
   rpcCalls: [] as { name: string; args: unknown }[],
   rpcResult: { data: null, error: null } as {
-    data: string | null;
+    data: unknown;
     error: { code: string; message?: string } | null;
   },
   runImportCalls: [] as unknown[],
@@ -26,6 +26,13 @@ vi.mock("@/lib/calendar/queries", () => ({
         state.rpcCalls.push({ name, args });
         return state.rpcResult;
       },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({ data: { name: "Colegio" } }),
+          }),
+        }),
+      }),
     },
     userId: "user",
   }),
@@ -62,7 +69,16 @@ const OK = {
   skipped: 2,
   cutSeries: 1,
 };
-const INITIAL = { values: { url: "", file: "", name: "", color: "" } };
+const INITIAL = {
+  values: {
+    url: "",
+    file: "",
+    name: "",
+    color: "",
+    destination: "",
+    calendar: "",
+  },
+};
 
 function form(fields: Record<string, string | File>) {
   const data = new FormData();
@@ -228,5 +244,57 @@ describe("importCalendar action failures (RF-6, RF-30)", () => {
     expect(JSON.stringify(done)).not.toContain("SECRET-TOKEN");
     expect(failed.formError).not.toContain("SECRET-TOKEN");
     expect(done.values.url).toBe("");
+  });
+});
+
+describe("importCalendar into an existing calendar (spec 044 RF-1..RF-3)", () => {
+  it("calls import_into_calendar and reports the added and existing", async () => {
+    state.rpcResult = { data: { added: 1, existing: 3 }, error: null };
+    const result = await importCalendar(
+      INITIAL,
+      form({ file: FILE(), destination: "existing", calendar: ID }),
+    );
+    expect(state.rpcCalls).toEqual([
+      {
+        name: "import_into_calendar",
+        args: { p_calendar_id: ID, p_events: EVENTS },
+      },
+    ]);
+    expect(result.result).toEqual({
+      calendarId: ID,
+      into: { name: "Colegio", existing: 3 },
+      created: 1,
+      skipped: 2,
+      cutSeries: 1,
+    });
+    expect(state.revalidated).toEqual([["/dashboard", "layout"]]);
+  });
+
+  it("asks for a calendar when none is chosen", async () => {
+    const result = await importCalendar(
+      INITIAL,
+      form({ file: FILE(), destination: "existing", calendar: "" }),
+    );
+    expect(result.fieldErrors?.calendar).toBe("Elige el calendario.");
+    expect(state.runImportCalls).toEqual([]);
+  });
+
+  it("explains a calendar it cannot write and the 10,000 limit", async () => {
+    state.rpcResult = { data: null, error: { code: "CF404" } };
+    const denied = await importCalendar(
+      INITIAL,
+      form({ file: FILE(), destination: "existing", calendar: ID }),
+    );
+    expect(denied.formError).toBe(
+      "No puedes añadir eventos a ese calendario. No se ha guardado nada.",
+    );
+    state.rpcResult = { data: null, error: { code: "CF429" } };
+    const full = await importCalendar(
+      INITIAL,
+      form({ file: FILE(), destination: "existing", calendar: ID }),
+    );
+    expect(full.formError).toBe(
+      "El calendario pasaría de 10.000 eventos importados. No se ha guardado nada.",
+    );
   });
 });

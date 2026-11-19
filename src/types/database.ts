@@ -1555,6 +1555,10 @@ export type Database = {
         Args: { p_color: string; p_events: Json; p_name: string }
         Returns: string
       }
+      import_into_calendar: {
+        Args: { p_calendar_id: string; p_events: Json }
+        Returns: Json
+      }
       is_calendar_member: { Args: { p_calendar_id: string }; Returns: boolean }
       is_synced_calendar: { Args: { p_calendar_id: string }; Returns: boolean }
       join_with_code: {

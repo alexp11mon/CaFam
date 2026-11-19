@@ -73,3 +73,25 @@ describe("ImportSummary (RF-31)", () => {
     );
   });
 });
+
+describe("ImportSummary into an existing calendar (spec 044 RF-3)", () => {
+  it("says what was added and what was already there", () => {
+    render(
+      <ImportSummary
+        result={{
+          calendarId: ID,
+          into: { name: "Colegio", existing: 3 },
+          created: 2,
+          skipped: 0,
+          cutSeries: 0,
+        }}
+      />,
+    );
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Se han añadido 2 eventos a «Colegio».");
+    expect(status).toHaveTextContent("3 ya estaban.");
+    expect(
+      screen.queryByRole("link", { name: "Editar calendario" }),
+    ).toBeNull();
+  });
+});

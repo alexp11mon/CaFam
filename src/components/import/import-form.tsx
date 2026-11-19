@@ -5,6 +5,7 @@ import { ColorPicker } from "@/components/calendar/color-picker";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { LinkButton } from "@/components/ui/link-button";
+import { Select } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
 import type { FormAction } from "@/lib/forms/form-state";
@@ -16,11 +17,30 @@ import { SwapLabel } from "@/components/ui/swap-label";
 
 const TOO_LARGE = getImportErrorMessage({ kind: "too-large" });
 
-/** Import an .ics from a link or a file into a new calendar (RF-1, RF-2, RF-8, RF-10, RF-26, RF-32). */
-export function ImportForm({ action }: { action: FormAction<ImportState> }) {
+export interface ImportDestination {
+  id: string;
+  name: string;
+}
+
+/**
+ * Import an .ics from a link or a file into a new calendar (RF-1, RF-2, RF-8,
+ * RF-10, RF-26, RF-32) or into one the user can write (spec 044 RF-1).
+ */
+export function ImportForm({
+  action,
+  destinations = [],
+}: {
+  action: FormAction<ImportState>;
+  /** Normal calendars where the user is owner or editor. */
+  destinations?: ImportDestination[];
+}) {
   const [state, formAction, pending] = useActionState(action, {
     values: EMPTY_IMPORT_VALUES,
   });
+  const [destination, setDestination] = useState(
+    state.values.destination || "new",
+  );
+  const existing = destination === "existing" && destinations.length > 0;
   const errors = state.fieldErrors ?? {};
   const fileId = useId();
   const fileErrorId = `${fileId}-error`;
@@ -68,18 +88,58 @@ export function ImportForm({ action }: { action: FormAction<ImportState> }) {
           </p>
         ) : null}
       </div>
-      <TextField
-        label="Nombre del calendario (opcional)"
-        name="name"
-        maxLength={50}
-        defaultValue={state.values.name}
-        error={errors.name}
-      />
-      <ColorPicker
-        name="color"
-        defaultValue={state.values.color || DEFAULT_CALENDAR_COLOR}
-        error={errors.color}
-      />
+      {destinations.length > 0 ? (
+        <fieldset className="flex flex-col gap-1">
+          <legend className="mb-1 text-sm font-medium text-ink">Destino</legend>
+          {(
+            [
+              ["new", "Un calendario nuevo"],
+              ["existing", "Un calendario que ya tengo"],
+            ] as const
+          ).map(([value, label]) => (
+            <label key={value} className="flex min-h-11 items-center gap-3">
+              <input
+                type="radio"
+                name="destination"
+                value={value}
+                checked={destination === value}
+                onChange={() => setDestination(value)}
+                className="size-5 shrink-0 accent-ink"
+              />
+              {label}
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
+      {existing ? (
+        <Select
+          label="Calendario"
+          name="calendar"
+          defaultValue={state.values.calendar || destinations[0]?.id}
+          error={errors.calendar}
+        >
+          {destinations.map((calendar) => (
+            <option key={calendar.id} value={calendar.id}>
+              {calendar.name}
+            </option>
+          ))}
+        </Select>
+      ) : (
+        <>
+          <TextField
+            label="Nombre del calendario (opcional)"
+            name="name"
+            maxLength={50}
+            defaultValue={state.values.name}
+            error={errors.name}
+          />
+          <ColorPicker
+            name="color"
+            defaultValue={state.values.color || DEFAULT_CALENDAR_COLOR}
+            error={errors.color}
+          />
+        </>
+      )}
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={pending || Boolean(fileError)}>
           <SwapLabel

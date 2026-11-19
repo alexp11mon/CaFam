@@ -8,14 +8,35 @@ const events = (n: number) => (n === 1 ? "1 evento" : `${n} eventos`);
 
 /** What a finished import did: created, skipped and cut series (RF-31). */
 export function ImportSummary({ result }: { result: ImportSummaryData }) {
-  const { calendarId, created, skipped, cutSeries } = result;
+  const { calendarId, created, skipped, cutSeries, into } = result;
 
   return (
     <div
       role="status"
       className="flex flex-col gap-2 rounded-card bg-paper p-4 text-ink tabular-nums"
     >
-      <p className="font-semibold">Calendario creado con {events(created)}.</p>
+      {into ? (
+        <>
+          <p className="font-semibold">
+            {created === 1
+              ? "Se ha añadido 1 evento"
+              : `Se han añadido ${created} eventos`}{" "}
+            a «{into.name}».
+          </p>
+          {into.existing > 0 ? (
+            <p>
+              {into.existing === 1
+                ? "1 ya estaba"
+                : `${into.existing} ya estaban`}
+              .
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <p className="font-semibold">
+          Calendario creado con {events(created)}.
+        </p>
+      )}
       {skipped > 0 ? (
         <p>
           {events(skipped)} {skipped === 1 ? "se ha omitido" : "se han omitido"}{" "}
@@ -34,12 +55,14 @@ export function ImportSummary({ result }: { result: ImportSummaryData }) {
         <Link href="/dashboard/calendar" className={ACTION_LINK}>
           Abrir calendario
         </Link>
-        <Link
-          href={`/dashboard/calendars/${calendarId}/edit`}
-          className={ACTION_LINK}
-        >
-          Editar calendario
-        </Link>
+        {into ? null : (
+          <Link
+            href={`/dashboard/calendars/${calendarId}/edit`}
+            className={ACTION_LINK}
+          >
+            Editar calendario
+          </Link>
+        )}
       </div>
     </div>
   );

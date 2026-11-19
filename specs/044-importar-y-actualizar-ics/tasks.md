@@ -12,12 +12,12 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- convert-events parse-ics` en verde: `UID` en sueltos, `UID#<instante>` en repeticiones y en repeticiones cambiadas, estable entre dos lecturas del mismo archivo.
 
   Cubre: RF-2 | Evidencia: `npm test -- parse-ics-identity ics-convert ics-parse ics-import import-action` 80 tests en verde; un `.ics` que repite una identidad conserva la primera y la cuenta como omitida (2026-11-19)
-- [ ] T2 Importar a un calendario existente
+- [x] T2 Importar a un calendario existente
   Hecho cuando: `npm run test:db -- import-into` y `npm test -- import-form import-actions` en verde.
   - Migración (parte de importación), `db:push`, `db:types`. Añade y cuenta los que ya estaban; Lector → error; traído → error; tope de 10.000.
   - Formulario con destino y resumen.
 
-  Cubre: RF-1, RF-3, RF-4 | Evidencia: —
+  Cubre: RF-1, RF-3, RF-4 | Evidencia: migración `ics_import_into` aplicada en dev y tipos regenerados; `npm run test:db -- import-into` 4 tests en verde (añade y cuenta los que ya estaban, Lector `CF404`, traído `22023`, tope de 10.000 sin dejar nada); `npm test -- import ics` 270 tests en verde; typecheck y lint sin errores (2026-11-19)
 - [ ] T3 Motor de actualización
   Hecho cuando: `npm test -- ics-refresh` (dependencias simuladas) en verde.
   - Lee, convierte y aplica; fallo de red → `transient`; 404/410 → `gone`; respeta el plazo de 50 s y las tandas.

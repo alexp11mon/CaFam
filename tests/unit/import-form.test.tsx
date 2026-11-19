@@ -7,7 +7,14 @@ import { MAX_BYTES } from "@/lib/ics/limits";
 import type { ImportState } from "@/lib/ics/import-state";
 
 const EMPTY: ImportState = {
-  values: { url: "", file: "", name: "", color: "" },
+  values: {
+    url: "",
+    file: "",
+    name: "",
+    color: "",
+    destination: "",
+    calendar: "",
+  },
 };
 
 function setup(action: FormAction<ImportState> = vi.fn(async () => EMPTY)) {
@@ -79,7 +86,14 @@ describe("ImportForm errors", () => {
     setup(
       vi.fn(async () => ({
         fieldErrors: { url: "Indica un enlace o sube un archivo, no los dos." },
-        values: { url: "", file: "", name: "", color: "" },
+        values: {
+          url: "",
+          file: "",
+          name: "",
+          color: "",
+          destination: "",
+          calendar: "",
+        },
       })),
     );
 
@@ -104,6 +118,8 @@ describe("ImportForm errors", () => {
           file: "",
           name: "Clases",
           color: "",
+          destination: "new",
+          calendar: "",
         },
       })),
     );
@@ -192,7 +208,14 @@ describe("ImportForm progress (RF-31, RF-32)", () => {
   it("shows the summary when the import finishes", async () => {
     setup(
       vi.fn(async () => ({
-        values: { url: "", file: "", name: "", color: "" },
+        values: {
+          url: "",
+          file: "",
+          name: "",
+          color: "",
+          destination: "",
+          calendar: "",
+        },
         result: {
           calendarId: "11111111-1111-4111-8111-111111111111",
           created: 12,
@@ -210,5 +233,39 @@ describe("ImportForm progress (RF-31, RF-32)", () => {
     expect(
       screen.getByRole("link", { name: "Abrir calendario" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("ImportForm destination (spec 044 RF-1)", () => {
+  const DESTINATIONS = [
+    { id: "c1", name: "Familia" },
+    { id: "c2", name: "Colegio" },
+  ];
+
+  it("imports into a new calendar unless another one is chosen", async () => {
+    const action = vi.fn<FormAction<ImportState>>(async () => EMPTY);
+    render(<ImportForm action={action} destinations={DESTINATIONS} />);
+    const user = userEvent.setup();
+    expect(screen.getByLabelText("Un calendario nuevo")).toBeChecked();
+    expect(screen.queryByLabelText("Calendario")).toBeNull();
+
+    await user.click(screen.getByLabelText("Un calendario que ya tengo"));
+    expect(
+      screen.queryByLabelText("Nombre del calendario (opcional)"),
+    ).toBeNull();
+    await user.selectOptions(screen.getByLabelText("Calendario"), "c2");
+    await user.type(
+      screen.getByLabelText("Enlace .ics"),
+      "https://example.com/a.ics",
+    );
+    await user.click(submit());
+    const formData = action.mock.calls[0]?.[1] as FormData;
+    expect(formData.get("destination")).toBe("existing");
+    expect(formData.get("calendar")).toBe("c2");
+  });
+
+  it("offers no choice without calendars to write", () => {
+    setup();
+    expect(screen.queryByLabelText("Un calendario nuevo")).toBeNull();
   });
 });

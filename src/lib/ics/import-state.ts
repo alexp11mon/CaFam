@@ -4,6 +4,8 @@ import type { ImportField } from "./schemas";
 /** What a finished import reports (RF-31). */
 export interface ImportSummaryData {
   calendarId: string;
+  /** Imported into a calendar that already existed (spec 044 RF-3). */
+  into?: { name: string; existing: number };
   created: number;
   skipped: number;
   cutSeries: number;
@@ -19,4 +21,6 @@ export const EMPTY_IMPORT_VALUES: ImportState["values"] = {
   file: "",
   name: "",
   color: "",
+  destination: "new",
+  calendar: "",
 };

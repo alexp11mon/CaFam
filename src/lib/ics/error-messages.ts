@@ -8,7 +8,10 @@ export type ImportError =
   | { kind: "too-many"; count: number; capped: boolean }
   | { kind: "not-ics" }
   | { kind: "no-events" }
-  | { kind: "create-failed" };
+  | { kind: "create-failed" }
+  | { kind: "gone" }
+  | { kind: "not-writable" }
+  | { kind: "too-many-imported" };
 
 const thousands = (n: number) =>
   String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -32,5 +35,11 @@ export function getImportErrorMessage(error: ImportError): string {
       return "El calendario no tiene eventos que se puedan importar.";
     case "create-failed":
       return "No se ha podido crear el calendario. No se ha guardado nada.";
+    case "gone":
+      return "El enlace ya no existe: el servidor dice que no lo encuentra.";
+    case "not-writable":
+      return "No puedes añadir eventos a ese calendario. No se ha guardado nada.";
+    case "too-many-imported":
+      return "El calendario pasaría de 10.000 eventos importados. No se ha guardado nada.";
   }
 }

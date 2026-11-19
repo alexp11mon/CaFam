@@ -22,6 +22,8 @@ export async function importCalendar(
     url: readString(formData, "url"),
     name: readString(formData, "name"),
     color: readString(formData, "color"),
+    destination: readString(formData, "destination") || "new",
+    calendar: readString(formData, "calendar"),
   };
 
   const parsed = parseImportForm({
@@ -29,6 +31,8 @@ export async function importCalendar(
     hasFile: getFile(formData) !== null,
     name: values.name,
     color: values.color,
+    destination: values.destination,
+    calendarId: values.calendar,
   });
   if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values };
 
@@ -54,6 +58,43 @@ export async function importCalendar(
   });
   if (!imported.ok) {
     return { formError: getImportErrorMessage(imported.error), values };
+  }
+
+  const into = parsed.data.into;
+  if (into) {
+    // Into a calendar that exists: what is already there stays (spec 044 RF-2).
+    const [{ data, error }, { data: calendar }] = await Promise.all([
+      supabase.rpc("import_into_calendar", {
+        p_calendar_id: into,
+        p_events: imported.events as unknown as Json,
+      }),
+      supabase.from("calendars").select("name").eq("id", into).maybeSingle(),
+    ]);
+    if (error || !data) {
+      const kind =
+        error?.code === "CF429"
+          ? "too-many-imported"
+          : error?.code === "CF404" || error?.code === "22023"
+            ? "not-writable"
+            : "create-failed";
+      return { formError: getImportErrorMessage({ kind }), values };
+    }
+    const counts = data as { added: number; existing: number };
+    revalidatePath("/dashboard", "layout");
+    return {
+      values: {
+        ...EMPTY_IMPORT_VALUES,
+        destination: "existing",
+        calendar: into,
+      },
+      result: {
+        calendarId: into,
+        into: { name: calendar?.name ?? "", existing: counts.existing },
+        created: counts.added,
+        skipped: imported.skipped,
+        cutSeries: imported.cutSeries,
+      },
+    };
   }
 
   // One transaction: the calendar and all its events, or nothing (RF-30).
