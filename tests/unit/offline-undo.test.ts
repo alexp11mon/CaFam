@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { EventData, OfflineChange } from "@/lib/offline/outbox";
+import type { EventData } from "@/lib/calendar/schemas";
+import type { OfflineChange } from "@/lib/offline/outbox";
 import { inverseOf } from "@/lib/offline/undo-sent";
 
 // Spec 046, T5: undoing a change made offline (RF-16). Still in the queue it

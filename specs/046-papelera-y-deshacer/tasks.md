@@ -31,7 +31,7 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- offline-undo` en verde: deshacer un cambio en cola lo retira; uno ya enviado se deshace con red.
 
   Cubre: RF-16 | Evidencia: la ficha `offline` lleva el cambio (`withOutbox`). `tokenStep`: en la cola, `undoChange` lo retira sin llamar al servidor; ya enviado y con red, aplica su inverso (`inverseOf`, `lib/offline/undo-sent.ts`: cambio ↔ cambio, alta ↔ borrado, solo eventos sueltos) con `applyOfflineChange`, cuyo conflicto de tres versiones da "Este evento ha cambiado entretanto" (RF-13), y el inverso del inverso es "Rehacer". `npm test -- offline-undo use-undo-toast with-outbox` 16 en verde; `npm test` 3.760 en verde.
-- [ ] T6 Cierre
+- [x] T6 Cierre
   Hecho cuando: AGENTS.md, README y constitución (enmienda 14: deshacer varias acciones y Ctrl/⌘+Mayús+Z; papelera) actualizados; `python -m graphify update .`; P8 completa.
 
 ## Trazabilidad

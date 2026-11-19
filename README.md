@@ -115,6 +115,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 043  | Exportar a `.ics` y enlace de suscripción de solo lectura              | ✅ Cerrada (migración pendiente en prod)          |
 | 044  | Importar a un calendario existente y mantener actualizado lo importado | ✅ Cerrada (migraciones pendientes en prod)       |
 | 045  | Zona horaria por evento                                                | ✅ Cerrada (migraciones pendientes en prod)       |
+| 046  | Papelera y deshacer de varias acciones                                 | ✅ Cerrada (migración pendiente en prod)          |
 
 > Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
@@ -129,6 +130,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 - **Panel con calendarios** en el orden guardado por el usuario, con accesos a crear, editar, categorías y juntar.
 - **CRUD de calendarios** (nombre, descripción, color pastel de una paleta cerrada) y **categorías por calendario**.
 - **CRUD de eventos** (hora, día completo, varios días, descripción, lugar, color propio y categoría).
+- **Papelera y deshacer:** lo borrado se guarda 30 días en la Papelera (en "Más" y en las opciones de cada calendario) para restaurarlo; Ctrl/⌘+Z deshace las últimas 20 acciones y Ctrl/⌘+Mayús+Z las rehace.
 - **Zona horaria por evento:** un evento con hora puede tener su zona (y otra para el fin, como un vuelo); se edita en ella, cada persona lo ve en la suya y el detalle enseña la hora original. Viaja a Google, iCloud y los `.ics`.
 - **Vistas agenda, año, mensual, semanal, de 4 días y diaria** que mezclan todos los calendarios (el año con un punto por calendario en los días con eventos; atajos Y y X), con panel de filtros por persona → calendario → categoría. La visibilidad y el orden se guardan por usuario.
 - **Vista agenda** continua (por defecto): bandas de mes, separadores de semana, "Sin eventos" y carga de más días al llegar a un extremo.
@@ -537,7 +539,6 @@ feat: registro de usuario (T7)
 
 El proyecto **aún no está terminado**. Existen specs pendientes y funcionalidades planificadas para versiones futuras:
 
-- Papelera o deshacer de más de una acción.
 - Compartir e integrar con el sistema operativo.
 - Verificación de email en el registro.
 - Traspaso voluntario de calendarios.
@@ -554,7 +555,6 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 
 Hasta que exista su spec aprobada:
 
-- Papelera o deshacer de más de una acción.
 - Compartir e integrar con el sistema (las dos últimas, en la hoja de ruta de la constitución).
 - Verificación de email en el registro, traspaso voluntario de calendarios, exportar datos de la cuenta, login social, Microsoft, i18n.
 - Sin conexión: envío en segundo plano, fechas fuera del rango guardado, series enteras, calendarios traídos, imágenes y comentarios (el resto, en "Fuera de alcance" de la spec 034).
