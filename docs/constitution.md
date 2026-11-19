@@ -98,7 +98,7 @@ Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, 
 - Nombres de archivos y carpetas: kebab-case (`login-form.tsx` exporta `LoginForm`), salvo los nombres reservados de Next.js (`page.tsx`, `layout.tsx`, `proxy.ts`, `[param]`, `(grupo)`).
 - Rutas URL: en inglés (`/login`, `/signup`, `/dashboard`), coherentes con los nombres de carpetas.
 - Base de datos: snake_case; tablas en plural (`calendars`), columnas en singular (`owner_id`); toda tabla con `created_at` y, si es editable, `updated_at`; cambios de esquema solo mediante migraciones en `supabase/migrations/`, nunca editando a mano en el panel de Supabase.
-- Fechas: se guardan como `timestamptz` (UTC) y se muestran en la zona horaria del usuario.
+- Fechas: se guardan como `timestamptz` (UTC) y se muestran en la zona horaria del usuario. Un evento con hora puede tener zona propia (`start_tz`, `end_tz`, spec 045): solo decide en qué reloj se edita y su "hora original"; el instante sigue en UTC.
 - Estructura: `docs/` (constitución y docs generales), `specs/NNN-nombre/` (`spec.md`, `plan.md`, `tasks.md`), `src/` (código de la app), `tests/unit/` y `tests/integration/`, `supabase/migrations/`, `public/` (iconos, service worker). Los ficheros de configuración de herramientas viven en la raíz.
 - Idioma: español en docs, specs, mensajes de commit y textos visibles para el usuario (incluidos errores); inglés en identificadores de código, nombres de archivos y comentarios técnicos. Se verifica en revisión del diff.
 - Git: rama `main` desplegable siempre; una rama por spec (`001-base-aplicacion`); commits pequeños con prefijo Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) y referencia a la tarea (`feat: registro de usuario (T7)`).
