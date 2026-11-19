@@ -16,6 +16,8 @@ describe("convertGoogleEvents", () => {
       starts_at: "2026-11-02T09:00:00.000Z",
       ends_at: "2026-11-02T10:00:00.000Z",
       all_day: false,
+      start_tz: "Europe/Madrid",
+      end_tz: "Europe/Madrid",
     });
   });
 

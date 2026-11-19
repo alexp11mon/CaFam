@@ -5,6 +5,8 @@ import { buildRow, dayStart, type ConvertResult } from "./event-row";
 interface GoogleTime {
   date?: string;
   dateTime?: string;
+  /** IANA zone of a timed event (spec 045 RF-9). */
+  timeZone?: string;
 }
 
 export interface GoogleEvent {
@@ -41,6 +43,8 @@ export function convertGoogleEvents(items: GoogleEvent[]): ConvertResult {
       start: instant(item.start),
       end: instant(item.end),
       allDay: Boolean(item.start?.date),
+      startTz: item.start?.timeZone,
+      endTz: item.end?.timeZone,
     });
     if (row) result.events.push(row);
     else result.skipped++;

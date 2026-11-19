@@ -13,6 +13,9 @@ export interface EventRow {
   all_day: boolean;
   /** UID, or UID#<instant> in a repetition (spec 044 RF-2). */
   external_id: string;
+  /** The TZID of the file, if any (spec 045 RF-10). */
+  start_tz?: string | null;
+  end_tz?: string | null;
 }
 
 const DAY_MS = 86_400_000;
@@ -115,6 +118,18 @@ function rangeOf(
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+const tzidOf = (time: IcsTime | null | undefined) =>
+  time?.zone.kind === "tzid" ? time.zone.tzid : null;
+
+/** The TZID of start and end (known by Intl, or the row was skipped). */
+function zonesOf(occurrence: IcsOccurrence) {
+  const start = occurrence.start.allDay ? null : tzidOf(occurrence.start);
+  return {
+    start_tz: start,
+    end_tz: start && (tzidOf(occurrence.end) ?? start),
+  };
+}
+
 /** 20261102T170000Z for a time, 20261208 for a date: like spec 018 ids. */
 function stamp(time: IcsTime, profileTimeZone: string): string {
   const date = `${time.year}${pad(time.month)}${pad(time.day)}`;
@@ -169,6 +184,7 @@ export function convertOccurrences(
       ends_at: new Date(range.end).toISOString(),
       all_day: occurrence.start.allDay,
       external_id: externalIdOf(occurrence, profileTimeZone),
+      ...zonesOf(occurrence),
     });
   }
 

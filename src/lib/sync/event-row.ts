@@ -1,3 +1,4 @@
+import { validZone } from "@/lib/calendar/event-zone";
 import {
   limit,
   MAX_DESCRIPTION,
@@ -19,6 +20,19 @@ export interface ConvertResult {
 
 const DAY_MS = 86_400_000;
 
+/** start_tz and end_tz of a row: none for all-day events (spec 045 RF-7). */
+export function ownZones(
+  allDay: boolean,
+  startTz: string | undefined,
+  endTz: string | undefined,
+): { start_tz: string | null; end_tz: string | null } {
+  const start = allDay ? null : validZone(startTz ?? "");
+  return {
+    start_tz: start,
+    end_tz: start && (validZone(endTz ?? "") ?? start),
+  };
+}
+
 /** UTC midnight of a `YYYY-MM-DD…` value. */
 export function dayStart(value: string): number {
   return Date.parse(`${value.slice(0, 10)}T00:00:00Z`);
@@ -36,6 +50,9 @@ export function buildRow(fields: {
   start: number | null;
   end: number | null;
   allDay: boolean;
+  /** Zones of the provider, kept when Intl knows them (spec 045 RF-9). */
+  startTz?: string;
+  endTz?: string;
 }): SyncedEventRow | null {
   const { start, allDay } = fields;
   let end = fields.end;
@@ -57,5 +74,6 @@ export function buildRow(fields: {
     starts_at: new Date(start).toISOString(),
     ends_at: new Date(end).toISOString(),
     all_day: allDay,
+    ...ownZones(allDay, fields.startTz, fields.endTz),
   };
 }

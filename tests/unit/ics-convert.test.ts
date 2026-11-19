@@ -250,9 +250,11 @@ describe("convertOccurrences texts (RF-13..RF-15)", () => {
       [
         "all_day",
         "description",
+        "end_tz",
         "ends_at",
         "external_id",
         "location",
+        "start_tz",
         "starts_at",
         "title",
       ].sort(),

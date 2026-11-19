@@ -25,10 +25,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- time-zone-field event-form event-panel event-card` en verde y capturas a 390 y 1440 px en claro y oscuro.
 
   Cubre: RF-1 a RF-5 | Evidencia: —
-- [ ] T5 Google, iCloud, `.ics` y sin conexión
+- [x] T5 Google, iCloud, `.ics` y sin conexión
   Hecho cuando: `npm test -- google-payload google-events icloud-ics convert-events write-ics offline-describe` en verde.
 
-  Cubre: RF-9, RF-10, RF-12 | Evidencia: —
+  Cubre: RF-9, RF-10, RF-12 | Evidencia: `event-zone-providers.test.ts` (Google envía y lee `timeZone`, iCloud escribe `TZID` con `VTIMEZONE` y lo conserva al mover, `.ics` de ida y vuelta) y las pruebas de forma actualizadas; `npm test` 379 archivos y 3.730 tests en verde; `test:db -- event-time-zone sync-write ics` 56 en verde. Migraciones `event_time_zone_keep` (`sync_commit_event` conserva la zona si el cambio no la trae) e `ics_feed_zone` (la suscripción lleva la zona) aplicadas en dev.
 - [ ] T6 Cierre
   Hecho cuando: AGENTS.md (convención de eventos con hora), README y constitución actualizados; `python -m graphify update .`; P8 completa.
 

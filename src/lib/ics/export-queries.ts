@@ -11,7 +11,7 @@ type Client = SupabaseClient<Database>;
 export type ExportTarget = { calendarId: string } | { visible: true };
 
 export const EVENT_COLUMNS =
-  "id, calendar_id, title, description, location, starts_at, ends_at, all_day, recurrence, recurrence_tz, exdates, series_id, original_start, created_at, updated_at";
+  "id, calendar_id, title, description, location, starts_at, ends_at, all_day, recurrence, recurrence_tz, exdates, series_id, original_start, created_at, updated_at, start_tz, end_tz";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

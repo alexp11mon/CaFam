@@ -241,6 +241,8 @@ describe("listEvents (RF-17, RF-19, RF-21)", () => {
           starts_at: "2026-11-05T09:00:00.000Z",
           ends_at: "2026-11-05T10:00:00.000Z",
           all_day: false,
+          start_tz: null,
+          end_tz: null,
         },
       ],
     });

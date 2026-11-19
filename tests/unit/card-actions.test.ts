@@ -18,6 +18,7 @@ vi.mock("@/lib/calendar/queries", () => ({
     return h.event;
   },
   getCalendar: async () => h.calendar,
+  getProfileTimeZone: async () => "Europe/Madrid",
 }));
 vi.mock("@/lib/sharing/queries", () => ({
   getMembers: async () => h.members,
@@ -55,6 +56,7 @@ describe("loadEventCard", () => {
       readOnly: null,
       provider: undefined,
       canEdit: true,
+      originalTime: null,
     });
   });
 

@@ -514,3 +514,33 @@ describe("sync_attach_uploaded (RF-33, RF-34, RF-36, RF-38)", () => {
     expect(uploaded.error?.code).toBe("CF429");
   });
 });
+
+describe("sync_commit_event and the own zone (spec 045 RF-9, RF-11)", () => {
+  it("stores the zone sent and keeps it when a change does not send one", async () => {
+    const eventId = await googleEvent(calA, "tz-1");
+    const zoned = await commit(editor, {
+      p_op: "update",
+      p_calendar_id: calA,
+      p_event_id: eventId,
+      p_row: { ...row(calA), start_tz: "America/New_York", end_tz: null },
+    });
+    expect(zoned.error).toBeNull();
+    const moved = await commit(editor, {
+      p_op: "update",
+      p_calendar_id: calA,
+      p_event_id: eventId,
+      p_row: row(calA, "Movido"),
+    });
+    expect(moved.error).toBeNull();
+    const { data } = await admin
+      .from("events")
+      .select("title, start_tz, end_tz")
+      .eq("id", eventId)
+      .single();
+    expect(data).toEqual({
+      title: "Movido",
+      start_tz: "America/New_York",
+      end_tz: "America/New_York",
+    });
+  });
+});

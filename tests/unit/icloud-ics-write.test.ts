@@ -36,7 +36,9 @@ const ALL_DAY: WritableEvent = {
 
 function rows(ics: string) {
   return expandObject(HREF, ics, WINDOW).events.map(
-    ({ external_id, ...row }) => ({ external_id, ...row }),
+    // The own zone is tested in event-zone-providers.test.ts (spec 045).
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ({ external_id, start_tz, end_tz, ...row }) => ({ external_id, ...row }),
   );
 }
 

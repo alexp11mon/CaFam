@@ -23,6 +23,19 @@ export interface IcsRow {
   updated_at: string;
   /** Calendar name, written as CATEGORIES when several are mixed (RF-2). */
   category?: string;
+  /** Own zones of a single event (spec 045 RF-10). */
+  start_tz?: string | null;
+  end_tz?: string | null;
+}
+
+/** The zones a row is written in: a series' own, or a single event's. */
+function zonesOfRow(row: IcsRow): { start: string | null; end: string | null } {
+  if (row.all_day) return { start: null, end: null };
+  if (row.recurrence)
+    return { start: row.recurrence_tz, end: row.recurrence_tz };
+  if (row.series_id) return { start: null, end: null };
+  const start = row.start_tz ?? null;
+  return { start, end: start && (row.end_tz ?? start) };
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -92,8 +105,10 @@ export function writeIcs({
     rows.filter((row) => row.recurrence).map((row) => [row.id, row]),
   );
   const zones = new Set<string>();
-  for (const row of series.values()) {
-    if (!row.all_day && row.recurrence_tz) zones.add(row.recurrence_tz);
+  for (const row of rows) {
+    const { start, end } = zonesOfRow(row);
+    if (start) zones.add(start);
+    if (end) zones.add(end);
   }
 
   const lines = [
@@ -110,7 +125,8 @@ export function writeIcs({
   const stamp = utcStamp(now);
   for (const row of rows) {
     const master = row.series_id ? series.get(row.series_id) : undefined;
-    const zone = row.recurrence && !row.all_day ? row.recurrence_tz : null;
+    const own = zonesOfRow(row);
+    const zone = row.recurrence ? own.start : null;
     lines.push(
       "BEGIN:VEVENT",
       `UID:${row.series_id ?? row.id}@cafam`,
@@ -131,8 +147,8 @@ export function writeIcs({
       );
     }
     lines.push(
-      timeProperty("DTSTART", row.starts_at, row.all_day, zone),
-      timeProperty("DTEND", row.ends_at, row.all_day, zone),
+      timeProperty("DTSTART", row.starts_at, row.all_day, own.start),
+      timeProperty("DTEND", row.ends_at, row.all_day, own.end),
     );
     if (row.recurrence) {
       lines.push(`RRULE:${rrule(row.recurrence, zone)}`);

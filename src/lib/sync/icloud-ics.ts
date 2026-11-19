@@ -9,6 +9,7 @@ import {
   type IcsOccurrence,
 } from "@/lib/ics/parse-ics";
 import type { ConvertResult, SyncedEventRow } from "./event-row";
+import { vtimezone } from "@/lib/ics/vtimezone";
 import type { WritableEvent } from "./google-payload";
 
 // Server-only: iCloud's .ics resources to and from CaFam rows (spec 018 plan
@@ -158,10 +159,69 @@ export function expandObject(
 // Writing (plan D7): only the fields that changed, keeping alarms, guests,
 // attachments and properties CaFam does not know. Never color or category (RF-44).
 
-function timeOf(value: string, allDay: boolean): ICAL.Time {
-  return allDay
-    ? ICAL.Time.fromDateString(value.slice(0, 10))
-    : ICAL.Time.fromJSDate(new Date(value), true);
+function timeOf(
+  value: string,
+  allDay: boolean,
+  zone: string | null,
+): ICAL.Time {
+  if (allDay) return ICAL.Time.fromDateString(value.slice(0, 10));
+  // Wall clock of the zone, marked with TZID by setTime (spec 045 RF-9).
+  if (zone) {
+    return ICAL.Time.fromData({
+      ...utcToZonedParts(new Date(value), zone),
+      isDate: false,
+    });
+  }
+  return ICAL.Time.fromJSDate(new Date(value), true);
+}
+
+/** The TZID a component already has: kept by a change without zones (RF-11). */
+function currentZone(component: ICAL.Component, name: string): string | null {
+  const zone = zoneOf(component, name as "dtstart");
+  return zone?.kind === "tzid" ? zone.tzid : null;
+}
+
+/** start and end zones a write uses. */
+function zonesFor(component: ICAL.Component, event: WritableEvent) {
+  if (event.all_day) return { start: null, end: null };
+  const start =
+    event.start_tz === undefined
+      ? currentZone(component, "dtstart")
+      : event.start_tz;
+  const end =
+    event.start_tz === undefined
+      ? currentZone(component, "dtend")
+      : (event.end_tz ?? start);
+  return { start, end: end ?? start };
+}
+
+/**
+ * Every zone used gets its VTIMEZONE, before the events as the iPhone writes
+ * them (spec 018 trap: iCloud relates times by their TZID).
+ */
+function ensureZones(root: ICAL.Component) {
+  const have = new Set(
+    root
+      .getAllSubcomponents("vtimezone")
+      .map((c) => String(c.getFirstPropertyValue("tzid"))),
+  );
+  const events = root.getAllSubcomponents("vevent");
+  const needed = new Set<string>();
+  for (const event of events) {
+    for (const name of ["dtstart", "dtend"]) {
+      const zone = currentZone(event, name);
+      if (zone && !have.has(zone)) needed.add(zone);
+    }
+  }
+  if (needed.size === 0) return;
+  for (const event of events) root.removeSubcomponent(event);
+  const year = new Date().getUTCFullYear();
+  for (const zone of needed) {
+    root.addSubcomponent(
+      ICAL.Component.fromString(vtimezone(zone, year).join("\r\n")),
+    );
+  }
+  for (const event of events) root.addSubcomponent(event);
 }
 
 /**
@@ -196,9 +256,15 @@ function addSeriesTime(
   if (zone.kind === "tzid") property.setParameter("tzid", tzid);
 }
 
-function setTime(component: ICAL.Component, name: string, time: ICAL.Time) {
+function setTime(
+  component: ICAL.Component,
+  name: string,
+  time: ICAL.Time,
+  zone: string | null = null,
+) {
   component.removeAllProperties(name);
-  component.addPropertyWithValue(name, time);
+  const property = component.addPropertyWithValue(name, time);
+  if (zone) property.setParameter("tzid", zone);
 }
 
 function setText(
@@ -218,16 +284,26 @@ function stamp(component: ICAL.Component) {
 }
 
 function setTimes(component: ICAL.Component, event: WritableEvent) {
+  const { start, end } = zonesFor(component, event);
   component.removeAllProperties("duration");
-  setTime(component, "dtstart", timeOf(event.starts_at, event.all_day));
-  setTime(component, "dtend", timeOf(event.ends_at, event.all_day));
+  setTime(
+    component,
+    "dtstart",
+    timeOf(event.starts_at, event.all_day, start),
+    start,
+  );
+  setTime(component, "dtend", timeOf(event.ends_at, event.all_day, end), end);
 }
 
 function timesChanged(before: WritableEvent, after: WritableEvent): boolean {
   return (
     after.all_day !== before.all_day ||
     Date.parse(after.starts_at) !== Date.parse(before.starts_at) ||
-    Date.parse(after.ends_at) !== Date.parse(before.ends_at)
+    Date.parse(after.ends_at) !== Date.parse(before.ends_at) ||
+    (after.start_tz !== undefined &&
+      (after.start_tz !== (before.start_tz ?? null) ||
+        (after.end_tz ?? after.start_tz) !==
+          (before.end_tz ?? before.start_tz ?? null)))
   );
 }
 
@@ -259,6 +335,7 @@ export function newEventIcs(uid: string, event: WritableEvent): string {
   setText(vevent, "location", event.location);
   setTimes(vevent, event);
   root.addSubcomponent(vevent);
+  ensureZones(root);
   return root.toString();
 }
 
@@ -301,12 +378,14 @@ export function patchIcs(
   const master = masterOf(root);
   if (recurrenceId === null) {
     applyChanges(master, before, after);
+    ensureZones(root);
     return root.toString();
   }
 
   const existing = exceptionFor(root, recurrenceId);
   if (existing) {
     applyChanges(existing, before, after);
+    ensureZones(root);
     return root.toString();
   }
   const exception = ICAL.Component.fromString(master.toString());
@@ -319,6 +398,7 @@ export function patchIcs(
   setTimes(exception, before);
   applyChanges(exception, before, after);
   root.addSubcomponent(exception);
+  ensureZones(root);
   return root.toString();
 }
 

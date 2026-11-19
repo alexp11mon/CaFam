@@ -272,6 +272,8 @@ export async function updateSingle(
       starts_at: event.startsAt,
       ends_at: event.endsAt,
       all_day: event.allDay,
+      start_tz: event.startTz,
+      end_tz: event.endTz,
     },
     row: toRow(data),
   });
