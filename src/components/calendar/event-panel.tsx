@@ -158,6 +158,7 @@ export function EventPanel({
             cancelHref="/dashboard/calendar"
             series={series ?? undefined}
             reminders={reminders ? { initial: reminders } : undefined}
+            timeZone={timeZone}
           />
         </div>
       </ViewTransition>

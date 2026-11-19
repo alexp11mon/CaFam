@@ -33,6 +33,7 @@ async function InterceptedNewEvent({
           categories={data.categories}
           reminders={{ defaults: data.reminderDefaults }}
           phrase={data.phrase}
+          timeZone={data.timeZone}
           submitLabel="Crear evento"
           pendingLabel="Creando…"
           cancelHref="/dashboard/calendar"

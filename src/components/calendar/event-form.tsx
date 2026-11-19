@@ -13,6 +13,7 @@ import { Select } from "@/components/ui/select";
 import { TextArea } from "@/components/ui/text-area";
 import { TextField } from "@/components/ui/text-field";
 import { TimeField } from "@/components/ui/time-field";
+import { TimeZoneField } from "./time-zone-field";
 import {
   endOptions,
   shiftEnd,
@@ -66,7 +67,10 @@ export function EventForm({
   eventId,
   reminders,
   phrase,
+  timeZone,
 }: {
+  /** The profile's zone: offers "Zona horaria" (spec 045 RF-1); none in tests. */
+  timeZone?: string;
   /** Creating: "Escribe el evento" above the title (spec 041 RF-11). */
   phrase?: { timeZone: string; defaultMinutes: number };
   /** The user's own reminders: the current ones or the defaults (spec 040 RF-5, RF-6). */
@@ -359,6 +363,13 @@ export function EventForm({
           />
         )}
       </div>
+      {allDay || !timeZone ? null : (
+        <TimeZoneField
+          profileZone={timeZone}
+          initialStart={values.startTz}
+          initialEnd={values.endTz}
+        />
+      )}
       <RepeatField
         startDate={startDate}
         allDay={allDay}

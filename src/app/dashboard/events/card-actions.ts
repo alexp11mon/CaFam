@@ -2,9 +2,11 @@
 
 import type { EventDetailData } from "@/components/calendar/event-detail";
 import { authorLabel } from "@/lib/account/author-label";
+import { originalLabel } from "@/lib/calendar/event-zone";
 import {
   getCalendar,
   getEvent,
+  getProfileTimeZone,
   requireActionUser,
 } from "@/lib/calendar/queries";
 import { parseEventId } from "@/lib/recurrence/occurrence-id";
@@ -23,6 +25,8 @@ export interface EventCardData {
   readOnly: ReadOnlyReason | null;
   provider?: ProviderName;
   canEdit: boolean;
+  /** The hours in the event's own zone, if not the reader's (spec 045 RF-5). */
+  originalTime: string | null;
 }
 
 /**
@@ -36,9 +40,10 @@ export async function loadEventCard(
   const { supabase, userId } = await requireActionUser();
   const event = await getEvent(supabase, id);
   if (!event) return { gone: true };
-  const [calendar, members] = await Promise.all([
+  const [calendar, members, timeZone] = await Promise.all([
     getCalendar(supabase, userId, event.calendarId),
     getMembers(supabase, [event.calendarId]),
+    getProfileTimeZone(supabase, userId),
   ]);
   if (!calendar) return { gone: true };
   return {
@@ -54,5 +59,9 @@ export async function loadEventCard(
     readOnly: readOnlyReason(calendar.synced),
     provider: calendar.synced?.provider,
     canEdit: canWriteEvents(calendar),
+    originalTime: originalLabel(
+      { ...event, recurrenceTz: event.series?.recurrenceTz },
+      timeZone,
+    ),
   };
 }

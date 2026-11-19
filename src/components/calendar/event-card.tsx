@@ -276,6 +276,14 @@ export function EventCard({
           {event.allDay ? "Todo el día · " : ""}
           {formatEventWhen(event, timeZone)}
         </dd>
+        {data?.originalTime ? (
+          <>
+            <dt className="sr-only">Hora original</dt>
+            <dd className="text-muted" data-testid="card-original-time">
+              {data.originalTime}
+            </dd>
+          </>
+        ) : null}
         {data?.repeat ? (
           <>
             <dt className="sr-only">Se repite</dt>

@@ -94,6 +94,14 @@ export function EventDetail({
           <span data-testid="event-when">
             {formatEventWhen(event, timeZone)}
           </span>
+          {event.originalTime ? (
+            <span
+              className="block text-sm text-muted"
+              data-testid="event-original-time"
+            >
+              {event.originalTime}
+            </span>
+          ) : null}
         </Row>
         {event.repeat ? (
           <Row label="Se repite">

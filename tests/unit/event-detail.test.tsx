@@ -285,3 +285,22 @@ describe("EventDetail deleting an occurrence", () => {
     expect(remove.mock.calls[1]![1].get("scope")).toBe("this");
   });
 });
+
+describe("original time (spec 045 RF-5)", () => {
+  it("shows the hours in the event's zone when it has one", () => {
+    setup({
+      event: {
+        ...EVENT,
+        originalTime: "02:00–03:30 en New York (America/New_York)",
+      },
+    });
+    expect(screen.getByTestId("event-original-time")).toHaveTextContent(
+      "02:00–03:30 en New York (America/New_York)",
+    );
+  });
+
+  it("shows nothing without it", () => {
+    setup();
+    expect(screen.queryByTestId("event-original-time")).toBeNull();
+  });
+});

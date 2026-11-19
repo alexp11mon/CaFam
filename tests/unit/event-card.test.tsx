@@ -447,3 +447,21 @@ describe("EventCard actions", () => {
     expect(h.deleteForUndo).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("EventCard original time (spec 045 RF-5)", () => {
+  it("shows the hours in the event's own zone", async () => {
+    h.loadEventCard.mockResolvedValue({
+      description: null,
+      author: "Ana",
+      repeat: null,
+      readOnly: null,
+      canEdit: true,
+      originalTime: "14:00–15:00 en New York (America/New_York)",
+    });
+    setup();
+    await userEvent.click(block("Cena"));
+    expect(await screen.findByTestId("card-original-time")).toHaveTextContent(
+      "14:00–15:00 en New York (America/New_York)",
+    );
+  });
+});

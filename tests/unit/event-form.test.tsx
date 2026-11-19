@@ -711,3 +711,48 @@ describe("EventForm: Escribe el evento (spec 041 RF-11 to RF-14)", () => {
     expect(screen.getByLabelText("Fecha de fin")).toHaveValue("2026-12-05");
   });
 });
+
+describe("Zona horaria (spec 045 RF-1, RF-7)", () => {
+  function renderWithZone(initial: EventFormValues = INITIAL) {
+    render(
+      <EventForm
+        action={vi.fn(async () => ({ values: INITIAL }))}
+        initial={initial}
+        calendars={CALENDARS}
+        categories={CATEGORIES}
+        submitLabel="Crear evento"
+        pendingLabel="Creando…"
+        cancelHref="/dashboard"
+        timeZone="Europe/Madrid"
+      />,
+    );
+  }
+
+  it("is offered for an event with a time", () => {
+    renderWithZone();
+    expect(
+      screen.getByRole("button", { name: "Cambiar zona horaria" }),
+    ).toBeVisible();
+  });
+
+  it("is not offered for an all-day event", async () => {
+    renderWithZone();
+    await userEvent.click(
+      screen.getByRole("checkbox", { name: "Todo el día" }),
+    );
+    expect(
+      screen.queryByRole("button", { name: "Cambiar zona horaria" }),
+    ).toBeNull();
+  });
+
+  it("opens with the event's own zone", () => {
+    renderWithZone({
+      ...INITIAL,
+      startTz: "America/New_York",
+      endTz: "America/New_York",
+    });
+    expect(screen.getByLabelText("Zona horaria")).toHaveValue(
+      "America/New_York",
+    );
+  });
+});
