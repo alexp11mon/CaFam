@@ -11,6 +11,7 @@ const h = vi.hoisted(() => ({
   rows: [{ id: "x" }] as { id: string }[],
   writeEvent: vi.fn(),
   current: null as Record<string, unknown> | null,
+  rpcCalls: [] as [string, unknown][],
 }));
 
 vi.mock("@/lib/sync/write-event", () => ({ writeEvent: h.writeEvent }));
@@ -26,6 +27,11 @@ vi.mock("next/server", () => ({ connection: async () => {} }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     auth: { getClaims: async () => ({ data: { claims: { sub: "u1" } } }) },
+    // snapshot_event: the copy in the trash (spec 046 RF-1).
+    rpc: async (fn: string, args: unknown) => {
+      h.rpcCalls.push([fn, args]);
+      return { data: fn === "snapshot_event" ? "trash-1" : null, error: null };
+    },
     from: (table: string) =>
       table === "profiles"
         ? {
@@ -144,6 +150,11 @@ describe("event actions in the window", () => {
     const state = await deleteEvent(EVENT_ID, "modal");
 
     expect(state).toEqual({ done: "deleted" });
+    // Spec 046 RF-1: a copy in the trash first.
+    expect(h.rpcCalls).toContainEqual([
+      "snapshot_event",
+      { p_event_id: EVENT_ID },
+    ]);
   });
 
   // Spec 012, T11: with images to upload the form needs the new id (RF-7).

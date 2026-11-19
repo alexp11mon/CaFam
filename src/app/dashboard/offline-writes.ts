@@ -46,7 +46,9 @@ import {
   createSingle,
   deleteOccurrences,
   deleteSingle,
+  dropTrash,
   materializeWith,
+  snapshotForTrash,
   toRow,
   unconfirmedLoss,
   updateSingle,
@@ -334,6 +336,8 @@ async function applyEvent(
   }
 
   if (!mine) {
+    // Sent from the queue, it is still a deletion made in CaFam (spec 046 RF-1).
+    const trashId = await snapshotForTrash(supabase, server, "this");
     if (server.series) {
       const result = await deleteOccurrences(
         supabase,
@@ -341,9 +345,11 @@ async function applyEvent(
         "this",
         true,
       );
+      if (result) await dropTrash(supabase, trashId);
       return result ? failed(result.formError) : APPLIED;
     }
     const result = await deleteSingle(supabase, server.id, "page");
+    if (result) await dropTrash(supabase, trashId);
     // Already deleted in the provider: CaFam dropped it too (spec 009 RF-25).
     if (!result || !now.event) return APPLIED;
     return failedSynced(supabase, userId, server.calendarId, result.formError);

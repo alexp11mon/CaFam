@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EventRecord } from "@/lib/calendar/queries";
+import { UNDO_ERRORS } from "@/lib/calendar/undo";
 
 // Spec 017, T3 and T4: the quick actions (plan quick-actions, D5, D6, D8).
 const EVENT_ID = "5b8f6c2e-3f0a-4d8e-9a51-2a8f1d7c9e10";
@@ -404,10 +405,11 @@ describe("deleteForUndo (RF-25, RF-31, RF-40, RF-55)", () => {
     expect(h.deletes).toBe(0);
   });
 
-  it("an occurrence asks for a scope and only 'this' can be undone", async () => {
+  it("an occurrence asks for a scope and every scope can be undone (spec 046 RF-15)", async () => {
     h.event = OCCURRENCE;
     rpcs({
       snapshot_event: { data: TRASH_ID, error: null },
+      snapshot_series: { data: TRASH_ID, error: null },
       series_loss: {
         data: [{ exceptions: 0, images: 0, comments: 0 }],
         error: null,
@@ -427,12 +429,25 @@ describe("deleteForUndo (RF-25, RF-31, RF-40, RF-55)", () => {
     });
 
     const all = await deleteForUndo(OCCURRENCE.id, { scope: "all" });
-    expect(all).toEqual({ ok: true, id: OCCURRENCE.id });
+    expect(h.rpc).toHaveBeenCalledWith(
+      "snapshot_series",
+      expect.objectContaining({ p_series_id: SERIES_ID }),
+    );
+    expect(all).toMatchObject({
+      ok: true,
+      undo: {
+        kind: "restore",
+        trashId: TRASH_ID,
+        guard: { id: SERIES_ID, updatedAt: expect.any(String) },
+      },
+    });
   });
 
-  it("asks to confirm what an occurrence would lose", async () => {
+  it("asks to confirm what an occurrence would lose, and drops the copy", async () => {
     h.event = OCCURRENCE;
     rpcs({
+      snapshot_series: { data: TRASH_ID, error: null },
+      trash_purge: { data: null, error: null },
       series_loss: {
         data: [{ exceptions: 1, images: 2, comments: 0 }],
         error: null,
@@ -442,6 +457,35 @@ describe("deleteForUndo (RF-25, RF-31, RF-40, RF-55)", () => {
       ok: false,
       error: "",
       loss: { exceptions: 1, images: 2, comments: 0 },
+    });
+    expect(h.rpc).toHaveBeenCalledWith("snapshot_series", {
+      p_series_id: SERIES_ID,
+      p_from: OCCURRENCE.series!.originalStart,
+    });
+    expect(h.rpc).toHaveBeenCalledWith("trash_purge", { p_trash_id: TRASH_ID });
+  });
+
+  it("does not restore over a series someone changed after deleting several (RF-15)", async () => {
+    h.updatedAt = "2099-01-01T00:00:00Z";
+    rpcs({ restore_event: { data: null, error: null } });
+    expect(
+      await undoAction({
+        kind: "restore",
+        trashId: TRASH_ID,
+        guard: { id: SERIES_ID, updatedAt: "2026-11-01T00:00:00Z" },
+      }),
+    ).toEqual({ ok: false, error: UNDO_ERRORS.changed });
+    expect(h.rpc).not.toHaveBeenCalledWith("restore_event", expect.anything());
+  });
+
+  it("explains an occurrence whose series is gone (spec 046 RF-5)", async () => {
+    rpcs({
+      trash_row: { data: null, error: null },
+      restore_event: { data: null, error: { code: "CF410" } },
+    });
+    expect(await undoAction({ kind: "restore", trashId: TRASH_ID })).toEqual({
+      ok: false,
+      error: UNDO_ERRORS.seriesGone,
     });
   });
 });

@@ -15,8 +15,16 @@ export type UndoToken =
       updatedAt: string;
       series: boolean;
     }
-  /** A deleted event, from its snapshot (RF-28). */
-  | { kind: "restore"; trashId: string }
+  /**
+   * A deleted event, from the trash (RF-28, spec 046 RF-14). Deleting several
+   * occurrences keeps the series' updated_at after the deletion: someone
+   * changed it if it differs (spec 046 RF-15).
+   */
+  | {
+      kind: "restore";
+      trashId: string;
+      guard?: { id: string; updatedAt: string };
+    }
   /** A pasted copy: undoing deletes it (RF-58). */
   | { kind: "unpaste"; id: string }
   /** A change still waiting on this device: undoing takes it out of the queue (spec 034 RF-30). */
@@ -36,4 +44,6 @@ export const UNDO_NOTICES = {
 export const UNDO_ERRORS = {
   changed: "Este evento ha cambiado entretanto; no se ha deshecho.",
   expired: "Ya no se puede deshacer.",
+  seriesGone:
+    "La serie de esta repetición ya no existe; no se puede restaurar.",
 } as const;

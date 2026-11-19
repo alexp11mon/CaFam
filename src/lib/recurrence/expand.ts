@@ -267,6 +267,27 @@ export function seriesBound(series: SeriesInput): string | null {
 }
 
 /**
+ * Occurrences of a series with an end, from `from` on (the first one when
+ * absent), for the trash's "serie, 24 repeticiones" (spec 046 RF-2). Null
+ * without end or too many to count. Deleted dates are not known here.
+ */
+export function countOccurrences(
+  series: SeriesInput,
+  from?: string,
+): number | null {
+  const prepared = prepare(series);
+  if (!prepared || prepared.rule.end.kind === "never") return null;
+  const fromMs = from ? Date.parse(from) : -Infinity;
+  let count = 0;
+  let steps = 0;
+  for (const local of walk(prepared)) {
+    if (++steps >= MAX_STEPS) return null;
+    if (Date.parse(occurrenceOf(local, prepared).startsAt) >= fromMs) count++;
+  }
+  return count;
+}
+
+/**
  * "Este y los siguientes" (RF-17): the series' rule ending right before
  * `originalStart` and the end left for the new series. A null recurrence means
  * no occurrence comes before.

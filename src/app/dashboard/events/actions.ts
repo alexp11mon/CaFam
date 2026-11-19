@@ -9,7 +9,6 @@ import {
   getEvent,
   getProfileTimeZone,
   requireActionUser,
-  type EventRecord,
 } from "@/lib/calendar/queries";
 import { parseEventInput, type EventFormValues } from "@/lib/calendar/schemas";
 import { readString, type ConfirmState } from "@/lib/forms/form-state";
@@ -27,8 +26,10 @@ import {
   createSeries,
   deleteOccurrences,
   deleteSingle,
+  dropTrash,
   failure,
   refresh,
+  snapshotForTrash,
   syncedWrite,
   toRow,
   updateSingle,
@@ -248,25 +249,27 @@ export async function deleteEvent(
     (arg): arg is FormData => arg instanceof FormData,
   );
 
-  let series: EventRecord["series"] = null;
+  // The trash keeps a copy of every deletion made in CaFam (spec 046 RF-1).
+  let trashId: string | null = null;
   try {
-    series = (await getEvent(supabase, id))?.series ?? null;
-    if (series) {
-      const failed = await deleteOccurrences(
-        supabase,
-        series,
-        formData ? readScope(formData) : null,
-        formData?.get("confirmLoss") === "1",
-      );
-      if (failed) return failed;
+    const event = await getEvent(supabase, id);
+    if (!event) return { formError: CALENDAR_MESSAGES.notFound };
+    const scope = event.series && formData ? readScope(formData) : null;
+    trashId = await snapshotForTrash(supabase, event, scope);
+    const failed = event.series
+      ? await deleteOccurrences(
+          supabase,
+          event.series,
+          scope,
+          formData?.get("confirmLoss") === "1",
+        )
+      : await deleteSingle(supabase, id, mode);
+    if (failed) {
+      await dropTrash(supabase, trashId);
+      return failed;
     }
   } catch (error) {
     return { formError: getCalendarErrorMessage(error) };
-  }
-
-  if (!series) {
-    const failed = await deleteSingle(supabase, id, mode);
-    if (failed) return failed;
   }
 
   refresh();

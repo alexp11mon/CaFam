@@ -14,10 +14,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Imágenes de la papelera no se purgan; al vaciar, sí.
 
   Cubre: RF-1, RF-4 a RF-7, RF-9, RF-10 | Evidencia: migración `20261127100000_trash_30_days` aplicada en dev (`db:push`, `db:types`; incluye `snapshot_series` para la T2); `event-trash.test.ts` nuevo y `event-undo.test.ts` adaptado: `test:db -- event-trash event-undo` 22 en verde (varias copias, Editor restaura lo de otro pasado el minuto, Lector y ajeno ni ven ni restauran, caducada no restaura, `CF404` de la 023, borrar una y vaciar solo el propietario, purga a 30 días, la copia sobrevive a la cuenta de su autor e imágenes retenidas hasta que la copia se va).
-- [ ] T2 Series en la papelera
+- [x] T2 Series en la papelera
   Hecho cuando: `npm run test:db -- event-trash-series` y `npm test -- event-actions` en verde: serie entera, "este y los siguientes" y repetición; restaurar repetición sin serie se explica; la sincronización no guarda copia.
 
-  Cubre: RF-2, RF-5, RF-8 | Evidencia: —
+  Cubre: RF-2, RF-5, RF-8 | Evidencia: `snapshotForTrash` y `dropTrash` (`event-writes.ts`) en los tres caminos de borrado (`deleteEvent`, `deleteForUndo` y el envío sin conexión): suelto y "Solo este evento" con `snapshot_event`, "Este y los siguientes" y "Todos" con `snapshot_series` (número de repeticiones con `countOccurrences` si la serie acaba); si el borrado no se hace, la copia se quita. `test:db -- event-trash-series` 3 en verde (serie entera con imágenes y comentarios, corte restaurado tal como estaba, repetición sin serie → `CF410`); `npm test` 3.732 en verde (`event-actions`, `quick-actions` con la guarda de RF-15 y "La serie de esta repetición ya no existe"). La sincronización no pasa por `snapshot_event` (D5): `sync_apply_events` borra directamente.
 - [ ] T3 Pila de deshacer y rehacer
   Hecho cuando: `npm test -- undo-stack toast use-undo-toast quick-actions` en verde.
   - 20 como máximo, deshacer y rehacer en orden, conflicto saca la entrada, atajos solo fuera de campos y ventanas, aviso con "Rehacer", Venito apila sus acciones.

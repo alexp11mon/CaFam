@@ -29,6 +29,7 @@ import {
   type LossQuery,
   type SeriesScope,
 } from "@/lib/recurrence/series-write";
+import { countOccurrences } from "@/lib/recurrence/expand";
 import { cronSecret } from "@/lib/recurrence/server-secret";
 import { writeEngineDeps } from "@/lib/sync/engine";
 import { goneDone, type GoneDone } from "@/lib/sync/provider-labels";
@@ -337,6 +338,64 @@ export async function deleteOccurrences(
     };
   }
   return null;
+}
+
+/**
+ * A copy in the trash right before a deletion made in CaFam (spec 046 RF-1,
+ * RF-2): the event, the occurrence ("Solo este evento") or the series ("Este
+ * y los siguientes", "Todos"). Null for a series without a scope yet.
+ */
+export async function snapshotForTrash(
+  supabase: Supabase,
+  event: EventRecord,
+  scope: SeriesScope | null,
+): Promise<string | null> {
+  const series = event.series;
+  if (series && !scope) return null;
+  const call =
+    !series || scope === "this"
+      ? supabase.rpc(
+          "snapshot_event",
+          series
+            ? {
+                p_event_id: series.id,
+                p_original_start: series.originalStart,
+              }
+            : { p_event_id: event.id },
+        )
+      : supabase.rpc("snapshot_series", {
+          p_series_id: series.id,
+          ...(scope === "following" ? { p_from: series.originalStart } : {}),
+          ...occurrencesOf(series, scope ?? "all"),
+        });
+  const { data, error } = await call;
+  if (error) throw error;
+  return data;
+}
+
+function occurrencesOf(
+  series: NonNullable<EventRecord["series"]>,
+  scope: SeriesScope,
+): { p_occurrences?: number } {
+  const count = countOccurrences(
+    {
+      startsAt: series.startsAt,
+      endsAt: series.endsAt,
+      allDay: series.allDay,
+      recurrence: series.recurrence,
+      recurrenceTz: series.recurrenceTz,
+    },
+    scope === "following" ? series.originalStart : undefined,
+  );
+  return count === null ? {} : { p_occurrences: count };
+}
+
+/** The deletion did not happen: its copy must not linger in the trash. */
+export async function dropTrash(
+  supabase: Supabase,
+  trashId: string | null,
+): Promise<void> {
+  if (trashId) await supabase.rpc("trash_purge", { p_trash_id: trashId });
 }
 
 /** A single event, through Google when its calendar is synced (spec 009 RF-12). */

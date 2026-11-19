@@ -30,8 +30,10 @@ import {
   createSingle,
   deleteOccurrences,
   deleteSingle,
+  dropTrash,
   isSyncedCalendar,
   refresh,
+  snapshotForTrash,
   syncedWrite,
   toRow,
 } from "./event-writes";
@@ -77,9 +79,9 @@ export async function quickChange(
 }
 
 /**
- * Deletes without asking, after keeping a snapshot for "Deshacer" (RF-25,
- * RF-31, plan D6, D17). An occurrence goes through its scope and the loss
- * warning of spec 013; only "Solo este evento" can be undone (plan D10).
+ * Deletes without asking, after keeping a copy in the trash (RF-25, RF-31,
+ * plan D6, D17; spec 046 RF-1, RF-2). An occurrence goes through its scope and
+ * the loss warning of spec 013; every scope can be undone (spec 046 RF-15).
  */
 export async function deleteForUndo(
   id: string,
@@ -91,22 +93,7 @@ export async function deleteForUndo(
     const event = await getEvent(supabase, id);
     if (!event) return NOT_FOUND;
     const scope = readScope(options);
-    const undoable = !event.series || scope === "this";
-
-    let trashId: string | null = null;
-    if (undoable) {
-      const { data, error } = await supabase.rpc(
-        "snapshot_event",
-        event.series
-          ? {
-              p_event_id: event.series.id,
-              p_original_start: event.series.originalStart,
-            }
-          : { p_event_id: event.id },
-      );
-      if (error) return errorOf(error);
-      trashId = data;
-    }
+    const trashId = await snapshotForTrash(supabase, event, scope ?? null);
 
     const failed = event.series
       ? await deleteOccurrences(
@@ -116,6 +103,7 @@ export async function deleteForUndo(
           Boolean(options.confirmLoss),
         )
       : await deleteSingle(supabase, id, "modal");
+    if (failed) await dropTrash(supabase, trashId);
     if (failed?.loss) return { ok: false, error: "", loss: failed.loss };
     if (isGoneDone(failed?.done)) {
       return { ok: false, gone: failed.done, error: goneText(failed.done) };
@@ -128,9 +116,16 @@ export async function deleteForUndo(
     }
 
     refresh();
-    return trashId
-      ? { ok: true, id, undo: { kind: "restore", trashId } }
-      : { ok: true, id };
+    if (!trashId) return { ok: true, id };
+    // Several occurrences: undoing must not step on later changes (RF-15).
+    const guard =
+      event.series && scope !== "this"
+        ? {
+            id: event.series.id,
+            updatedAt: await updatedAtOf(supabase, event.series.id),
+          }
+        : undefined;
+    return { ok: true, id, undo: { kind: "restore", trashId, guard } };
   } catch (error) {
     return errorOf(error);
   }
@@ -138,6 +133,7 @@ export async function deleteForUndo(
 
 const RESTORE_ERRORS: Record<string, string> = {
   CF404: UNDO_ERRORS.expired,
+  CF410: UNDO_ERRORS.seriesGone,
   "23505": UNDO_ERRORS.changed,
   "23503": UNDO_ERRORS.changed,
 };
@@ -185,6 +181,12 @@ export async function undoAction(token: UndoToken): Promise<UndoResult> {
       return result.ok ? { ok: true } : { ok: false, error: result.error };
     }
 
+    if (
+      undo.guard &&
+      (await updatedAtOf(supabase, undo.guard.id)) !== undo.guard.updatedAt
+    ) {
+      return { ok: false, error: UNDO_ERRORS.changed };
+    }
     const { data: row, error: rowError } = await supabase.rpc("trash_row", {
       p_trash_id: undo.trashId,
     });
