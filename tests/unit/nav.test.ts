@@ -19,6 +19,7 @@ describe("NAV_ITEMS", () => {
       ["Cuentas conectadas", "/dashboard/connections"],
       ["Unirme con código", "/dashboard/join"],
       ["Importar calendario", "/dashboard/import"],
+      ["Papelera", "/dashboard/trash"],
       ["Ajustes", "/dashboard/settings"],
     ]);
   });
@@ -38,6 +39,8 @@ describe("activeSection (RF-20)", () => {
     ["/dashboard/connections/0f6c", "connections"],
     ["/dashboard/join", "join"],
     ["/dashboard/import", "import"],
+    // Spec 046 (RF-3).
+    ["/dashboard/trash", "trash"],
     ["/dashboard/settings", "settings"],
     // Spec 015, T9 (RF-1).
     ["/dashboard/assistant", "assistant"],
@@ -57,6 +60,7 @@ describe("the bottom bar and its +", () => {
       "connections",
       "join",
       "import",
+      "trash",
       "settings",
     ]);
   });

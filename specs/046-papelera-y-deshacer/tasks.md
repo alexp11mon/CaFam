@@ -23,10 +23,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - 20 como máximo, deshacer y rehacer en orden, conflicto saca la entrada, atajos solo fuera de campos y ventanas, aviso con "Rehacer", Venito apila sus acciones.
 
   Cubre: RF-11 a RF-15, RF-17 | Evidencia: `lib/calendar/undo-stack.ts` (puro: 20 como máximo, una acción nueva vacía "rehacer", el fallo saca la entrada) y `UndoStackProvider` (`components/calendar/undo-stack.tsx`, en `AppFrame`: Ctrl/⌘+Z, Ctrl/⌘+Mayús+Z y Ctrl+Y fuera de campos y de ventanas modales, "Deshecho: mover «Dentista»" con "Rehacer"). `undoAction` devuelve el inverso de cada ficha (`change` ↔ `change`, `restore` ↔ `delete`, pegar se borra por la papelera); `useUndoToast` apila con `tokenStep`; las tarjetas de Venito se apilan sin "Rehacer" (`stack-cards.ts`). `npm test -- undo-stack use-undo-toast toast quick-actions` 65 en verde; `npm test` 3.744 en verde.
-- [ ] T4 Pantalla "Papelera"
+- [x] T4 Pantalla "Papelera"
   Hecho cuando: `npm test -- trash-list trash-item nav` en verde y capturas a 390, 768 y 1440 px en claro y oscuro (lista, vacía, confirmación).
 
-  Cubre: RF-3, RF-5, RF-6, RNF-2 | Evidencia: —
+  Cubre: RF-3, RF-5, RF-6, RNF-2 | Evidencia: `/dashboard/trash` (`page.tsx` con `readTrash` de `lib/calendar/trash-queries.ts` y `actions.ts`: `restoreFromTrash` por el mismo camino que "Deshacer", así un traído vuelve primero a Google o iCloud; `purgeFromTrash` y `emptyTrash`). `TrashList` (por calendario, en el orden de "Mis calendarios", "Vaciar la papelera" solo del Propietario con confirmación) y `TrashItem` ("Borrado por Ana hace 2 días", "Quedan 28 días", "serie, 24 repeticiones", "Restaurar" con el motivo si no se puede y "Borrar para siempre" con confirmación); textos puros en `lib/calendar/trash.ts`. Destino "Papelera" en "Más" (`needsNetwork`) y enlace "Papelera" en las opciones de cada calendario para Propietario y Editores. `npm test -- trash-list trash-item nav` 40 en verde; `npm test` 3.754 en verde. Capturas en `capturas/` (lista, confirmación y vacía a 390, 768 y 1440 px, claro y oscuro) con `scripts/screenshots-046.mjs`.
 - [ ] T5 Sin conexión
   Hecho cuando: `npm test -- offline-undo` en verde: deshacer un cambio en cola lo retira; uno ya enviado se deshace con red.
 

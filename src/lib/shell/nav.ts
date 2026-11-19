@@ -9,6 +9,7 @@ export type Section =
   | "connections"
   | "join"
   | "import"
+  | "trash"
   | "settings";
 
 export interface NavItem {
@@ -54,6 +55,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: "Importar calendario",
     needsNetwork: true,
   },
+  // Spec 046 (RF-3).
+  {
+    section: "trash",
+    href: "/dashboard/trash",
+    label: "Papelera",
+    needsNetwork: true,
+  },
   {
     section: "settings",
     href: "/dashboard/settings",
@@ -77,6 +85,7 @@ export const SHEET_SECTIONS: readonly Section[] = [
   "connections",
   "join",
   "import",
+  "trash",
   "settings",
 ];
 
@@ -109,6 +118,7 @@ const PREFIXES: readonly [string, Section][] = [
   ["/dashboard/connections", "connections"],
   ["/dashboard/join", "join"],
   ["/dashboard/import", "import"],
+  ["/dashboard/trash", "trash"],
   ["/dashboard/settings", "settings"],
 ];
 

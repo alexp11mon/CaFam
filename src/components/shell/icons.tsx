@@ -358,6 +358,7 @@ export const SECTION_ICONS = {
   join: JoinIcon,
   connections: ConnectionsIcon,
   import: ImportIcon,
+  trash: TrashIcon,
   settings: SettingsIcon,
 } as const;
 

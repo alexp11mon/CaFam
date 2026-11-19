@@ -258,6 +258,16 @@ function CalendarRow({
               Categorías
             </Link>
           ) : null}
+          {calendar.role !== "viewer" ? (
+            // Spec 046 RF-3: its trash, for Propietario and Editores (RF-4).
+            <Link
+              href={`/dashboard/trash#papelera-${calendar.id}`}
+              aria-label={`Papelera de ${calendar.name}`}
+              className={ACTION_LINK}
+            >
+              Papelera
+            </Link>
+          ) : null}
           {calendar.role === "owner" ? (
             <Link
               href={`/dashboard/calendars/${calendar.id}/share`}
