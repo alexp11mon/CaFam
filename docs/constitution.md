@@ -51,6 +51,7 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 041-alta-en-lenguaje-natural | Alta de eventos en lenguaje natural ("Cena con Ana mañana a las 21"), con un analizador propio, sin IA ni coste |
 | 042-vistas-de-ano-y-4-dias | Vistas de año (12 meses con marcas por calendario) y de 4 días, con atajos Y y X |
 | 043-exportar-y-suscripcion-ics | Exportar un calendario o los visibles a `.ics` y enlace secreto de suscripción de solo lectura |
+| 044-importar-y-actualizar-ics | Importar un `.ics` a un calendario existente sin repetir eventos y mantenerlo actualizado desde su enlace |
 | Futura (sin número) | Compartir e integrar con el sistema: compartir un evento, recibir `.ics` o fotos compartidas, accesos directos y número de eventos de hoy en el icono |
 
 Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": desde el 2026-10-22 son la 006 y la 007. Las specs cerradas no se editan, con una única excepción: el cambio de nombre a CaFam de la spec 010, que solo sustituye el nombre y no toca requisitos, decisiones ni evidencias (enmienda 3).

@@ -2,7 +2,7 @@
 
 Spec: `specs/044-importar-y-actualizar-ics/spec.md`. Plan: `specs/044-importar-y-actualizar-ics/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: pendiente.
+> Estado: cerrada (2026-11-19), T1–T6.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T2 y T4.
 
@@ -32,8 +32,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- ics-refresh-route ics-subscription-status` en verde, prueba real con un `.ics` servido en local (cambiarlo y "Actualizar ahora") y capturas a 390 y 1440 px en claro y oscuro.
 
   Cubre: RF-5, RF-6, RF-10 | Evidencia: `npm test -- ics-refresh-route ics-subscription-status import-form import-action notice-list` en verde y `npm test` 376 archivos, 3.690 tests en verde. Prueba real contra `next start` con el `.ics` público de festivos de España de Google (un `.ics` servido en local lo rechaza la protección anti-SSRF de la 004): importar a "Mi calendario" con "Mantener actualizado" guardó la suscripción con 386 identidades; tras borrar un festivo dentro de la ventana y añadir uno que el enlace ya no tiene, "Actualizar ahora" dio `{added: 1, changed: 0, removed: 1}` y una segunda pulsación "espera unos minutos". Capturas a 390 y 1440 px en claro y oscuro en `capturas/` (`scripts/screenshots-044.mjs`) (2026-11-19)
-- [ ] T6 Cierre
+- [x] T6 Cierre
   Hecho cuando: AGENTS.md, README y constitución actualizados; `python -m graphify update .`; P8 completa.
+
+  Evidencia: AGENTS.md, README y constitución actualizados; `python -m graphify update .`; typecheck y lint sin errores (1 aviso previo en `event-form.tsx`), `format:check` limpio, `npm test` 376 archivos y 3.690 tests en verde, `npm run test:db -- --no-file-parallelism` 63 archivos y 658 tests en verde y `npm run build` correcto (2026-11-19)
 
 ## Trazabilidad
 
