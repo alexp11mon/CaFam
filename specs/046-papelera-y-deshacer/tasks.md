@@ -34,6 +34,8 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
 - [x] T6 Cierre
   Hecho cuando: AGENTS.md, README y constitución (enmienda 14: deshacer varias acciones y Ctrl/⌘+Mayús+Z; papelera) actualizados; `python -m graphify update .`; P8 completa.
 
+  Evidencia: AGENTS.md (fila de la 046, ruta `/dashboard/trash`, migraciones, sección "Añadido por la spec 046" y §12), README (fila, función y hoja de ruta) y constitución (enmienda 14 y las reglas de atajos y "Deshacer") actualizados; `python -m graphify update .` hecho. P8: `typecheck`, `lint` (0 errores; el aviso de siempre en `event-form.tsx`), `format:check`, `npm test` 384 archivos y 3.760 tests en verde y `build` correcto. `npm run test:db` 677 de 679: fallaron por tiempo `import-fixtures` (2.000 eventos) y `live-changes` (5 s) con la máquina cargada, y repetidos solos pasan los 17.
+
 ## Trazabilidad
 
 | RF | Tareas |
