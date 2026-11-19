@@ -785,6 +785,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          end_tz: string | null
           ends_at: string
           exdates: string[]
           external_id: string | null
@@ -795,6 +796,7 @@ export type Database = {
           recurrence_tz: string | null
           recurrence_until: string | null
           series_id: string | null
+          start_tz: string | null
           starts_at: string
           title: string
           updated_at: string
@@ -807,6 +809,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          end_tz?: string | null
           ends_at: string
           exdates?: string[]
           external_id?: string | null
@@ -817,6 +820,7 @@ export type Database = {
           recurrence_tz?: string | null
           recurrence_until?: string | null
           series_id?: string | null
+          start_tz?: string | null
           starts_at: string
           title: string
           updated_at?: string
@@ -829,6 +833,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          end_tz?: string | null
           ends_at?: string
           exdates?: string[]
           external_id?: string | null
@@ -839,6 +844,7 @@ export type Database = {
           recurrence_tz?: string | null
           recurrence_until?: string | null
           series_id?: string | null
+          start_tz?: string | null
           starts_at?: string
           title?: string
           updated_at?: string
@@ -1826,6 +1832,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          end_tz: string | null
           ends_at: string
           exdates: string[]
           external_id: string | null
@@ -1836,6 +1843,7 @@ export type Database = {
           recurrence_tz: string | null
           recurrence_until: string | null
           series_id: string | null
+          start_tz: string | null
           starts_at: string
           title: string
           updated_at: string
