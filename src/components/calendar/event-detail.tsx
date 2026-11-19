@@ -32,6 +32,8 @@ export interface EventDetailData {
   provider?: ProviderName;
   /** The rule of an occurrence and whether it was changed alone (spec 013 RF-10, RF-16). */
   repeat?: { summary: string; changed: boolean; limitReached: boolean } | null;
+  /** "18:00–20:00 en New York (America/New_York)" when not the reader's zone (spec 045 RF-5). */
+  originalTime?: string | null;
 }
 
 function Row({

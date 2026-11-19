@@ -96,6 +96,8 @@ const EMPTY = {
     color: "",
     categoryId: "",
     repeat: "none",
+    startTz: "",
+    endTz: "",
   },
 };
 
@@ -520,5 +522,55 @@ describe("deleteEvent on an occurrence", () => {
     expect(rpcCalls("delete_occurrences")[0]![1]).toMatchObject({
       p_scope: "following",
     });
+  });
+});
+
+describe("own time zone of a series (spec 045 RF-8)", () => {
+  beforeEach(() => {
+    h.event = OCCURRENCE;
+    h.rpc.mockImplementation(async (fn: string) =>
+      fn === "series_loss"
+        ? { data: [{ exceptions: 0, images: 0, comments: 0 }], error: null }
+        : { data: "new-id", error: null },
+    );
+  });
+
+  it("a new series repeats in the chosen zone", async () => {
+    await createEvent(
+      EMPTY,
+      form({ repeat: "weekly", startTz: "America/New_York" }),
+    );
+    expect(h.inserted[0]).toMatchObject({
+      recurrence_tz: "America/New_York",
+      start_tz: null,
+      // 18:00 in New York (EDT, UTC-4).
+      starts_at: "2026-10-07T22:00:00.000Z",
+    });
+  });
+
+  it("'Todos los eventos' moves the series to the zone keeping the hours", async () => {
+    await updateEvent(
+      OCCURRENCE.id,
+      EMPTY,
+      occurrenceForm({ scope: "all", startTz: "America/New_York" }),
+    );
+    const args = rpcCalls("update_series")[0]![1];
+    expect(args.p_fields).toMatchObject({
+      recurrence_tz: "America/New_York",
+      starts_at: "2026-10-07T22:00:00.000Z",
+    });
+    // The series functions accept no start_tz (they list their fields).
+    expect(args.p_fields).not.toHaveProperty("start_tz");
+  });
+
+  it("'Solo este evento' never sends a zone to update_occurrence", async () => {
+    await updateEvent(
+      OCCURRENCE.id,
+      EMPTY,
+      occurrenceForm({ scope: "this", startTz: "America/New_York" }),
+    );
+    const fields = rpcCalls("update_occurrence")[0]![1].p_fields;
+    expect(fields).not.toHaveProperty("start_tz");
+    expect(fields).not.toHaveProperty("end_tz");
   });
 });

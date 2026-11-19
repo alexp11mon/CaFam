@@ -91,6 +91,8 @@ const SINGLE: EventRecord = {
   categoryId: null,
   createdBy: "u2",
   series: null,
+  startTz: null,
+  endTz: null,
 };
 
 const OCCURRENCE: EventRecord = {
@@ -649,5 +651,27 @@ describe("pasteEvent (RF-58 to RF-61)", () => {
 
   it("refuses a bad day", async () => {
     expect((await pasteEvent(EVENT_ID, { day: "mañana" })).ok).toBe(false);
+  });
+});
+
+describe("own time zone (spec 045 RF-11)", () => {
+  it("moving never touches the zone", async () => {
+    h.event = {
+      ...SINGLE,
+      startTz: "America/New_York",
+      endTz: "America/New_York",
+    };
+    await quickChange(EVENT_ID, LATER);
+    expect(h.updates[0]).not.toHaveProperty("start_tz");
+    expect(h.updates[0]).not.toHaveProperty("end_tz");
+  });
+
+  it("pasting keeps the zone", async () => {
+    h.event = { ...SINGLE, startTz: "Asia/Kolkata", endTz: "Asia/Kolkata" };
+    await pasteEvent(EVENT_ID, { day: "2026-11-20", minute: 16 * 60 });
+    expect(h.inserts[0]).toMatchObject({
+      start_tz: "Asia/Kolkata",
+      end_tz: "Asia/Kolkata",
+    });
   });
 });

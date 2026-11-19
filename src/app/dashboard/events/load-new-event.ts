@@ -3,7 +3,8 @@ import type {
   CategoryOption,
   EventFormValues,
 } from "@/components/calendar/event-form";
-import { eventToFormDates, todayKey } from "@/lib/calendar/format";
+import { zonedFormDates } from "@/lib/calendar/event-zone";
+import { todayKey } from "@/lib/calendar/format";
 import { parseNewEventQuery } from "@/lib/calendar/new-event-query";
 import { getReminderDefaults } from "@/lib/push/reminder-writes";
 import { canWriteEvents } from "@/lib/sync/read-only";
@@ -71,7 +72,11 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
         title: source.title,
         calendarId: sameCalendar ? source.calendarId : defaults.calendarId,
         allDay: source.allDay ? "on" : "",
-        ...eventToFormDates(source, timeZone),
+        // The copy keeps the zone (spec 045 RF-11).
+        ...zonedFormDates(
+          { ...source, recurrenceTz: source.series?.recurrenceTz },
+          timeZone,
+        ),
         description: source.description ?? "",
         location: source.location ?? "",
         color: source.color ?? "",
@@ -106,6 +111,8 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
       color: "",
       categoryId: "",
       repeat: "none",
+      startTz: "",
+      endTz: "",
     },
     calendars: editable.map(({ id, name, color, synced }) => ({
       id,

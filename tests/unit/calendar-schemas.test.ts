@@ -128,7 +128,55 @@ describe("parseEventInput", () => {
         location: null,
         color: null,
         categoryId: null,
+        startTz: null,
+        endTz: null,
       },
+    });
+  });
+
+  it("reads the hours in the event's own zone (spec 045 RF-3)", () => {
+    const york = parseEventInput(
+      { ...timed, startTz: "America/New_York" },
+      MADRID,
+    );
+    expect(york.ok && york.data).toMatchObject({
+      startsAt: "2026-11-02T13:00:00.000Z",
+      endsAt: "2026-11-02T14:30:00.000Z",
+      startTz: "America/New_York",
+      endTz: "America/New_York",
+    });
+
+    // A flight: leaves Madrid at 08:00, lands in Kolkata at 09:30 next day.
+    const flight = parseEventInput(
+      {
+        ...timed,
+        endDate: "2026-11-03",
+        startTz: "Europe/Madrid",
+        endTz: "Asia/Kolkata",
+      },
+      "UTC",
+    );
+    expect(flight.ok && flight.data).toMatchObject({
+      startsAt: "2026-11-02T07:00:00.000Z",
+      endsAt: "2026-11-03T04:00:00.000Z",
+      startTz: "Europe/Madrid",
+      endTz: "Asia/Kolkata",
+    });
+  });
+
+  it("drops an unknown zone and any zone of an all-day event (spec 045 RF-7)", () => {
+    const unknown = parseEventInput({ ...timed, startTz: "Mars/Base" }, MADRID);
+    expect(unknown.ok && unknown.data).toMatchObject({
+      startsAt: "2026-11-02T07:00:00.000Z",
+      startTz: null,
+    });
+    const allDay = parseEventInput(
+      { ...timed, allDay: true, startTz: "America/New_York" },
+      MADRID,
+    );
+    expect(allDay.ok && allDay.data).toMatchObject({
+      startTz: null,
+      endTz: null,
     });
   });
 

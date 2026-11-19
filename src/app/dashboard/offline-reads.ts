@@ -36,6 +36,9 @@ type DetailRow = {
   description: string | null;
   created_by: string | null;
   recurrence: string | null;
+  start_tz: string | null;
+  end_tz: string | null;
+  recurrence_tz: string | null;
 };
 
 /** Description, author and rule of the rows the copy holds, page by page. */
@@ -49,7 +52,9 @@ async function detailRows(
     for (let page = 0; page < 20; page += 1) {
       let query = supabase
         .from("events")
-        .select("id, description, created_by, recurrence")
+        .select(
+          "id, description, created_by, recurrence, start_tz, end_tz, recurrence_tz",
+        )
         .lt("starts_at", to.toISOString());
       query = series
         ? query
@@ -141,6 +146,9 @@ export async function readSnapshot(
           : "Se repite"
         : null,
       seriesChanged: false,
+      // The zone travels with the copy (spec 045 RF-12).
+      startTz: own?.start_tz ?? series?.recurrence_tz ?? null,
+      endTz: own?.end_tz ?? null,
     };
   });
 

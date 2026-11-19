@@ -27,6 +27,9 @@ export interface OfflineEvent extends CalendarEventRecord {
   seriesSummary: string | null;
   /** An exception that differs from its series (spec 013 RF-16). */
   seriesChanged: boolean;
+  /** Own zones of the event (spec 045 RF-12). */
+  startTz?: string | null;
+  endTz?: string | null;
   /** Seen in a window the page read again: no description or author yet (D9). */
   partial?: boolean;
 }
@@ -182,6 +185,8 @@ export function mergeWindow(
       createdByName: before?.createdByName ?? null,
       seriesSummary: before?.seriesSummary ?? null,
       seriesChanged: before?.seriesChanged ?? false,
+      startTz: before?.startTz ?? null,
+      endTz: before?.endTz ?? null,
       ...(before && !before.partial ? {} : { partial: true }),
     });
   }

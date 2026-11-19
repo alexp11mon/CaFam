@@ -21,6 +21,9 @@ function withData(event: OfflineEvent, data: EventData): PendingEvent {
     location: data.location,
     color: data.color,
     categoryId: data.categoryId,
+    ...(data.startTz === undefined
+      ? {}
+      : { startTz: data.startTz, endTz: data.endTz ?? data.startTz }),
     pending: true,
   };
 }

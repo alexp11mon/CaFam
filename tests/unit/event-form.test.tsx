@@ -91,6 +91,8 @@ const INITIAL: EventFormValues = {
   color: "",
   categoryId: "",
   repeat: "none",
+  startTz: "",
+  endTz: "",
 };
 
 function setup(

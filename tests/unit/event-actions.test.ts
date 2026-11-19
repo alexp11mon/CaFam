@@ -80,6 +80,8 @@ const EMPTY = {
     color: "",
     categoryId: "",
     repeat: "none",
+    startTz: "",
+    endTz: "",
   },
 };
 
@@ -260,5 +262,32 @@ describe("event actions in synced calendars", () => {
     });
     const state = await createEvent(EMPTY, form({ mode: "modal" }));
     expect(state.formError).toBe("Revisa los datos e inténtalo de nuevo.");
+  });
+});
+
+describe("own time zone (spec 045 RF-3, RF-6)", () => {
+  it("reads the hours in the chosen zone and stores it", async () => {
+    await createEvent(
+      EMPTY,
+      form({ mode: "modal", startTz: "America/New_York" }),
+    );
+    const { row } = h.writeEvent.mock.calls[0]![0];
+    // 21:00 in New York on 23 October (EDT, UTC-4).
+    expect(row).toMatchObject({
+      starts_at: "2026-10-24T01:00:00.000Z",
+      ends_at: "2026-10-24T02:00:00.000Z",
+      start_tz: "America/New_York",
+      end_tz: "America/New_York",
+    });
+  });
+
+  it("without a zone uses the profile's and stores none", async () => {
+    await createEvent(EMPTY, form({ mode: "modal" }));
+    const { row } = h.writeEvent.mock.calls[0]![0];
+    expect(row).toMatchObject({
+      starts_at: "2026-10-23T19:00:00.000Z",
+      start_tz: null,
+      end_tz: null,
+    });
   });
 });

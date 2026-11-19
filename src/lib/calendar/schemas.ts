@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { fieldErrorsFromZod, type ParseResult } from "@/lib/forms/form-state";
 import { DEFAULT_CALENDAR_COLOR, isPaletteColor } from "./palette";
+import { validZone } from "./event-zone";
 import {
   allDayToRange,
   parseDateKey,
@@ -68,7 +69,8 @@ export type EventField =
  * Every field of the event form; `allDay` is "on" or empty because it is a
  * checkbox, and `repeat` the value of "Repetir" (spec 013 RF-1, plan D13).
  */
-export type EventFormField = EventField | "allDay" | "repeat";
+export type EventFormField =
+  EventField | "allDay" | "repeat" | "startTz" | "endTz";
 export type EventFormValues = Record<EventFormField, string>;
 
 /** Raw form values; dates are YYYY-MM-DD and times HH:mm in the profile's zone. */
@@ -84,6 +86,9 @@ export interface EventFormInput {
   location: string;
   color: string;
   categoryId: string;
+  /** Own zones of the event (spec 045); empty = the `timeZone` argument. */
+  startTz?: string;
+  endTz?: string;
 }
 
 export interface EventData {
@@ -96,6 +101,12 @@ export interface EventData {
   location: string | null;
   color: string | null;
   categoryId: string | null;
+  /**
+   * Own zones (spec 045): null = none; absent = leave them as they are, so a
+   * move or a change of color keeps the event's zone (RF-11).
+   */
+  startTz?: string | null;
+  endTz?: string | null;
 }
 
 const eventTextSchema = z.object({
@@ -132,7 +143,8 @@ const END_BEFORE_START = "El fin no puede ser anterior al inicio.";
 
 /**
  * Validates the event form and converts it to what is stored: timed events as
- * UTC instants from the profile's zone, all-day events as UTC dates (plan D6).
+ * UTC instants from the profile's zone or the event's own (spec 045 RF-3),
+ * all-day events as UTC dates (plan D6).
  */
 export function parseEventInput(
   raw: EventFormInput,
@@ -148,6 +160,9 @@ export function parseEventInput(
   if (!startDay) errors.startDate = "Introduce una fecha de inicio válida.";
   if (!endDay) errors.endDate = "Introduce una fecha de fin válida.";
 
+  // An unknown zone is dropped: the database checks it again (spec 045 RNF-2).
+  const ownStart = raw.allDay ? null : validZone(raw.startTz ?? "");
+  const ownEnd = ownStart ? (validZone(raw.endTz ?? "") ?? ownStart) : null;
   let startsAt = "";
   let endsAt = "";
   if (startDay && endDay) {
@@ -162,11 +177,11 @@ export function parseEventInput(
       if (startTime && endTime) {
         const start = zonedLocalToUtc(
           { ...startDay, ...startTime } satisfies LocalDateTime,
-          timeZone,
+          ownStart ?? timeZone,
         );
         const end = zonedLocalToUtc(
           { ...endDay, ...endTime } satisfies LocalDateTime,
-          timeZone,
+          ownEnd ?? timeZone,
         );
         if (end < start) {
           errors[raw.endDate < raw.startDate ? "endDate" : "endTime"] =
@@ -183,7 +198,14 @@ export function parseEventInput(
   }
   return {
     ok: true,
-    data: { ...text.data, allDay: raw.allDay, startsAt, endsAt },
+    data: {
+      ...text.data,
+      allDay: raw.allDay,
+      startsAt,
+      endsAt,
+      startTz: ownStart,
+      endTz: ownEnd,
+    },
   };
 }
 

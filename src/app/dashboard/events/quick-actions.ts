@@ -280,6 +280,13 @@ export async function pasteEvent(
       color: event.color,
       categoryId: event.categoryId,
       ...times,
+      // The pasted copy keeps the zone (spec 045 RF-11).
+      ...(times.allDay
+        ? {}
+        : {
+            startTz: event.startTz ?? event.series?.recurrenceTz ?? null,
+            endTz: event.endTz,
+          }),
     });
 
     const created = await createSingle(supabase, userId, row);

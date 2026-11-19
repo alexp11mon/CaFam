@@ -326,6 +326,9 @@ export interface EventRecord {
   allDay: boolean;
   color: string | null;
   categoryId: string | null;
+  /** Own zones (spec 045); a series' zone is `series.recurrenceTz`. */
+  startTz: string | null;
+  endTz: string | null;
   /** Null once the author deleted the account (spec 006 RF-20). */
   createdBy: string | null;
   /** The series of an occurrence (spec 013 RF-10, RF-16); null for a single event. */
@@ -349,7 +352,7 @@ export interface EventSeries {
 }
 
 const EVENT_COLUMNS =
-  "id, calendar_id, title, description, location, starts_at, ends_at, all_day, color, category_id, created_by, recurrence, recurrence_tz, exdates, series_id, original_start";
+  "id, calendar_id, title, description, location, starts_at, ends_at, all_day, color, category_id, created_by, recurrence, recurrence_tz, exdates, series_id, original_start, start_tz, end_tz";
 
 async function eventRow(supabase: Client, id: string) {
   const { data, error } = await supabase
@@ -376,6 +379,8 @@ function fromRow(row: EventRow): EventRecord {
     allDay: row.all_day,
     color: row.color,
     categoryId: row.category_id,
+    startTz: row.start_tz,
+    endTz: row.end_tz,
     createdBy: row.created_by,
     series: null,
   };

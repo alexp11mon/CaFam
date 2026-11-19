@@ -67,7 +67,17 @@ export function toRow(data: EventData) {
     all_day: data.allDay,
     color: data.color,
     category_id: data.categoryId,
+    // Absent: the zone stays as it is (spec 045 RF-11).
+    ...(data.startTz === undefined
+      ? {}
+      : { start_tz: data.startTz, end_tz: data.endTz ?? data.startTz }),
   };
+}
+
+// A series keeps its zone in recurrence_tz alone (spec 045 RF-8): start_tz on
+// its row would not follow the series functions.
+function seriesRow(data: EventData) {
+  return { ...toRow(data), start_tz: null, end_tz: null };
 }
 
 export function failure(
@@ -215,7 +225,10 @@ export async function changeOccurrence(
     return { fieldErrors: { repeat: RECURRENCE_MESSAGES.synced }, values };
   }
   const plan = planSeriesChange({
-    series: event.series,
+    // A zone chosen in the form becomes the series' zone (spec 045 RF-8).
+    series: data.startTz
+      ? { ...event.series, recurrenceTz: data.startTz }
+      : event.series,
     occurrence: event,
     row: toRow(data),
     repeat: values.repeat,
@@ -412,14 +425,14 @@ export async function convertToSeries(
   if (!images.count && !comments.count) {
     const { error } = await supabase
       .from("events")
-      .update({ ...toRow(data), ...columns })
+      .update({ ...seriesRow(data), ...columns })
       .eq("id", event.id);
     return error ? seriesFailure(error, values) : { id: event.id };
   }
 
   const { data: series, error } = await supabase
     .from("events")
-    .insert({ ...toRow(data), ...columns, created_by: event.createdBy })
+    .insert({ ...seriesRow(data), ...columns, created_by: event.createdBy })
     .select("id")
     .single();
   if (error) return seriesFailure(error, values);
@@ -468,7 +481,7 @@ export async function createSeries(
   const { data: row, error } = await supabase
     .from("events")
     .insert({
-      ...toRow(data),
+      ...seriesRow(data),
       ...columns,
       created_by: userId,
       ...(id ? { id } : {}),

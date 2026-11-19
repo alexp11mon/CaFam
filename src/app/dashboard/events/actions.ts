@@ -50,6 +50,8 @@ function readEventValues(formData: FormData): EventFormValues {
     color: readString(formData, "color"),
     categoryId: readString(formData, "categoryId"),
     repeat: readString(formData, "repeat") || "none",
+    startTz: readString(formData, "startTz"),
+    endTz: readString(formData, "endTz"),
   };
 }
 
@@ -130,7 +132,8 @@ export async function createEvent(
       const created = await createSeries(supabase, userId, {
         data: parsed.data,
         rule: repeat.rule,
-        timeZone,
+        // A series repeats on the wall clock of its own zone (spec 045 RF-8).
+        timeZone: parsed.data.startTz ?? timeZone,
         values,
       });
       if (!("id" in created)) return created;
@@ -203,7 +206,7 @@ export async function updateEvent(
           values,
           scope: readScope(formData),
           confirmLoss: formData.get("confirmLoss") === "1",
-          timeZone,
+          timeZone: parsed.data.startTz ?? timeZone,
         },
       );
     } else if (!repeat.ok) {
@@ -212,7 +215,7 @@ export async function updateEvent(
       saved = await convertToSeries(supabase, event, {
         data: parsed.data,
         rule: repeat.rule,
-        timeZone,
+        timeZone: parsed.data.startTz ?? timeZone,
         values,
       });
     } else {

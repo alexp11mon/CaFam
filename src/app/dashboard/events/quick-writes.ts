@@ -75,6 +75,8 @@ export function seriesValues(
     color: data.color ?? "",
     categoryId: data.categoryId ?? "",
     repeat: event.series ? `custom:${event.series.recurrence}` : "none",
+    startTz: "",
+    endTz: "",
   };
 }
 

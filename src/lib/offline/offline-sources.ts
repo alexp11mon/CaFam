@@ -4,7 +4,8 @@
 import type { EventData as LoadedEvent } from "@/app/dashboard/events/load-event";
 import { calendarProps } from "@/lib/calendar/calendar-props";
 import { eventsInRange } from "@/lib/calendar/event-window";
-import { eventToFormDates, todayKey } from "@/lib/calendar/format";
+import { originalLabel, zonedFormDates } from "@/lib/calendar/event-zone";
+import { todayKey } from "@/lib/calendar/format";
 import { monthMarks } from "@/lib/calendar/month-marks";
 import { parseNewEventQuery } from "@/lib/calendar/new-event-query";
 import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
@@ -143,6 +144,14 @@ export function detailFromSnapshot(
         copy.categories.find((c) => c.id === event.categoryId)?.name ?? null,
       author: event.createdByName ?? "",
       readOnly: readOnlyReason(calendar.synced),
+      originalTime: originalLabel(
+        {
+          ...event,
+          startTz: event.startTz ?? null,
+          endTz: event.endTz ?? null,
+        },
+        timeZone,
+      ),
       provider: calendar.synced?.provider,
       repeat: event.seriesId
         ? {
@@ -158,7 +167,7 @@ export function detailFromSnapshot(
       title: event.title,
       calendarId: event.calendarId,
       allDay: event.allDay ? "on" : "",
-      ...eventToFormDates(event, timeZone),
+      ...zonedFormDates(event, timeZone),
       description: event.partial ? "" : (event.description ?? ""),
       location: event.location ?? "",
       color: event.color ?? "",
@@ -274,6 +283,8 @@ export function newEventFromSnapshot(
       color: "",
       categoryId: "",
       repeat: "none",
+      startTz: "",
+      endTz: "",
     },
   };
 }

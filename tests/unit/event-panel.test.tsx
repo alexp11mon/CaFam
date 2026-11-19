@@ -85,6 +85,8 @@ const EDIT: EventFormValues = {
   color: "",
   categoryId: "",
   repeat: "none",
+  startTz: "",
+  endTz: "",
 };
 
 function setup({

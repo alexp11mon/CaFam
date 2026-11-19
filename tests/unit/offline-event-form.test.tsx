@@ -32,6 +32,8 @@ const INITIAL: EventFormValues = {
   color: "",
   categoryId: "",
   repeat: "none",
+  startTz: "",
+  endTz: "",
 };
 
 beforeEach(async () => {

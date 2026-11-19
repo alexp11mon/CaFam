@@ -1,5 +1,6 @@
 // The own time zone of an event (spec 045). Instants stay in UTC; the zone
 // only says in which wall clock the event is edited and its original hours.
+import { eventToFormDates, type EventFormDates } from "./format";
 import { formatTime, offsetMs } from "./time-zone";
 
 export interface ZonedRow {
@@ -19,6 +20,38 @@ export function editZones(
 ): { start: string; end: string } {
   const start = row.startTz ?? row.recurrenceTz ?? profileZone;
   return { start, end: row.endTz ?? start };
+}
+
+/**
+ * Dates and hours of the edit form in the event's zones, and the zones it
+ * sends: empty while they are the profile's (RF-3, RF-6).
+ */
+export function zonedFormDates(
+  event: Omit<ZonedRow, "startTz" | "endTz"> & {
+    startTz?: string | null;
+    endTz?: string | null;
+  },
+  profileZone: string,
+): EventFormDates & { startTz: string; endTz: string } {
+  const { start, end } = editZones(
+    {
+      startTz: event.startTz ?? null,
+      endTz: event.endTz ?? null,
+      recurrenceTz: event.recurrenceTz,
+    },
+    profileZone,
+  );
+  const own = !event.allDay && (start !== profileZone || end !== profileZone);
+  const from = eventToFormDates(event, start);
+  const to = eventToFormDates(event, end);
+  return {
+    startDate: from.startDate,
+    startTime: from.startTime,
+    endDate: to.endDate,
+    endTime: to.endTime,
+    startTz: own ? start : "",
+    endTz: own ? end : "",
+  };
 }
 
 /** "New_York" -> "New York": the last part of the IANA id. */

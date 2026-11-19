@@ -73,6 +73,9 @@ export interface EventRowFields {
   all_day: boolean;
   color: string | null;
   category_id: string | null;
+  /** Never sent to the series functions: the zone is recurrence_tz (spec 045). */
+  start_tz?: string | null;
+  end_tz?: string | null;
 }
 
 export interface SeriesChangeInput {
@@ -161,7 +164,10 @@ function fromWallMs(wall: number, allDay: boolean, zone: string): string {
  * calls it.
  */
 export function planSeriesChange(input: SeriesChangeInput): SeriesChangePlan {
-  const { series, occurrence, row, scope } = input;
+  const { series, occurrence, scope } = input;
+  const row = { ...input.row };
+  delete row.start_tz;
+  delete row.end_tz;
   const resolved = resolveRepeat(input.repeat, input.startDate);
   if (!resolved.ok) {
     return {

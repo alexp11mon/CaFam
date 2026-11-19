@@ -5,7 +5,7 @@ import type {
   EventFormValues,
 } from "@/components/calendar/event-form";
 import { authorLabel } from "@/lib/account/author-label";
-import { eventToFormDates } from "@/lib/calendar/format";
+import { originalLabel, zonedFormDates } from "@/lib/calendar/event-zone";
 import { getEventImages, type EventImage } from "@/lib/images/queries";
 import {
   getCalendar,
@@ -92,6 +92,10 @@ export async function loadEvent(id: string): Promise<EventData | null> {
       author: authorLabel(event.createdBy, members),
       readOnly: readOnlyReason(calendar.synced),
       provider: calendar.synced?.provider,
+      originalTime: originalLabel(
+        { ...event, recurrenceTz: event.series?.recurrenceTz },
+        timeZone,
+      ),
       repeat: event.series
         ? {
             summary: event.series.summary,
@@ -106,7 +110,11 @@ export async function loadEvent(id: string): Promise<EventData | null> {
       title: event.title,
       calendarId: event.calendarId,
       allDay: event.allDay ? "on" : "",
-      ...eventToFormDates(event, timeZone),
+      // In the event's own zone, if it has one (spec 045 RF-3).
+      ...zonedFormDates(
+        { ...event, recurrenceTz: event.series?.recurrenceTz },
+        timeZone,
+      ),
       description: event.description ?? "",
       location: event.location ?? "",
       color: event.color ?? "",
