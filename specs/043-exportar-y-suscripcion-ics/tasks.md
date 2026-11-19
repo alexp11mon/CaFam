@@ -8,12 +8,12 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
 
 ## Tareas
 
-- [ ] T1 Escritura del `.ics`
+- [x] T1 Escritura del `.ics`
   Hecho cuando: `npm test -- write-ics ics-fold vtimezone` en verde.
   - Escapes (`,` `;` `\` saltos), plegado a 75 octetos sin partir UTF-8, día completo, varios días, serie con `RRULE`/`TZID`/`EXDATE` y excepción con `RECURRENCE-ID`.
   - Ida y vuelta con `parseIcs` (004) en 20 eventos variados.
 
-  Cubre: RF-3 a RF-6, RNF-1 | Evidencia: —
+  Cubre: RF-3 a RF-6, RNF-1 | Evidencia: `npm test -- write-ics ics-fold vtimezone` 3 archivos, 13 tests en verde (2026-11-19)
 - [ ] T2 Exportar con sesión
   Hecho cuando: `npm test -- ics-export-route` y `npm run test:db -- ics-export` en verde.
   - Un calendario (Lector incluido), los visibles con `CATEGORIES`, un ajeno → 404, sin sesión → 401, 2.000 eventos en menos de 1 s.

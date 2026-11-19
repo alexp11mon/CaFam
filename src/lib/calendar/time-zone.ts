@@ -60,7 +60,8 @@ export function utcToZonedParts(
   };
 }
 
-function offsetMs(utcMs: number, timeZone: string): number {
+/** Offset of `timeZone` from UTC at an instant, in ms. */
+export function offsetMs(utcMs: number, timeZone: string): number {
   const whole = Math.floor(utcMs / 1000) * 1000;
   const parts = utcToZonedParts(whole, timeZone);
   return (
