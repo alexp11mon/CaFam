@@ -14,11 +14,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Ida y vuelta con `parseIcs` (004) en 20 eventos variados.
 
   Cubre: RF-3 a RF-6, RNF-1 | Evidencia: `npm test -- write-ics ics-fold vtimezone` 3 archivos, 13 tests en verde (2026-11-19)
-- [ ] T2 Exportar con sesión
+- [x] T2 Exportar con sesión
   Hecho cuando: `npm test -- ics-export-route` y `npm run test:db -- ics-export` en verde.
   - Un calendario (Lector incluido), los visibles con `CATEGORIES`, un ajeno → 404, sin sesión → 401, 2.000 eventos en menos de 1 s.
 
-  Cubre: RF-1, RF-2, RF-5, RNF-2 | Evidencia: —
+  Cubre: RF-1, RF-2, RF-5, RNF-2 | Evidencia: `npm test -- ics-export-route` 4 tests y `npm run test:db -- ics-export` 4 tests en verde (2.000 eventos por debajo de 1 s) (2026-11-19)
 - [ ] T3 Enlace de suscripción
   Hecho cuando: `npm run test:db -- ics-feeds` y `npm test -- ics-feed-route` en verde.
   - Migración, `db:push`, `db:types`. Solo el propietario crea y desactiva; un Editor → `CF404`; el hash no se lee; regenerar invalida; borrar o juntar el calendario lo invalida; 61.ª petición en una hora → 429.

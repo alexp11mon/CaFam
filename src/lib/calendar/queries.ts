@@ -516,7 +516,7 @@ const PAGE_ROWS = 1000;
  * and says nothing about the rest (spec 023 RF-13, plan D10). The query must
  * have a stable order. 20 pages at most, so a mistake cannot loop.
  */
-async function allRows<Row>(
+export async function allRows<Row>(
   page: (
     first: number,
     last: number,
