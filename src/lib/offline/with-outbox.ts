@@ -7,7 +7,7 @@ import { addChange, getQueueState } from "./queue-store";
 
 export type Queued = {
   offline: true;
-  undo: { kind: "offline"; changeId: string };
+  undo: { kind: "offline"; changeId: string; change: OfflineChange };
 };
 
 export function isQueued(value: unknown): value is Queued {
@@ -21,7 +21,7 @@ export function isQueued(value: unknown): value is Queued {
 async function queued(change: OfflineChange): Promise<Queued> {
   return {
     offline: true,
-    undo: { kind: "offline", changeId: await addChange(change) },
+    undo: { kind: "offline", changeId: await addChange(change), change },
   };
 }
 

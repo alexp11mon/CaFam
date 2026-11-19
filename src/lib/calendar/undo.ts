@@ -1,6 +1,8 @@
 // What a quick change sends and how it is undone (spec 017 RF-24 to RF-30,
 // plan undo-core, D8, D9). The token only lives in the client for 10 s.
 
+import type { OfflineChange } from "@/lib/offline/outbox";
+
 export type Change =
   | { kind: "times"; startsAt: string; endsAt: string; allDay: boolean }
   /** null = the calendar's color (RF-37). */
@@ -32,7 +34,8 @@ export type UndoToken =
   /** A pasted copy: undoing deletes it (RF-58). */
   | { kind: "unpaste"; id: string }
   /** A change still waiting on this device: undoing takes it out of the queue (spec 034 RF-30). */
-  | { kind: "offline"; changeId: string };
+  /** `change`: to undo it online once sent (spec 046 RF-16). */
+  | { kind: "offline"; changeId: string; change?: OfflineChange };
 
 /** The notices of RF-24, RF-25, RF-57 and RF-58. */
 export const UNDO_NOTICES = {

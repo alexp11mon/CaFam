@@ -11,6 +11,9 @@ vi.mock("@/app/dashboard/events/quick-actions", () => ({
   undoAction: h.undoAction,
 }));
 vi.mock("@/lib/offline/queue-store", () => ({ undoChange: h.undoChange }));
+vi.mock("@/app/dashboard/offline-actions", () => ({
+  applyOfflineChange: vi.fn(),
+}));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh() {} }) }));
 
 const { tokenStep } = await import("@/components/calendar/use-undo-toast");

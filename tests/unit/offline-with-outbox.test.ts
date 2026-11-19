@@ -50,7 +50,7 @@ describe("withOutbox", () => {
     expect(write).not.toHaveBeenCalled();
     expect(result).toEqual({
       offline: true,
-      undo: { kind: "offline", changeId: expect.any(String) },
+      undo: { kind: "offline", changeId: expect.any(String), change: move(1) },
     });
     expect(getQueueState().queue.map((e) => e.change)).toEqual([move(1)]);
     forgetConnection();

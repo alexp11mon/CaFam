@@ -27,10 +27,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- trash-list trash-item nav` en verde y capturas a 390, 768 y 1440 px en claro y oscuro (lista, vacía, confirmación).
 
   Cubre: RF-3, RF-5, RF-6, RNF-2 | Evidencia: `/dashboard/trash` (`page.tsx` con `readTrash` de `lib/calendar/trash-queries.ts` y `actions.ts`: `restoreFromTrash` por el mismo camino que "Deshacer", así un traído vuelve primero a Google o iCloud; `purgeFromTrash` y `emptyTrash`). `TrashList` (por calendario, en el orden de "Mis calendarios", "Vaciar la papelera" solo del Propietario con confirmación) y `TrashItem` ("Borrado por Ana hace 2 días", "Quedan 28 días", "serie, 24 repeticiones", "Restaurar" con el motivo si no se puede y "Borrar para siempre" con confirmación); textos puros en `lib/calendar/trash.ts`. Destino "Papelera" en "Más" (`needsNetwork`) y enlace "Papelera" en las opciones de cada calendario para Propietario y Editores. `npm test -- trash-list trash-item nav` 40 en verde; `npm test` 3.754 en verde. Capturas en `capturas/` (lista, confirmación y vacía a 390, 768 y 1440 px, claro y oscuro) con `scripts/screenshots-046.mjs`.
-- [ ] T5 Sin conexión
+- [x] T5 Sin conexión
   Hecho cuando: `npm test -- offline-undo` en verde: deshacer un cambio en cola lo retira; uno ya enviado se deshace con red.
 
-  Cubre: RF-16 | Evidencia: —
+  Cubre: RF-16 | Evidencia: la ficha `offline` lleva el cambio (`withOutbox`). `tokenStep`: en la cola, `undoChange` lo retira sin llamar al servidor; ya enviado y con red, aplica su inverso (`inverseOf`, `lib/offline/undo-sent.ts`: cambio ↔ cambio, alta ↔ borrado, solo eventos sueltos) con `applyOfflineChange`, cuyo conflicto de tres versiones da "Este evento ha cambiado entretanto" (RF-13), y el inverso del inverso es "Rehacer". `npm test -- offline-undo use-undo-toast with-outbox` 16 en verde; `npm test` 3.760 en verde.
 - [ ] T6 Cierre
   Hecho cuando: AGENTS.md, README y constitución (enmienda 14: deshacer varias acciones y Ctrl/⌘+Mayús+Z; papelera) actualizados; `python -m graphify update .`; P8 completa.
 
