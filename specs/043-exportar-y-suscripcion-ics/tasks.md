@@ -25,10 +25,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - La ruta pública con cabeceras y 404 sin cuerpo.
 
   Cubre: RF-7 a RF-11, RNF-3 | Evidencia: migración `ics_feeds` aplicada en dev; `npm run test:db -- ics-feeds` 5 tests y `npm test -- ics-feed-route` 3 tests en verde (2026-11-19)
-- [ ] T4 Interfaz y privacidad
+- [x] T4 Interfaz y privacidad
   Hecho cuando: `npm test -- ics-feed-panel calendar-list calendar-filters` en verde y capturas a 390 y 1440 px en claro y oscuro en `capturas/`; prueba manual de suscripción desde un `.ics` servido por `next start` abierto en el navegador.
 
-  Cubre: RF-1, RF-2, RF-7, RF-8, RF-12, RF-13 | Evidencia: —
+  Cubre: RF-1, RF-2, RF-7, RF-8, RF-12, RF-13 | Evidencia: `npm test -- ics-feed-panel calendar-list calendar-filters share-actions` 48 tests en verde; `scripts/screenshots-043.mjs` con `next start`: capturas en `capturas/`, la suscripción servida responde 200 con `text/calendar`, `private, max-age=900` y `noindex`, un token falso 404 sin cuerpo y la descarga con sesión `attachment; filename="Mi calendario.ics"` (2026-11-19)
 - [ ] T5 Cierre
   Hecho cuando: AGENTS.md (rutas públicas, base de datos), README y constitución actualizados; `python -m graphify update .`; P8 completa.
 

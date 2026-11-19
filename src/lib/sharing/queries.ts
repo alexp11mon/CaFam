@@ -69,6 +69,20 @@ export async function getAccessCode(
   };
 }
 
+/** Whether the calendar has a subscription link; the owner only (spec 043 RF-8). */
+export async function hasIcsFeed(
+  supabase: Client,
+  calendarId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("calendar_feeds")
+    .select("calendar_id")
+    .eq("calendar_id", calendarId)
+    .maybeSingle();
+  if (error) throw error;
+  return data !== null;
+}
+
 export interface MemberRecord {
   calendarId: string;
   userId: string;

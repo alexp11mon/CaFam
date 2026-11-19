@@ -209,4 +209,21 @@ describe("CalendarList", () => {
       screen.getByRole("link", { name: "Crear calendario" }),
     ).toHaveAttribute("href", "/dashboard/calendars/new");
   });
+
+  it("lets every member export the calendar as .ics (spec 043 RF-1)", async () => {
+    render(
+      <CalendarList
+        timeZone="Europe/Madrid"
+        calendars={CALENDARS}
+        leaveAction={leave}
+      />,
+    );
+    const viewer = screen.getAllByRole("listitem")[2]!;
+    await open(viewer);
+    const link = within(viewer).getByRole("link", {
+      name: "Exportar Fútbol (.ics)",
+    });
+    expect(link).toHaveAttribute("href", "/api/ics/export?calendar=3");
+    expect(link).toHaveAttribute("download");
+  });
 });

@@ -4,13 +4,16 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PageShell } from "@/components/calendar/page-shell";
 import { AccessCodePanel } from "@/components/sharing/access-code-panel";
+import { IcsFeedPanel } from "@/components/sharing/ics-feed-panel";
 import { InviteForm } from "@/components/sharing/invite-form";
 import { InviteList } from "@/components/sharing/invite-list";
 import { getCalendar, requireUser } from "@/lib/calendar/queries";
-import { getAccessCode, getInvites } from "@/lib/sharing/queries";
+import { getAccessCode, getInvites, hasIcsFeed } from "@/lib/sharing/queries";
 import {
+  createIcsFeed,
   createInvite,
   disableAccessCode,
+  disableIcsFeed,
   revokeInvite,
   saveAccessCode,
 } from "./actions";
@@ -24,9 +27,10 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
   const calendar = await getCalendar(supabase, userId, id);
   // Only the owner shares (RF-29): everyone else gets a 404 like a stranger.
   if (!calendar || calendar.role !== "owner") notFound();
-  const [invites, accessCode] = await Promise.all([
+  const [invites, accessCode, feed] = await Promise.all([
     getInvites(supabase, id),
     getAccessCode(supabase, id),
+    hasIcsFeed(supabase, id),
   ]);
 
   return (
@@ -71,6 +75,16 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
           code={accessCode}
           saveAction={saveAccessCode.bind(null, id)}
           disableAction={disableAccessCode.bind(null, id)}
+        />
+      </section>
+      <section aria-labelledby="feed-heading" className="flex flex-col gap-4">
+        <h2 id="feed-heading" className="text-lg font-semibold text-ink">
+          Suscripción (.ics)
+        </h2>
+        <IcsFeedPanel
+          active={feed}
+          createAction={createIcsFeed.bind(null, id)}
+          disableAction={disableIcsFeed.bind(null, id)}
         />
       </section>
     </>

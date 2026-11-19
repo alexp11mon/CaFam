@@ -190,6 +190,15 @@ describe("CalendarWorkspace filter tree (RF-42)", () => {
   });
 });
 
+describe("export (spec 043 RF-2)", () => {
+  it("downloads the visible calendars", () => {
+    setup();
+    const link = screen.getByRole("link", { name: "Exportar los visibles" });
+    expect(link).toHaveAttribute("href", "/api/ics/export?visible=1");
+    expect(link).toHaveAttribute("download");
+  });
+});
+
 describe("visibility (RF-32, RF-33, RF-43, RF-44)", () => {
   it("hides the events of a calendar when its box is unchecked, and saves it", async () => {
     const user = userEvent.setup();

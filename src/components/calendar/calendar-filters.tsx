@@ -6,6 +6,7 @@ import { ChevronIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
 import { FoldChevron } from "@/components/ui/fold-chevron";
 import { IconButton } from "@/components/ui/icon-button";
+import { useConnection } from "@/lib/hooks/use-connection";
 import { foldId } from "@/lib/calendar/folded";
 import { useFolded } from "@/lib/hooks/use-folded";
 import { ORPHAN_GROUP_ID } from "@/lib/calendar/grouping";
@@ -333,6 +334,8 @@ export function CalendarFilters({
   const listId = useId();
   const [folded, setFolded] = useFolded(foldId.calendars);
   const [ordering, setOrdering] = useState(false);
+  // The export reads the server: not offline (spec 043 RF-2).
+  const online = useConnection();
   // With nobody else sharing, the person level would only repeat my own name.
   const showPeople = groups.length > 1;
   const people = groups.filter((group) => !group.groupId);
@@ -430,6 +433,15 @@ export function CalendarFilters({
           </SectionItem>
         ))}
       </ul>
+      {folded || !online ? null : (
+        <a
+          href="/api/ics/export?visible=1"
+          download
+          className="inline-flex min-h-11 items-center self-start px-1 text-sm font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
+        >
+          Exportar los visibles
+        </a>
+      )}
     </section>
   );
 }

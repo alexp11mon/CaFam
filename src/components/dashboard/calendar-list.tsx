@@ -227,6 +227,15 @@ function CalendarRow({
               Subir a Google o iCloud
             </Link>
           ) : null}
+          {/* A file download, not a page: a plain link (spec 043 RF-1). */}
+          <a
+            href={`/api/ics/export?calendar=${calendar.id}`}
+            download
+            aria-label={`Exportar ${calendar.name} (.ics)`}
+            className={ACTION_LINK}
+          >
+            Exportar (.ics)
+          </a>
           {calendar.role !== "viewer" ? (
             <Link
               href={`/dashboard/calendars/${calendar.id}/categories`}

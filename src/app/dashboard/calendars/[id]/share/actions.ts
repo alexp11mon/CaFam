@@ -11,7 +11,7 @@ import {
   type ConfirmState,
 } from "@/lib/forms/form-state";
 import { getSharingErrorMessage } from "@/lib/sharing/error-messages";
-import { buildInviteUrl } from "@/lib/sharing/invite-url";
+import { buildFeedUrl, buildInviteUrl } from "@/lib/sharing/invite-url";
 import {
   accessCodeSchema,
   inviteSchema,
@@ -20,6 +20,7 @@ import {
 } from "@/lib/sharing/schemas";
 import type { AccessCodeState } from "@/components/sharing/access-code-panel";
 import type { InviteState } from "@/components/sharing/invite-form";
+import type { FeedState } from "@/components/sharing/ics-feed-panel";
 
 function refresh() {
   // Drop the client router cache so the list shows the change.
@@ -141,6 +142,51 @@ export async function disableAccessCode(
     return { formError: getSharingErrorMessage(error) };
   }
 
+  refresh();
+  return {};
+}
+
+// CF404 here means "not your calendar", not an invalid invite.
+function feedError(error: { code?: string } | null): string {
+  return error?.code === "CF404"
+    ? CALENDAR_MESSAGES.notFound
+    : getSharingErrorMessage(error);
+}
+
+/** Creates (or replaces) the .ics subscription link (spec 043 RF-7, RF-8). */
+export async function createIcsFeed(calendarId: string): Promise<FeedState> {
+  if (!z.uuid().safeParse(calendarId).success) {
+    return { formError: CALENDAR_MESSAGES.notFound };
+  }
+  const { supabase } = await requireActionUser();
+  try {
+    const { data, error } = await supabase.rpc("create_ics_feed", {
+      p_calendar_id: calendarId,
+    });
+    if (error || !data) return { formError: feedError(error) };
+    refresh();
+    // Shown once: only its hash is stored.
+    return { url: buildFeedUrl(await headers(), data) };
+  } catch (error) {
+    return { formError: getSharingErrorMessage(error) };
+  }
+}
+
+export async function disableIcsFeed(
+  calendarId: string,
+): Promise<ConfirmState> {
+  if (!z.uuid().safeParse(calendarId).success) {
+    return { formError: CALENDAR_MESSAGES.notFound };
+  }
+  const { supabase } = await requireActionUser();
+  try {
+    const { error } = await supabase.rpc("disable_ics_feed", {
+      p_calendar_id: calendarId,
+    });
+    if (error) return { formError: feedError(error) };
+  } catch (error) {
+    return { formError: getSharingErrorMessage(error) };
+  }
   refresh();
   return {};
 }

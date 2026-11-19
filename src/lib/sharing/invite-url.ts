@@ -10,7 +10,18 @@ export function buildInviteUrl(
   headers: Pick<Headers, "get">,
   token: string,
 ): string {
-  const path = `/invite/${encodeURIComponent(token)}`;
+  return absoluteUrl(headers, `/invite/${encodeURIComponent(token)}`);
+}
+
+/** The .ics subscription link of a token (spec 043 RF-7). */
+export function buildFeedUrl(
+  headers: Pick<Headers, "get">,
+  token: string,
+): string {
+  return absoluteUrl(headers, `/api/ics/${encodeURIComponent(token)}.ics`);
+}
+
+function absoluteUrl(headers: Pick<Headers, "get">, path: string): string {
   const host =
     firstValue(headers.get("x-forwarded-host")) ??
     firstValue(headers.get("host"));

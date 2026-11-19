@@ -327,6 +327,24 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
+        <Section title="Exportar y suscripción (.ics)">
+          <p>
+            Cualquier miembro de un calendario puede descargar sus eventos en un
+            archivo .ics (título, fechas, descripción, lugar y repetición). El
+            archivo no lleva imágenes, comentarios, colores, categorías ni
+            autores, y CaFam no guarda ninguna copia de lo que descargas.
+          </p>
+          <p>
+            El propietario puede crear un enlace secreto de suscripción para ver
+            el calendario en otra app, como Google Calendar, Apple Calendar u
+            Outlook. Cualquiera que tenga el enlace ve los eventos desde seis
+            meses atrás sin necesidad de cuenta, así que solo debe compartirse
+            con quien se quiera. CaFam guarda solo una huella del enlace, no el
+            enlace, y deja de funcionar al desactivarlo, al crear uno nuevo, al
+            borrar el calendario o cuando se queda sin propietario.
+          </p>
+        </Section>
+
         <Section title="Contacto">
           <p>
             Para cualquier duda, escribe al correo de asistencia que muestra
