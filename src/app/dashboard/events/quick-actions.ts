@@ -125,7 +125,8 @@ export async function deleteForUndo(
             updatedAt: await updatedAtOf(supabase, event.series.id),
           }
         : undefined;
-    return { ok: true, id, undo: { kind: "restore", trashId, guard } };
+    const again = event.series && scope ? { id, scope } : undefined;
+    return { ok: true, id, undo: { kind: "restore", trashId, guard, again } };
   } catch (error) {
     return errorOf(error);
   }
@@ -149,22 +150,29 @@ function restoreFailure(error: unknown): { ok: false; error: string } {
   };
 }
 
-type UndoResult = { ok: true } | { ok: false; error: string };
+/** `inverse` undoes what was just undone: "Rehacer" (spec 046 RF-12). */
+type UndoResult =
+  { ok: true; inverse?: UndoToken } | { ok: false; error: string };
 
-/** Undoes the last quick action within its 10 s (RF-27 to RF-30). */
+/**
+ * Undoes an action of the stack, and redoes one with the inverse it gave
+ * (spec 017 RF-27 to RF-30; spec 046 RF-11 to RF-15).
+ */
 export async function undoAction(token: UndoToken): Promise<UndoResult> {
   const parsed = undoTokenSchema.safeParse(token);
   if (!parsed.success) return { ok: false, error: UNDO_ERRORS.expired };
   const undo = parsed.data;
   const { supabase, userId } = await requireActionUser();
   try {
-    if (undo.kind === "unpaste") {
-      const failed = await deleteSingle(supabase, undo.id, "modal");
-      if (failed && failed.done !== "gone") {
-        return { ok: false, error: failed.formError ?? UNDO_ERRORS.expired };
-      }
-      refresh();
-      return { ok: true };
+    if (undo.kind === "unpaste" || undo.kind === "delete") {
+      // Through the trash, so it can be redone (spec 046 RF-12).
+      const result = await deleteForUndo(undo.id, {
+        scope: undo.kind === "delete" ? undo.scope : undefined,
+        confirmLoss: true,
+      });
+      if (result.ok) return { ok: true, inverse: result.undo };
+      // Already gone: nothing left to undo.
+      return result.gone ? { ok: true } : { ok: false, error: result.error };
     }
 
     if (undo.kind === "change") {
@@ -173,12 +181,32 @@ export async function undoAction(token: UndoToken): Promise<UndoResult> {
       if (!event || (await updatedAtOf(supabase, undo.id)) !== undo.updatedAt) {
         return { ok: false, error: UNDO_ERRORS.changed };
       }
+      const after: Change =
+        undo.before.kind === "times"
+          ? {
+              kind: "times",
+              startsAt: event.startsAt,
+              endsAt: event.endsAt,
+              allDay: event.allDay,
+            }
+          : { kind: "color", color: event.color };
       const timeZone = await getProfileTimeZone(supabase, userId);
       const result = await applyChange(supabase, event, undo.before, {
         scope: undo.series ? "this" : undefined,
         timeZone,
       });
-      return result.ok ? { ok: true } : { ok: false, error: result.error };
+      if (!result.ok) return { ok: false, error: result.error };
+      const id = result.id;
+      return {
+        ok: true,
+        inverse: {
+          kind: "change",
+          id,
+          before: after,
+          updatedAt: await updatedAtOf(supabase, id),
+          series: undo.series,
+        },
+      };
     }
 
     if (
@@ -192,6 +220,7 @@ export async function undoAction(token: UndoToken): Promise<UndoResult> {
     });
     if (rowError) return restoreFailure(rowError);
     const saved = row as EventRowInput | null;
+    let restored: string | null = null;
     if (saved && (await isSyncedCalendar(supabase, saved.calendar_id))) {
       // Google gets it back first, as a new event (RF-3, case of synced calendars).
       const created = await syncedWrite(supabase, {
@@ -220,14 +249,19 @@ export async function undoAction(token: UndoToken): Promise<UndoResult> {
         p_event_id: created.eventId,
       });
       if (error) return restoreFailure(error);
+      restored = created.eventId;
     } else {
-      const { error } = await supabase.rpc("restore_event", {
+      const { data, error } = await supabase.rpc("restore_event", {
         p_trash_id: undo.trashId,
       });
       if (error) return restoreFailure(error);
+      restored = data;
     }
     refresh();
-    return { ok: true };
+    const again = undo.again ?? (restored ? { id: restored } : null);
+    return again
+      ? { ok: true, inverse: { kind: "delete", ...again } }
+      : { ok: true };
   } catch (error) {
     return restoreFailure(error);
   }

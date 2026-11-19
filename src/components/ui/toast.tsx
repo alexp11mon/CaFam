@@ -19,8 +19,15 @@ const LEAVING_MS = 200;
 const UNDONE = "Deshecho";
 
 export interface ToastOptions {
-  /** Undoes the action; resolves to null when undone or to why it could not be. */
-  undo?: () => Promise<string | null>;
+  /**
+   * Undoes the action; resolves to null when undone or to why it could not
+   * be, or to nothing when it shows its own notice (spec 046 stack).
+   */
+  undo?: () => Promise<string | null | void>;
+  /** The button: "Deshacer" by default, "Rehacer" after undoing (spec 046 RF-12). */
+  label?: string;
+  /** false: the undo stack answers Ctrl/⌘+Z itself (spec 046 RF-12). */
+  keys?: boolean;
 }
 
 type Show = (text: string, options?: ToastOptions) => void;
@@ -32,6 +39,8 @@ type Toast = {
   id: number;
   text: string;
   undo?: ToastOptions["undo"];
+  label?: string;
+  keys?: boolean;
   leaving?: boolean;
 };
 
@@ -64,7 +73,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const id = ++lastId;
     setNotices(({ toast: current }) => ({
       previous: current && { ...current, leaving: true },
-      toast: { id, text, undo: options?.undo },
+      toast: {
+        id,
+        text,
+        undo: options?.undo,
+        label: options?.label,
+        keys: options?.keys,
+      },
     }));
   }, []);
   const id = toast?.id;
@@ -97,7 +112,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     async (undo: NonNullable<ToastOptions["undo"]>) => {
       setUndoing(true);
       try {
-        show((await undo()) ?? UNDONE);
+        const message = await undo();
+        if (message !== undefined) show(message ?? UNDONE);
       } finally {
         setUndoing(false);
       }
@@ -107,7 +123,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   // Ctrl/⌘+Z while the notice offers it: with the keyboard the button is at
   // the end of the tab order and lasts 10 s (spec 023 RF-20, enmienda 9).
-  const undo = toast?.undo;
+  const undo = toast?.keys === false ? undefined : toast?.undo;
   useEffect(() => {
     if (!undo || undoing) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -159,7 +175,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 onClick={() => runUndo(toast.undo!)}
                 className="press settle pointer-events-auto min-h-11 rounded-control px-4 font-semibold text-on-ink underline decoration-on-ink/50 underline-offset-4 hover:decoration-on-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-ink disabled:opacity-60"
               >
-                Deshacer
+                {toast.label ?? "Deshacer"}
               </button>
             ) : null}
           </p>

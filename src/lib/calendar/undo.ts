@@ -24,7 +24,11 @@ export type UndoToken =
       kind: "restore";
       trashId: string;
       guard?: { id: string; updatedAt: string };
+      /** What "Rehacer" deletes again: an occurrence and its scope (spec 046 RF-12). */
+      again?: { id: string; scope: "this" | "following" | "all" };
     }
+  /** "Rehacer" a deletion: deletes again, back to the trash (spec 046 RF-12). */
+  | { kind: "delete"; id: string; scope?: "this" | "following" | "all" }
   /** A pasted copy: undoing deletes it (RF-58). */
   | { kind: "unpaste"; id: string }
   /** A change still waiting on this device: undoing takes it out of the queue (spec 034 RF-30). */

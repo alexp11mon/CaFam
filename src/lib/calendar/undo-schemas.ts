@@ -43,6 +43,14 @@ export const undoTokenSchema = z.discriminatedUnion("kind", [
     kind: z.literal("restore"),
     trashId: z.uuid(),
     guard: z.object({ id: z.uuid(), updatedAt: z.string() }).optional(),
+    again: z
+      .object({ id: z.string(), scope: z.enum(["this", "following", "all"]) })
+      .optional(),
+  }),
+  z.object({
+    kind: z.literal("delete"),
+    id: z.string(),
+    scope: z.enum(["this", "following", "all"]).optional(),
   }),
   z.object({ kind: z.literal("unpaste"), id: z.uuid() }),
 ]);

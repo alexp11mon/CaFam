@@ -18,11 +18,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm run test:db -- event-trash-series` y `npm test -- event-actions` en verde: serie entera, "este y los siguientes" y repetición; restaurar repetición sin serie se explica; la sincronización no guarda copia.
 
   Cubre: RF-2, RF-5, RF-8 | Evidencia: `snapshotForTrash` y `dropTrash` (`event-writes.ts`) en los tres caminos de borrado (`deleteEvent`, `deleteForUndo` y el envío sin conexión): suelto y "Solo este evento" con `snapshot_event`, "Este y los siguientes" y "Todos" con `snapshot_series` (número de repeticiones con `countOccurrences` si la serie acaba); si el borrado no se hace, la copia se quita. `test:db -- event-trash-series` 3 en verde (serie entera con imágenes y comentarios, corte restaurado tal como estaba, repetición sin serie → `CF410`); `npm test` 3.732 en verde (`event-actions`, `quick-actions` con la guarda de RF-15 y "La serie de esta repetición ya no existe"). La sincronización no pasa por `snapshot_event` (D5): `sync_apply_events` borra directamente.
-- [ ] T3 Pila de deshacer y rehacer
+- [x] T3 Pila de deshacer y rehacer
   Hecho cuando: `npm test -- undo-stack toast use-undo-toast quick-actions` en verde.
   - 20 como máximo, deshacer y rehacer en orden, conflicto saca la entrada, atajos solo fuera de campos y ventanas, aviso con "Rehacer", Venito apila sus acciones.
 
-  Cubre: RF-11 a RF-15, RF-17 | Evidencia: —
+  Cubre: RF-11 a RF-15, RF-17 | Evidencia: `lib/calendar/undo-stack.ts` (puro: 20 como máximo, una acción nueva vacía "rehacer", el fallo saca la entrada) y `UndoStackProvider` (`components/calendar/undo-stack.tsx`, en `AppFrame`: Ctrl/⌘+Z, Ctrl/⌘+Mayús+Z y Ctrl+Y fuera de campos y de ventanas modales, "Deshecho: mover «Dentista»" con "Rehacer"). `undoAction` devuelve el inverso de cada ficha (`change` ↔ `change`, `restore` ↔ `delete`, pegar se borra por la papelera); `useUndoToast` apila con `tokenStep`; las tarjetas de Venito se apilan sin "Rehacer" (`stack-cards.ts`). `npm test -- undo-stack use-undo-toast toast quick-actions` 65 en verde; `npm test` 3.744 en verde.
 - [ ] T4 Pantalla "Papelera"
   Hecho cuando: `npm test -- trash-list trash-item nav` en verde y capturas a 390, 768 y 1440 px en claro y oscuro (lista, vacía, confirmación).
 

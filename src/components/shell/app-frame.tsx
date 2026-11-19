@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { EventClipboardProvider } from "@/components/calendar/event-clipboard";
+import { UndoStackProvider } from "@/components/calendar/undo-stack";
 import { OfflineProvider } from "@/components/offline/offline-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import type { AccentId } from "@/lib/theme/accents";
@@ -55,24 +56,26 @@ export function AppFrame({
       <ThemeSync theme={theme} />
       <ToastProvider>
         <OfflineProvider userId={userId} offlineApp={offline} />
-        <EventClipboardProvider>
-          <CalendarHeaderProvider>
-            <TopNav displayName={displayName} signOutAction={signOutAction} />
-            <TopBar displayName={displayName} />
-            <div
-              id="contenido"
-              tabIndex={-1}
-              // Room for the phone header above and for the floating bar
-              // below, with the safe areas of iOS (spec 030 RF-5).
-              className="flex flex-1 flex-col pt-[calc(3.25rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] outline-none tab:pt-0 tab:pb-0"
-            >
-              {children}
-            </div>
-            <CreateButton floating />
-            {offline ? null : <AssistantFab />}
-            <BottomBar signOutAction={signOutAction} />
-          </CalendarHeaderProvider>
-        </EventClipboardProvider>
+        <UndoStackProvider>
+          <EventClipboardProvider>
+            <CalendarHeaderProvider>
+              <TopNav displayName={displayName} signOutAction={signOutAction} />
+              <TopBar displayName={displayName} />
+              <div
+                id="contenido"
+                tabIndex={-1}
+                // Room for the phone header above and for the floating bar
+                // below, with the safe areas of iOS (spec 030 RF-5).
+                className="flex flex-1 flex-col pt-[calc(3.25rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] outline-none tab:pt-0 tab:pb-0"
+              >
+                {children}
+              </div>
+              <CreateButton floating />
+              {offline ? null : <AssistantFab />}
+              <BottomBar signOutAction={signOutAction} />
+            </CalendarHeaderProvider>
+          </EventClipboardProvider>
+        </UndoStackProvider>
       </ToastProvider>
     </div>
   );

@@ -242,7 +242,7 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
         if (override) next.set(event.id, { ...override, pending: false });
         return next;
       });
-      showUndo(notice, result.undo);
+      showUndo(notice, result.undo, event.title);
       // Offline the queue draws it; the server is not there (spec 034 RF-26).
       if (isOnline()) router.refresh();
     },

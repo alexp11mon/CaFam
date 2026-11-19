@@ -505,7 +505,11 @@ describe("undoAction (RF-27 to RF-29)", () => {
   };
 
   it("writes the values of before when nothing changed meanwhile", async () => {
-    expect(await undoAction(change)).toEqual({ ok: true });
+    // The inverse writes the values it had: "Rehacer" (spec 046 RF-12).
+    expect(await undoAction(change)).toMatchObject({
+      ok: true,
+      inverse: { kind: "change", id: EVENT_ID, before: { kind: "times" } },
+    });
     expect(h.updates[0]).toMatchObject({
       starts_at: "2026-11-03T08:00:00.000Z",
     });
@@ -530,6 +534,7 @@ describe("undoAction (RF-27 to RF-29)", () => {
     });
     expect(await undoAction({ kind: "restore", trashId: TRASH_ID })).toEqual({
       ok: true,
+      inverse: { kind: "delete", id: EVENT_ID },
     });
     expect(h.rpc).toHaveBeenCalledWith("restore_event", {
       p_trash_id: TRASH_ID,
@@ -560,6 +565,7 @@ describe("undoAction (RF-27 to RF-29)", () => {
 
     expect(await undoAction({ kind: "restore", trashId: TRASH_ID })).toEqual({
       ok: true,
+      inverse: { kind: "delete", id: "g-new" },
     });
     expect(h.writeEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -618,11 +624,21 @@ describe("undoAction (RF-27 to RF-29)", () => {
     });
   });
 
-  it("undoing a paste deletes the copy", async () => {
-    expect(await undoAction({ kind: "unpaste", id: EVENT_ID })).toEqual({
+  it("undoing a paste deletes the copy through the trash, so it can be redone", async () => {
+    rpcs({ snapshot_event: { data: TRASH_ID, error: null } });
+    expect(await undoAction({ kind: "unpaste", id: EVENT_ID })).toMatchObject({
       ok: true,
+      inverse: { kind: "restore", trashId: TRASH_ID },
     });
     expect(h.deletes).toBe(1);
+  });
+
+  it("redoes a deletion with its scope (spec 046 RF-12)", async () => {
+    rpcs({ snapshot_event: { data: TRASH_ID, error: null } });
+    expect(await undoAction({ kind: "delete", id: EVENT_ID })).toMatchObject({
+      ok: true,
+      inverse: { kind: "restore", trashId: TRASH_ID },
+    });
   });
 
   it("refuses a malformed token", async () => {

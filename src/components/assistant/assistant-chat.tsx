@@ -38,6 +38,7 @@ import { prepareForAssistant } from "@/lib/images/prepare-image";
 import { describeAction, type AssistantAction } from "@/lib/assistant/actions";
 import { isNo, isYes } from "@/lib/assistant/write-intent";
 import { ActionCard, runCardStep, type ChatAction } from "./action-card";
+import { useStackCards } from "./stack-cards";
 import { CitedEvents } from "./cited-events";
 import {
   AttachNote,
@@ -151,6 +152,7 @@ export function AssistantChat({
     Intl.DateTimeFormat().resolvedOptions().timeZone;
   const calendars = givenCalendars ?? loaded?.calendars ?? [];
   const [messages, setMessages] = useState<Message[]>([]);
+  useStackCards(messages, onChanged);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [attachErrors, setAttachErrors] = useState<string[]>([]);
   // Plan D2: images re-sent while the assistant asks before proposing.

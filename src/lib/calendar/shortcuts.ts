@@ -82,8 +82,12 @@ export const SHORTCUTS: readonly {
   { keys: "Supr", description: "Borrar el evento" },
   { keys: "Ctrl + C", description: "Copiar el evento" },
   { keys: "Ctrl + V", description: "Pegar el evento copiado" },
-  // While the notice offers "Deshacer" (spec 023 RF-20, RF-21).
+  // The stack of the tab (spec 023 RF-20, RF-21; spec 046 RF-12, RF-17).
   { keys: "Ctrl + Z", description: "Deshacer la última acción" },
+  {
+    keys: "Ctrl + Mayús + Z",
+    description: "Rehacer lo deshecho (también Ctrl + Y)",
+  },
   { keys: "Menú o Mayús + F10", description: "Abrir el menú del evento" },
   { keys: "E", description: "Editar el evento con su detalle abierto" },
 ];
