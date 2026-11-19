@@ -128,7 +128,7 @@ export function YearView({
                               date={day}
                               aria-label={`${fullDay.format(new Date(`${day}T00:00:00Z`))}${isToday ? ", hoy" : ""}${dots.length > 0 ? ", con eventos" : ""}`}
                               aria-current={isToday ? "date" : undefined}
-                              className={`press-quiet mx-auto flex size-11 flex-col items-center justify-center rounded-control text-sm tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+                              className={`press-quiet mx-auto flex aspect-square w-full max-w-11 flex-col items-center justify-center rounded-control text-sm tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
                                 isToday
                                   ? "border border-accent-edge bg-accent font-bold text-on-accent"
                                   : "font-medium text-ink hover:bg-stone"

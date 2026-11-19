@@ -36,6 +36,13 @@ const VIEWS: {
     next: "14 días siguientes",
   },
   {
+    view: "year",
+    label: "Año",
+    key: "Y",
+    previous: "Año anterior",
+    next: "Año siguiente",
+  },
+  {
     view: "month",
     label: "Mes",
     key: "M",
@@ -50,14 +57,6 @@ const VIEWS: {
     next: "Semana siguiente",
   },
   {
-    view: "day",
-    label: "Día",
-    key: "D",
-    previous: "Día anterior",
-    next: "Día siguiente",
-  },
-  // Spec 042 RF-10.
-  {
     view: "4days",
     label: "4 días",
     key: "X",
@@ -65,11 +64,11 @@ const VIEWS: {
     next: "4 días siguientes",
   },
   {
-    view: "year",
-    label: "Año",
-    key: "Y",
-    previous: "Año anterior",
-    next: "Año siguiente",
+    view: "day",
+    label: "Día",
+    key: "D",
+    previous: "Día anterior",
+    next: "Día siguiente",
   },
 ];
 

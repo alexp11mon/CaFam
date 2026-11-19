@@ -70,7 +70,7 @@ describe("CalendarHeading", () => {
       within(views)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Agenda", "Día", "Semana", "Mes"]);
+    ).toEqual(["Agenda", "Mes", "Semana", "Día"]);
     const current = within(views).getByRole("link", { name: "Mes" });
     expect(current).toHaveAttribute("aria-current", "page");
     expect(current.className).toContain(

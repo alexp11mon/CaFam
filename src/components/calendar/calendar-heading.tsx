@@ -17,10 +17,10 @@ const VIEWS: {
 }[] = [
   { view: "agenda", label: "Agenda", previous: "", next: "" },
   {
-    view: "day",
-    label: "Día",
-    previous: "Día anterior",
-    next: "Día siguiente",
+    view: "month",
+    label: "Mes",
+    previous: "Mes anterior",
+    next: "Mes siguiente",
   },
   {
     view: "week",
@@ -29,26 +29,26 @@ const VIEWS: {
     next: "Semana siguiente",
   },
   {
-    view: "month",
-    label: "Mes",
-    previous: "Mes anterior",
-    next: "Mes siguiente",
+    view: "day",
+    label: "Día",
+    previous: "Día anterior",
+    next: "Día siguiente",
   },
 ];
 
 /** Behind "Más vistas": six tabs do not fit at 390 px (spec 042 RF-10, plan D3). */
 const MORE_VIEWS: typeof VIEWS = [
   {
-    view: "4days",
-    label: "4 días",
-    previous: "4 días anteriores",
-    next: "4 días siguientes",
-  },
-  {
     view: "year",
     label: "Año",
     previous: "Año anterior",
     next: "Año siguiente",
+  },
+  {
+    view: "4days",
+    label: "4 días",
+    previous: "4 días anteriores",
+    next: "4 días siguientes",
   },
 ];
 
