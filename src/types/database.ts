@@ -727,37 +727,61 @@ export type Database = {
       }
       event_trash: {
         Row: {
+          all_day: boolean
           calendar_id: string
           comments: Json
           created_at: string
-          deleted_by: string
+          deleted_by: string | null
+          ends_at: string | null
           event: Json | null
+          exceptions: Json
+          expires_at: string
           id: string
           images: Json
+          kind: string
+          occurrences: number | null
           original_start: string | null
           series_id: string | null
+          starts_at: string | null
+          title: string
         }
         Insert: {
+          all_day?: boolean
           calendar_id: string
           comments?: Json
           created_at?: string
-          deleted_by?: string
+          deleted_by?: string | null
+          ends_at?: string | null
           event?: Json | null
+          exceptions?: Json
+          expires_at?: string
           id?: string
           images?: Json
+          kind?: string
+          occurrences?: number | null
           original_start?: string | null
           series_id?: string | null
+          starts_at?: string | null
+          title?: string
         }
         Update: {
+          all_day?: boolean
           calendar_id?: string
           comments?: Json
           created_at?: string
-          deleted_by?: string
+          deleted_by?: string | null
+          ends_at?: string | null
           event?: Json | null
+          exceptions?: Json
+          expires_at?: string
           id?: string
           images?: Json
+          kind?: string
+          occurrences?: number | null
           original_start?: string | null
           series_id?: string | null
+          starts_at?: string | null
+          title?: string
         }
         Relationships: [
           {
@@ -1883,6 +1907,10 @@ export type Database = {
         Args: { p_event_id: string; p_original_start?: string }
         Returns: string
       }
+      snapshot_series: {
+        Args: { p_from?: string; p_occurrences?: number; p_series_id: string }
+        Returns: string
+      }
       split_series: {
         Args: {
           p_keep_exceptions: boolean
@@ -2095,7 +2123,31 @@ export type Database = {
         }
         Returns: Json
       }
-      trash_purge: { Args: never; Returns: undefined }
+      trash_empty: { Args: { p_calendar_id: string }; Returns: number }
+      trash_list: {
+        Args: never
+        Returns: {
+          all_day: boolean
+          calendar_id: string
+          comments: number
+          created_at: string
+          deleted_by: string
+          deleted_by_name: string
+          ends_at: string
+          expires_at: string
+          id: string
+          images: number
+          kind: string
+          occurrences: number
+          original_start: string
+          series_id: string
+          starts_at: string
+          title: string
+        }[]
+      }
+      trash_purge:
+        | { Args: never; Returns: undefined }
+        | { Args: { p_trash_id: string }; Returns: undefined }
       trash_row: { Args: { p_trash_id: string }; Returns: Json }
       trash_scheduled_jobs: {
         Args: never

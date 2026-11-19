@@ -8,12 +8,12 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
 
 ## Tareas
 
-- [ ] T1 Papelera de 30 días en la base de datos
+- [x] T1 Papelera de 30 días en la base de datos
   Hecho cuando: `npm run test:db -- event-trash` en verde (tests de la 017 adaptados y nuevos).
   - Migración, `db:push`, `db:types`. Varias copias por usuario; Editor restaura lo borrado por otro; Lector y ajeno no ven ni restauran; caducada no restaura; `p_event_id` de otro calendario → `CF404` (023); vaciar solo propietario; purga a 30 días.
   - Imágenes de la papelera no se purgan; al vaciar, sí.
 
-  Cubre: RF-1, RF-4 a RF-7, RF-9, RF-10 | Evidencia: —
+  Cubre: RF-1, RF-4 a RF-7, RF-9, RF-10 | Evidencia: migración `20261127100000_trash_30_days` aplicada en dev (`db:push`, `db:types`; incluye `snapshot_series` para la T2); `event-trash.test.ts` nuevo y `event-undo.test.ts` adaptado: `test:db -- event-trash event-undo` 22 en verde (varias copias, Editor restaura lo de otro pasado el minuto, Lector y ajeno ni ven ni restauran, caducada no restaura, `CF404` de la 023, borrar una y vaciar solo el propietario, purga a 30 días, la copia sobrevive a la cuenta de su autor e imágenes retenidas hasta que la copia se va).
 - [ ] T2 Series en la papelera
   Hecho cuando: `npm run test:db -- event-trash-series` y `npm test -- event-actions` en verde: serie entera, "este y los siguientes" y repetición; restaurar repetición sin serie se explica; la sincronización no guarda copia.
 

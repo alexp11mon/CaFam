@@ -160,10 +160,11 @@ describe("snapshot_event (RF-25, RF-30)", () => {
     expect(error).not.toBeNull();
   });
 
-  it("keeps only the last snapshot of each user", async () => {
+  it("keeps every snapshot for 30 days (spec 046 RF-1)", async () => {
+    const before = await trashCount(editor.id);
     await snapshot(editor, (await createEvent()).id);
     await snapshot(editor, (await createEvent()).id);
-    expect(await trashCount(editor.id)).toBe(1);
+    expect(await trashCount(editor.id)).toBe(before + 2);
   });
 });
 
@@ -217,18 +218,23 @@ describe("restore_event (RF-28, RF-29)", () => {
         edited_at: expect.stringMatching(/^2026-11-01T09:00:00/),
       },
     ]);
-    expect(await trashCount(editor.id)).toBe(0);
+    const { count } = await admin
+      .from("event_trash")
+      .select("id", { count: "exact", head: true })
+      .eq("id", trashId!);
+    expect(count).toBe(0);
   });
 
-  it("refuses another user, an old snapshot and a lost role", async () => {
+  it("refuses a reader, a stranger, an expired copy and a lost role (spec 046 RF-4)", async () => {
     const event = await createEvent();
     const { data: trashId } = await snapshot(editor, event.id);
     await deleteAs(editor, event.id);
-    expect((await restore(owner, trashId!)).error?.code).toBe("CF404");
+    expect((await restore(viewer, trashId!)).error?.code).toBe("CF404");
+    expect((await restore(stranger, trashId!)).error?.code).toBe("CF404");
 
     await admin
       .from("event_trash")
-      .update({ created_at: new Date(Date.now() - 3_600_000).toISOString() })
+      .update({ expires_at: new Date(Date.now() - 1_000).toISOString() })
       .eq("id", trashId!);
     expect((await restore(editor, trashId!)).error?.code).toBe("CF404");
 
@@ -315,13 +321,17 @@ describe("restore_event (RF-28, RF-29)", () => {
 });
 
 describe("trash_row (T4)", () => {
-  it("gives the saved row only to whoever deleted", async () => {
+  it("gives the saved row to owners and editors, not to readers (spec 046)", async () => {
     const event = await createEvent();
     const { data: trashId } = await snapshot(editor, event.id);
-    const own = await editor.client.rpc("trash_row", { p_trash_id: trashId! });
-    expect(own.error).toBeNull();
-    expect(own.data).toMatchObject({ id: event.id, title: "Cena" });
-    const other = await owner.client.rpc("trash_row", {
+    for (const user of [editor, owner]) {
+      const { data, error } = await user.client.rpc("trash_row", {
+        p_trash_id: trashId!,
+      });
+      expect(error).toBeNull();
+      expect(data).toMatchObject({ id: event.id, title: "Cena" });
+    }
+    const other = await viewer.client.rpc("trash_row", {
       p_trash_id: trashId!,
     });
     expect(other.data).toBeNull();
