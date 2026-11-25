@@ -2,16 +2,16 @@
 
 Spec: `specs/050-iniciar-sesion-con-google/spec.md`. Plan: `specs/050-iniciar-sesion-con-google/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: pendiente. Bloqueo externo previsto: crear el cliente OAuth y activar el proveedor en Supabase (pasos de producción 1–3) lo hace el usuario; sin ello, T5 queda pendiente.
+> Estado: en curso. Bloqueo externo previsto: crear el cliente OAuth y activar el proveedor en Supabase (pasos de producción 1–3) lo hace el usuario; sin ello, T5 queda pendiente.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T1.
 
 ## Tareas
 
-- [ ] T1 Nombre del perfil desde Google
+- [x] T1 Nombre del perfil desde Google
   Hecho cuando: `npm run test:db -- signup` en verde con un usuario creado con `full_name` y otro con `name`.
 
-  Cubre: RF-4 | Evidencia: —
+  Cubre: RF-4 | Evidencia: 2026-11-25, migración `20261201100000_oauth_profile_name.sql` aplicada en dev; `npm run test:db -- signup` 3/3 (`full_name` recortado a 50, `name`, y la parte local del email si Google no manda nombre; zona `Europe/Madrid` hasta la primera entrada); P8 en verde.
 - [ ] T2 Botón, acción y callback
   Hecho cuando: `npm test -- google-button oauth-actions auth-callback-route route-access` en verde: URL de Google con PKCE, `next` seguro, cancelación y error, botón oculto sin la variable.
 

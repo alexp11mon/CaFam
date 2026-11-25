@@ -2,6 +2,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { getAuthErrorMessage } from "@/lib/auth/error-messages";
 import { signUpSchema } from "@/lib/auth/schemas";
 import {
+  admin,
   anonClient,
   deleteTestUser,
   TEST_PASSWORD,
@@ -42,5 +43,42 @@ describe("sign-up against Supabase Auth", () => {
     expect(getAuthErrorMessage(second.error)).toBe(
       "Ya existe una cuenta con este email.",
     );
+  });
+});
+
+// Spec 050, T1: an account made with Google takes Google's name (RF-4).
+describe("profile name of an account made with Google", () => {
+  async function nameOf(
+    metadata: Record<string, unknown>,
+    email = uniqueEmail(),
+  ) {
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: metadata,
+    });
+    if (error) throw error;
+    createdIds.push(data.user.id);
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("display_name, time_zone")
+      .eq("id", data.user.id)
+      .single();
+    return profile;
+  }
+
+  it("uses full_name, cut to 50 characters", async () => {
+    expect(await nameOf({ full_name: `  ${"Ana ".repeat(20)}` })).toEqual({
+      display_name: "Ana ".repeat(20).trim().slice(0, 50).trim(),
+      time_zone: "Europe/Madrid",
+    });
+  });
+
+  it("uses name, or the address when Google sends none", async () => {
+    expect((await nameOf({ name: "Luis Pérez" }))?.display_name).toBe(
+      "Luis Pérez",
+    );
+    const email = uniqueEmail();
+    expect((await nameOf({}, email))?.display_name).toBe(email.split("@")[0]);
   });
 });
