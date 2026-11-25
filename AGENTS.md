@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Lo imprescindible para trabajar en el proyecto. El bloque de arriba lo gestiona `next dev`: no lo edites. El detalle de cada funcionalidad está en su spec (`specs/NNN-nombre/spec.md`, `plan.md`, `tasks.md`) y en el grafo de graphify; la fuente de verdad de las reglas es [`docs/constitution.md`](docs/constitution.md). Ante una contradicción manda la spec más reciente.
 
-> Última actualización: 2026-11-23 (resumido). Specs cerradas hasta la 048 (la 048 en su rama); `main` está subida y la contiene.
+> Última actualización: 2026-11-23 (resumido). Specs cerradas hasta la 049 (la 048 y la 049 en sus ramas); `main` está subida y la contiene.
 
 ## 0. Mapa del proyecto: graphify (obligatorio, enmienda 13)
 
@@ -90,10 +90,11 @@ Todas cerradas salvo la 036 (hecha; falta `EVAL_PART=write npm run eval:assistan
 | 046 | Papelera de 30 días (`/dashboard/trash`) y pila de deshacer/rehacer de 20 acciones (enmienda 14) |
 | 047 | Compartir un evento (Web Share o menú), recibir lo compartido (`share_target` → `sw.js` → IndexedDB `cafam-share` → `/dashboard/share`), accesos directos y número del icono (`profiles.badge_today`) |
 | 048 | Notas: fecha por elemento (`note_items.due_date/due_time`), orden fraccionario arrastrando (`lib/notes/order.ts`), tareas en el calendario (`calendar_tasks`, `TaskBlock`), notas de un evento (`notes.event_id`), Venito crea notas (`create_notes`, `add_note_items`) |
+| 049 | Confirmar el email al registrarse, traspasar un calendario (`transfer_calendar`, solo no traídos, revoca invitaciones/código/feed/suscripción) y "Descargar mis datos" (`.zip` *store* hecho a mano en `lib/export/`, en el navegador) |
 
 ### Pendiente del usuario (comprueba antes si ya está hecho)
 
-1. `supabase db push` a **prod antes de desplegar** de las migraciones aplicadas solo en dev: las de la 023 (`restore_event_guard`, `assistant_busy_scope`, `join_code_lock`), 028 (`notes`, `notes_calendar_functions`), 038 (`sync_apply_window`), 039 (`event_search`), 040 (`push`), 042 (`views_year`), 043 (`ics_feeds`), 044 (`ics_import_into`, `ics_subscriptions`), 045 (`event_time_zone`, `event_time_zone_keep`, `ics_feed_zone`), 046 (`trash_30_days`), 047 (`profile_badge`) y 048 (`notes_more`).
+1. `supabase db push` a **prod antes de desplegar** de las migraciones aplicadas solo en dev: las de la 023 (`restore_event_guard`, `assistant_busy_scope`, `join_code_lock`), 028 (`notes`, `notes_calendar_functions`), 038 (`sync_apply_window`), 039 (`event_search`), 040 (`push`), 042 (`views_year`), 043 (`ics_feeds`), 044 (`ics_import_into`, `ics_subscriptions`), 045 (`event_time_zone`, `event_time_zone_keep`, `ics_feed_zone`), 046 (`trash_30_days`), 047 (`profile_badge`), 048 (`notes_more`) y 049 (`account_more`).
 2. Claves VAPID (`node scripts/make-vapid-keys.mjs`) en Vercel y `sync_app_url` en el Vault de prod.
 3. Pruebas en iPhone/Android: push, sin conexión, Google/iCloud reales, papelera, zona horaria; eval y cierre de la 036.
 
@@ -168,7 +169,7 @@ Monolito Next.js en Vercel + Supabase (Auth y Postgres, donde **RLS impone los p
 
 ### Autenticación
 
-`signUp` valida con zod (email en minúsculas, contraseña 8–72, nombre 1–50) y envía `display_name` y `time_zone` (del navegador; inválida → `Europe/Madrid`). "Confirm email" desactivado: el registro devuelve sesión. Errores traducidos en `lib/auth/error-messages.ts`. `signOut` con `scope: "local"`. Correo de Auth por SMTP de Brevo; avisos de cuenta desde Postgres (`pg_net` → API de Brevo, claves en Vault).
+`signUp` valida con zod (email en minúsculas, contraseña 8–72, nombre 1–50) y envía `display_name` y `time_zone` (del navegador; inválida → `Europe/Madrid`). "Confirm email" (049): sin sesión en la respuesta, `signUp` guarda el email y el `next` en la cookie httpOnly `cafam_pending` y lleva a `/signup/check-email?email=<enmascarado>`; "Reenviar" limitado por `request_signup_resend` (1/min, 3/15 min); `/auth/confirm` acepta `type=signup|email` → `/dashboard/calendar?confirmed=1` (o la invitación guardada); `signIn` traduce `email_not_confirmed`. Mientras siga desactivado en Supabase, el registro entra al momento. Cuentas sin confirmar se purgan a los 7 días. Errores traducidos en `lib/auth/error-messages.ts`. `signOut` con `scope: "local"`. Correo de Auth por SMTP de Brevo; avisos de cuenta desde Postgres (`pg_net` → API de Brevo, claves en Vault).
 
 ### Base de datos (conceptos clave)
 
@@ -289,4 +290,4 @@ npm run eval:schedule  # 12 horarios al modelo con visión (~12 min, gasta cuota
 
 ## 11. Fuera de alcance hasta su spec
 
-Sincronizar en dos direcciones un calendario importado, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft (exige tarjeta), avisos por correo o de notas, i18n, lo excluido en las specs 034/035; en el asistente: borrar eventos, crear series, guardar conversaciones o voz; en notas: gesto de deslizar en un elemento, avisos de tareas y la sección "Notas" de un evento sin conexión.
+Sincronizar en dos direcciones un calendario importado, importar el `.zip` exportado o traspasar con aceptación, login social, Microsoft (exige tarjeta), avisos por correo o de notas, i18n, lo excluido en las specs 034/035; en el asistente: borrar eventos, crear series, guardar conversaciones o voz; en notas: gesto de deslizar en un elemento, avisos de tareas y la sección "Notas" de un evento sin conexión.

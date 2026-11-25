@@ -2,7 +2,7 @@
 
 Spec: `specs/049-cuenta-verificacion-traspaso-exportar/spec.md`. Plan: `specs/049-cuenta-verificacion-traspaso-exportar/plan.md` (aprobados de antemano por el usuario el 2026-11-18). Depende de la 043 (`write-ics`).
 
-> Estado: en curso.
+> Estado: cerrada el 2026-11-25.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T1 y T3.
 
@@ -28,8 +28,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- export-data export-actions` en verde (sin datos ajenos ni secretos), prueba en el navegador con imágenes y capturas del progreso.
 
   Cubre: RF-12 a RF-15, RNF-2 | Evidencia: 2026-11-25, `npx vitest run --project unit export-data export-actions` 6/6 (miembros solo por nombre, sin ids ni emails ajenos; pregunta con más de 300 imágenes; "Cancelar"); P8 (3880 tests, build). Prueba en Edge con `next start`: usuario con un evento, una imagen y una nota; descarga `cafam-2026-11-25.zip` que `tar -tf` lista con `LEEME.txt`, `perfil.json`, `calendarios.json`, `calendarios/Mi calendario.ics`, `comentarios.json`, `notas.json` e `imagenes/Cumple de Ana/1.jpg`. Capturas `capturas/exportar-progreso-*` y `exportar-listo-*` a 390 y 1440 px, claro y oscuro.
-- [ ] T6 Cierre
+- [x] T6 Cierre
   Hecho cuando: AGENTS.md (autenticación y "Confirm email"), README y constitución actualizados; `python -m graphify update .`; P8 completa.
+
+  Evidencia: 2026-11-25, AGENTS.md (autenticación, tabla, migración `account_more` pendiente en prod, §11), README y constitución; `python -m graphify update .`; P8 en verde.
 
 ## Trazabilidad
 
