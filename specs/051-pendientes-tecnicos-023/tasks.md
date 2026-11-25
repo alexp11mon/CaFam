@@ -13,11 +13,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - Un Editor que manda otro `created_by` queda como autor; `update` no lo cambia; convertir en serie un evento ajeno con imágenes conserva el autor del original; copias, juntar, importar, sincronizar y restaurar conservan sus autores.
 
   Cubre: RF-1 a RF-3 | Evidencia: 2026-11-25. `test:db -- event-author calendars-events event-series account-copy account-delete assistant-writes account-apply series-copy` 104/104; `npm test` 3906/3906; typecheck, lint (1 aviso previo), format y build en verde. El trigger solo actúa con `current_user = 'authenticated'` (escrituras directas del cliente): las funciones `SECURITY DEFINER` corren como su dueño y conservan sus autores sin la marca `app.keep_author` del plan D1 (mismo efecto, menos código).
-- [ ] T2 Cuota sin carreras
+- [x] T2 Cuota sin carreras
   Hecho cuando: `npm run test:db -- assistant-quota` y `npm test -- assistant-route` en verde.
   - 35 reservas en paralelo con 29 respondidas → solo 1 cabe; liberar devuelve el hueco; una reserva de hace 3 minutos no cuenta; error del proveedor y cancelación liberan.
 
-  Cubre: RF-4, RF-5 | Evidencia: —
+  Cubre: RF-4, RF-5 | Evidencia: 2026-11-25. `test:db -- assistant-quota assistant.test` 17/17 (35 reservas en paralelo con 29 respondidas: 1 cabe y 34 reciben `CF429`; liberar devuelve el hueco; una reserva caducada y las de ayer no cuentan; el cliente ya no inserta filas); `npm test -- assistant-route` 18/18 (error del proveedor y cancelación llaman a `assistant_release`); P8 completo en verde. El inicio del día lo calcula ahora `assistant_reserve` con la zona del perfil, así que `quotaDayStart` se ha borrado.
 - [ ] T3 CSP
   Hecho cuando: `npm test -- csp next-config-headers csp-report-route` en verde y recorrido con Playwright y Edge sobre `next start -p 3100` (login, calendario, detalle con imagen, asistente, notas, ajustes, tema oscuro, sin conexión) sin errores de CSP en la consola.
 

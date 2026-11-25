@@ -33,11 +33,6 @@ export function dayBounds(dateKey: string, timeZone: string) {
   return { start: at(dateKey), end: at(addDays(dateKey, 1)) };
 }
 
-/** RF-27: the quota restarts at 00:00 in the profile's zone. */
-export function quotaDayStart(now: Date, timeZone: string): Date {
-  return dayBounds(todayKey(timeZone, now), timeZone).start;
-}
-
 export type Period =
   | { status: "ok"; from: Date; to: Date; days: string[] }
   | { status: "invalid_date" }

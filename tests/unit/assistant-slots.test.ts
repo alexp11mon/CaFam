@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   dayBounds,
   parsePeriod,
-  quotaDayStart,
   dateContext,
   minutesOf,
 } from "@/lib/assistant/dates";
@@ -42,15 +41,6 @@ describe("dates", () => {
     // 25 hours on the last Sunday of October.
     const long = dayBounds("2026-10-25", TZ);
     expect(long.end.getTime() - long.start.getTime()).toBe(25 * 3_600_000);
-  });
-
-  it("starts the quota day at midnight in the profile's zone", () => {
-    expect(iso(quotaDayStart(new Date("2026-11-02T23:30:00Z"), TZ))).toBe(
-      "2026-11-02T23:00:00.000Z",
-    );
-    expect(iso(quotaDayStart(new Date("2026-11-02T10:00:00Z"), TZ))).toBe(
-      "2026-11-01T23:00:00.000Z",
-    );
   });
 
   it("parses a period and rejects impossible or reversed dates", () => {

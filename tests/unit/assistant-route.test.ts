@@ -6,8 +6,7 @@ import { AssistantUnavailable } from "@/lib/assistant/provider";
 // RF-4, RF-27, RF-28).
 const {
   getClaims,
-  gte,
-  insert,
+  rpc,
   runAssistant,
   runProposal,
   runTool,
@@ -17,8 +16,7 @@ const {
 } = vi.hoisted(() => ({
   writeTools: vi.fn(),
   getClaims: vi.fn(),
-  gte: vi.fn(),
-  insert: vi.fn(),
+  rpc: vi.fn(),
   runAssistant: vi.fn(),
   runProposal: vi.fn(),
   runTool: vi.fn(),
@@ -30,9 +28,13 @@ const supabase = {
   auth: { getClaims },
   from: (table: string) => {
     if (table !== "assistant_questions") throw new Error(table);
-    return { select: () => ({ gte }), insert };
+    throw new Error(table);
   },
+  rpc,
 };
+
+/** Calls to one function of the quota (spec 051 RF-4, RF-5). */
+const calls = (name: string) => rpc.mock.calls.filter(([fn]) => fn === name);
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => supabase,
@@ -76,8 +78,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.useRealTimers();
   getClaims.mockResolvedValue({ data: { claims: { sub: "user-1" } } });
-  gte.mockResolvedValue({ count: 3, error: null });
-  insert.mockResolvedValue({ error: null });
+  rpc.mockImplementation(async (name: string) =>
+    name === "assistant_reserve"
+      ? { data: [{ id: 7, remaining: 26 }], error: null }
+      : { data: null, error: null },
+  );
   runAssistant.mockResolvedValue({ answer: "Nada hoy.", events: [] });
 });
 
@@ -97,14 +102,10 @@ describe("POST /api/assistant", () => {
   });
 
   it("refuses the 31st question of the day without calling the model (RF-27)", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-11-02T10:00:00Z"));
-    gte.mockResolvedValue({ count: 30, error: null });
+    rpc.mockResolvedValue({ data: null, error: { code: "CF429" } });
     const response = await post(QUESTION);
     expect(response.status).toBe(429);
     expect((await response.json()).error).toContain("30 preguntas");
-    // Counted from 00:00 in the profile's zone.
-    expect(gte).toHaveBeenCalledWith("asked_at", "2026-11-01T23:00:00.000Z");
     expect(runAssistant).not.toHaveBeenCalled();
   });
 
@@ -118,7 +119,9 @@ describe("POST /api/assistant", () => {
       { type: "status", text: "Pensando…" },
       { type: "done", answer: "Cine [visto].", events, remaining: 26 },
     ]);
-    expect(insert).toHaveBeenCalledWith({ user_id: "user-1" });
+    expect(calls("assistant_answered")).toEqual([
+      ["assistant_answered", { p_id: 7 }],
+    ]);
     expect(runAssistant.mock.calls[0]![0]).toEqual(QUESTION.messages);
   });
 
@@ -147,7 +150,10 @@ describe("POST /api/assistant", () => {
       text: "El asistente no está disponible ahora mismo",
       retry: true,
     });
-    expect(insert).not.toHaveBeenCalled();
+    expect(calls("assistant_answered")).toEqual([]);
+    expect(calls("assistant_release")).toEqual([
+      ["assistant_release", { p_id: 7 }],
+    ]);
   });
 
   it("passes the request's signal and records nothing when it is cancelled (RF-4)", async () => {
@@ -162,7 +168,10 @@ describe("POST /api/assistant", () => {
       { type: "status", text: "Pensando…" },
     ]);
     expect(runAssistant.mock.calls[0]![2]).toBeInstanceOf(AbortSignal);
-    expect(insert).not.toHaveBeenCalled();
+    expect(calls("assistant_answered")).toEqual([]);
+    expect(calls("assistant_release")).toEqual([
+      ["assistant_release", { p_id: 7 }],
+    ]);
   });
 });
 
@@ -255,7 +264,9 @@ describe("POST /api/assistant with images", () => {
     expect(runAssistant).not.toHaveBeenCalled();
     expect(runProposal.mock.calls[0]![0]).toEqual(WITH_IMAGES.messages);
     expect(runProposal.mock.calls[0]![1]).toBeUndefined();
-    expect(insert).toHaveBeenCalledWith({ user_id: "user-1" });
+    expect(calls("assistant_answered")).toEqual([
+      ["assistant_answered", { p_id: 7 }],
+    ]);
   });
 
   it("gives the proposal only the calendars the user can write to (RF-26)", async () => {
@@ -310,7 +321,10 @@ describe("POST /api/assistant with images", () => {
       type: "error",
       retry: true,
     });
-    expect(insert).not.toHaveBeenCalled();
+    expect(calls("assistant_answered")).toEqual([]);
+    expect(calls("assistant_release")).toEqual([
+      ["assistant_release", { p_id: 7 }],
+    ]);
     for (const spy of spies) {
       for (const call of spy.mock.calls) {
         expect(JSON.stringify(call)).not.toContain("base64");
@@ -376,7 +390,7 @@ describe("POST /api/assistant with writing", () => {
       },
     ]);
     // One question, however many writes (RF-43).
-    expect(insert).toHaveBeenCalledTimes(1);
+    expect(calls("assistant_answered")).toHaveLength(1);
   });
 
   it("gives the write tools the session, the zone and the request's signal (RF-39, RF-44)", async () => {

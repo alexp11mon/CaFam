@@ -123,10 +123,9 @@ describe("profiles.share_availability (RF-20, RF-21)", () => {
 });
 
 describe("assistant_questions (RF-27, D9)", () => {
-  it("each user inserts and reads only their own rows", async () => {
-    const { error } = await asker.client
-      .from("assistant_questions")
-      .insert({ user_id: asker.id });
+  it("each user reserves and reads only their own rows", async () => {
+    // Spec 051 RF-4: rows are made only by assistant_reserve.
+    const { error } = await asker.client.rpc("assistant_reserve");
     expect(error).toBeNull();
 
     const { data: mine } = await asker.client

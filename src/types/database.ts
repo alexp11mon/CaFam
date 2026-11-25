@@ -83,17 +83,23 @@ export type Database = {
       assistant_questions: {
         Row: {
           asked_at: string
+          expires_at: string | null
           id: number
+          state: string
           user_id: string
         }
         Insert: {
           asked_at?: string
+          expires_at?: string | null
           id?: never
+          state?: string
           user_id?: string
         }
         Update: {
           asked_at?: string
+          expires_at?: string | null
           id?: never
+          state?: string
           user_id?: string
         }
         Relationships: [
@@ -1494,6 +1500,7 @@ export type Database = {
         }[]
       }
       apply_orphan_decisions: { Args: never; Returns: undefined }
+      assistant_answered: { Args: { p_id: number }; Returns: undefined }
       assistant_busy: {
         Args: { p_from: string; p_person_ids: string[]; p_to: string }
         Returns: {
@@ -1518,6 +1525,14 @@ export type Database = {
         }[]
       }
       assistant_purge_questions: { Args: never; Returns: undefined }
+      assistant_release: { Args: { p_id: number }; Returns: undefined }
+      assistant_reserve: {
+        Args: never
+        Returns: {
+          id: number
+          remaining: number
+        }[]
+      }
       assistant_scheduled_jobs: {
         Args: never
         Returns: {

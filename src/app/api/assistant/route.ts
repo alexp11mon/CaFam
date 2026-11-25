@@ -1,7 +1,6 @@
 import { writeTools } from "@/app/dashboard/assistant/assistant-writes";
 import type { AssistantAction } from "@/lib/assistant/actions";
 import type { Refs } from "@/lib/assistant/citations";
-import { quotaDayStart } from "@/lib/assistant/dates";
 import {
   INVALID_TEXT,
   QUESTION_MESSAGES,
@@ -9,7 +8,6 @@ import {
   SESSION_TEXT,
   UNAVAILABLE_TEXT,
 } from "@/lib/assistant/error-messages";
-import { DAILY_QUESTIONS } from "@/lib/assistant/limits";
 import {
   AssistantUnavailable,
   PROVIDER_TRAINS_ON_DATA,
@@ -86,15 +84,15 @@ export async function POST(request: Request) {
 
   const timeZone = await getProfileTimeZone(supabase, userId);
   const now = new Date();
-  const { count, error: countError } = await supabase
-    .from("assistant_questions")
-    .select("id", { count: "exact", head: true })
-    .gte("asked_at", quotaDayStart(now, timeZone).toISOString());
-  if (countError) throw countError;
-  const used = count ?? 0;
-  if (used >= DAILY_QUESTIONS) {
+  // Spec 051 RF-4: the slot is reserved atomically before calling the model,
+  // so parallel questions never pass the 30 of the day.
+  const { data: slots, error: quotaError } =
+    await supabase.rpc("assistant_reserve");
+  if (quotaError?.code === "CF429") {
     return Response.json({ error: QUOTA_TEXT }, { status: 429 });
   }
+  if (quotaError || !slots?.[0]) throw quotaError ?? new Error("No slot");
+  const { id: questionId, remaining } = slots[0];
 
   const { messages, proposal } = parsed.data;
   const last = messages.at(-1);
@@ -196,15 +194,22 @@ export async function POST(request: Request) {
             ? { proposal: result.proposal as Proposal }
             : {}),
           ...(actions.length ? { actions } : {}),
-          remaining: DAILY_QUESTIONS - used - 1,
+          remaining,
         });
         // Only answered questions count (plan D9 of 015). After the answer
         // is on its way, before the stream closes.
-        const { error: insertError } = await supabase
-          .from("assistant_questions")
-          .insert({ user_id: userId });
-        if (insertError) console.error(insertError);
+        const { error: answerError } = await supabase.rpc(
+          "assistant_answered",
+          { p_id: questionId },
+        );
+        if (answerError) console.error(answerError);
       } catch (error) {
+        // Failed or cancelled: the slot is free again (spec 051 RF-5).
+        const { error: releaseError } = await supabase.rpc(
+          "assistant_release",
+          { p_id: questionId },
+        );
+        if (releaseError) console.error(releaseError);
         // The user cancelled (RF-4 of 015): nobody reads this answer.
         if (!request.signal.aborted) {
           // The reason (status and Groq's code, no user data) shows in Vercel's logs.
