@@ -234,7 +234,7 @@ describe("restore_event (RF-28, RF-29)", () => {
 
     await admin
       .from("event_trash")
-      .update({ expires_at: new Date(Date.now() - 1_000).toISOString() })
+      .update({ expires_at: new Date(Date.now() - 3_600_000).toISOString() })
       .eq("id", trashId!);
     expect((await restore(editor, trashId!)).error?.code).toBe("CF404");
 

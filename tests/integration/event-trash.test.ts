@@ -113,7 +113,7 @@ describe("trash_list (RF-3, RF-4, RF-10)", () => {
     const { trashId } = await trash(owner);
     await admin
       .from("event_trash")
-      .update({ expires_at: new Date(Date.now() - 1_000).toISOString() })
+      .update({ expires_at: new Date(Date.now() - 3_600_000).toISOString() })
       .eq("id", trashId);
     expect((await listed(owner)).map((item) => item.id)).not.toContain(trashId);
 
@@ -202,7 +202,7 @@ describe("trash_purge and trash_empty (RF-6, RF-7)", () => {
     const old = await trash(owner);
     await admin
       .from("event_trash")
-      .update({ expires_at: new Date(Date.now() - 1_000).toISOString() })
+      .update({ expires_at: new Date(Date.now() - 3_600_000).toISOString() })
       .eq("id", old.trashId);
     const { error } = await admin.rpc("trash_purge");
     expect(error).toBeNull();
