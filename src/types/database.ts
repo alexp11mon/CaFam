@@ -1482,6 +1482,10 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { p_token: string }; Returns: string }
+      account_purge_unconfirmed: {
+        Args: { p_older_than?: string }
+        Returns: number
+      }
       account_scheduled_jobs: {
         Args: never
         Returns: {
@@ -1838,6 +1842,7 @@ export type Database = {
       }
       push_trigger: { Args: { p_dry_run?: boolean }; Returns: Json }
       request_recovery: { Args: { p_email: string }; Returns: boolean }
+      request_signup_resend: { Args: { p_email: string }; Returns: boolean }
       reserve_event_images: {
         Args: { p_event_id: string; p_images: Json }
         Returns: string[]
@@ -2157,6 +2162,10 @@ export type Database = {
           p_target_calendar_id?: string
         }
         Returns: Json
+      }
+      transfer_calendar: {
+        Args: { p_calendar_id: string; p_new_owner: string }
+        Returns: undefined
       }
       trash_empty: { Args: { p_calendar_id: string }; Returns: number }
       trash_list: {

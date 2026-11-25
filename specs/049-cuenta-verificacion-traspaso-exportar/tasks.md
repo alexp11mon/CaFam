@@ -2,16 +2,16 @@
 
 Spec: `specs/049-cuenta-verificacion-traspaso-exportar/spec.md`. Plan: `specs/049-cuenta-verificacion-traspaso-exportar/plan.md` (aprobados de antemano por el usuario el 2026-11-18). Depende de la 043 (`write-ics`).
 
-> Estado: pendiente.
+> Estado: en curso.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T1 y T3.
 
 ## Tareas
 
-- [ ] T1 Migración
+- [x] T1 Migración
   Hecho cuando: `npm run test:db -- account-more` en verde: límite de reenvío, `transfer_calendar` (solo propietario, a un miembro, no traído, revoca invitaciones, código, feed y suscripción, avisa), purga de cuentas sin confirmar que respeta a los demás.
 
-  Cubre: RF-1, RF-6 a RF-11 | Evidencia: —
+  Cubre: RF-1, RF-6 a RF-11 | Evidencia: 2026-11-25, migración `20261130100000_account_more.sql` aplicada en dev; `npm run test:db -- account-more` 5/5 (reenvío 1/min y 3/15 min, traspaso con roles, invitaciones revocadas, código, feed y suscripción borrados, aviso y correo; rechaza a no propietarios, ajenos y traídos con `CF409`; purga solo cuentas sin confirmar); P8 en verde.
 - [ ] T2 Registro con confirmación
   Hecho cuando: `npm test -- signup-action login-action auth-confirm-route check-email next-path` en verde; prueba en dev con "Confirm email" activado: registro, correo de Brevo, enlace, entrada con aviso, invitación conservada.
 
