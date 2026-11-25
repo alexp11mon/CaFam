@@ -40,7 +40,7 @@ const FILLERS = new Set([
   "calendarios",
 ]);
 
-const normalize = (text: string) =>
+export const normalize = (text: string) =>
   text
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")

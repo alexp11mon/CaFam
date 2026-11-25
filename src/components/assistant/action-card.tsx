@@ -50,7 +50,7 @@ export async function runCardStep(
       ? { ...card, status: "applied", error: undefined, undo: result.undo }
       : { ...card, status: "failed", error: result.error };
   }
-  const undo = card.action.kind === "created" ? card.action.undo : card.undo;
+  const undo = card.action.kind === "change" ? card.undo : card.action.undo;
   if (!undo) return card;
   const result = await undoAssistantAction(undo);
   return result.ok
@@ -148,13 +148,24 @@ export function ActionCard({
   }
 
   const canUndo =
-    (action.kind === "created" && status === "done") ||
+    (action.kind !== "change" && status === "done") ||
     (action.kind === "change" && status === "applied" && card.undo);
   const open =
     status === "done" || status === "applied"
       ? action.kind === "created"
-        ? action.event
-        : action.after
+        ? {
+            href: `/dashboard/events/${action.event.id}`,
+            title: action.event.title,
+          }
+        : action.kind === "note"
+          ? {
+              href: `/dashboard/notes/${action.note.id}`,
+              title: action.note.title,
+            }
+          : {
+              href: `/dashboard/events/${action.after.id}`,
+              title: action.after.title,
+            }
       : null;
 
   return (
@@ -169,9 +180,13 @@ export function ActionCard({
             : "text-muted"
         }`}
       >
-        {action.kind === "created" && status === "done"
-          ? LABELS.done
-          : LABELS[status]}
+        {action.kind === "note" && status === "done"
+          ? action.added
+            ? "Añadido a la nota"
+            : "Nota creada"
+          : action.kind === "created" && status === "done"
+            ? LABELS.done
+            : LABELS[status]}
       </p>
 
       {action.kind === "created" ? (
@@ -188,6 +203,23 @@ export function ActionCard({
             </p>
           ) : null}
         </>
+      ) : action.kind === "note" ? (
+        // Spec 048 RF-12: the note and what was written in it.
+        <div className="flex flex-col gap-1">
+          <p className="font-semibold">{action.note.title || "(Sin título)"}</p>
+          {action.note.items.length ? (
+            <ul className="list-disc pl-5 text-sm">
+              {action.note.items.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="text-sm text-muted">
+            {action.note.calendarName
+              ? `Compartida en ${action.note.calendarName}`
+              : "Personal"}
+          </p>
+        </div>
       ) : (
         <>
           {/* Once applied or undone, the two sides are history. */}
@@ -248,7 +280,7 @@ export function ActionCard({
           {open ? (
             <LinkButton
               variant="secondary"
-              href={`/dashboard/events/${open.id}`}
+              href={open.href}
               prefetch={false}
               aria-label={`Abrir ${open.title}`}
             >

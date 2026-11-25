@@ -87,6 +87,23 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "list_notes",
+      description:
+        "Notas del usuario (spec 048). Sin note: los títulos y cuántos elementos quedan. Con note: lo pendiente y lo hecho de esa nota, o su texto.",
+      parameters: {
+        type: "object",
+        properties: {
+          note: {
+            type: ["string", "null"],
+            description: "Nombre de la nota tal como lo dice el usuario",
+          },
+        },
+      },
+    },
+  },
 ];
 
 // Spec 036: the write tools, offered only when the user asks to write
@@ -127,6 +144,68 @@ const timeProperties = {
 };
 
 export const WRITE_TOOL_DEFINITIONS: ToolDefinition[] = [
+  {
+    type: "function",
+    function: {
+      name: "create_notes",
+      description:
+        'Crea en el acto de 1 a 3 notas nuevas. Una lista con sus elementos en items; un texto en text. Ejemplo: «Crea una lista Maleta con bañador y crema» es {"notes":[{"title":"Maleta","items":["bañador","crema"]}]}.',
+      parameters: {
+        type: "object",
+        properties: {
+          notes: {
+            type: "array",
+            maxItems: 3,
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "Título de la nota" },
+                kind: {
+                  type: ["string", "null"],
+                  enum: ["list", "text", null],
+                  description: "list para una lista de tareas, text para texto",
+                },
+                items: {
+                  type: ["array", "null"],
+                  items: { type: "string" },
+                  description: "Elementos de la lista",
+                },
+                text: nullableString("Texto de una nota de texto"),
+                calendar: nullableString(
+                  "Calendario donde compartirla si el usuario lo dice; si no, null (personal)",
+                ),
+              },
+              required: ["title"],
+            },
+          },
+        },
+        required: ["notes"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_note_items",
+      description:
+        'Añade elementos al final de una lista que ya existe. Ejemplo: «apunta leche y pan en la lista de la compra» es {"note":"compra","items":["leche","pan"]}.',
+      parameters: {
+        type: "object",
+        properties: {
+          note: {
+            type: "string",
+            description: "Nombre de la lista tal como lo dice el usuario",
+          },
+          items: {
+            type: "array",
+            items: { type: "string" },
+            description: "Elementos que hay que añadir",
+          },
+        },
+        required: ["note", "items"],
+      },
+    },
+  },
   {
     type: "function",
     function: {

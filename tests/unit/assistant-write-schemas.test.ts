@@ -170,8 +170,10 @@ describe("pending change and undo from the browser", () => {
 });
 
 describe("WRITE_TOOL_DEFINITIONS", () => {
-  it("offers create_events and propose_changes", () => {
+  it("offers notes (spec 048), create_events and propose_changes", () => {
     expect(WRITE_TOOL_DEFINITIONS.map((tool) => tool.function.name)).toEqual([
+      "create_notes",
+      "add_note_items",
       "create_events",
       "propose_changes",
     ]);

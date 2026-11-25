@@ -47,7 +47,21 @@ export interface PendingChange {
   fields: ChangeFields;
 }
 
+/** What a note card shows (spec 048 RF-12). */
+export interface ActionNote {
+  id: string;
+  title: string;
+  /** The items written: all of a new list, or the ones added. */
+  items: string[];
+  calendarName: string | null;
+}
+
 export type AssistantUndo =
+  /**
+   * Spec 048: deletes the note Venito created, if nobody changed it, or only
+   * the items it added (never anything else of the note).
+   */
+  | { kind: "unnote"; id: string; updatedAt: string; itemIds?: string[] }
   /** Deletes the event Venito created if nobody changed it (RF-34, RF-36). */
   | { kind: "uncreate"; id: string; updatedAt: string }
   /** Writes the values of before if nobody changed it (RF-35, RF-36). */
@@ -60,6 +74,14 @@ export type AssistantUndo =
     };
 
 export type AssistantAction =
+  | {
+      kind: "note";
+      key: string;
+      note: ActionNote;
+      /** Items added to a note that was there; otherwise a new note. */
+      added: boolean;
+      undo: AssistantUndo;
+    }
   | {
       kind: "created";
       key: string;
@@ -166,6 +188,18 @@ export function describeAction(
   timeZone: string,
   status: ActionStatus,
 ): string {
+  if (action.kind === "note") {
+    const items = action.note.items.length
+      ? `: ${action.note.items.join(", ")}`
+      : "";
+    const head = action.added
+      ? `Añadido a la nota «${action.note.title}»`
+      : `Nota creada «${action.note.title}»`;
+    const where = action.note.calendarName
+      ? `, en ${action.note.calendarName}`
+      : "";
+    return `[${head}${status === "undone" ? " y deshecho" : ""}${items}${where}]`;
+  }
   if (action.kind === "created") {
     return `[${HEADS[status].created}: ${eventText(action.event, timeZone)}, en ${action.event.calendarName}]`;
   }

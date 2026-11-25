@@ -90,7 +90,7 @@ const clock = () => Date.now();
 /** Spec 036: a fresh card for an action that just arrived. */
 const cardOf = (action: AssistantAction): ChatAction => ({
   action,
-  status: action.kind === "created" ? "done" : "pending",
+  status: action.kind === "change" ? "pending" : "done",
 });
 
 const pendingChange = (card: ChatAction) =>

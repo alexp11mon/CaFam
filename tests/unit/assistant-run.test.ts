@@ -161,6 +161,7 @@ describe("runAssistant", () => {
       "search_events",
       "find_free_time",
       "get_comments",
+      "list_notes",
     ]);
   });
 
@@ -229,6 +230,7 @@ describe("runAssistant", () => {
       "search_events",
       "find_free_time",
       "get_comments",
+      "list_notes",
     ]);
   });
 

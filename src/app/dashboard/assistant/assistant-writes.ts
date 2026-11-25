@@ -42,6 +42,7 @@ import {
   type Supabase,
 } from "../events/event-writes";
 import { seriesValues, updatedAtOf } from "../events/quick-writes";
+import { noteWriteTools } from "./note-writes";
 
 // Spec 036: the write tools of the assistant (plan "assistant-writes", D1,
 // D3). Not a "use server" file: nothing here is an endpoint. Everything goes
@@ -537,6 +538,11 @@ export function writeTools(ctx: WriteToolsContext) {
   }
 
   return {
+    // Spec 048 RF-12: notes count in the same 3 writes per message.
+    ...noteWriteTools(ctx, reserve, () => ({
+      status: "too_many",
+      notice: WRITE_TEXTS.tooMany,
+    })),
     /** RF-1 to RF-23: creates 1 to 3 events right away. */
     async create_events(args: unknown): Promise<ToolAnswer> {
       return each(

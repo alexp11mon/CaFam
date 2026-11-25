@@ -27,6 +27,9 @@ import {
   searchArgsSchema,
 } from "./schemas";
 import { toModelComment, toModelEvent, type EventSource } from "./serialize";
+import { getNotes } from "@/lib/notes/queries";
+import { matchNote } from "@/lib/notes/match";
+import { sortItems } from "@/lib/notes/order";
 
 export { TOOL_DEFINITIONS } from "./tool-definitions";
 
@@ -56,12 +59,7 @@ export interface ToolContext {
   /** RF-31, D12: leave out Google calendars if the provider trained on data. */
   excludeSynced: boolean;
   /** Spec 036: the write tools, bound to the session by the route. */
-  writes?: Partial<
-    Record<
-      "create_events" | "propose_changes",
-      (args: unknown) => Promise<object>
-    >
-  >;
+  writes?: Partial<Record<string, (args: unknown) => Promise<object>>>;
 }
 
 const SOURCES: Partial<Record<string, EventSource>> = {
@@ -359,6 +357,55 @@ async function searchEvents(args: unknown, ctx: ToolContext) {
 }
 
 /** D15: the latest comments of events this question already handed out (RF-34, RF-35). */
+/** Items shown per note: enough to answer "¿qué queda?" without flooding. */
+const NOTE_ITEMS_SHOWN = 40;
+
+/**
+ * Spec 048 RF-14: the user's notes, read through RLS. Without a name, their
+ * titles and what is left; with one, that note (its text is data).
+ */
+async function listNotes(args: unknown, ctx: ToolContext) {
+  const named =
+    args &&
+    typeof args === "object" &&
+    "note" in args &&
+    typeof args.note === "string"
+      ? args.note
+      : null;
+  const notes = (await getNotes(ctx.supabase)).filter((note) => !note.archived);
+  if (!named) {
+    return {
+      status: "ok",
+      notes: notes.slice(0, 30).map((note) => ({
+        title: note.title || "(Sin título)",
+        kind: note.kind,
+        ...(note.kind === "list"
+          ? { pending: note.items.filter((item) => !item.done).length }
+          : {}),
+        shared: note.calendarName ?? null,
+      })),
+    };
+  }
+  const match = matchNote(named, notes);
+  if (match.status !== "ok") return match;
+  const note = match.note;
+  if (note.kind === "text") {
+    return { status: "ok", title: note.title, text: note.body.slice(0, 2000) };
+  }
+  const sorted = sortItems(note.items);
+  return {
+    status: "ok",
+    title: note.title,
+    pending: sorted
+      .filter((item) => !item.done)
+      .slice(0, NOTE_ITEMS_SHOWN)
+      .map((item) =>
+        item.dueDate ? { text: item.text, due: item.dueDate } : item.text,
+      ),
+    done: sorted.filter((item) => item.done).length,
+  };
+}
+
 async function getComments(args: unknown, ctx: ToolContext) {
   const parsed = commentsArgsSchema.safeParse(args);
   if (!parsed.success) return { status: "invalid_arguments" };
@@ -509,7 +556,15 @@ const TOOLS: Record<
   search_events: searchEvents,
   find_free_time: findFreeTime,
   get_comments: getComments,
+  list_notes: listNotes,
 };
+
+const WRITE_NAMES = new Set([
+  "create_events",
+  "propose_changes",
+  "create_notes",
+  "add_note_items",
+]);
 
 /** Runs a tool the model asked for; bad names or arguments go back to the model. */
 export async function runTool(
@@ -519,7 +574,7 @@ export async function runTool(
 ): Promise<object> {
   const tool =
     TOOLS[name] ??
-    (name === "create_events" || name === "propose_changes"
+    (WRITE_NAMES.has(name)
       ? ctx.writes?.[name] && ((args: unknown) => ctx.writes![name]!(args))
       : undefined);
   if (!tool) return { status: "unknown_tool" };

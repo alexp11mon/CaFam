@@ -15,6 +15,7 @@ import {
   type Supabase,
 } from "../events/event-writes";
 import { fromState, seriesValues, updatedAtOf } from "../events/quick-writes";
+import { undoNote } from "./note-writes";
 
 // Spec 036: what "Confirmar" and "Deshacer" write (plan "write-actions", D4,
 // D7, D8). Not a "use server" file: the actions in write-actions.ts check the
@@ -114,6 +115,7 @@ export async function undoWrite(
   timeZone: string,
   undo: AssistantUndo,
 ): Promise<WriteResult> {
+  if (undo.kind === "unnote") return undoNote(supabase, undo);
   const event = await getEvent(supabase, undo.id);
   if (!event) return { ok: false, error: UNDO_ERRORS.changed };
   if ((await updatedAtOf(supabase, guardId(event))) !== undo.updatedAt) {

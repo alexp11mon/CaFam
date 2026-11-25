@@ -28,10 +28,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- event-notes note-form event-panel` y `npm run test:db -- notes-event` en verde (repetición materializada).
 
   Cubre: RF-9 a RF-11 | Evidencia: 2026-11-25, `npm test -- event-notes notes-actions event-panel` en verde (sección "Notas" con progreso y "Añadir nota", formulario con "De: …" y el evento en un campo oculto, `createNote` vincula y materializa una repetición; si no puede, no escribe); `npm run test:db -- notes-event` 1/1 (la repetición materializada tiene su nota, la serie no; borrar la serie desvincula); P8 completa (3.835 tests, build OK). Prueba real en Edge: desde el detalle, "Añadir nota" crea "Qué llevar" compartida en el calendario del evento, la nota muestra "De: Cena con Ana · 10 dic" y el detalle la lista; capturas `nota-de-evento*`, `evento-con-notas-*`. La sección solo aparece con conexión, como los comentarios.
-- [ ] T6 Notas desde Venito
+- [x] T6 Notas desde Venito
   Hecho cuando: `npm test -- notes-match assistant-note-writes assistant-core` en verde y `EVAL_ONLY` con las 5 preguntas nuevas contra Groq (una ejecución).
 
-  Cubre: RF-12 a RF-14, RNF-3 | Evidencia: —
+  Cubre: RF-12 a RF-14, RNF-3 | Evidencia: 2026-11-25, `npm test -- notes-match assistant-note-writes assistant-core assistant-action-card` en verde (`matchNote` sin tildes ni mayúsculas, ambigua o no encontrada; `create_notes` personal o compartida solo donde puede escribir, `add_note_items` al final de la lista, cuentan en los 3 cambios por mensaje; "Deshacer" quita solo los elementos añadidos o la nota creada si nadie la cambió; tarjeta "Añadido a la nota" con "Abrir" y "Deshacer"); `list_notes` de solo lectura; P8 completa (3.845 tests, build OK). Eval contra Groq con `EVAL_PART=notes` (5 preguntas nuevas en `tests/assistant-eval/note-questions.ts`): primera ejecución 4/5 (N5 sin respuesta por un timeout de Groq; N4 acertó pero dejaba ver un aviso interno, que se quitó); segunda ejecución solo de N4–N5 (`EVAL_ONLY=4-5`), 2/2; ninguna escritura indebida.
 - [ ] T7 Sin conexión
   Hecho cuando: `npm test -- offline-describe offline-flush offline-sw-sync` en verde con los casos nuevos en `offline-flush-cases.ts`.
 

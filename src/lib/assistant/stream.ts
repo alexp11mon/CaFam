@@ -88,6 +88,10 @@ export function statusFor(tool: string, args: string): string {
   if (tool === "propose_changes") return STATUS.change;
   if (tool === "find_free_time") return STATUS.free;
   if (tool === "get_comments") return STATUS.comments;
+  // Spec 048 RF-12, RF-14.
+  if (tool === "list_notes") return "Mirando tus notas…";
+  if (tool === "create_notes" || tool === "add_note_items")
+    return "Apuntando en tus notas…";
   return STATUS.events;
 }
 

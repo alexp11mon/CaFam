@@ -7,6 +7,7 @@ import { writeTools } from "@/app/dashboard/assistant/assistant-writes";
 import type { AssistantAction } from "@/lib/assistant/actions";
 import type { ChatMessage } from "@/lib/assistant/schemas";
 import { WRITE_QUESTIONS } from "../tests/assistant-eval/write-questions";
+import { NOTE_QUESTIONS } from "../tests/assistant-eval/note-questions";
 import {
   PRIVATE_TITLES,
   QUESTIONS,
@@ -367,6 +368,13 @@ async function ask(
   );
   if (createdIds.length)
     await admin.from("events").delete().in("id", createdIds);
+  // Spec 048: notes it created go too; items it added, back out.
+  for (const action of actions) {
+    if (action.kind !== "note" || action.undo.kind !== "unnote") continue;
+    if (action.undo.itemIds)
+      await admin.from("note_items").delete().in("id", action.undo.itemIds);
+    else await admin.from("notes").delete().eq("id", action.note.id);
+  }
   return { result: { ...result, actions }, ms: performance.now() - started };
 }
 
@@ -380,7 +388,7 @@ const SELECTED = [...QUESTIONS.entries()].filter(
 
 const PART = process.env.EVAL_PART;
 
-it.skipIf(PART === "write")(
+it.skipIf(PART === "write" || PART === "notes")(
   "answers the evaluation questions",
   async () => {
     let right = 0;
@@ -442,7 +450,7 @@ it.skipIf(PART === "write")(
 // Spec 036, T9 (RNF de calidad): 90 % right, no undue write and 90 % under
 // 10 s. An undue write is one where nothing may be written, or an event
 // created in another calendar or with other hours than asked.
-it.skipIf(PART === "read")(
+it.skipIf(PART === "read" || PART === "notes")(
   "writes only what is asked",
   async () => {
     let right = 0;
@@ -497,4 +505,56 @@ it.skipIf(PART === "read")(
     expect(fast).toBeGreaterThanOrEqual(0.9);
   },
   30 * 60_000,
+);
+
+// Spec 048, T6 (RNF-3): EVAL_PART=notes asks only the 5 note requests.
+it.skipIf(PART !== "notes")(
+  "writes and reads notes as asked",
+  async () => {
+    const { data: list, error } = await admin
+      .from("notes")
+      .insert({ owner_id: asker.id, title: "Lista de la compra", kind: "list" })
+      .select("id")
+      .single();
+    if (error) throw error;
+    await admin.from("note_items").insert([
+      { note_id: list.id, text: "huevos", done: false, position: 0 },
+      { note_id: list.id, text: "arroz", done: true, position: 1 },
+    ]);
+    let right = 0;
+    let undue = 0;
+    // EVAL_ONLY=4-5 asks only those of these too.
+    const chosen = [...NOTE_QUESTIONS.entries()].filter(
+      ([index]) =>
+        !onlyFrom ||
+        (index + 1 >= onlyFrom && index + 1 <= (onlyTo || onlyFrom)),
+    );
+    for (const [position, [index, item]] of chosen.entries()) {
+      if (position > 0) await sleep(PAUSE_MS);
+      const outcome = await ask(index, NOTE_QUESTIONS, true).catch(
+        (failed: unknown) => String(failed),
+      );
+      if (typeof outcome === "string") {
+        console.log(
+          `✗ N${index + 1}. ${item.question}\n    sin respuesta: ${outcome}`,
+        );
+        continue;
+      }
+      const { result, ms } = outcome;
+      const failures = item.checks
+        .map((check) => check(result))
+        .filter(Boolean);
+      if (item.mustNotWrite && result.actions?.length) undue++;
+      if (failures.length === 0) right++;
+      console.log(
+        `${failures.length ? "✗" : "✓"} N${index + 1}. ${item.question} (${(ms / 1000).toFixed(1)} s)\n    ${result.answer.replace(/\n/g, " ")}${failures.length ? `\n    FALLO: ${failures.join("; ")}` : ""}`,
+      );
+    }
+    console.log(
+      `\nNotas: ${right}/${chosen.length}. Escrituras indebidas: ${undue}.`,
+    );
+    expect(right).toBeGreaterThanOrEqual(chosen.length - 1);
+    expect(undue).toBe(0);
+  },
+  15 * 60_000,
 );

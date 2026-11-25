@@ -223,3 +223,36 @@ describe("ActionCard of a change", () => {
     expect(screen.queryByRole("button")).toBeNull();
   });
 });
+
+// Spec 048 RF-12: what Venito wrote in a note, with a link and "Deshacer".
+describe("ActionCard of a note", () => {
+  const NOTE_ID = "6f1c0a5e-8f0e-4c1e-9a43-2b7d7a1f0c11";
+  const note: AssistantAction = {
+    kind: "note",
+    key: "k-note",
+    note: {
+      id: NOTE_ID,
+      title: "Lista de la compra",
+      items: ["leche", "pan"],
+      calendarName: "Casa",
+    },
+    added: true,
+    undo: { kind: "unnote", id: NOTE_ID, updatedAt: "", itemIds: ["i1", "i2"] },
+  };
+
+  it("shows the items added, opens the note and undoes only them", async () => {
+    undoAssistantAction.mockResolvedValue({ ok: true });
+    render(<Harness initial={{ action: note, status: "done" }} />);
+    const card = screen.getByRole("region", {
+      name: "[Añadido a la nota «Lista de la compra»: leche, pan, en Casa]",
+    });
+    expect(card).toHaveTextContent("Añadido a la nota");
+    expect(card).toHaveTextContent("Compartida en Casa");
+    expect(
+      screen.getByRole("link", { name: "Abrir Lista de la compra" }),
+    ).toHaveAttribute("href", `/dashboard/notes/${NOTE_ID}`);
+    await userEvent.click(screen.getByRole("button", { name: "Deshacer" }));
+    expect(undoAssistantAction).toHaveBeenCalledWith(note.undo);
+    expect(await screen.findByText("Deshecho")).toBeInTheDocument();
+  });
+});

@@ -12,7 +12,7 @@ import type { ChatAction } from "./action-card";
 // is where it is created again. Each token is stacked once.
 
 function undoOf(card: ChatAction): AssistantUndo | null {
-  if (card.action.kind === "created" && card.status === "done")
+  if (card.action.kind !== "change" && card.status === "done")
     return card.action.undo;
   if (card.action.kind === "change" && card.status === "applied")
     return card.undo ?? null;
@@ -22,7 +22,9 @@ function undoOf(card: ChatAction): AssistantUndo | null {
 function titleOf(card: ChatAction): string {
   return card.action.kind === "created"
     ? card.action.event.title
-    : card.action.after.title;
+    : card.action.kind === "note"
+      ? card.action.note.title
+      : card.action.after.title;
 }
 
 export function useStackCards(
@@ -37,11 +39,15 @@ export function useStackCards(
       for (const card of message.actions ?? []) {
         const undo = undoOf(card);
         if (!undo) continue;
-        const key = `${undo.kind}:${undo.id}:${undo.updatedAt}`;
+        const key = `${undo.kind}:${undo.id}:${undo.updatedAt}:${"itemIds" in undo ? (undo.itemIds?.join() ?? "") : ""}`;
         if (stacked.current.has(key)) continue;
         stacked.current.add(key);
         const verb =
-          card.action.kind === "created" ? "Evento creado" : "cambiar";
+          card.action.kind === "created"
+            ? "Evento creado"
+            : card.action.kind === "note"
+              ? "Nota"
+              : "cambiar";
         stack.record(undoLabel(verb, titleOf(card)), null, async () => {
           const result = await undoAssistantAction(undo);
           if (result.ok) onChanged?.();

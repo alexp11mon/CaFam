@@ -216,6 +216,12 @@ export const pendingChangeSchema = z.object({
 
 export const assistantUndoSchema = z.discriminatedUnion("kind", [
   z.object({
+    kind: z.literal("unnote"),
+    id: z.uuid(),
+    updatedAt: z.string().max(64),
+    itemIds: z.array(z.uuid()).max(50).optional(),
+  }),
+  z.object({
     kind: z.literal("uncreate"),
     id: z.uuid(),
     updatedAt: z.string().max(64),
