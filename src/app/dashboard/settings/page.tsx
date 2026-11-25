@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DeleteAccountDialog } from "@/components/account/delete-account-dialog";
 import { EmailForm } from "@/components/account/email-form";
+import { SignInMethods } from "@/components/account/sign-in-methods";
+import { googleLoginEnabled } from "@/lib/auth/google-login";
+import { signInMethods } from "@/lib/account/sign-in-methods";
+import { createPassword, linkGoogle, unlinkGoogle } from "./identity-actions";
 import { ExportData } from "@/components/account/export-data";
 import { loadAccountExport, loadCalendarIcs } from "./export-actions";
 import { PasswordForm } from "@/components/account/password-form";
@@ -159,12 +163,74 @@ async function NotificationSection() {
 
 async function EmailSection() {
   const { supabase } = await requireUser();
-  const { email, pendingEmail } = await getAccountEmails(supabase);
+  const [{ email, pendingEmail }, { data }] = await Promise.all([
+    getAccountEmails(supabase),
+    supabase.auth.getUser(),
+  ]);
+  const { hasPassword, google } = signInMethods(data.user);
   return (
-    <EmailForm
-      action={requestEmailChange}
-      email={email}
-      pendingEmail={pendingEmail}
+    <>
+      {google ? (
+        // Spec 050 RF-7: Google keeps entering with its own address.
+        <p className="text-sm text-muted">
+          Si cambias el email, «Continuar con Google» seguirá entrando con tu
+          cuenta de Google.
+        </p>
+      ) : null}
+      {hasPassword ? (
+        <EmailForm
+          action={requestEmailChange}
+          email={email}
+          pendingEmail={pendingEmail}
+        />
+      ) : (
+        <p className="text-ink">
+          {email}. Para cambiarlo, crea antes una contraseña en «Formas de
+          entrar».
+        </p>
+      )}
+    </>
+  );
+}
+
+/** Spec 050 RF-5, RF-6: how the account enters. */
+async function SignInSection() {
+  const { supabase } = await requireUser();
+  const { data } = await supabase.auth.getUser();
+  const { hasPassword, google } = signInMethods(data.user);
+  if (!google && !googleLoginEnabled()) return null;
+  return (
+    <Section id="settings-sign-in" title="Formas de entrar">
+      <SignInMethods
+        hasPassword={hasPassword}
+        googleEmail={google?.email ?? null}
+        linkAction={linkGoogle}
+        unlinkAction={unlinkGoogle}
+        createPasswordAction={createPassword}
+      />
+    </Section>
+  );
+}
+
+async function PasswordSection() {
+  const { supabase } = await requireUser();
+  const { data } = await supabase.auth.getUser();
+  return signInMethods(data.user).hasPassword ? (
+    <PasswordForm action={changePassword} />
+  ) : (
+    <p className="text-ink">
+      Tu cuenta entra con Google. Crea una contraseña en «Formas de entrar».
+    </p>
+  );
+}
+
+async function AccountSection() {
+  const { supabase } = await requireUser();
+  const { data } = await supabase.auth.getUser();
+  return (
+    <DeleteAccountDialog
+      action={deleteAccount}
+      needsPassword={signInMethods(data.user).hasPassword}
     />
   );
 }
@@ -244,13 +310,18 @@ export default function SettingsPage({
           <AssistantSection />
         </Suspense>
       </Section>
+      <Suspense fallback={null}>
+        <SignInSection />
+      </Suspense>
       <Section id="settings-email" title="Email">
         <Suspense fallback={LOADING}>
           <EmailSection />
         </Suspense>
       </Section>
       <Section id="settings-password" title="Contraseña">
-        <PasswordForm action={changePassword} />
+        <Suspense fallback={LOADING}>
+          <PasswordSection />
+        </Suspense>
       </Section>
       <Section id="settings-export" title="Tus datos">
         <ExportData load={loadAccountExport} loadIcs={loadCalendarIcs} />
@@ -261,7 +332,9 @@ export default function SettingsPage({
           borran enseguida: sus miembros tendrán 15 días para conservarlos.
         </p>
         <div>
-          <DeleteAccountDialog action={deleteAccount} />
+          <Suspense fallback={LOADING}>
+            <AccountSection />
+          </Suspense>
         </div>
       </Section>
     </main>

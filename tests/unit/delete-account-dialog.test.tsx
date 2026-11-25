@@ -64,3 +64,26 @@ describe("DeleteAccountDialog (RF-16, RF-17)", () => {
     ).toBeInTheDocument();
   });
 });
+
+// Spec 050, T3: an account that only enters with Google confirms with its
+// email (RF-8).
+describe("DeleteAccountDialog without a password (spec 050 RF-8)", () => {
+  it("asks only for the email", async () => {
+    render(
+      <DeleteAccountDialog
+        action={vi.fn(async (): Promise<ConfirmState> => ({}))}
+        needsPassword={false}
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Borrar mi cuenta" }),
+    );
+    expect(screen.queryByLabelText("Tu contraseña")).not.toBeInTheDocument();
+    const confirm = screen.getByRole("button", {
+      name: "Borrar definitivamente",
+    });
+    expect(confirm).toBeDisabled();
+    await userEvent.type(screen.getByLabelText("Tu email"), "ana@gmail.com");
+    expect(confirm).toBeEnabled();
+  });
+});

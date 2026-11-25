@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { GoogleLogo } from "@/components/brand/google-logo";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
+import { googleLoginEnabled } from "@/lib/auth/google-login";
 import { NextField } from "./next-field";
 
 // Spec 050, T2: "Continuar con Google" in the login and the sign-up (RF-1,
@@ -14,10 +15,6 @@ export const GOOGLE_TEXTS = {
   cancelled: "Has cancelado el inicio de sesión con Google.",
   error: "No se ha podido entrar con Google.",
 } as const;
-
-export function googleLoginEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "1";
-}
 
 function GoogleNotice() {
   const reason = useSearchParams()?.get("google");

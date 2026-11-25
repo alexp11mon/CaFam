@@ -40,7 +40,14 @@ function form(fields: Record<string, string>) {
 
 beforeEach(() => {
   h.getUser.mockReset().mockResolvedValue({
-    data: { user: { id: "u1", email: "ana@example.com" } },
+    // An account made with email has that identity (spec 050).
+    data: {
+      user: {
+        id: "u1",
+        email: "ana@example.com",
+        identities: [{ provider: "email" }],
+      },
+    },
     error: null,
   });
   h.signInWithPassword.mockReset().mockResolvedValue({ error: null });

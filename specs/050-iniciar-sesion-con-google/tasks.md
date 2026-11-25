@@ -16,10 +16,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- google-button oauth-actions auth-callback-route route-access` en verde: URL de Google con PKCE, `next` seguro, cancelación y error, botón oculto sin la variable.
 
   Cubre: RF-1, RF-2, RF-9, RNF-1, RNF-2 | Evidencia: 2026-11-25, `npx vitest run --project unit google-button oauth-actions auth-callback-route route-access` en verde (URL de Google con `skipBrowserRedirect` y PKCE de `@supabase/ssr`, solo `openid email profile`, `next` seguro, cancelación y error, botón oculto sin `NEXT_PUBLIC_GOOGLE_LOGIN=1`); P8 en verde. Logotipo oficial en `components/brand/google-logo.tsx` (colores como atributos `fill`, que la guardia de diseño no toca).
-- [ ] T3 Formas de entrar
+- [x] T3 Formas de entrar
   Hecho cuando: `npm test -- sign-in-methods identity-actions delete-account-dialog` en verde: enlazar, desvincular solo si queda otra, crear contraseña, borrar sin contraseña.
 
-  Cubre: RF-5 a RF-8 | Evidencia: —
+  Cubre: RF-5 a RF-8 | Evidencia: 2026-11-25, `npx vitest run --project unit sign-in-methods identity-actions delete-account-dialog account-delete-action` en verde: "Conectar Google" con `linkIdentity` de vuelta a Ajustes, "Desconectar Google" solo con contraseña, "Crear contraseña" sin la actual (marca `has_password` en los metadatos, porque Supabase no dice si la hay), borrar sin contraseña con el propio email; P8 en verde. Una cuenta solo de Google no cambia el email ni la contraseña hasta crear una (se explica en Ajustes). Si Supabase no deja desvincular la única identidad aunque haya contraseña, se verá en la prueba real (T5).
 - [ ] T4 Zona en la primera entrada y privacidad
   Hecho cuando: `npm test -- time-zone-check` en verde y `/privacy` con la sección; capturas de login y Ajustes a 390 y 1440 px en claro y oscuro.
 

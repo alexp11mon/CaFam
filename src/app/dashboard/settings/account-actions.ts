@@ -18,6 +18,7 @@ import {
   profileSchema,
 } from "@/lib/account/schemas";
 import { AUTH_MESSAGES } from "@/lib/auth/error-messages";
+import { signInMethods } from "@/lib/account/sign-in-methods";
 import { requireActionUser } from "@/lib/calendar/queries";
 import {
   fieldErrorsFromZod,
@@ -177,26 +178,34 @@ export async function deleteAccount(
   formData: FormData,
 ): Promise<ConfirmState> {
   const mismatch = { formError: ACCOUNT_MESSAGES.confirmationMismatch };
-  const parsed = deleteAccountSchema.safeParse({
-    email: readString(formData, "email"),
-    password: readString(formData, "password"),
-  });
-  if (!parsed.success) return mismatch;
+  const typedEmail = readString(formData, "email");
+  const password = readString(formData, "password");
 
   const { supabase } = await requireActionUser();
   try {
     const { data } = await supabase.auth.getUser();
     const email = data.user?.email;
-    if (!email || email !== parsed.data.email) return mismatch;
+    // Spec 050 RF-8: an account that only enters with Google confirms with
+    // its email; any other still gives its password.
+    const withPassword = signInMethods(data.user).hasPassword;
+    const parsed = withPassword
+      ? deleteAccountSchema.safeParse({ email: typedEmail, password })
+      : deleteAccountSchema.shape.email.safeParse(typedEmail);
+    if (!parsed.success) return mismatch;
+    const parsedEmail =
+      typeof parsed.data === "string" ? parsed.data : parsed.data.email;
+    if (!email || email !== parsedEmail) return mismatch;
 
-    const { error: checkError } = await supabase.auth.signInWithPassword({
-      email,
-      password: parsed.data.password,
-    });
-    if (checkError) {
-      return checkError.code === "invalid_credentials"
-        ? mismatch
-        : { formError: getAccountErrorMessage(checkError) };
+    if (withPassword) {
+      const { error: checkError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (checkError) {
+        return checkError.code === "invalid_credentials"
+          ? mismatch
+          : { formError: getAccountErrorMessage(checkError) };
+      }
     }
 
     const { error } = await supabase.rpc("delete_own_account");
