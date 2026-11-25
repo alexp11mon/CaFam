@@ -161,6 +161,6 @@ describe("the service worker's sync (RF-42, RF-43)", () => {
   });
 
   it("drops the old caches with a new version", () => {
-    expect(code).toContain('const CACHE_NAME = "cafam-v8";');
+    expect(code).toContain('const CACHE_NAME = "cafam-v9";');
   });
 });

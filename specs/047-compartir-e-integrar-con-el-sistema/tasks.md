@@ -12,10 +12,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- share-text event-ics share-event-button` en verde: texto con y sin lugar, día completo, `.ics` válido, `share` con archivo, sin archivo y sin API (menú).
 
   Cubre: RF-1 a RF-4 | Evidencia: 2026-11-25, `share-text` 3, `event-ics` 4, `share-event-button` 5 en verde; P8 completa (3.772 tests, build OK).
-- [ ] T2 Recepción en el service worker
+- [x] T2 Recepción en el service worker
   Hecho cuando: `npm test -- sw-share-target offline-sw-sync` en verde: el `POST` guarda en `cafam-share` y responde `303`; lo caducado se borra; el bucle sin conexión sigue igual. `CACHE_NAME` sube.
 
-  Cubre: RF-5, RF-10, RNF-2 | Evidencia: —
+  Cubre: RF-5, RF-10, RNF-2 | Evidencia: 2026-11-25, `sw-share-target` 4, `offline-sw-sync`, `sw-push`, `manifest` en verde; `CACHE_NAME` = `cafam-v9`; P8 completa (3.777 tests, build OK).
 - [ ] T3 Bandeja de lo compartido
   Hecho cuando: `npm test -- share-inbox import-form next-path` en verde y capturas a 390 px en claro y oscuro.
   - `.ics` → importar; imágenes → Venito o evento; texto → alta; sin sesión → login y vuelta.

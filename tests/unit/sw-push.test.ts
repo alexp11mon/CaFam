@@ -109,7 +109,7 @@ describe("sw.js notificationclick", () => {
 });
 
 describe("sw.js cache", () => {
-  it("is cafam-v8", () => {
-    expect(code).toContain('const CACHE_NAME = "cafam-v8";');
+  it("is cafam-v9", () => {
+    expect(code).toContain('const CACHE_NAME = "cafam-v9";');
   });
 });

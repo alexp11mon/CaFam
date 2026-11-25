@@ -189,7 +189,7 @@ Monolito Next.js en Vercel + Supabase (Auth y Postgres, donde **RLS impone los p
 
 ### PWA
 
-`public/sw.js`: precachea `/offline` y estáticos; red primero en navegaciones (fallo en `/dashboard` → `/offline?from=<ruta>`); caché primero en `/_next/static/` e `/icons/`; **nunca cachea HTML con sesión ni respuestas de Supabase**; atiende `sync` y `push`. **Si cambias `sw.js` o los iconos, sube `CACHE_NAME`** (ahora `cafam-v8`). Solo se registra en producción. Iconos desde `public/icons/icon.svg` con `node scripts/make-icons.mjs`.
+`public/sw.js`: precachea `/offline` y estáticos; red primero en navegaciones (fallo en `/dashboard` → `/offline?from=<ruta>`); caché primero en `/_next/static/` e `/icons/`; **nunca cachea HTML con sesión ni respuestas de Supabase**; atiende `sync` y `push`. **Si cambias `sw.js` o los iconos, sube `CACHE_NAME`** (ahora `cafam-v9`). Solo se registra en producción. Iconos desde `public/icons/icon.svg` con `node scripts/make-icons.mjs`.
 
 ### Identidad visual (Nexo)
 

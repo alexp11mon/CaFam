@@ -6,7 +6,7 @@
 // spec 035 it also sends the queue with the app closed (Background Sync).
 
 // Bump the version to drop old caches after a change (plan R5).
-const CACHE_NAME = "cafam-v8";
+const CACHE_NAME = "cafam-v9";
 const OFFLINE_URL = "/offline";
 const PRECACHE_URLS = [
   OFFLINE_URL,
@@ -56,6 +56,15 @@ function isCacheableAsset(url) {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
+  // What another app shares never reaches the server (spec 047 RF-10, plan D1).
+  if (
+    request.method === "POST" &&
+    url.origin === self.location.origin &&
+    url.pathname === SHARE_PATH
+  ) {
+    event.respondWith(receiveShare(request));
+    return;
+  }
   // Only this origin's GETs; Supabase and everything else go to the network.
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
@@ -456,3 +465,55 @@ self.addEventListener("notificationclick", (event) => {
     })(),
   );
 });
+
+// ---------------------------------------------------------------------------
+// Spec 047: Web Share Target. The files stay in IndexedDB on this device
+// until /dashboard/share uses them, or for 10 minutes (RF-10). The same
+// database as src/lib/share/inbox.ts: a change there goes here too.
+
+const SHARE_PATH = "/share-target";
+const SHARE_DB = "cafam-share";
+const SHARE_STORE = "items";
+const SHARE_TTL_MS = 10 * 60 * 1000;
+const SHARE_MAX_FILES = 3;
+
+function openShareDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(SHARE_DB, 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(SHARE_STORE))
+        request.result.createObjectStore(SHARE_STORE);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function receiveShare(request) {
+  const form = await request.formData();
+  const files = form
+    .getAll("files")
+    .filter((file) => typeof file === "object" && file && file.size > 0)
+    .slice(0, SHARE_MAX_FILES);
+  const text = ["title", "text", "url"]
+    .map((field) => String(form.get(field) || "").trim())
+    .filter(Boolean)
+    .join("\n");
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  const db = await openShareDb();
+  const old = await transact(db, [SHARE_STORE], "readonly", (tx) => {
+    const request = tx.objectStore(SHARE_STORE).getAll();
+    return () => request.result || [];
+  });
+  await transact(db, [SHARE_STORE], "readwrite", (tx) => {
+    const store = tx.objectStore(SHARE_STORE);
+    for (const item of old)
+      if (now - item.createdAt > SHARE_TTL_MS) store.delete(item.id);
+    store.put({ id, createdAt: now, text, files }, id);
+  });
+  return Response.redirect(
+    `${self.location.origin}/dashboard/share?id=${id}`,
+    303,
+  );
+}

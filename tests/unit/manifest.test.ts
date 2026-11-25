@@ -43,4 +43,20 @@ describe("web app manifest (RF-21, RNF-9)", () => {
       expect(existsSync(join(process.cwd(), "public", icon.src))).toBe(true);
     }
   });
+
+  it("receives .ics, images, text and links from other apps (spec 047 RF-5)", () => {
+    expect(result.share_target).toEqual({
+      action: "/share-target",
+      method: "POST",
+      enctype: "multipart/form-data",
+      params: {
+        title: "title",
+        text: "text",
+        url: "url",
+        files: [
+          { name: "files", accept: ["text/calendar", ".ics", "image/*"] },
+        ],
+      },
+    });
+  });
 });

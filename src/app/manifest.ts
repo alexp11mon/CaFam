@@ -13,6 +13,21 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     theme_color: NEUTRALS.stone,
     background_color: NEUTRALS.stone,
+    // Android hands what is shared to sw.js, never to the server (spec 047
+    // RF-5, RF-10); iOS does not support it.
+    share_target: {
+      action: "/share-target",
+      method: "POST",
+      enctype: "multipart/form-data",
+      params: {
+        title: "title",
+        text: "text",
+        url: "url",
+        files: [
+          { name: "files", accept: ["text/calendar", ".ics", "image/*"] },
+        ],
+      },
+    },
     icons: [
       {
         src: "/icons/icon-192.png",
