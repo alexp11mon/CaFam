@@ -18,10 +18,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - 35 reservas en paralelo con 29 respondidas → solo 1 cabe; liberar devuelve el hueco; una reserva de hace 3 minutos no cuenta; error del proveedor y cancelación liberan.
 
   Cubre: RF-4, RF-5 | Evidencia: 2026-11-25. `test:db -- assistant-quota assistant.test` 17/17 (35 reservas en paralelo con 29 respondidas: 1 cabe y 34 reciben `CF429`; liberar devuelve el hueco; una reserva caducada y las de ayer no cuentan; el cliente ya no inserta filas); `npm test -- assistant-route` 18/18 (error del proveedor y cancelación llaman a `assistant_release`); P8 completo en verde. El inicio del día lo calcula ahora `assistant_reserve` con la zona del perfil, así que `quotaDayStart` se ha borrado.
-- [ ] T3 CSP
+- [x] T3 CSP
   Hecho cuando: `npm test -- csp next-config-headers csp-report-route` en verde y recorrido con Playwright y Edge sobre `next start -p 3100` (login, calendario, detalle con imagen, asistente, notas, ajustes, tema oscuro, sin conexión) sin errores de CSP en la consola.
 
-  Cubre: RF-6 a RF-9 | Evidencia: —
+  Cubre: RF-6 a RF-9 | Evidencia: 2026-11-25. `npm test -- csp next-config-headers csp-report-route` 11/11; P8 completo en verde (417 archivos, 3912 tests). Recorrido con Playwright y Edge sobre `next start -p 3100`, claro y oscuro (login, calendario, detalle con imagen, asistente en streaming, notas, ajustes, `/offline`, conexiones): **ninguna** violación de la política aplicada, imagen visible, `data-theme` correcto y sin errores de página. La *Report-Only* estricta envía unos 13 avisos por página: los scripts en línea de Next (datos RSC) y un `eval` de prueba de una librería, como preveía D3. Con eso queda medido que `script-src` no se puede endurecer hoy; conviene quitar la cabecera *Report-Only* tras unos días en producción para no gastar invocaciones.
 - [ ] T4 Helpers de `test:db`
   Hecho cuando: `npm test -- integration-helpers` (con `fetch` simulado que se cuelga y que da `rate limit`) en verde y `npm run test:db` completo en verde.
 

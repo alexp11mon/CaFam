@@ -1,4 +1,13 @@
 import type { NextConfig } from "next";
+import { buildCsp, scriptHash } from "./src/lib/security/csp";
+import { THEME_SCRIPT } from "./src/lib/theme/theme";
+
+// Spec 051 RF-6 to RF-8: applied policy and strict Report-Only one.
+const cspOptions = {
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  scriptHashes: [scriptHash(THEME_SCRIPT)],
+  dev: process.env.NODE_ENV === "development",
+};
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -19,7 +28,11 @@ const nextConfig: NextConfig = {
         // wins and the two below are more specific (spec 023 RF-4, RF-5).
         source: "/:path*",
         headers: [
-          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Content-Security-Policy", value: buildCsp(cspOptions) },
+          {
+            key: "Content-Security-Policy-Report-Only",
+            value: buildCsp({ ...cspOptions, strict: true }),
+          },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

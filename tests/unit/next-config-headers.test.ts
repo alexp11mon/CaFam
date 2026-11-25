@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import nextConfig from "../../next.config";
+import { scriptHash } from "@/lib/security/csp";
+import { THEME_SCRIPT } from "@/lib/theme/theme";
 
 describe("next.config headers (plan D12)", () => {
   it("keeps the invite token out of the Referer and out of search engines", async () => {
@@ -31,8 +33,20 @@ describe("next.config security headers (spec 023 RF-4, RF-5)", () => {
     const headers = Object.fromEntries(
       rules[0].headers.map(({ key, value }) => [key, value]),
     );
+    // Spec 051 RF-6 to RF-8: the full policy, and the strict one reported.
+    expect(headers["Content-Security-Policy"]).toContain(
+      "frame-ancestors 'none'",
+    );
+    expect(headers["Content-Security-Policy"]).toContain("object-src 'none'");
+    expect(headers["Content-Security-Policy-Report-Only"]).toContain(
+      `script-src 'self' ${scriptHash(THEME_SCRIPT)}`,
+    );
+    expect(headers["Content-Security-Policy-Report-Only"]).toContain(
+      "report-uri /api/csp-report",
+    );
+    delete headers["Content-Security-Policy"];
+    delete headers["Content-Security-Policy-Report-Only"];
     expect(headers).toEqual({
-      "Content-Security-Policy": "frame-ancestors 'none'",
       "X-Frame-Options": "DENY",
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "strict-origin-when-cross-origin",
