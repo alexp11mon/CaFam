@@ -7,6 +7,10 @@ export interface NoteItem {
   /** When it was ticked, as the database says; null while pending. */
   doneAt: string | null;
   position: number;
+  /** YYYY-MM-DD; absent in copies saved before spec 048 (RF-1). */
+  dueDate?: string | null;
+  /** HH:MM, only with a date. */
+  dueTime?: string | null;
 }
 
 export interface Note {

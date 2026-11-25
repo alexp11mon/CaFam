@@ -30,6 +30,7 @@ import { useLiveCalendar } from "@/lib/hooks/use-live-calendar";
 import { NOTE_MESSAGES } from "@/lib/notes/error-messages";
 import { NOTE_TITLE_MAX } from "@/lib/notes/limits";
 import { applyPositions, moveItem, nextPosition } from "@/lib/notes/order";
+import { dueLabel as itemDueLabel } from "@/lib/notes/due";
 import type { NoteAccess } from "@/lib/notes/permissions";
 import { dueLabel } from "@/lib/notes/progress";
 import type { Note, NoteItem } from "@/lib/notes/types";
@@ -161,6 +162,23 @@ export function NoteEditor({
       ),
       () => updateItemOrQueue(note.id, item, { done }),
       done ? `Hecho: «${item.text}»` : `Pendiente otra vez: «${item.text}»`,
+    );
+  }
+
+  function setDue(
+    item: NoteItem,
+    next: { dueDate: string | null; dueTime: string | null },
+  ) {
+    void change(
+      withItems((items) =>
+        items.map((other) =>
+          other.id === item.id ? { ...other, ...next } : other,
+        ),
+      ),
+      () => updateItemOrQueue(note.id, item, next),
+      next.dueDate
+        ? `Fecha de «${item.text}»: ${itemDueLabel(next.dueDate, next.dueTime, today)}`
+        : `Sin fecha: «${item.text}»`,
     );
   }
 
@@ -362,6 +380,8 @@ export function NoteEditor({
             onMove={move}
             onDelete={(item) => void remove(item)}
             onClearDone={clear}
+            today={today}
+            onDue={setDue}
           />
         ) : (
           <TextNote

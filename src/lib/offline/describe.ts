@@ -9,6 +9,7 @@ import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar/palette";
 import type { Note, NoteItem } from "@/lib/notes/types";
 import { parseEventId } from "@/lib/recurrence/occurrence-id";
 import type {
+  ItemBase,
   ItemFields,
   NoteFields,
   OfflineChange,
@@ -99,8 +100,13 @@ export function noteBase(note: Note): Required<NoteFields> {
   };
 }
 
-export function itemBase(item: NoteItem): Required<ItemFields> {
-  return { text: item.text, done: item.done };
+export function itemBase(item: NoteItem): Required<ItemFields> & ItemBase {
+  return {
+    text: item.text,
+    done: item.done,
+    dueDate: item.dueDate ?? null,
+    dueTime: item.dueTime ?? null,
+  };
 }
 
 type Calendar = { id: string; name: string; color: string };

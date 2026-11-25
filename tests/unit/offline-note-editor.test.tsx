@@ -81,7 +81,7 @@ describe("NoteEditor offline", () => {
       type: "item.update",
       noteId: NOTE.id,
       id: "Pan",
-      base: { text: "Pan", done: false },
+      base: { text: "Pan", done: false, dueDate: null, dueTime: null },
       change: { done: true },
     });
     expect(screen.getByText("Pendiente de enviar")).toBeVisible();

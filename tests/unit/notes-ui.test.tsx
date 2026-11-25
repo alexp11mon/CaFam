@@ -311,6 +311,52 @@ describe("a list (RF-6, RF-9)", () => {
   });
 });
 
+describe("due dates of items (spec 048 RF-1, RF-2)", () => {
+  it("sets one from its menu, shows it and saves it", async () => {
+    const { value } = editor();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Fecha de «Pan»" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Mañana" }));
+    expect(screen.getByText("mañana")).toBeInTheDocument();
+    expect(actions.updateItem).toHaveBeenCalledExactlyOnceWith("Pan", {
+      dueDate: "2026-11-16",
+      dueTime: null,
+    });
+    expect(value.items[0]!.text).toBe("Pan");
+  });
+
+  it("shows a past one in red, but not once done", () => {
+    editor({
+      items: [
+        { ...item("Pan", 0), dueDate: "2026-11-14" },
+        { ...item("Sal", 1, true), dueDate: "2026-11-14" },
+      ],
+    });
+    const labels = screen.getAllByText("ayer");
+    expect(labels[0]).toHaveClass("text-danger");
+    expect(labels[1]).not.toHaveClass("text-danger");
+  });
+
+  it("the card shows the closest pending one", () => {
+    render(
+      <NotesBoard
+        notes={[
+          note({
+            items: [
+              { ...item("Pan", 0), dueDate: "2026-11-20" },
+              { ...item("Sal", 1), dueDate: "2026-11-16", dueTime: "18:00" },
+            ],
+          }),
+        ]}
+        today="2026-11-15"
+        userId="me"
+      />,
+    );
+    expect(screen.getByText("Próximo: mañana · 18:00")).toBeInTheDocument();
+  });
+});
+
 describe("the note itself (RF-5, RF-8)", () => {
   it("saves the title when its field is left", async () => {
     const { value } = editor();

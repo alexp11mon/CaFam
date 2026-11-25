@@ -3,7 +3,11 @@
 // database checks permissions and limits again.
 import { z } from "zod";
 import { isPaletteColor } from "@/lib/calendar/palette";
-import { itemTextSchema, noteIdSchema as uuid } from "@/lib/notes/schemas";
+import {
+  itemDueSchema,
+  itemTextSchema,
+  noteIdSchema as uuid,
+} from "@/lib/notes/schemas";
 import { NOTE_BODY_MAX, NOTE_TITLE_MAX } from "@/lib/notes/limits";
 import { parseDateKey } from "@/lib/calendar/time-zone";
 import { parseEventId } from "@/lib/recurrence/occurrence-id";
@@ -40,7 +44,13 @@ const noteFields = z.object({
     .refine((value) => parseDateKey(value) !== null)
     .nullable(),
 });
-const itemFields = z.object({ text: itemTextSchema, done: z.boolean() });
+const itemFields = z.object({
+  text: itemTextSchema,
+  done: z.boolean(),
+  // Optional: changes queued before spec 048 do not have them.
+  dueDate: itemDueSchema.dueDate.optional(),
+  dueTime: itemDueSchema.dueTime.optional(),
+});
 
 const PRESETS = [
   "none",

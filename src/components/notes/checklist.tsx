@@ -8,6 +8,9 @@ import { ITEM_TEXT_MAX, ITEMS_MAX } from "@/lib/notes/limits";
 import { moveItem, sortItems } from "@/lib/notes/order";
 import { progress } from "@/lib/notes/progress";
 import type { NoteItem } from "@/lib/notes/types";
+import { dueLabel, isOverdue } from "@/lib/notes/due";
+import { useNow } from "@/lib/hooks/use-now";
+import { ItemDueMenu, type ItemDue } from "./item-due-menu";
 
 export interface ChecklistHandlers {
   onAdd: (text: string) => void;
@@ -16,6 +19,8 @@ export interface ChecklistHandlers {
   onMove: (item: NoteItem, direction: "up" | "down") => void;
   onDelete: (item: NoteItem) => void;
   onClearDone: () => void;
+  /** Spec 048 RF-1. */
+  onDue?: (item: NoteItem, due: ItemDue) => void;
 }
 
 /**
@@ -27,11 +32,17 @@ export interface ChecklistHandlers {
 export function Checklist({
   items,
   canWrite,
+  today,
   ...handlers
 }: {
   items: NoteItem[];
   canWrite: boolean;
+  /** YYYY-MM-DD in the profile's zone, for the due dates (spec 048 RF-2). */
+  today?: string;
 } & ChecklistHandlers) {
+  const now = useNow();
+  // HH:MM on this device: an item due at an hour is late past it.
+  const nowTime = now ? new Date(now).toTimeString().slice(0, 5) : "00:00";
   const [draft, setDraft] = useState("");
   const adder = useRef<HTMLInputElement>(null);
   // Never a fixed id: Activity keeps a hidden copy of the page in the DOM.
@@ -64,7 +75,7 @@ export function Checklist({
       <li
         key={item.id}
         data-done={item.done || undefined}
-        className="row-in flex items-center gap-1 rounded-control py-0.5 pr-1 hover:bg-stone"
+        className="row-in relative flex items-center gap-1 rounded-control py-0.5 pr-1 hover:bg-stone"
       >
         <button
           type="button"
@@ -83,30 +94,55 @@ export function Checklist({
             <CheckIcon />
           </span>
         </button>
-        {canWrite ? (
-          <input
-            aria-label={`Texto de «${item.text}»`}
-            defaultValue={item.text}
-            // A change that comes from outside replaces what is shown.
-            key={item.text}
-            maxLength={ITEM_TEXT_MAX}
-            onBlur={(event) => {
-              const text = event.target.value.trim();
-              if (text && text !== item.text) handlers.onRename(item, text);
-              else event.target.value = item.text;
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") event.currentTarget.blur();
-            }}
-            className={`min-h-11 min-w-0 flex-1 rounded-block bg-transparent px-1 text-base outline-none focus-visible:bg-paper focus-visible:ring-2 focus-visible:ring-ink/20 ${item.done ? "text-muted line-through decoration-muted/70" : "text-ink"}`}
+        {/* The date goes under the text so it never squeezes it (390 px). */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          {canWrite ? (
+            <input
+              aria-label={`Texto de «${item.text}»`}
+              defaultValue={item.text}
+              // A change that comes from outside replaces what is shown.
+              key={item.text}
+              maxLength={ITEM_TEXT_MAX}
+              onBlur={(event) => {
+                const text = event.target.value.trim();
+                if (text && text !== item.text) handlers.onRename(item, text);
+                else event.target.value = item.text;
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.currentTarget.blur();
+              }}
+              className={`min-h-11 w-full min-w-0 rounded-block bg-transparent px-1 text-base outline-none focus-visible:bg-paper focus-visible:ring-2 focus-visible:ring-ink/20 ${item.done ? "text-muted line-through decoration-muted/70" : "text-ink"}`}
+            />
+          ) : (
+            <span
+              className={`min-w-0 px-1 py-2 ${item.done ? "text-muted line-through decoration-muted/70" : "text-ink"}`}
+            >
+              {item.text}
+            </span>
+          )}
+          {today && item.dueDate ? (
+            <span
+              className={`-mt-2 px-1 pb-1 text-sm tabular-nums ${
+                !item.done &&
+                isOverdue(item.dueDate, item.dueTime, today, nowTime)
+                  ? "font-semibold text-danger"
+                  : "text-muted"
+              }`}
+            >
+              <span className="sr-only">Fecha límite: </span>
+              {dueLabel(item.dueDate, item.dueTime, today)}
+            </span>
+          ) : null}
+        </div>
+        {canWrite && today && handlers.onDue && !item.done ? (
+          <ItemDueMenu
+            text={item.text}
+            dueDate={item.dueDate ?? null}
+            dueTime={item.dueTime ?? null}
+            today={today}
+            onChange={(due) => handlers.onDue!(item, due)}
           />
-        ) : (
-          <span
-            className={`min-w-0 flex-1 px-1 py-2 ${item.done ? "text-muted line-through decoration-muted/70" : "text-ink"}`}
-          >
-            {item.text}
-          </span>
-        )}
+        ) : null}
         {movable ? (
           <>
             <IconButton

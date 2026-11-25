@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PinIcon } from "@/components/shell/icons";
 import { sortItems } from "@/lib/notes/order";
 import { dueLabel, progress } from "@/lib/notes/progress";
+import { dueLabel as itemDueLabel, nextDue } from "@/lib/notes/due";
 import type { Note } from "@/lib/notes/types";
 import { PendingMark } from "@/components/offline/pending-mark";
 
@@ -21,6 +22,8 @@ export function NoteCard({
   today: string;
 }) {
   const due = dueLabel(note.dueDate, today);
+  // Without a date of its own, the closest of its pending items (spec 048 RF-2).
+  const next = due ? null : nextDue(note.items);
   const done = progress(note.items);
   const pending = sortItems(note.items).filter((item) => !item.done);
   const title =
@@ -88,6 +91,15 @@ export function NoteCard({
             className={due.late ? "font-semibold text-danger" : "text-muted"}
           >
             {due.text}
+          </span>
+        ) : null}
+        {next ? (
+          <span
+            className={
+              next.date < today ? "font-semibold text-danger" : "text-muted"
+            }
+          >
+            Próximo: {itemDueLabel(next.date, next.time, today)}
           </span>
         ) : null}
         {note.calendarName ? (

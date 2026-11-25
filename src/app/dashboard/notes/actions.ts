@@ -8,6 +8,7 @@ import { getNoteErrorMessage, NOTE_MESSAGES } from "@/lib/notes/error-messages";
 import {
   createNoteSchema,
   itemChangeSchema,
+  itemRow,
   newItemSchema,
   noteFieldsSchema,
   noteIdSchema,
@@ -171,7 +172,7 @@ export async function updateItem(
   try {
     const { data, error } = await supabase
       .from("note_items")
-      .update(parsed.data)
+      .update(itemRow(parsed.data))
       .eq("id", id.data)
       .select("id");
     if (error) return { error: getNoteErrorMessage(error) };

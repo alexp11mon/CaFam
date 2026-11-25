@@ -25,6 +25,8 @@ const SOURCES = files(ROOT).map((path) => ({
 // the rail tooltips, the time list, the toast, an event lifted while dragging (spec 017)
 // the round buttons (spec 016 and 015) and the note of a busy block (spec 020).
 const FLOATING = new Set([
+  // The due date menu of an item (spec 048 RF-1).
+  "src/components/notes/item-due-menu.tsx",
   "src/components/calendar/busy-block.tsx",
   // The confirmation of signing out with changes waiting (spec 034 RF-61).
   "src/components/offline/sign-out-guard.tsx",

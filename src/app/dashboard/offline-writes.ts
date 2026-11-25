@@ -20,6 +20,7 @@ import {
 import { purgeDeps, purgeObjects } from "@/lib/images/purge";
 import { getNoteErrorMessage, NOTE_MESSAGES } from "@/lib/notes/error-messages";
 import { getNote } from "@/lib/notes/queries";
+import { itemRow } from "@/lib/notes/schemas";
 import type { Note } from "@/lib/notes/types";
 import {
   createVerdict,
@@ -651,11 +652,18 @@ function noteRow({ dueDate, ...rest }: NoteFields) {
 async function itemNow(supabase: Supabase, id: string) {
   const { data, error } = await supabase
     .from("note_items")
-    .select("text, done")
+    .select("text, done, due_date, due_time")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
-  return data;
+  return (
+    data && {
+      text: data.text,
+      done: data.done,
+      dueDate: data.due_date,
+      dueTime: data.due_time?.slice(0, 5) ?? null,
+    }
+  );
 }
 
 /** One write of notes: an error in the user's words, or "gone" for 0 rows. */
@@ -767,7 +775,7 @@ async function applyNote(
         ? noteWrite(
             supabase
               .from("note_items")
-              .update(change.change)
+              .update(itemRow(change.change))
               .eq("id", change.id)
               .select("id"),
           )

@@ -59,12 +59,39 @@ export const newItemSchema = z.object({
   position: z.number().int().min(0).max(100_000),
 });
 
+/** A due date and its optional time (spec 048 RF-1). */
+export const itemDueSchema = {
+  dueDate: z.iso.date({ error: "Fecha no válida." }).nullable(),
+  dueTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, { error: "Hora no válida." })
+    .nullable(),
+};
+
 export const itemChangeSchema = z
-  .object({ text: itemTextSchema, done: z.boolean() })
+  .object({ text: itemTextSchema, done: z.boolean(), ...itemDueSchema })
   .partial()
   .refine((fields) => Object.keys(fields).length > 0, {
     error: "Nada que cambiar.",
+  })
+  .refine((fields) => !fields.dueTime || fields.dueDate, {
+    error: "Una hora necesita su fecha.",
   });
+
+/** The columns of an item change: the due fields are snake case there. */
+export function itemRow(change: {
+  text?: string;
+  done?: boolean;
+  dueDate?: string | null;
+  dueTime?: string | null;
+}) {
+  const { dueDate, dueTime, ...rest } = change;
+  return {
+    ...rest,
+    ...(dueDate !== undefined ? { due_date: dueDate } : {}),
+    ...(dueTime !== undefined ? { due_time: dueTime } : {}),
+  };
+}
 
 export const restoreItemSchema = newItemSchema.extend({ done: z.boolean() });
 

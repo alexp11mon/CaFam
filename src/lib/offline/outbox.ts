@@ -18,7 +18,13 @@ export interface NoteFields {
 export interface ItemFields {
   text?: string;
   done?: boolean;
+  /** Spec 048 RF-1; absent in changes queued before it. */
+  dueDate?: string | null;
+  dueTime?: string | null;
 }
+
+/** What an item was when the change was made; old changes lack the due fields. */
+export type ItemBase = Required<Pick<ItemFields, "text" | "done">> & ItemFields;
 
 /** What another person could have changed in a whole series (spec 035 D3). */
 export interface SeriesTotals {
@@ -75,14 +81,14 @@ export type OfflineChange =
       type: "item.update";
       noteId: string;
       id: string;
-      base: Required<ItemFields>;
+      base: ItemBase;
       change: ItemFields;
     }
   | {
       type: "item.delete";
       noteId: string;
       id: string;
-      base: Required<ItemFields>;
+      base: ItemBase;
     }
   | {
       type: "item.move";

@@ -19,7 +19,7 @@ import { itemBase, noteBase } from "./describe";
 import { newItemError, newNoteError } from "./limits";
 import { OFFLINE_MESSAGES } from "./messages";
 import { loadPage } from "./navigate";
-import type { NoteFields, OfflineChange } from "./outbox";
+import type { ItemFields, NoteFields, OfflineChange } from "./outbox";
 import { addChange, getQueueState } from "./queue-store";
 import { getSnapshot } from "./snapshot-store";
 import { isQueued, withOutbox } from "./with-outbox";
@@ -80,7 +80,7 @@ export function addItemOrQueue(
 export function updateItemOrQueue(
   noteId: string,
   item: NoteItem,
-  change: { text?: string; done?: boolean },
+  change: ItemFields,
 ): Promise<NoteResult> {
   return run(() => updateItem(item.id, change), {
     type: "item.update",

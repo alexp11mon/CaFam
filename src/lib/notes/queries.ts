@@ -6,7 +6,7 @@ import type { Note } from "./types";
 type Client = SupabaseClient<Database>;
 
 const NOTE_SELECT =
-  "id, kind, title, body, color, pinned, archived, due_date, updated_at, owner_id, calendar_id, calendars(name), note_items(id, text, done, done_at, position)";
+  "id, kind, title, body, color, pinned, archived, due_date, updated_at, owner_id, calendar_id, calendars(name), note_items(id, text, done, done_at, position, due_date, due_time)";
 
 type Row = {
   id: string;
@@ -27,6 +27,8 @@ type Row = {
     done: boolean;
     done_at: string | null;
     position: number;
+    due_date: string | null;
+    due_time: string | null;
   }[];
 };
 
@@ -50,6 +52,8 @@ function toNote(row: Row): Note {
       done: item.done,
       doneAt: item.done_at,
       position: item.position,
+      dueDate: item.due_date,
+      dueTime: item.due_time?.slice(0, 5) ?? null,
     })),
   };
 }
