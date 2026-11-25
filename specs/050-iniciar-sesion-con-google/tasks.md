@@ -12,10 +12,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm run test:db -- signup` en verde con un usuario creado con `full_name` y otro con `name`.
 
   Cubre: RF-4 | Evidencia: 2026-11-25, migración `20261201100000_oauth_profile_name.sql` aplicada en dev; `npm run test:db -- signup` 3/3 (`full_name` recortado a 50, `name`, y la parte local del email si Google no manda nombre; zona `Europe/Madrid` hasta la primera entrada); P8 en verde.
-- [ ] T2 Botón, acción y callback
+- [x] T2 Botón, acción y callback
   Hecho cuando: `npm test -- google-button oauth-actions auth-callback-route route-access` en verde: URL de Google con PKCE, `next` seguro, cancelación y error, botón oculto sin la variable.
 
-  Cubre: RF-1, RF-2, RF-9, RNF-1, RNF-2 | Evidencia: —
+  Cubre: RF-1, RF-2, RF-9, RNF-1, RNF-2 | Evidencia: 2026-11-25, `npx vitest run --project unit google-button oauth-actions auth-callback-route route-access` en verde (URL de Google con `skipBrowserRedirect` y PKCE de `@supabase/ssr`, solo `openid email profile`, `next` seguro, cancelación y error, botón oculto sin `NEXT_PUBLIC_GOOGLE_LOGIN=1`); P8 en verde. Logotipo oficial en `components/brand/google-logo.tsx` (colores como atributos `fill`, que la guardia de diseño no toca).
 - [ ] T3 Formas de entrar
   Hecho cuando: `npm test -- sign-in-methods identity-actions delete-account-dialog` en verde: enlazar, desvincular solo si queda otra, crear contraseña, borrar sin contraseña.
 

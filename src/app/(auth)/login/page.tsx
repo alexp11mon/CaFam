@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth/auth-card";
+import { GoogleButton } from "@/components/auth/google-button";
 import { LoginForm } from "@/components/auth/login-form";
 import { resendConfirmation, signIn } from "../actions";
+import { signInWithGoogle } from "../oauth-actions";
 
 export const metadata: Metadata = { title: "Iniciar sesión" };
 
@@ -16,6 +18,7 @@ export default function LoginPage() {
         href: "/signup",
       }}
     >
+      <GoogleButton action={signInWithGoogle} />
       <LoginForm action={signIn} resendAction={resendConfirmation} />
       <Link
         href="/forgot-password"
