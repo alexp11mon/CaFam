@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth/auth-card";
 import { LoginForm } from "@/components/auth/login-form";
-import { signIn } from "../actions";
+import { resendConfirmation, signIn } from "../actions";
 
 export const metadata: Metadata = { title: "Iniciar sesión" };
 
@@ -16,7 +16,7 @@ export default function LoginPage() {
         href: "/signup",
       }}
     >
-      <LoginForm action={signIn} />
+      <LoginForm action={signIn} resendAction={resendConfirmation} />
       <Link
         href="/forgot-password"
         className="mt-4 block text-center text-sm font-medium text-accent-ink underline underline-offset-4"

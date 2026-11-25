@@ -10,7 +10,15 @@ export interface SignUpState {
 
 export interface SignInState {
   formError?: string;
+  /** The account waits for its link: the form offers to resend it (spec 049 RF-3). */
+  unconfirmed?: boolean;
   values: { email: string };
+}
+
+/** "Reenviar" of the signup link (spec 049 RF-1, RF-3). */
+export interface ResendState {
+  status?: "sent" | "limited";
+  formError?: string;
 }
 
 export type FormAction<State> = (

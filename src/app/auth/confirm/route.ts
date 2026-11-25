@@ -1,4 +1,6 @@
 import { getConfirmPlan } from "@/lib/account/confirm-type";
+import { cookies } from "next/headers";
+import { PENDING_COOKIE, readPending } from "@/lib/auth/pending";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -24,6 +26,13 @@ export async function GET(request: Request) {
     token_hash: tokenHash,
   });
 
-  const destination = error ? plan.failure : plan.success;
+  let destination = error ? plan.failure : plan.success;
+  // The invite that started the sign-up, kept on this device (spec 049 RF-5).
+  if (!error && (plan.otpType === "signup" || plan.otpType === "email")) {
+    const store = await cookies();
+    const next = readPending(store.get(PENDING_COOKIE)?.value)?.next;
+    if (next?.startsWith("/invite/")) destination = next;
+    store.delete(PENDING_COOKIE);
+  }
   return Response.redirect(new URL(destination, url), 303);
 }

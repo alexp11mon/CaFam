@@ -3,13 +3,22 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AUTH_MESSAGES, getAuthErrorMessage } from "@/lib/auth/error-messages";
+import {
+  PENDING_COOKIE,
+  PENDING_COOKIE_OPTIONS,
+  maskEmail,
+  readPending,
+  writePending,
+} from "@/lib/auth/pending";
 import type {
+  ResendState,
   SignInState,
   SignUpField,
   SignUpState,
 } from "@/lib/auth/form-state";
 import { getSafeNextPath } from "@/lib/auth/next-path";
 import { signInSchema, signUpSchema } from "@/lib/auth/schemas";
+import { recoveryEmailSchema } from "@/lib/account/schemas";
 import { createClient } from "@/lib/supabase/server";
 import {
   parseTheme,
@@ -46,6 +55,8 @@ export async function signUp(
   }
 
   const { displayName, email, password, timeZone } = parsed.data;
+  const next = getSafeNextPath(formData.get("next"));
+  let confirmed = true;
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.signUp({
@@ -56,19 +67,64 @@ export async function signUp(
     if (error) {
       return { formError: getAuthErrorMessage(error), values };
     }
-    // "Confirm email" is off (plan D6), so a successful sign-up has a session.
-    if (!data.session) {
-      return { formError: AUTH_MESSAGES.connection, values };
+    // With "Confirm email" on, the account waits for its link (spec 049 RF-1).
+    confirmed = Boolean(data.session);
+    if (!confirmed) {
+      (await cookies()).set(
+        PENDING_COOKIE,
+        writePending({ email, next }),
+        PENDING_COOKIE_OPTIONS,
+      );
     }
   } catch (error) {
     return { formError: getAuthErrorMessage(error), values };
+  }
+
+  if (!confirmed) {
+    redirect(
+      `/signup/check-email?email=${encodeURIComponent(maskEmail(email))}`,
+    );
   }
 
   // A new account starts on the system theme, whatever this device had (spec 011 RF-2).
   (await cookies()).delete(THEME_COOKIE);
 
   // `next` only survives if it is an invite link (RF-7, plan D9).
-  redirect(getSafeNextPath(formData.get("next")));
+  redirect(next);
+}
+
+/**
+ * "Reenviar" of the signup link (spec 049 RF-1, RF-3): the address of the form
+ * (login) or of the pending cookie (after signing up), within the limit.
+ */
+export async function resendConfirmation(
+  _prevState: ResendState,
+  formData: FormData,
+): Promise<ResendState> {
+  const typed = readString(formData, "email");
+  const email =
+    typed || readPending((await cookies()).get(PENDING_COOKIE)?.value)?.email;
+  const parsed = recoveryEmailSchema.safeParse(email ?? "");
+  if (!parsed.success) return { formError: parsed.error.issues[0].message };
+  try {
+    const supabase = await createClient();
+    const { data: allowed, error } = await supabase.rpc(
+      "request_signup_resend",
+      {
+        p_email: parsed.data,
+      },
+    );
+    if (error) return { formError: getAuthErrorMessage(error) };
+    if (!allowed) return { status: "limited" };
+    const { error: sendError } = await supabase.auth.resend({
+      type: "signup",
+      email: parsed.data,
+    });
+    if (sendError) return { formError: getAuthErrorMessage(sendError) };
+  } catch (error) {
+    return { formError: getAuthErrorMessage(error) };
+  }
+  return { status: "sent" };
 }
 
 export async function signIn(
@@ -90,7 +146,11 @@ export async function signIn(
     const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
     if (error) {
-      return { formError: getAuthErrorMessage(error), values };
+      return {
+        formError: getAuthErrorMessage(error),
+        values,
+        ...(error.code === "email_not_confirmed" ? { unconfirmed: true } : {}),
+      };
     }
     // The first paint of the panel already has the theme of the account (spec 011 RF-4).
     const { data: profile } = await supabase

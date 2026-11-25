@@ -85,7 +85,7 @@ describe("/auth/confirm failures (RF-3, RF-12)", () => {
   });
 
   it("an unknown type never reaches Auth and goes to login", async () => {
-    const response = await confirm("type=signup&token_hash=abc123");
+    const response = await confirm("type=invite&token_hash=abc123");
 
     expect(verifyOtp).not.toHaveBeenCalled();
     expect(location(response)).toBe("/login");

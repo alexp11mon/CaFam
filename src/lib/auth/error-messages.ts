@@ -3,6 +3,7 @@ export const AUTH_MESSAGES = {
   invalidCredentials: "Email o contraseña incorrectos.",
   weakPassword: "La contraseña debe tener al menos 8 caracteres.",
   rateLimited: "Demasiados intentos. Espera unos minutos y vuelve a probar.",
+  unconfirmed: "Confirma tu email antes de entrar.",
   connection:
     "No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.",
 } as const;
@@ -12,6 +13,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   user_already_exists: AUTH_MESSAGES.emailTaken,
   email_exists: AUTH_MESSAGES.emailTaken,
   invalid_credentials: AUTH_MESSAGES.invalidCredentials,
+  email_not_confirmed: AUTH_MESSAGES.unconfirmed,
   weak_password: AUTH_MESSAGES.weakPassword,
   over_request_rate_limit: AUTH_MESSAGES.rateLimited,
   over_email_send_rate_limit: AUTH_MESSAGES.rateLimited,

@@ -4,12 +4,21 @@ import { ACCOUNT_MESSAGES } from "./error-messages";
 // RF-2, RF-3, RF-11, RF-12). `next` is never read, so a link cannot redirect elsewhere.
 
 export interface ConfirmPlan {
-  otpType: "recovery" | "email_change";
+  otpType: "recovery" | "email_change" | "signup" | "email";
   success: string;
   failure: string;
 }
 
+// Spec 049 RF-2: the signup link enters the calendar with a notice; a dead one
+// offers a new link.
+const SIGNUP: Omit<ConfirmPlan, "otpType"> = {
+  success: "/dashboard/calendar?confirmed=1",
+  failure: "/signup/check-email?expired=1",
+};
+
 const PLANS = new Map<string, ConfirmPlan>([
+  ["signup", { otpType: "signup", ...SIGNUP }],
+  ["email", { otpType: "email", ...SIGNUP }],
   [
     "recovery",
     {
