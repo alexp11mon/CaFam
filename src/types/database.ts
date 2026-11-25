@@ -1022,6 +1022,8 @@ export type Database = {
           created_at: string
           done: boolean
           done_at: string | null
+          due_date: string | null
+          due_time: string | null
           id: string
           note_id: string
           position: number
@@ -1031,6 +1033,8 @@ export type Database = {
           created_at?: string
           done?: boolean
           done_at?: string | null
+          due_date?: string | null
+          due_time?: string | null
           id?: string
           note_id: string
           position?: number
@@ -1040,6 +1044,8 @@ export type Database = {
           created_at?: string
           done?: boolean
           done_at?: string | null
+          due_date?: string | null
+          due_time?: string | null
           id?: string
           note_id?: string
           position?: number
@@ -1063,6 +1069,7 @@ export type Database = {
           color: string | null
           created_at: string
           due_date: string | null
+          event_id: string | null
           id: string
           kind: string
           owner_id: string | null
@@ -1077,6 +1084,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           due_date?: string | null
+          event_id?: string | null
           id?: string
           kind?: string
           owner_id?: string | null
@@ -1091,6 +1099,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           due_date?: string | null
+          event_id?: string | null
           id?: string
           kind?: string
           owner_id?: string | null
@@ -1104,6 +1113,13 @@ export type Database = {
             columns: ["calendar_id"]
             isOneToOne: false
             referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
           {
@@ -1171,6 +1187,7 @@ export type Database = {
           reminder_minutes: number | null
           share_availability: boolean
           share_busy: boolean
+          show_tasks: boolean
           show_weekends: boolean
           theme: string
           time_zone: string
@@ -1189,6 +1206,7 @@ export type Database = {
           reminder_minutes?: number | null
           share_availability?: boolean
           share_busy?: boolean
+          show_tasks?: boolean
           show_weekends?: boolean
           theme?: string
           time_zone?: string
@@ -1207,6 +1225,7 @@ export type Database = {
           reminder_minutes?: number | null
           share_availability?: boolean
           share_busy?: boolean
+          show_tasks?: boolean
           show_weekends?: boolean
           theme?: string
           time_zone?: string
@@ -1529,6 +1548,19 @@ export type Database = {
       calendar_role_for: {
         Args: { p_calendar_id: string }
         Returns: Database["public"]["Enums"]["calendar_role"]
+      }
+      calendar_tasks: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          calendar_id: string
+          due_date: string
+          due_time: string
+          item_id: string
+          note_id: string
+          note_kind: string
+          note_title: string
+          text: string
+        }[]
       }
       can_read_event_image: { Args: { p_name: string }; Returns: boolean }
       can_read_note: { Args: { p_note_id: string }; Returns: boolean }

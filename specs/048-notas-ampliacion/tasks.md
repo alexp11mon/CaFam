@@ -8,10 +8,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
 
 ## Tareas
 
-- [ ] T1 Esquema
+- [x] T1 Esquema
   Hecho cuando: `npm run test:db -- notes` en verde (028 y nuevos): fechas por elemento, `position` fraccionaria, `event_id` de otro calendario → error, borrar el evento desvincula, `calendar_tasks` con RLS.
 
-  Cubre: RF-1, RF-5, RF-8, RF-11 | Evidencia: —
+  Cubre: RF-1, RF-5, RF-8, RF-11 | Evidencia: 2026-11-25, migración `20261129100000_notes_more` aplicada en dev y tipos regenerados; `npm run test:db -- notes` 22/22 (`notes-more`: fecha y hora por elemento, hora sin fecha rechazada, `position` fraccionaria, evento de otro calendario → `22023`, evento ajeno → `CF404`, borrar el evento desvincula, `calendar_tasks` con RLS y calendarios ocultos, `show_tasks` apagado); P8 completa (3.799 tests, build OK). La FK de `event_id` es simple con un trigger (`notes_event_rules`) en lugar de compuesta: compuesta con `on delete set null` vaciaría también `calendar_id`.
 - [ ] T2 Fecha límite por elemento
   Hecho cuando: `npm test -- notes-due item-due-menu checklist` en verde y capturas a 390 px en claro y oscuro.
 
