@@ -8,6 +8,7 @@ import type { UndoToken } from "@/lib/calendar/undo";
 import { DeleteEventButton } from "./delete-event-button";
 import { PendingMark } from "@/components/offline/pending-mark";
 import { StaleCopyNote } from "./stale-copy-note";
+import { ShareEventButton } from "./share-event-button";
 
 export interface EventDetailData {
   id: string;
@@ -64,7 +65,7 @@ export function EventDetail({
 }: {
   event: EventDetailData;
   timeZone: string;
-  /** Owner or editor; viewers get no buttons (RF-26). */
+  /** Owner or editor; viewers only get "Compartir" (RF-26, spec 047 RF-4). */
   canEdit: boolean;
   deleteAction: FormAction<ConfirmState>;
   /** More buttons next to "Borrar evento" (spec 008: Editar, Duplicar). */
@@ -132,20 +133,24 @@ export function EventDetail({
           {readOnlyEventText(event.readOnly, event.provider ?? "google")}
         </p>
       ) : null}
-      {canEdit ? (
-        <div className="flex flex-wrap gap-3">
-          {actions}
-          {event.repeat ? (
-            <SeriesDelete
-              action={deleteAction}
-              limitReached={event.repeat.limitReached}
-              onDone={onDeleted}
-            />
-          ) : (
-            <DeleteEventButton action={deleteAction} onDone={onDeleted} />
-          )}
-        </div>
-      ) : null}
+      <div className="flex flex-wrap items-start gap-3">
+        {canEdit ? (
+          <>
+            {actions}
+            {event.repeat ? (
+              <SeriesDelete
+                action={deleteAction}
+                limitReached={event.repeat.limitReached}
+                onDone={onDeleted}
+              />
+            ) : (
+              <DeleteEventButton action={deleteAction} onDone={onDeleted} />
+            )}
+          </>
+        ) : null}
+        {/* Readers share too (spec 047 RF-4). */}
+        <ShareEventButton event={event} timeZone={timeZone} />
+      </div>
       {comments}
     </article>
   );

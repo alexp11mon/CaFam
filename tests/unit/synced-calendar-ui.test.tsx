@@ -39,7 +39,7 @@ describe("EventDetail of a read-only synced event (spec 009 RF-8)", () => {
     ["reconnect", /volver a conectar/i],
     // Spec 018 T4: "google" became "provider", named in the text.
     ["provider", /solo puede ver este calendario/i],
-  ] as const)("has no buttons and says why (%s)", (readOnly, text) => {
+  ] as const)("only shares and says why (%s)", (readOnly, text) => {
     render(
       <EventDetail
         event={{
@@ -63,7 +63,10 @@ describe("EventDetail of a read-only synced event (spec 009 RF-8)", () => {
       />,
     );
 
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    // Sharing does not write, so it stays (spec 047 RF-4).
+    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([
+      "Compartir",
+    ]);
     expect(screen.getByText(text)).toBeInTheDocument();
   });
 });

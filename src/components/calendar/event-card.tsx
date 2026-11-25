@@ -33,6 +33,7 @@ import { originFrom } from "@/lib/motion/origin";
 import { POP_OUT_MS } from "@/lib/motion/play";
 import { readOnlyEventText } from "@/lib/sync/read-only";
 import { useEventClipboard } from "./event-clipboard";
+import { ShareEventButton } from "./share-event-button";
 
 export type CardEvent = CalendarEventItem & {
   location?: string | null;
@@ -352,6 +353,18 @@ export function EventCard({
             </button>
           </>
         ) : null}
+        <ShareEventButton
+          event={{
+            id: event.id,
+            title: event.title,
+            startsAt: event.startsAt,
+            endsAt: event.endsAt,
+            allDay: event.allDay,
+            location: event.location ?? null,
+            description: data?.description ?? null,
+          }}
+          timeZone={timeZone}
+        />
         {/* The whole detail, with images and comments, for every member (RF-8). */}
         <Link
           href={`/dashboard/events/${event.id}`}

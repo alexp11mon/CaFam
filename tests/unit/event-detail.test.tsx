@@ -149,10 +149,12 @@ describe("EventDetail (RF-34, RF-36)", () => {
 });
 
 describe("EventDetail permissions and deletion (RF-23, RF-24, RF-26)", () => {
-  it("gives viewers no buttons or links", () => {
+  it("gives viewers only Compartir (spec 047 RF-4)", () => {
     setup({ canEdit: false });
 
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([
+      "Compartir",
+    ]);
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 

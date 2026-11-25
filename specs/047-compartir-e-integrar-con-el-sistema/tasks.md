@@ -8,10 +8,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
 
 ## Tareas
 
-- [ ] T1 Compartir un evento
+- [x] T1 Compartir un evento
   Hecho cuando: `npm test -- share-text event-ics share-event-button` en verde: texto con y sin lugar, día completo, `.ics` válido, `share` con archivo, sin archivo y sin API (menú).
 
-  Cubre: RF-1 a RF-4 | Evidencia: —
+  Cubre: RF-1 a RF-4 | Evidencia: 2026-11-25, `share-text` 3, `event-ics` 4, `share-event-button` 5 en verde; P8 completa (3.772 tests, build OK).
 - [ ] T2 Recepción en el service worker
   Hecho cuando: `npm test -- sw-share-target offline-sw-sync` en verde: el `POST` guarda en `cafam-share` y responde `303`; lo caducado se borra; el bucle sin conexión sigue igual. `CACHE_NAME` sube.
 
