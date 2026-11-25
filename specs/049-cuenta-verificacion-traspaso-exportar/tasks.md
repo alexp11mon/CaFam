@@ -16,10 +16,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- signup-action login-action auth-confirm-route check-email next-path` en verde; prueba en dev con "Confirm email" activado: registro, correo de Brevo, enlace, entrada con aviso, invitación conservada.
 
   Cubre: RF-1 a RF-5 | Evidencia: 2026-11-25, `npx vitest run --project unit signup-action login-action auth-confirm-route check-email next-path account-confirm login-recovery-link` en verde y P8 (3864 tests, build). La prueba real con "Confirm email" activado en dev queda para el usuario: activar la opción es un ajuste del panel de Supabase (pasos 2, 5 y 6 del plan); mientras siga desactivada el registro entra al momento como antes. `account-confirm.test.ts` usaba `signup` como tipo desconocido: ahora usa `invite`.
-- [ ] T3 Traspaso
+- [x] T3 Traspaso
   Hecho cuando: `npm test -- transfer-dialog transfer-actions` en verde (confirmación escribiendo el nombre) y capturas a 390 y 1440 px.
 
-  Cubre: RF-7 a RF-11 | Evidencia: —
+  Cubre: RF-7 a RF-11 | Evidencia: 2026-11-25, `npx vitest run --project unit transfer-dialog transfer-actions` en verde (confirmar escribiendo el nombre, rechazo de traídos con `CF409`); P8 (3868 tests, build); capturas `capturas/traspaso-*` y `capturas/revisa-correo-*` a 390 y 1440 px, claro y oscuro. Sección "Traspasar el calendario" en Editar calendario y aviso `transferred` en la lista de avisos.
 - [ ] T4 ZIP sin dependencias
   Hecho cuando: `npm test -- zip-store account-files` en verde: CRC-32 de vectores conocidos, nombres UTF-8, archivo vacío, y un `.zip` generado en el test se lista con `tar -tf`.
 

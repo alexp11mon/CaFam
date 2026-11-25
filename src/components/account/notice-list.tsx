@@ -25,6 +25,8 @@ function noticeText(notice: AccountNotice): string {
       return `La actualización de «${notice.calendarName}» ha fallado 3 veces seguidas. Se seguirá intentando.`;
     case "ics_failing":
       return `No se pudo actualizar «${notice.calendarName}» desde su enlace.${notice.detail ? ` ${notice.detail}` : ""}`;
+    case "transferred":
+      return `${notice.personName || "Su propietario"} te ha traspasado «${notice.calendarName}». Ahora es tuyo: puedes editarlo, compartirlo y decidir quién entra.`;
   }
 }
 

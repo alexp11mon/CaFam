@@ -4,8 +4,12 @@ import { Suspense } from "react";
 import { CalendarForm } from "@/components/calendar/calendar-form";
 import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
 import { PageShell } from "@/components/calendar/page-shell";
+import { TransferDialog } from "@/components/sharing/transfer-dialog";
 import { getCalendar, requireUser } from "@/lib/calendar/queries";
+import { getMembers } from "@/lib/sharing/queries";
+import { TRANSFER_TEXTS } from "@/lib/sharing/transfer-texts";
 import { deleteCalendar, updateCalendar } from "../../actions";
+import { transferCalendar } from "../../transfer-actions";
 
 export const metadata: Metadata = { title: "Editar calendario" };
 
@@ -16,6 +20,13 @@ async function EditCalendar({ params }: { params: Promise<{ id: string }> }) {
   const calendar = await getCalendar(supabase, userId, id);
   // Only the owner edits a calendar (RF-8); anyone else sees a 404.
   if (!calendar || calendar.role !== "owner") notFound();
+  const others = calendar.synced
+    ? []
+    : (await getMembers(supabase, [id])).flatMap((member) =>
+        member.role === "owner"
+          ? []
+          : [{ userId: member.userId, name: member.name, role: member.role }],
+      );
 
   return (
     <>
@@ -29,6 +40,36 @@ async function EditCalendar({ params }: { params: Promise<{ id: string }> }) {
         submitLabel="Guardar cambios"
         pendingLabel="Guardando…"
       />
+      <section
+        aria-labelledby="transfer-heading"
+        className="flex flex-col gap-3 border-t border-line pt-6"
+      >
+        <h2 id="transfer-heading" className="text-lg font-semibold text-ink">
+          Traspasar el calendario
+        </h2>
+        {calendar.synced ? (
+          // RF-9: the connected account is the owner's.
+          <p className="text-ink">{TRANSFER_TEXTS.synced}</p>
+        ) : others.length ? (
+          <>
+            <p className="text-ink">
+              Otra persona del calendario pasa a tener su propiedad y tú te
+              quedas como Editor.
+            </p>
+            <div>
+              <TransferDialog
+                calendarName={calendar.name}
+                members={others}
+                action={transferCalendar.bind(null, id)}
+              />
+            </div>
+          </>
+        ) : (
+          <p className="text-muted">
+            Invita a alguien al calendario para poder traspasárselo.
+          </p>
+        )}
+      </section>
       <section
         aria-labelledby="danger-heading"
         className="flex flex-col gap-3 border-t border-line pt-6"

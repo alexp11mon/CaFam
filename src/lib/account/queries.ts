@@ -40,7 +40,8 @@ export type NoticeKind =
   | "deleted_calendar"
   | "sync_revoked"
   | "sync_failing"
-  | "ics_failing";
+  | "ics_failing"
+  | "transferred";
 
 export interface AccountNotice {
   id: string;
@@ -62,6 +63,7 @@ const NOTICE_KINDS = new Set<string>([
   "sync_revoked",
   "sync_failing",
   "ics_failing",
+  "transferred",
 ]);
 
 /** Unread notices of the user, newest first; RLS only returns the own ones (RF-23). */
