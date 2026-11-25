@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DeleteAccountDialog } from "@/components/account/delete-account-dialog";
 import { EmailForm } from "@/components/account/email-form";
+import { ExportData } from "@/components/account/export-data";
+import { loadAccountExport, loadCalendarIcs } from "./export-actions";
 import { PasswordForm } from "@/components/account/password-form";
 import { ProfileForm } from "@/components/account/profile-form";
 import { AccentPicker } from "@/components/settings/accent-picker";
@@ -249,6 +251,9 @@ export default function SettingsPage({
       </Section>
       <Section id="settings-password" title="Contraseña">
         <PasswordForm action={changePassword} />
+      </Section>
+      <Section id="settings-export" title="Tus datos">
+        <ExportData load={loadAccountExport} loadIcs={loadCalendarIcs} />
       </Section>
       <Section id="settings-account" title="Cuenta">
         <p className="text-sm text-muted">

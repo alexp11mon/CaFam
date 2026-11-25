@@ -24,10 +24,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- zip-store account-files` en verde: CRC-32 de vectores conocidos, nombres UTF-8, archivo vacío, y un `.zip` generado en el test se lista con `tar -tf`.
 
   Cubre: RNF-1 | Evidencia: 2026-11-25, `npx vitest run --project unit zip-store account-files` 6/6 (CRC-32 de "123456789" y del zorro, bandera UTF-8, archivo vacío, `.zip` listado y extraído con `tar` de Windows); P8 (3874 tests, build).
-- [ ] T5 Descargar mis datos
+- [x] T5 Descargar mis datos
   Hecho cuando: `npm test -- export-data export-actions` en verde (sin datos ajenos ni secretos), prueba en el navegador con imágenes y capturas del progreso.
 
-  Cubre: RF-12 a RF-15, RNF-2 | Evidencia: —
+  Cubre: RF-12 a RF-15, RNF-2 | Evidencia: 2026-11-25, `npx vitest run --project unit export-data export-actions` 6/6 (miembros solo por nombre, sin ids ni emails ajenos; pregunta con más de 300 imágenes; "Cancelar"); P8 (3880 tests, build). Prueba en Edge con `next start`: usuario con un evento, una imagen y una nota; descarga `cafam-2026-11-25.zip` que `tar -tf` lista con `LEEME.txt`, `perfil.json`, `calendarios.json`, `calendarios/Mi calendario.ics`, `comentarios.json`, `notas.json` e `imagenes/Cumple de Ana/1.jpg`. Capturas `capturas/exportar-progreso-*` y `exportar-listo-*` a 390 y 1440 px, claro y oscuro.
 - [ ] T6 Cierre
   Hecho cuando: AGENTS.md (autenticación y "Confirm email"), README y constitución actualizados; `python -m graphify update .`; P8 completa.
 
