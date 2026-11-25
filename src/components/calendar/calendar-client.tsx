@@ -16,6 +16,7 @@ import {
   type DayRange,
   type EventWindow,
 } from "@/lib/calendar/event-window";
+import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 import { coversRange } from "@/lib/offline/range";
 import { monthMarks } from "@/lib/calendar/month-marks";
@@ -39,6 +40,14 @@ import { CalendarHeading } from "./calendar-heading";
 import { CalendarNavContext, type CalendarGo } from "./calendar-nav";
 import { CalendarWorkspace, type PeriodEnter } from "./calendar-workspace";
 import { ViewToolbar } from "./view-toolbar";
+import { useToast } from "@/components/ui/toast";
+import { updateItemOrQueue } from "@/lib/offline/note-actions";
+import {
+  TasksContext,
+  tasksByDay,
+  type CalendarTask,
+  type CalendarTasks,
+} from "./task-block";
 
 type WorkspaceProps = ComponentProps<typeof CalendarWorkspace>;
 
@@ -85,8 +94,18 @@ export function CalendarClient({
   loadWindow,
   loadBusy,
   availableRange,
+  showTasks = false,
+  loadTasks,
+  saveShowTasks,
   ...workspace
 }: {
+  /** "Tareas con fecha" (spec 048 RF-6); without loadTasks there is no switch. */
+  showTasks?: boolean;
+  loadTasks?: (
+    from: string,
+    to: string,
+  ) => Promise<{ tasks: CalendarTask[] } | { error: string }>;
+  saveShowTasks?: (show: boolean) => Promise<{ error?: string }>;
   /** The days the offline copy holds; others are not shown (spec 034 RF-11). */
   availableRange?: DayRange;
   initialView: CalendarView;
@@ -286,72 +305,163 @@ export function CalendarClient({
     };
   }, [busyKey, loadBusy, anyoneShown, busyKnown, range]);
 
+  // Dated tasks of the notes (spec 048 RF-6 to RF-8): asked for per period
+  // while the switch is on, again after every server render.
+  const toast = useToast();
+  const [tasksShown, setTasksShown] = useState(showTasks);
+  const [taskCache, setTaskCache] = useState(() => ({
+    seen: serverWindow,
+    byKey: new Map<string, CalendarTask[]>(),
+  }));
+  if (taskCache.seen !== serverWindow) {
+    setTaskCache({ seen: serverWindow, byKey: new Map() });
+  }
+  const taskKey =
+    view === "year" ? null : `${range.days[0]}|${range.days.at(-1)}`;
+  const taskList = taskKey ? taskCache.byKey.get(taskKey) : undefined;
+  useEffect(() => {
+    if (!tasksShown || !taskKey || !loadTasks || taskList) return;
+    let dropped = false;
+    const [from, to] = taskKey.split("|") as [string, string];
+    void loadTasks(from, to)
+      .then((result) => {
+        if (dropped || "error" in result) return;
+        setTaskCache((current) => ({
+          ...current,
+          byKey: new Map(current.byKey).set(taskKey, result.tasks),
+        }));
+      })
+      .catch(() => {});
+    return () => {
+      dropped = true;
+    };
+  }, [tasksShown, taskKey, loadTasks, taskList]);
+
+  const tasks = useMemo<CalendarTasks | null>(() => {
+    if (!loadTasks) return null;
+    const forget = () => setTaskCache((c) => ({ ...c, byKey: new Map() }));
+    const tick = (task: CalendarTask, done: boolean) =>
+      updateItemOrQueue(
+        task.noteId,
+        {
+          id: task.itemId!,
+          text: task.text,
+          done: !done,
+          doneAt: null,
+          position: 0,
+          dueDate: task.dueDate,
+          dueTime: task.dueTime,
+        },
+        { done },
+      );
+    return {
+      shown: tasksShown,
+      byDay: tasksByDay(taskList ?? []),
+      async setShown(show) {
+        setTasksShown(show);
+        const result = await saveShowTasks?.(show).catch(() => ({
+          error: CALENDAR_MESSAGES.connection,
+        }));
+        if (!result?.error) return;
+        setTasksShown(!show);
+        toast.show(result.error);
+        return false;
+      },
+      // Optimistic, with "Deshacer" (RF-7).
+      async complete(task) {
+        setTaskCache((current) => ({
+          ...current,
+          byKey: new Map(
+            [...current.byKey].map(([key, list]) => [
+              key,
+              list.filter((other) => other.itemId !== task.itemId),
+            ]),
+          ),
+        }));
+        const result = await tick(task, true);
+        if (result.error) {
+          forget();
+          toast.show(result.error);
+          return;
+        }
+        toast.show(`Completada «${task.text}»`, {
+          undo: async () => {
+            await tick(task, false);
+            forget();
+          },
+        });
+      },
+    };
+  }, [loadTasks, saveShowTasks, tasksShown, taskList, toast]);
+
   return (
-    <CalendarNavContext value={go}>
-      {/* On a phone the header, the drawer and "+" do this (spec 016 RF-19). */}
-      {/* Fixed while scrolling, so the views stay at hand (agenda bug, 2026-11-01). */}
-      <div className="sticky top-[4.5rem] z-20 flex flex-wrap items-center justify-between gap-3 rounded-card surface px-4 py-3 max-tab:hidden">
-        <ViewToolbar
+    <TasksContext value={tasks}>
+      <CalendarNavContext value={go}>
+        {/* On a phone the header, the drawer and "+" do this (spec 016 RF-19). */}
+        {/* Fixed while scrolling, so the views stay at hand (agenda bug, 2026-11-01). */}
+        <div className="sticky top-[4.5rem] z-20 flex flex-wrap items-center justify-between gap-3 rounded-card surface px-4 py-3 max-tab:hidden">
+          <ViewToolbar
+            view={view}
+            date={date}
+            today={today}
+            saveLastView={workspace.saveLastView}
+            showWeekends={showWeekends}
+          />
+        </div>
+        <CalendarHeading
           view={view}
           date={date}
           today={today}
           saveLastView={workspace.saveLastView}
-          showWeekends={showWeekends}
         />
-      </div>
-      <CalendarHeading
-        view={view}
-        date={date}
-        today={today}
-        saveLastView={workspace.saveLastView}
-      />
-      {/* A period that was not loaded: the view is already there, its events
+        {/* A period that was not loaded: the view is already there, its events
           are on their way (RF-4). */}
-      <p role="status" className="sr-only">
-        {events.loading ? "Cargando eventos…" : ""}
-      </p>
-      {availableRange &&
-      view !== "year" &&
-      !coversRange(availableRange, {
-        from: range.days[0]!,
-        to: range.days.at(-1)!,
-      }) ? (
-        <p
-          role="alert"
-          className="rounded-control border border-line bg-paper px-4 py-3 text-ink"
-        >
-          {OFFLINE_MESSAGES.outOfRange}
+        <p role="status" className="sr-only">
+          {events.loading ? "Cargando eventos…" : ""}
         </p>
-      ) : null}
-      {events.failed ? (
+        {availableRange &&
+        view !== "year" &&
+        !coversRange(availableRange, {
+          from: range.days[0]!,
+          to: range.days.at(-1)!,
+        }) ? (
+          <p
+            role="alert"
+            className="rounded-control border border-line bg-paper px-4 py-3 text-ink"
+          >
+            {OFFLINE_MESSAGES.outOfRange}
+          </p>
+        ) : null}
+        {events.failed ? (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-danger bg-paper px-4 py-3 text-danger"
+          >
+            <span>No se han podido cargar los eventos de estas fechas.</span>
+            <Button variant="secondary" onClick={events.retry}>
+              Reintentar
+            </Button>
+          </div>
+        ) : null}
         <div
-          role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-danger bg-paper px-4 py-3 text-danger"
+          aria-busy={events.loading || undefined}
+          data-loading={events.loading || undefined}
+          className="flex min-h-0 flex-1 flex-col transition-opacity duration-(--motion-fast-in) data-loading:opacity-70"
         >
-          <span>No se han podido cargar los eventos de estas fechas.</span>
-          <Button variant="secondary" onClick={events.retry}>
-            Reintentar
-          </Button>
+          <Workspace
+            {...workspace}
+            view={view}
+            date={date}
+            enter={location.enter}
+            days={days}
+            events={shown}
+            monthMarks={marks}
+            busyIntervals={busyKnown ?? EMPTY_BUSY}
+            availableRange={availableRange}
+          />
         </div>
-      ) : null}
-      <div
-        aria-busy={events.loading || undefined}
-        data-loading={events.loading || undefined}
-        className="flex min-h-0 flex-1 flex-col transition-opacity duration-(--motion-fast-in) data-loading:opacity-70"
-      >
-        <Workspace
-          {...workspace}
-          view={view}
-          date={date}
-          enter={location.enter}
-          days={days}
-          events={shown}
-          monthMarks={marks}
-          busyIntervals={busyKnown ?? EMPTY_BUSY}
-          availableRange={availableRange}
-        />
-      </div>
-    </CalendarNavContext>
+      </CalendarNavContext>
+    </TasksContext>
   );
 }
 

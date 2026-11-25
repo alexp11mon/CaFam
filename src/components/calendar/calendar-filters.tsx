@@ -12,6 +12,8 @@ import { useFolded } from "@/lib/hooks/use-folded";
 import { ORPHAN_GROUP_ID } from "@/lib/calendar/grouping";
 import { assignTints } from "@/lib/people/avatar";
 import type { FilterSection } from "./calendar-workspace";
+import { useCalendarTasks } from "./task-block";
+import { Switch } from "@/components/ui/switch";
 
 export interface FilterCategory {
   id: string;
@@ -336,6 +338,8 @@ export function CalendarFilters({
   const [ordering, setOrdering] = useState(false);
   // The export reads the server: not offline (spec 043 RF-2).
   const online = useConnection();
+  // "Tareas con fecha", only inside the calendar (spec 048 RF-6).
+  const tasks = useCalendarTasks();
   // With nobody else sharing, the person level would only repeat my own name.
   const showPeople = groups.length > 1;
   const people = groups.filter((group) => !group.groupId);
@@ -433,6 +437,16 @@ export function CalendarFilters({
           </SectionItem>
         ))}
       </ul>
+      {tasks && !folded ? (
+        <div className="border-t border-line pt-2">
+          <Switch
+            checked={tasks.shown}
+            onCheckedChange={tasks.setShown}
+            label="Tareas con fecha"
+            description="Lo pendiente de tus notas, el día que vence"
+          />
+        </div>
+      ) : null}
       {folded || !online ? null : (
         <a
           href="/api/ics/export?visible=1"

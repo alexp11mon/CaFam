@@ -20,10 +20,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- notes-order use-item-drag checklist` en verde: arrastre, mantener pulsado, Alt+flechas con anuncio, posición entre dos y renumerado.
 
   Cubre: RF-3 a RF-5, RNF-1 | Evidencia: 2026-11-25, `npm test -- notes-order use-item-drag notes-ui` en verde (`placeItem` escribe una fila entre dos y renumera sin hueco; arrastre con ratón al instante, dedo tras 300 ms, dedo rápido = desplazar; Alt+↑/↓ en el asa con "Movido a la posición 2 de 2"); P8 completa (3.823 tests, build OK). Prueba real en Edge (`next start`): arrastrar "Crema" al principio con ratón a 1440 px y manteniendo pulsado con el dedo (eventos táctiles CDP) a 390 px, el orden queda guardado; capturas `arrastrando-*`. El asa sustituye a los botones Subir/Bajar; el teclado sigue intercambiando con el vecino (dos filas).
-- [ ] T4 Vencimientos en el calendario
+- [x] T4 Vencimientos en el calendario
   Hecho cuando: `npm test -- task-block calendar-filters week-view month-view agenda-view` y `npm run test:db -- calendar-tasks` en verde; capturas a 390 y 1440 px.
 
-  Cubre: RF-6 a RF-8 | Evidencia: —
+  Cubre: RF-6 a RF-8 | Evidencia: 2026-11-25, `npm test -- task-block calendar-filters week-view month-view agenda-view` en verde (bloque con casilla y enlace a la nota, franja de día completo, pie de la celda del mes con "+N", día de la agenda, interruptor "Tareas con fecha" en los filtros); `npm run test:db -- calendar-tasks` 2/2 (interruptor propio, completar quita la tarea y Deshacer la devuelve, nadie ve las personales de otro); P8 completa (3.831 tests, build OK). Prueba real en Edge: marcar "Pan" en el calendario lo guarda hecho y "Deshacer" lo devuelve. Capturas `tareas-*` a 390 y 1440 px. Límite conocido: la agenda solo pinta días con eventos, así que una tarea en un día sin eventos solo se ve en semana, día y mes. Completar desde el calendario pasa por `updateItemOrQueue` (también sin conexión).
 - [ ] T5 Notas de un evento
   Hecho cuando: `npm test -- event-notes note-form event-panel` y `npm run test:db -- notes-event` en verde (repetición materializada).
 

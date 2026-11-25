@@ -40,6 +40,8 @@ import {
   setShowBusy,
 } from "./preferences-actions";
 import { loadBusy, loadCalendarWindow } from "./window-actions";
+import { loadTasks } from "./task-actions";
+import { setShowTasks } from "../settings/actions";
 
 export const metadata: Metadata = { title: "Calendario" };
 
@@ -169,6 +171,9 @@ async function CalendarContent({
       createAction={createEvent}
       userId={userId}
       showWeekends={profile.showWeekends}
+      showTasks={profile.showTasks}
+      loadTasks={loadTasks}
+      saveShowTasks={setShowTasks}
       defaultDuration={profile.duration}
       busyPeople={busyPeople}
       setShowBusy={setShowBusy}

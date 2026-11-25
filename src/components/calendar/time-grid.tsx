@@ -30,6 +30,7 @@ import { BusyBlock, isBusyItem, type BusyGridItem } from "./busy-block";
 import { DraggableEvent } from "./draggable-event";
 import { ScrollOnMount } from "./scroll-on-mount";
 import { SlotLayer } from "./slot-layer";
+import { DayTasks } from "./task-block";
 
 /** The event being created, drawn at its hours (spec 008 RF-40). */
 export interface GridDraft {
@@ -175,6 +176,18 @@ export function TimeGrid({
                 style={{
                   gridColumn: index + 2,
                   gridRow: `1 / span ${Math.max(1, ...banners.map((b) => b.lane + 1))}`,
+                }}
+              />
+            ))}
+            {/* Dated tasks under the all-day events (spec 048 RF-6). */}
+            {days.map((day, index) => (
+              <DayTasks
+                key={`tasks-${day}`}
+                day={day}
+                className="mx-0.5"
+                style={{
+                  gridColumn: index + 2,
+                  gridRow: Math.max(1, ...banners.map((b) => b.lane + 1)) + 1,
                 }}
               />
             ))}

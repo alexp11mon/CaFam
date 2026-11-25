@@ -103,7 +103,8 @@ const VIEW_NOT_SAVED = "No se ha podido guardar. Inténtalo de nuevo.";
 type ViewOptionsUpdate =
   | { show_weekends: boolean }
   | { default_event_minutes: number }
-  | { badge_today: boolean };
+  | { badge_today: boolean }
+  | { show_tasks: boolean };
 
 async function saveViewOption(update: ViewOptionsUpdate): Promise<Result> {
   const { supabase, userId } = await requireActionUser();
@@ -138,4 +139,10 @@ export async function setDefaultDuration(minutes: number): Promise<Result> {
   const parsed = durationSchema.safeParse(minutes);
   if (!parsed.success) return { error: parsed.error.issues[0]!.message };
   return saveViewOption({ default_event_minutes: parsed.data });
+}
+
+/** "Tareas con fecha" in the calendar, for every device (spec 048 RF-6, plan D3). */
+export async function setShowTasks(show: boolean): Promise<Result> {
+  if (typeof show !== "boolean") return { error: VIEW_NOT_SAVED };
+  return saveViewOption({ show_tasks: show });
 }

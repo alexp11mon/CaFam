@@ -8,6 +8,7 @@ import { fitWeek, layoutMonthWeek } from "@/lib/calendar/month-lanes";
 import { boxOf, type Box } from "@/lib/calendar/popover";
 import { weekdayIndex } from "@/lib/calendar/time-zone";
 import { DraggableEvent } from "./draggable-event";
+import { DayTasks } from "./task-block";
 
 const INITIALS = ["L", "M", "X", "J", "V", "S", "D"];
 // A lane is an 18 px block and a 2 px gap (EventBlock "line", gap-y-0.5).
@@ -127,6 +128,12 @@ export function MonthView({
                 >
                   {Number(day.slice(8))}
                 </CalendarLink>
+                {/* At the foot of the cell, over the events (spec 048 RF-6). */}
+                <DayTasks
+                  day={day}
+                  limit={1}
+                  className="absolute inset-x-0.5 bottom-0.5 z-10"
+                />
                 {draft?.day === day ? (
                   <span
                     aria-hidden="true"

@@ -22,6 +22,7 @@ import { addDays } from "@/lib/calendar/time-zone";
 import type { AgendaEvent } from "@/lib/calendar/to-view-events";
 import { todayType, typesOf } from "@/lib/calendar/transition-types";
 import { EventBlock } from "./event-block";
+import { DayTasks } from "./task-block";
 
 export type { AgendaEvent } from "@/lib/calendar/to-view-events";
 
@@ -403,18 +404,22 @@ const AgendaDay = memo(
             {item.number}
           </span>
         </div>
-        <ul className="flex min-w-0 flex-1 flex-col gap-1.5 pt-1">
-          {item.entries.map((entry) => (
-            <li key={entry.event.id}>
-              <EventBlock
-                event={entry.event}
-                timeZone={timeZone}
-                shape="card"
-                line={entry.line}
-              />
-            </li>
-          ))}
-        </ul>
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5 pt-1">
+          <ul className="flex flex-col gap-1.5">
+            {item.entries.map((entry) => (
+              <li key={entry.event.id}>
+                <EventBlock
+                  event={entry.event}
+                  timeZone={timeZone}
+                  shape="card"
+                  line={entry.line}
+                />
+              </li>
+            ))}
+          </ul>
+          {/* Context, not props: the memo keeps the day, the tasks still change (spec 048 RF-6). */}
+          <DayTasks day={item.key} />
+        </div>
       </section>
     );
   },

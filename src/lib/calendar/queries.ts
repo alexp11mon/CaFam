@@ -245,6 +245,8 @@ export interface CalendarProfile {
   lastView: string | null;
   showWeekends: boolean;
   duration: Duration;
+  /** "Tareas con fecha" (spec 048 RF-6). */
+  showTasks: boolean;
 }
 
 /**
@@ -257,7 +259,9 @@ export async function getCalendarProfile(
 ): Promise<CalendarProfile> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("time_zone, last_view, show_weekends, default_event_minutes")
+    .select(
+      "time_zone, last_view, show_weekends, default_event_minutes, show_tasks",
+    )
     .eq("id", userId)
     .maybeSingle();
   if (error) throw error;
@@ -266,6 +270,7 @@ export async function getCalendarProfile(
     lastView: data?.last_view ?? null,
     showWeekends: data?.show_weekends ?? true,
     duration: parseDuration(data?.default_event_minutes),
+    showTasks: data?.show_tasks ?? false,
   };
 }
 

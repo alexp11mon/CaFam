@@ -8,6 +8,7 @@ import {
 import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { ORPHAN_GROUP_ID, type PersonGroup } from "@/lib/calendar/grouping";
 import { getVisibleRange } from "@/lib/calendar/ranges";
+import { TasksContext } from "@/components/calendar/task-block";
 
 // The workspace listens to the calendar shortcuts, which navigate (spec 008 T12).
 vi.mock("next/navigation", () => ({
@@ -86,6 +87,7 @@ type Result = { error?: string };
 
 function setup(
   overrides: Partial<React.ComponentProps<typeof CalendarWorkspace>> = {},
+  wrapper?: React.JSXElementConstructor<{ children: React.ReactNode }>,
 ) {
   const setCalendarVisibility = vi.fn<
     (id: string, visible: boolean) => Promise<Result>
@@ -114,6 +116,7 @@ function setup(
       saveOrder={saveOrder}
       {...overrides}
     />,
+    { wrapper },
   );
   return { setCalendarVisibility, setPersonVisibility, saveOrder };
 }
@@ -555,6 +558,32 @@ describe("folding (spec 032 RF-3 to RF-7)", () => {
     // Ordering did not change what stays folded.
     expect(
       screen.queryByRole("checkbox", { name: "Familia de Ana" }),
+    ).toBeNull();
+  });
+});
+
+describe("Tareas con fecha (spec 048 RF-6)", () => {
+  it("is a switch of the filters that the calendar keeps", async () => {
+    const setShown = vi.fn();
+    setup({}, ({ children }) => (
+      <TasksContext
+        value={{ shown: false, setShown, byDay: new Map(), complete: vi.fn() }}
+      >
+        {children}
+      </TasksContext>
+    ));
+    const toggle = screen
+      .getAllByRole("switch", { name: /Tareas con fecha/ })
+      .at(0)!;
+    expect(toggle).toHaveAttribute("aria-checked", "false");
+    await userEvent.click(toggle);
+    expect(setShown).toHaveBeenCalledWith(true);
+  });
+
+  it("is not there outside the calendar", () => {
+    setup();
+    expect(
+      screen.queryByRole("switch", { name: /Tareas con fecha/ }),
     ).toBeNull();
   });
 });
