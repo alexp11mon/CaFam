@@ -20,10 +20,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- transfer-dialog transfer-actions` en verde (confirmación escribiendo el nombre) y capturas a 390 y 1440 px.
 
   Cubre: RF-7 a RF-11 | Evidencia: 2026-11-25, `npx vitest run --project unit transfer-dialog transfer-actions` en verde (confirmar escribiendo el nombre, rechazo de traídos con `CF409`); P8 (3868 tests, build); capturas `capturas/traspaso-*` y `capturas/revisa-correo-*` a 390 y 1440 px, claro y oscuro. Sección "Traspasar el calendario" en Editar calendario y aviso `transferred` en la lista de avisos.
-- [ ] T4 ZIP sin dependencias
+- [x] T4 ZIP sin dependencias
   Hecho cuando: `npm test -- zip-store account-files` en verde: CRC-32 de vectores conocidos, nombres UTF-8, archivo vacío, y un `.zip` generado en el test se lista con `tar -tf`.
 
-  Cubre: RNF-1 | Evidencia: —
+  Cubre: RNF-1 | Evidencia: 2026-11-25, `npx vitest run --project unit zip-store account-files` 6/6 (CRC-32 de "123456789" y del zorro, bandera UTF-8, archivo vacío, `.zip` listado y extraído con `tar` de Windows); P8 (3874 tests, build).
 - [ ] T5 Descargar mis datos
   Hecho cuando: `npm test -- export-data export-actions` en verde (sin datos ajenos ni secretos), prueba en el navegador con imágenes y capturas del progreso.
 
