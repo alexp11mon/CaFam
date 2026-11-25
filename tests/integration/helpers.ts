@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import { timedFetch, withRetry } from "./net";
 
 // Integration tests run against the Supabase `dev` project (plan D8, D9).
 // Values come from `.env.test.local`, loaded by vitest.config.ts.
@@ -18,8 +19,10 @@ const SECRET_KEY = requireEnv("SUPABASE_SECRET_KEY");
 
 export const TEST_PASSWORD = "test-password-1234";
 
+// A hang fails in 15 s with the call that hung (spec 051 RF-10).
 const clientOptions = {
   auth: { persistSession: false, autoRefreshToken: false },
+  global: { fetch: timedFetch() },
 } as const;
 
 export type TypedClient = SupabaseClient<Database>;
@@ -50,19 +53,21 @@ export async function createTestUser(
   metadata: Record<string, unknown> = { display_name: "Test" },
 ): Promise<TestUser> {
   const email = uniqueEmail();
-  const { data, error } = await admin.auth.admin.createUser({
-    email,
-    password: TEST_PASSWORD,
-    email_confirm: true,
-    user_metadata: metadata,
-  });
+  // Only user management is retried, on network or rate-limit errors (RF-11).
+  const { data, error } = await withRetry(() =>
+    admin.auth.admin.createUser({
+      email,
+      password: TEST_PASSWORD,
+      email_confirm: true,
+      user_metadata: metadata,
+    }),
+  );
   if (error) throw error;
 
   const client = anonClient();
-  const { error: signInError } = await client.auth.signInWithPassword({
-    email,
-    password: TEST_PASSWORD,
-  });
+  const { error: signInError } = await withRetry(() =>
+    client.auth.signInWithPassword({ email, password: TEST_PASSWORD }),
+  );
   if (signInError) throw signInError;
 
   return { id: data.user.id, email, client };
@@ -72,7 +77,7 @@ export async function createTestUser(
 // Supabase answers "Database error deleting user", so retry a few times.
 export async function deleteTestUser(id: string): Promise<void> {
   for (let attempt = 1; ; attempt++) {
-    const { error } = await admin.auth.admin.deleteUser(id);
+    const { error } = await withRetry(() => admin.auth.admin.deleteUser(id));
     if (!error) return;
     if (attempt === 4) throw error;
     await new Promise((resolve) => setTimeout(resolve, 300 * attempt));

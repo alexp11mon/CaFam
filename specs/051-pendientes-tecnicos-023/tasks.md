@@ -22,10 +22,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- csp next-config-headers csp-report-route` en verde y recorrido con Playwright y Edge sobre `next start -p 3100` (login, calendario, detalle con imagen, asistente, notas, ajustes, tema oscuro, sin conexión) sin errores de CSP en la consola.
 
   Cubre: RF-6 a RF-9 | Evidencia: 2026-11-25. `npm test -- csp next-config-headers csp-report-route` 11/11; P8 completo en verde (417 archivos, 3912 tests). Recorrido con Playwright y Edge sobre `next start -p 3100`, claro y oscuro (login, calendario, detalle con imagen, asistente en streaming, notas, ajustes, `/offline`, conexiones): **ninguna** violación de la política aplicada, imagen visible, `data-theme` correcto y sin errores de página. La *Report-Only* estricta envía unos 13 avisos por página: los scripts en línea de Next (datos RSC) y un `eval` de prueba de una librería, como preveía D3. Con eso queda medido que `script-src` no se puede endurecer hoy; conviene quitar la cabecera *Report-Only* tras unos días en producción para no gastar invocaciones.
-- [ ] T4 Helpers de `test:db`
+- [x] T4 Helpers de `test:db`
   Hecho cuando: `npm test -- integration-helpers` (con `fetch` simulado que se cuelga y que da `rate limit`) en verde y `npm run test:db` completo en verde.
 
-  Cubre: RF-10, RF-11 | Evidencia: —
+  Cubre: RF-10, RF-11 | Evidencia: 2026-11-25. `npm test -- integration-helpers` 5/5 (cuelgue → "Supabase dev no respondió en …"; `rate limit` reintentado 2 veces con 2 y 5 s; otros errores y aserciones nunca). `npm run test:db` completo: 72 de 73 archivos y 707 de 708 tests a la primera; el fallo era una expectativa desfasada de la 048 T6 (`assistant-tools`: falta `list_notes`, herramienta de solo lectura), corregida aquí y en verde (21/21).
 - [ ] T5 Lectura por rango
   Hecho cuando: `node scripts/perf/range-explain.mjs` ejecutado en dev con la salida de `EXPLAIN` antes (y después, si se cambia) en la evidencia; si hay migración, `npm run test:db -- range-performance` en verde.
 

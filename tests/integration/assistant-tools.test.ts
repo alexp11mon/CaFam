@@ -274,6 +274,8 @@ describe("tool definitions (RF-25)", () => {
       "search_events",
       "find_free_time",
       "get_comments",
+      // Spec 028: the notes, read only too.
+      "list_notes",
     ]);
   });
 });
