@@ -48,7 +48,13 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/lib/calendar/queries", () => ({
   requireActionUser: async () => ({
-    supabase: { from: (table: string) => query(table) },
+    supabase: {
+      from: (table: string) => query(table),
+      rpc: async (name: string, args: unknown) => {
+        h.writes.push({ table: name, op: "rpc", payload: args });
+        return { data: null, error: null };
+      },
+    },
     userId: "u1",
   }),
   getProfileTimeZone: async () => "Europe/Madrid",
@@ -104,10 +110,19 @@ describe("a single event that becomes a series", () => {
       const state = await updateEvent(EVENT_ID, EMPTY, form());
 
       expect(state.done).toBe("updated");
-      expect(h.writes.map((write) => write.op)).toEqual(["insert", "update"]);
+      expect(h.writes.map((write) => write.op)).toEqual([
+        "insert",
+        "update",
+        "rpc",
+      ]);
       expect(h.writes[0].payload).toMatchObject({
         recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=FR",
-        created_by: "author",
+      });
+      // The server makes the series the original author's (spec 051 RF-3).
+      expect(h.writes[2]).toEqual({
+        table: "convert_keep_author",
+        op: "rpc",
+        payload: { p_event_id: EVENT_ID },
       });
       // The original row keeps its images and comments as an occurrence.
       expect(h.writes[1].payload).toMatchObject({

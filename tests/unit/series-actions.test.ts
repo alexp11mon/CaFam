@@ -430,7 +430,10 @@ describe("updateEvent turning a single event into a series (RF-21, D7)", () => {
     await updateEvent(EVENT_ID, EMPTY, form({ repeat: "weekly" }));
     expect(h.inserted[0]).toMatchObject({
       recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=WE",
-      created_by: "u2",
+    });
+    // The server gives the series the original's author (spec 051 RF-3).
+    expect(h.rpc).toHaveBeenCalledWith("convert_keep_author", {
+      p_event_id: EVENT_ID,
     });
     expect(h.updates[0]!.row).toMatchObject({
       series_id: EVENT_ID,

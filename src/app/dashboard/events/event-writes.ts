@@ -493,7 +493,7 @@ export async function convertToSeries(
 
   const { data: series, error } = await supabase
     .from("events")
-    .insert({ ...seriesRow(data), ...columns, created_by: event.createdBy })
+    .insert({ ...seriesRow(data), ...columns })
     .select("id")
     .single();
   if (error) return seriesFailure(error, values);
@@ -512,6 +512,9 @@ export async function convertToSeries(
     await supabase.from("events").delete().eq("id", series.id);
     return seriesFailure(attachError, values);
   }
+  // The server makes the caller the author of the new row; the series keeps
+  // the original's (spec 051 RF-3). A failure only leaves the caller as author.
+  await supabase.rpc("convert_keep_author", { p_event_id: event.id });
   return { id: event.id };
 }
 

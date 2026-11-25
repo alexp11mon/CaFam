@@ -1587,6 +1587,7 @@ export type Database = {
         }
         Returns: Json
       }
+      convert_keep_author: { Args: { p_event_id: string }; Returns: undefined }
       copy_calendar_for_owner: {
         Args: { p_calendar_id: string; p_user_id: string }
         Returns: string
