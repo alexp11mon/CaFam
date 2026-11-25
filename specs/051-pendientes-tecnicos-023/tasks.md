@@ -2,7 +2,7 @@
 
 Spec: `specs/051-pendientes-tecnicos-023/spec.md`. Plan: `specs/051-pendientes-tecnicos-023/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: pendiente.
+> Estado: hecha (T1–T6, 2026-11-25).
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T1, T2 y T5.
 
@@ -26,12 +26,13 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- integration-helpers` (con `fetch` simulado que se cuelga y que da `rate limit`) en verde y `npm run test:db` completo en verde.
 
   Cubre: RF-10, RF-11 | Evidencia: 2026-11-25. `npm test -- integration-helpers` 5/5 (cuelgue → "Supabase dev no respondió en …"; `rate limit` reintentado 2 veces con 2 y 5 s; otros errores y aserciones nunca). `npm run test:db` completo: 72 de 73 archivos y 707 de 708 tests a la primera; el fallo era una expectativa desfasada de la 048 T6 (`assistant-tools`: falta `list_notes`, herramienta de solo lectura), corregida aquí y en verde (21/21).
-- [ ] T5 Lectura por rango
+- [x] T5 Lectura por rango
   Hecho cuando: `node scripts/perf/range-explain.mjs` ejecutado en dev con la salida de `EXPLAIN` antes (y después, si se cambia) en la evidencia; si hay migración, `npm run test:db -- range-performance` en verde.
 
-  Cubre: RF-12 | Evidencia: —
-- [ ] T6 Cierre
+  Cubre: RF-12 | Evidencia: 2026-11-25. `node --env-file=.env.test.local scripts/perf/range-explain.mjs` en dev (20.000 eventos en 30 calendarios repartidos en dos años; ventana de 6 semanas; como `authenticated` con sus claims): `Index Scan using events_calendar_id_starts_at_idx` con `Index Cond: starts_at < fin`, filtro `recurrence IS NULL AND ends_at >= inicio AND is_calendar_member(calendar_id)` (1.152 filas devueltas, 10.084 descartadas), *Planning* 4,6 ms, **Execution 46,6 ms**. Usa índice y queda por debajo de 50 ms: según RF-12 no se cambia nada. Nota: el coste crece con los eventos anteriores a la ventana (solo acota por `starts_at < fin`); si un calendario real supera ese volumen, el siguiente paso sería acotar también por abajo (p. ej. `starts_at >= inicio − duración máxima`). Datos de prueba borrados (0 calendarios y 0 eventos «Rango»).
+- [x] T6 Cierre
   Hecho cuando: "Diferido" de la 023 marca lo resuelto con la spec 051, AGENTS.md (patrones del autor y la cuota, trampas de la CSP) actualizado; `python -m graphify update .`; P8 completa.
+  Evidencia: 2026-11-25. «Diferido» de la 023 marca autor, cuota, CSP, helpers y lectura por rango con la spec 051; AGENTS.md (estado, fila 051, migraciones pendientes, patrones de autor y cuota, CSP y trampa de `test:db`); `python -m graphify update .`; P8 en verde (418 archivos, 3.917 tests, build compilado; `trash-list` y `write-ics` fallaron una vez por carga con el grafo regenerándose y pasan solos y en la repetición completa).
 
 ## Trazabilidad
 

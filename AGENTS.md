@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Lo imprescindible para trabajar en el proyecto. El bloque de arriba lo gestiona `next dev`: no lo edites. El detalle de cada funcionalidad está en su spec (`specs/NNN-nombre/spec.md`, `plan.md`, `tasks.md`) y en el grafo de graphify; la fuente de verdad de las reglas es [`docs/constitution.md`](docs/constitution.md). Ante una contradicción manda la spec más reciente.
 
-> Última actualización: 2026-11-23 (resumido). Specs cerradas hasta la 049, la 050 hecha salvo su prueba real (048–050 en sus ramas); `main` está subida y la contiene.
+> Última actualización: 2026-11-25 (resumido). Specs cerradas hasta la 049 y la 051; la 050 hecha salvo su prueba real (047–051 en sus ramas, cada una sobre la anterior; `main` aún no las contiene).
 
 ## 0. Mapa del proyecto: graphify (obligatorio, enmienda 13)
 
@@ -92,14 +92,15 @@ Todas cerradas salvo la 036 (hecha; falta `EVAL_PART=write npm run eval:assistan
 | 048 | Notas: fecha por elemento (`note_items.due_date/due_time`), orden fraccionario arrastrando (`lib/notes/order.ts`), tareas en el calendario (`calendar_tasks`, `TaskBlock`), notas de un evento (`notes.event_id`), Venito crea notas (`create_notes`, `add_note_items`) |
 | 049 | Confirmar el email al registrarse, traspasar un calendario (`transfer_calendar`, solo no traídos, revoca invitaciones/código/feed/suscripción) y "Descargar mis datos" (`.zip` *store* hecho a mano en `lib/export/`, en el navegador) |
 | 050 | "Continuar con Google" con Supabase Auth (PKCE, `/auth/callback`), "Formas de entrar" en Ajustes; falta la prueba real (T5) |
+| 051 | Diferidos de la 023: autor impuesto (trigger `events_author`, `convert_keep_author`), cuota del asistente reservada (`assistant_reserve`/`answered`/`release`), CSP completa + *Report-Only* (`lib/security/csp.ts`, `/api/csp-report`), plazo y reintento en los helpers de `test:db`, medida de la lectura por rango |
 
 ### Pendiente del usuario (comprueba antes si ya está hecho)
 
-1. `supabase db push` a **prod antes de desplegar** de las migraciones aplicadas solo en dev: las de la 023 (`restore_event_guard`, `assistant_busy_scope`, `join_code_lock`), 028 (`notes`, `notes_calendar_functions`), 038 (`sync_apply_window`), 039 (`event_search`), 040 (`push`), 042 (`views_year`), 043 (`ics_feeds`), 044 (`ics_import_into`, `ics_subscriptions`), 045 (`event_time_zone`, `event_time_zone_keep`, `ics_feed_zone`), 046 (`trash_30_days`), 047 (`profile_badge`), 048 (`notes_more`), 049 (`account_more`) y 050 (`oauth_profile_name`).
+1. `supabase db push` a **prod antes de desplegar** de las migraciones aplicadas solo en dev: las de la 023 (`restore_event_guard`, `assistant_busy_scope`, `join_code_lock`), 028 (`notes`, `notes_calendar_functions`), 038 (`sync_apply_window`), 039 (`event_search`), 040 (`push`), 042 (`views_year`), 043 (`ics_feeds`), 044 (`ics_import_into`, `ics_subscriptions`), 045 (`event_time_zone`, `event_time_zone_keep`, `ics_feed_zone`), 046 (`trash_30_days`), 047 (`profile_badge`), 048 (`notes_more`), 049 (`account_more`), 050 (`oauth_profile_name`) y 051 (`event_author`, `assistant_quota_reserve`; **antes de desplegar**: la ruta del asistente llama a `assistant_reserve`).
 2. Claves VAPID (`node scripts/make-vapid-keys.mjs`) en Vercel y `sync_app_url` en el Vault de prod.
 3. Pruebas en iPhone/Android: push, sin conexión, Google/iCloud reales, papelera, zona horaria; eval y cierre de la 036.
 
-Siguientes trabajos propuestos: periodos contiguos ya pintados (cambio de mes < 80 ms con CPU lenta), sacar zod del JS inicial, rediseñar formularios largos con estilo Nexo, diferidos de la 023 (`events.created_by` elegido por el cliente, carrera en la cuota del asistente, CSP completa, timeout en helpers de `test:db`), actualizaciones mayores de herramientas (cada una con su spec).
+Siguientes trabajos propuestos: periodos contiguos ya pintados (cambio de mes < 80 ms con CPU lenta), sacar zod del JS inicial, rediseñar formularios largos con estilo Nexo, quitar la cabecera *Report-Only* de la CSP tras revisar los avisos `csp-report` en producción, actualizaciones mayores de herramientas (cada una con su spec).
 
 ## 3. Reglas que más afectan a un agente
 
@@ -166,7 +167,7 @@ Monolito Next.js en Vercel + Supabase (Auth y Postgres, donde **RLS impone los p
 - **APIs con `Authorization: Bearer ${CRON_SECRET}`** (POST, comprobado con `hasCronSecret`): `sync/run`, `images/purge`, `push/run`, `ics/refresh` (las despierta `pg_cron` vía `*_trigger()` con `sync_app_url` del Vault) y `cron/keep-alive` (GET, cron diario de Vercel).
 - **Públicas:** `/offline`, `/privacy`, `/invite/[token]` (preview con sesión; `no-referrer`, `noindex`), `/api/sync/google-push` (siempre 200), `/api/ics/<token>.ics` (el token es la credencial; 404/429 sin cuerpo).
 - **Con sesión:** `/api/assistant` (POST NDJSON `status`/`action`/`done`/`error`; 400/401/429 en JSON; GET 204 precalienta), `/api/ics/export`, `/api/offline/{apply,image}` (los usa el service worker), `/api/oauth/[provider]/{start,callback}`.
-- Cabeceras de seguridad en `next.config.ts`: la regla global va primera porque **gana la última que coincide**.
+- Cabeceras de seguridad en `next.config.ts`: la regla global va primera porque **gana la última que coincide**. La CSP sale de `buildCsp()` (`lib/security/csp.ts`): un origen externo nuevo (imágenes, `fetch`, formularios) debe añadirse ahí o el navegador lo bloquea. `script-src` lleva `'unsafe-inline'` porque Next inserta scripts en línea por petición y el nonce es incompatible con PPR (051 D3); un script en línea propio nuevo necesita su hash en `scriptHashes`. `/api/csp-report` es pública y solo registra.
 
 ### Autenticación
 
@@ -243,6 +244,7 @@ npm run eval:schedule  # 12 horarios al modelo con visión (~12 min, gasta cuota
 - **Calendarios traídos:** decide la interfaz con `canWriteEvents`, `moveTargets`, `readOnlyReason`, `canMerge` (`lib/sync/read-only.ts`), nunca `role !== "viewer"`. Escrituras con `writeEvent` y `writeEngineDeps(supabase)`; el motor con `engineDeps()` (clave publicable + `CRON_SECRET`). Un componente `"use client"` no importa el motor.
 - **Navegar por el calendario:** `useCalendarGo()` y `CalendarLink`, nunca `router.push(calendarHref(...))`. Datos que cambian con el periodo, desde `useEventWindow` o una acción perezosa. Enlaces repetidos (días, eventos) con `prefetch={false}`.
 - **Móvil/escritorio:** variantes `max-tab:` (≤ 768 px) y `tab:` (≥ 769 px), no `md:`; en JS `useIsPhone()`. Ventanas del móvil con `Sheet`; cierra el `<dialog>` en la limpieza del efecto.
+- **Autor y cuota (051):** `events.created_by` lo pone el trigger `events_author` en las escrituras directas del cliente (rol `authenticated`); las funciones `SECURITY DEFINER` conservan el autor que elijan. La cuota del asistente se reserva con `assistant_reserve()` (CF429) y se confirma (`assistant_answered`) o libera (`assistant_release`); el cliente ya no inserta en `assistant_questions`.
 - **Escrituras de eventos/notas desde la interfaz:** pasan por `lib/offline/event-actions.ts` o `note-actions.ts` (`withOutbox`) y necesitan su tipo en `OfflineChange`, `describe.ts`, `applyOfflineChange`/`offline-writes.ts` **y** su caso en `sw.js` (con caso en `tests/unit/offline-flush-cases.ts`). Red: `useConnection()`, nunca `navigator.onLine` a secas.
 - **Interacciones con eventos:** `useEventInteractions()` (optimista, "Deshacer", menú); deshacer apila con `useUndoToast()`; refrescos ajenos en pausa con `useHoldLive`. Pantallas con datos ajenos: `useLiveCalendar(userId)`.
 - **Atajos:** en `SHORTCUTS` (`lib/calendar/shortcuts.ts`), que alimenta teclas y ayuda (?).
@@ -270,7 +272,7 @@ npm run eval:schedule  # 12 horarios al modelo con visión (~12 min, gasta cuota
 - Storage: el CDN cachea por URL y token; `downloadImage` usa `/object/authenticated/…?v=<uuid>` con `no-store` (no lo cambies). URL firmadas de subida fallan si el objeto ya existe.
 - **Tras usar el link de prod, vuelve a enlazar dev.**
 - En dev `pg_cron` no llega a `localhost`: llama a mano a `POST /api/sync/run`, `/api/push/run`… con `Bearer $CRON_SECRET`. Si arrancas con `SYNC_PUSH_URL` se crean canales reales de Google: bórralos.
-- `test:db` es intermitente (timeouts, límite de Auth `Request rate limit reached`): repite, espera o usa `--no-file-parallelism`. Drena los calendarios pendientes de dev. El reloj local va por delante del de la BD: para "caducar" algo retrasa una hora.
+- `test:db` es intermitente (límite de Auth `Request rate limit reached`): los helpers ya reintentan la gestión de usuarios (2 y 5 s) y cortan un cuelgue a los 15 s con "Supabase dev no respondió…" (051, `tests/integration/net.ts`); si aun así falla, repite o usa `--no-file-parallelism`. Drena los calendarios pendientes de dev. El reloj local va por delante del de la BD: para "caducar" algo retrasa una hora.
 
 **Proveedores y formatos**
 - `ical.js` deja los `TZID` como hora de pared: `parse-ics.ts` los convierte. iCloud empareja repeticiones por la hora de pared de la serie (`RECURRENCE-ID`/`EXDATE` con la misma `TZID`). Las reglas de prueba se escriben como la app (`FREQ=WEEKLY;INTERVAL=1;BYDAY=TH`).
