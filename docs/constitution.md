@@ -53,6 +53,7 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 043-exportar-y-suscripcion-ics | Exportar un calendario o los visibles a `.ics` y enlace secreto de suscripción de solo lectura |
 | 044-importar-y-actualizar-ics | Importar un `.ics` a un calendario existente sin repetir eventos y mantenerlo actualizado desde su enlace |
 | 047-compartir-e-integrar-con-el-sistema | Compartir un evento (Web Share o menú), recibir `.ics`, imágenes y texto de otras apps (Web Share Target, solo en el dispositivo), accesos directos y número de eventos de hoy en el icono |
+| 048-notas-ampliacion | Fecha límite por elemento, reordenar arrastrando, tareas con fecha en el calendario, notas de un evento y notas desde Venito |
 
 Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": desde el 2026-10-22 son la 006 y la 007. Las specs cerradas no se editan, con una única excepción: el cambio de nombre a CaFam de la spec 010, que solo sustituye el nombre y no toca requisitos, decisiones ni evidencias (enmienda 3).
 

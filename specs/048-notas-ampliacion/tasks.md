@@ -36,8 +36,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- offline-describe offline-flush offline-sw-sync` en verde con los casos nuevos en `offline-flush-cases.ts`.
 
   Cubre: RF-15 | Evidencia: 2026-11-25, `npx vitest run --project unit offline-describe offline-flush offline-sw-sync offline-schemas` 49/49 y P8 (3850 tests, build). Fechas, orden fraccionario y completar desde el calendario ya iban por la cola; `note.create` lleva `eventId` (repeticiones materializadas en el servidor) y un evento rechazado nunca se lleva la nota. Una hora sin fecha solo la rechaza la base de datos (23514), que conoce la fecha guardada.
-- [ ] T8 Cierre
+- [x] T8 Cierre
   Hecho cuando: AGENTS.md (§11 y sección de la spec), README y constitución actualizados; `python -m graphify update .`; P8 completa.
+
+  Evidencia: 2026-11-25, AGENTS.md (tabla, migración `notes_more` pendiente en prod, §11), README y constitución; `python -m graphify update .`; P8 en verde (3850 tests, build).
 
 ## Trazabilidad
 

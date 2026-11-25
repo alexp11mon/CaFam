@@ -117,6 +117,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 045  | Zona horaria por evento                                                | ✅ Cerrada (migraciones pendientes en prod)       |
 | 046  | Papelera y deshacer de varias acciones                                 | ✅ Cerrada (migración pendiente en prod)          |
 | 047  | Compartir e integrar con el sistema                                    | ✅ Cerrada (migración pendiente en prod)          |
+| 048  | Ampliación de Notas                                                    | ✅ Cerrada (migración pendiente en prod)          |
 
 > Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
@@ -216,6 +217,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 
 - Sección **Notas** con listas de tareas y notas de texto, personales o compartidas con un calendario (con los roles de ese calendario).
 - Cambios al instante con "Deshacer", búsqueda, fijar, archivar, fecha límite y tiempo real.
+- Fecha (y hora) por elemento, reordenar arrastrando (ratón, dedo o Alt+flechas), tareas con fecha en el calendario (interruptor "Tareas con fecha"), notas de un evento y Venito crea notas o apunta en listas.
 
 ### 👀 Disponibilidad
 
@@ -558,7 +560,6 @@ Hasta que exista su spec aprobada:
 - Verificación de email en el registro, traspaso voluntario de calendarios, exportar datos de la cuenta, login social, Microsoft, i18n.
 - Sin conexión: envío en segundo plano, fechas fuera del rango guardado, series enteras, calendarios traídos, imágenes y comentarios (el resto, en "Fuera de alcance" de la spec 034).
 - Cambiar eventos desde el asistente (salvo crearlos desde una imagen), guardar conversaciones o responder por voz (necesitan otra spec).
-- En notas: fecha límite por elemento, reordenar arrastrando, vencimientos en el calendario, notas de un evento y notas desde el asistente.
 
 ---
 
