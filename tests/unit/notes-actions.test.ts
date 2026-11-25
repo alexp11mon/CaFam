@@ -72,6 +72,15 @@ vi.mock("@/lib/calendar/queries", () => ({
   requireActionUser: async () => ({ supabase: { from: table }, userId: "me" }),
 }));
 
+const materializeOccurrence = vi.hoisted(() =>
+  vi.fn<(id: string) => Promise<{ eventId: string } | { error: string }>>(
+    async () => ({ eventId: "row-of-occurrence" }),
+  ),
+);
+vi.mock("@/app/dashboard/events/image-actions", () => ({
+  materializeOccurrence,
+}));
+
 const actions = await import("@/app/dashboard/notes/actions");
 
 const NOTE = "6f1c0a5e-8f0e-4c1e-9a43-2b7d7a1f0c11";
@@ -105,6 +114,41 @@ describe("createNote", () => {
       values: { kind: "list", title: "Deberes", calendar_id: null },
     });
     expect(revalidatePath).toHaveBeenCalledWith("/dashboard/notes", "layout");
+  });
+
+  it("links it to the event it was made for, a repetition through its own row (spec 048 RF-9, RF-11)", async () => {
+    const event = "8b2f0c1e-1a2b-4c3d-8e9f-0a1b2c3d4e5f";
+    await expect(
+      actions.createNote(
+        {},
+        form({ title: "Compra", kind: "list", calendarId: "", eventId: event }),
+      ),
+    ).rejects.toThrow(/REDIRECT/);
+    expect(db.calls[0]?.values).toMatchObject({ event_id: event });
+    expect(materializeOccurrence).not.toHaveBeenCalled();
+
+    db.calls = [];
+    const occurrence = `${event}_20261210T190000Z`;
+    await expect(
+      actions.createNote(
+        {},
+        form({ title: "", kind: "text", calendarId: "", eventId: occurrence }),
+      ),
+    ).rejects.toThrow(/REDIRECT/);
+    expect(materializeOccurrence).toHaveBeenCalledWith(occurrence);
+    expect(db.calls[0]?.values).toMatchObject({
+      event_id: "row-of-occurrence",
+    });
+
+    // A repetition that cannot be had: nothing is written.
+    db.calls = [];
+    materializeOccurrence.mockResolvedValueOnce({ error: "x" });
+    const state = await actions.createNote(
+      {},
+      form({ title: "", kind: "text", calendarId: "", eventId: occurrence }),
+    );
+    expect(state.error).toBeTruthy();
+    expect(db.calls).toEqual([]);
   });
 
   it("gives back what was written when it cannot be created", async () => {

@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
 import { requireActionUser } from "@/lib/calendar/queries";
+import { commentRowFor } from "@/lib/comments/queries";
+import { parseEventId } from "@/lib/recurrence/occurrence-id";
+import { materializeOccurrence } from "../events/image-actions";
 import { getNoteErrorMessage, NOTE_MESSAGES } from "@/lib/notes/error-messages";
 import {
   createNoteSchema,
@@ -36,6 +39,18 @@ export interface NewNoteState {
   values?: { title: string; kind: string; calendarId: string };
 }
 
+/**
+ * The row a note links to: a repetition without its own row gets one first,
+ * as for images and comments (spec 048 RF-11). Null when it is not an event.
+ */
+async function eventRowFor(eventId: string): Promise<string | null> {
+  const parsed = parseEventId(eventId);
+  if (!parsed) return null;
+  if (parsed.kind === "event") return parsed.id;
+  const row = await materializeOccurrence(eventId);
+  return "error" in row ? null : row.eventId;
+}
+
 /** The form of `/dashboard/notes/new` (RF-4): creates and opens the note. */
 export async function createNote(
   _previous: NewNoteState,
@@ -56,11 +71,19 @@ export async function createNote(
 
   const { supabase } = await requireActionUser();
   const { id, kind, title, calendarId } = parsed.data;
+  // Made from an event's detail (spec 048 RF-9).
+  const fromEvent = String(formData.get("eventId") ?? "");
+  const eventRow = fromEvent ? await eventRowFor(fromEvent) : null;
+  if (fromEvent && !eventRow) return { error: NOTE_MESSAGES.invalid, values };
   let failure: string | undefined;
   try {
-    const { error } = await supabase
-      .from("notes")
-      .insert({ id, kind, title, calendar_id: calendarId });
+    const { error } = await supabase.from("notes").insert({
+      id,
+      kind,
+      title,
+      calendar_id: calendarId,
+      ...(eventRow ? { event_id: eventRow } : {}),
+    });
     if (error) failure = getNoteErrorMessage(error);
   } catch {
     failure = NOTE_MESSAGES.connection;
@@ -249,4 +272,50 @@ export async function clearDone(noteId: string): Promise<NoteResult> {
     return { error: NOTE_MESSAGES.connection };
   }
   return {};
+}
+
+export interface EventNote {
+  id: string;
+  title: string;
+  kind: "list" | "text";
+  /** "2/5" of a list; null for a text. */
+  done: { done: number; total: number } | null;
+}
+
+/**
+ * The notes of an event that the user sees through RLS (spec 048 RF-10). A
+ * repetition without its own row has none yet.
+ */
+export async function loadEventNotes(
+  eventId: string,
+): Promise<{ notes: EventNote[] } | { error: string }> {
+  if (!parseEventId(eventId)) return { notes: [] };
+  const { supabase } = await requireActionUser();
+  try {
+    const row = await commentRowFor(supabase, eventId);
+    if (!row) return { notes: [] };
+    const { data, error } = await supabase
+      .from("notes")
+      .select("id, title, kind, note_items(done)")
+      .eq("event_id", row.id)
+      .eq("archived", false)
+      .order("created_at");
+    if (error) return { error: NOTE_MESSAGES.connection };
+    return {
+      notes: (data ?? []).map((note) => ({
+        id: note.id,
+        title: note.title,
+        kind: note.kind === "text" ? "text" : "list",
+        done:
+          note.kind === "text"
+            ? null
+            : {
+                done: note.note_items.filter((item) => item.done).length,
+                total: note.note_items.length,
+              },
+      })),
+    };
+  } catch {
+    return { error: NOTE_MESSAGES.connection };
+  }
 }

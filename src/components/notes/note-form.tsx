@@ -26,10 +26,15 @@ const KINDS = [
 export function NoteForm({
   action,
   calendars,
+  event,
+  defaultCalendarId = "",
 }: {
   action: (state: NewNoteState, data: FormData) => Promise<NewNoteState>;
   /** Calendars where the user can write: a note there is shared with them. */
   calendars: readonly { id: string; name: string }[];
+  /** The event it is made for: "Cena con Ana · 20 nov" (spec 048 RF-9). */
+  event?: { id: string; label: string };
+  defaultCalendarId?: string;
 }) {
   // Offline the note waits on the device (spec 034 RF-31).
   const [queued] = useState(
@@ -42,6 +47,12 @@ export function NoteForm({
   return (
     <form action={formAction} noValidate className="flex flex-col gap-5">
       <FormAlert message={state.error} />
+      {event ? (
+        <p className="text-sm text-muted">
+          <input type="hidden" name="eventId" value={event.id} />
+          De: <span className="font-semibold text-ink">{event.label}</span>
+        </p>
+      ) : null}
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium text-ink">Tipo</legend>
         {KINDS.map((kind) => (
@@ -74,7 +85,7 @@ export function NoteForm({
       <Select
         label="Dónde se guarda"
         name="calendarId"
-        defaultValue={values?.calendarId ?? ""}
+        defaultValue={values?.calendarId ?? defaultCalendarId}
       >
         <option value="">Personal (solo tú la ves)</option>
         {calendars.map((calendar) => (

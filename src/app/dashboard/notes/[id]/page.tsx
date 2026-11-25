@@ -31,6 +31,7 @@ async function Note({ params }: { params: Promise<{ id: string }> }) {
         .filter((entry) => entry.role === "owner" || entry.role === "editor")
         .map(({ calendarId, name }) => ({ id: calendarId, name }))}
       today={todayKey(timeZone)}
+      timeZone={timeZone}
       userId={userId}
     />
   );

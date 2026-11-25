@@ -24,10 +24,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- task-block calendar-filters week-view month-view agenda-view` y `npm run test:db -- calendar-tasks` en verde; capturas a 390 y 1440 px.
 
   Cubre: RF-6 a RF-8 | Evidencia: 2026-11-25, `npm test -- task-block calendar-filters week-view month-view agenda-view` en verde (bloque con casilla y enlace a la nota, franja de día completo, pie de la celda del mes con "+N", día de la agenda, interruptor "Tareas con fecha" en los filtros); `npm run test:db -- calendar-tasks` 2/2 (interruptor propio, completar quita la tarea y Deshacer la devuelve, nadie ve las personales de otro); P8 completa (3.831 tests, build OK). Prueba real en Edge: marcar "Pan" en el calendario lo guarda hecho y "Deshacer" lo devuelve. Capturas `tareas-*` a 390 y 1440 px. Límite conocido: la agenda solo pinta días con eventos, así que una tarea en un día sin eventos solo se ve en semana, día y mes. Completar desde el calendario pasa por `updateItemOrQueue` (también sin conexión).
-- [ ] T5 Notas de un evento
+- [x] T5 Notas de un evento
   Hecho cuando: `npm test -- event-notes note-form event-panel` y `npm run test:db -- notes-event` en verde (repetición materializada).
 
-  Cubre: RF-9 a RF-11 | Evidencia: —
+  Cubre: RF-9 a RF-11 | Evidencia: 2026-11-25, `npm test -- event-notes notes-actions event-panel` en verde (sección "Notas" con progreso y "Añadir nota", formulario con "De: …" y el evento en un campo oculto, `createNote` vincula y materializa una repetición; si no puede, no escribe); `npm run test:db -- notes-event` 1/1 (la repetición materializada tiene su nota, la serie no; borrar la serie desvincula); P8 completa (3.835 tests, build OK). Prueba real en Edge: desde el detalle, "Añadir nota" crea "Qué llevar" compartida en el calendario del evento, la nota muestra "De: Cena con Ana · 10 dic" y el detalle la lista; capturas `nota-de-evento*`, `evento-con-notas-*`. La sección solo aparece con conexión, como los comentarios.
 - [ ] T6 Notas desde Venito
   Hecho cuando: `npm test -- notes-match assistant-note-writes assistant-core` en verde y `EVAL_ONLY` con las 5 preguntas nuevas contra Groq (una ejecución).
 

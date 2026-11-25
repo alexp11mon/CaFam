@@ -30,4 +30,11 @@ export interface Note {
   calendarId: string | null;
   calendarName: string | null;
   items: NoteItem[];
+  /** The event it was made for, while it exists (spec 048 RF-10). */
+  event?: {
+    id: string;
+    title: string;
+    startsAt: string;
+    allDay: boolean;
+  } | null;
 }

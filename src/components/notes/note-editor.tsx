@@ -73,7 +73,10 @@ export function NoteEditor({
   calendars,
   today,
   userId,
+  timeZone = "UTC",
 }: {
+  /** The profile's zone, for the event's date (spec 048 RF-10). */
+  timeZone?: string;
   note: Note;
   access: NoteAccess;
   /** Calendars where the user can write, to share the note there. */
@@ -385,6 +388,24 @@ export function NoteEditor({
         {note.calendarName && !access.canMove ? (
           <p className="text-sm text-muted">
             Compartida en {note.calendarName}
+          </p>
+        ) : null}
+        {note.event ? (
+          // The event it was made for (spec 048 RF-10).
+          <p className="text-sm text-muted">
+            De:{" "}
+            <Link
+              href={`/dashboard/events/${note.event.id}`}
+              prefetch={false}
+              className="font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
+            >
+              {note.event.title} ·{" "}
+              {new Intl.DateTimeFormat("es-ES", {
+                day: "numeric",
+                month: "short",
+                timeZone: note.event.allDay ? "UTC" : timeZone,
+              }).format(new Date(note.event.startsAt))}
+            </Link>
           </p>
         ) : null}
 

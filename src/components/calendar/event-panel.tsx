@@ -9,6 +9,8 @@ import {
   ViewTransition,
 } from "react";
 import { EventComments } from "@/components/comments/event-comments";
+import { EventNotes } from "@/components/notes/event-notes";
+import { loadEventNotes } from "@/app/dashboard/notes/actions";
 import { EventImages } from "@/components/images/event-images";
 import { ImageUploader } from "@/components/images/image-uploader";
 import { Button } from "@/components/ui/button";
@@ -186,7 +188,11 @@ export function EventPanel({
           }
           comments={
             online ? (
-              <EventComments eventId={detail.id} timeZone={timeZone} />
+              <>
+                {/* Spec 048 RF-9, RF-10. */}
+                <EventNotes eventId={detail.id} loadNotes={loadEventNotes} />
+                <EventComments eventId={detail.id} timeZone={timeZone} />
+              </>
             ) : (
               <OfflineComments
                 eventId={detail.id}
