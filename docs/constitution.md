@@ -55,6 +55,7 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 047-compartir-e-integrar-con-el-sistema | Compartir un evento (Web Share o menú), recibir `.ics`, imágenes y texto de otras apps (Web Share Target, solo en el dispositivo), accesos directos y número de eventos de hoy en el icono |
 | 048-notas-ampliacion | Fecha límite por elemento, reordenar arrastrando, tareas con fecha en el calendario, notas de un evento y notas desde Venito |
 | 049-cuenta-verificacion-traspaso-exportar | Confirmar el email al registrarse, traspasar un calendario a otro miembro y descargar los datos de la cuenta en un `.zip` |
+| 050-iniciar-sesion-con-google | "Continuar con Google" con Supabase Auth y "Formas de entrar" en Ajustes; Apple, imposible a coste cero |
 
 Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": desde el 2026-10-22 son la 006 y la 007. Las specs cerradas no se editan, con una única excepción: el cambio de nombre a CaFam de la spec 010, que solo sustituye el nombre y no toca requisitos, decisiones ni evidencias (enmienda 3).
 
@@ -74,7 +75,7 @@ Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, 
 
 - Lenguaje y versión: TypeScript 5.x en modo `strict`, sobre Node.js 24 LTS (mínimo Node 20.9, requisito de Next.js 16).
 - Frontend: Next.js 16 (App Router, Turbopack, Server Components y Server Actions), React 19, Tailwind CSS 4.
-- Backend / BaaS: Supabase Free (PostgreSQL con RLS, Supabase Auth email/contraseña, Supabase Storage para las imágenes de los eventos, Supabase Realtime (Broadcast con canales privados, desde la spec 019; enmienda 7), `pg_cron`, `pg_net` y Vault). Región de datos en la UE.
+- Backend / BaaS: Supabase Free (PostgreSQL con RLS, Supabase Auth con email/contraseña y Google (spec 050; Apple queda fuera por P2), Supabase Storage para las imágenes de los eventos, Supabase Realtime (Broadcast con canales privados, desde la spec 019; enmienda 7), `pg_cron`, `pg_net` y Vault). Región de datos en la UE.
 - Hosting: Vercel Hobby (incluye su Cron Job diario) con repositorio en GitHub (privado).
 - PWA: nativa de Next.js (`app/manifest.ts`) + service worker propio en `public/sw.js`, sin librerías PWA.
 - Servicios externos aceptados: Google Calendar API (OAuth, spec 007 y 009), iCloud por CalDAV (con contraseña específica de app, spec 018; enmienda 6), Brevo (correo, spec 006) y un proveedor LLM con capa gratuita sin tarjeta para el asistente de chat, que elige y aprueba la spec 015 (Gemini queda descartado porque su capa gratuita no puede usarse con usuarios de la UE). El proveedor LLM se llama con `fetch` desde el servidor, sin SDK.

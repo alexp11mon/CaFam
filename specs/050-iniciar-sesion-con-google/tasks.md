@@ -2,7 +2,7 @@
 
 Spec: `specs/050-iniciar-sesion-con-google/spec.md`. Plan: `specs/050-iniciar-sesion-con-google/plan.md` (aprobados de antemano por el usuario el 2026-11-18).
 
-> Estado: en curso. Bloqueo externo previsto: crear el cliente OAuth y activar el proveedor en Supabase (pasos de producción 1–3) lo hace el usuario; sin ello, T5 queda pendiente.
+> Estado: hecha salvo T5 (prueba real), que espera a que el usuario cree el cliente OAuth y active el proveedor (pasos 1–3 del plan). Bloqueo externo previsto: crear el cliente OAuth y activar el proveedor en Supabase (pasos de producción 1–3) lo hace el usuario; sin ello, T5 queda pendiente.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T1.
 
@@ -28,8 +28,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: en dev (puerto 3000) con el proveedor activo: cuenta nueva con Google, cuenta existente enlazada por email, desvincular y volver a entrar con contraseña.
 
   Cubre: RF-2, RF-3, RF-5 | Evidencia: —
-- [ ] T6 Cierre
+- [x] T6 Cierre
   Hecho cuando: AGENTS.md, README (login social; Apple imposible a coste cero) y constitución (stack: Supabase Auth con Google) actualizados; `python -m graphify update .`; P8 completa.
+
+  Evidencia: 2026-11-25, AGENTS.md (autenticación, tabla, variables, migración `oauth_profile_name` pendiente en prod, §11), README (Google, Apple imposible a coste cero) y constitución (stack: Supabase Auth con Google); `python -m graphify update .`; P8 en verde.
 
 ## Trazabilidad
 

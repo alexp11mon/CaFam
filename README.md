@@ -68,57 +68,58 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 
 ## 📊 Estado del proyecto
 
-| Spec | Alcance                                                                | Estado                                              |
-| ---- | ---------------------------------------------------------------------- | --------------------------------------------------- |
-| 001  | Base: auth, esquema con RLS, panel esqueleto, PWA, despliegue          | ✅ Cerrada                                          |
-| 002  | Calendarios, categorías y eventos; vistas mensual, semanal y diaria    | ✅ Cerrada                                          |
-| 003  | Compartición: enlace, ID + PIN, roles Lector/Editor, miembros          | ✅ Cerrada                                          |
-| 004  | Importación única de `.ics` (enlace o archivo)                         | ✅ Cerrada                                          |
-| 005  | Identidad visual, color de acento, marco, agenda, mini calendario      | ✅ Cerrada                                          |
-| 006  | Gestión de cuenta: recuperación, email, contraseña, borrar cuenta      | ✅ Cerrada                                          |
-| 007  | Sincronización solo lectura con Google OAuth 2.0 y grupos              | ✅ Cerrada                                          |
-| 008  | Mejoras de experiencia: ventana de evento, arrastrar, atajos           | ✅ Cerrada                                          |
-| 009  | Sincronización bidireccional con Google                                | ✅ Cerrada                                          |
-| 010  | Renombrado a CaFam                                                     | ✅ Cerrada                                          |
-| 011  | Modo oscuro, animaciones, microinteracciones                           | ✅ Cerrada                                          |
-| 012  | Imágenes en eventos con Supabase Storage                               | ✅ Cerrada                                          |
-| 013  | Eventos recurrentes con reglas personalizables                         | ✅ Cerrada                                          |
-| 014  | Comentarios en eventos                                                 | ✅ Cerrada                                          |
-| 015  | Asistente de chat con proveedor LLM gratuito (Groq)                    | ✅ Cerrada                                          |
-| 016  | Calendario estilo Google Calendar en móvil                             | ✅ Cerrada                                          |
-| 017  | Mover/redimensionar arrastrando, menú contextual, "Deshacer"           | ✅ Cerrada                                          |
-| 018  | Calendarios de iCloud por CalDAV                                       | ✅ Cerrada                                          |
-| 019  | Escritorio, móvil y tiempo real (Supabase Realtime)                    | ✅ Cerrada                                          |
-| 020  | Disponibilidad ("Ocupado") y sincronización rápida                     | ✅ Cerrada                                          |
-| 021  | Animaciones y microinteracciones                                       | ✅ Cerrada                                          |
-| 022  | Eventos desde la foto de un horario                                    | ✅ Cerrada                                          |
-| 023  | Auditoría y 25 correcciones                                            | ✅ Cerrada (migraciones pendientes en prod)         |
-| 024  | Rendimiento: cambio de periodo sin red, asistente en streaming         | ✅ Cerrada                                          |
-| 025  | Sistema de diseño y componentes base                                   | ✅ Cerrada                                          |
-| 026  | Calendario móvil primero                                               | ✅ Cerrada                                          |
-| 027  | Venito y el chat como conversación                                     | ✅ Cerrada                                          |
-| 028  | Notas y listas de tareas                                               | ✅ Cerrada (migraciones pendientes en dev y prod)   |
-| 029  | Pantallas restantes y recorrido en móvil                               | ✅ Cerrada                                          |
-| 030  | Identidad visual "Nexo"                                                | ✅ Cerrada                                          |
-| 031  | Venito pasa a ser una morsa                                            | ✅ Cerrada                                          |
-| 032  | Panel lateral desplazable y calendarios plegables                      | ✅ Cerrada                                          |
-| 033  | Next.js 16.4.6 y `npm audit` sin vulnerabilidades                      | ✅ Cerrada                                          |
-| 034  | Modo sin conexión: copia en el dispositivo, cola y conflictos          | ✅ Cerrada                                          |
-| 035  | Sin conexión, fase 2: Google, iCloud, series, comentarios, imágenes    | ✅ Cerrada                                          |
-| 036  | Venito crea eventos y propone cambios desde el chat                    | 🟡 Hecha, pendiente del eval y del cierre           |
-| 037  | El "+" no tapa "Enviar" en la pantalla del asistente                   | ✅ Cerrada                                          |
-| 038  | La sincronización no borra lo que queda fuera de la ventana            | ✅ Cerrada (migración pendiente en prod)            |
-| 039  | Búsqueda de eventos, también sin conexión                              | ✅ Cerrada (migración pendiente en prod)            |
-| 040  | Recordatorios y notificaciones push                                    | ✅ Cerrada (migración y claves VAPID pendientes)    |
-| 041  | Alta de eventos en lenguaje natural, sin IA                            | ✅ Cerrada                                          |
-| 042  | Vistas de año y de 4 días                                              | ✅ Cerrada (migración pendiente en prod)            |
-| 043  | Exportar a `.ics` y enlace de suscripción de solo lectura              | ✅ Cerrada (migración pendiente en prod)            |
-| 044  | Importar a un calendario existente y mantener actualizado lo importado | ✅ Cerrada (migraciones pendientes en prod)         |
-| 045  | Zona horaria por evento                                                | ✅ Cerrada (migraciones pendientes en prod)         |
-| 046  | Papelera y deshacer de varias acciones                                 | ✅ Cerrada (migración pendiente en prod)            |
-| 047  | Compartir e integrar con el sistema                                    | ✅ Cerrada (migración pendiente en prod)            |
-| 048  | Ampliación de Notas                                                    | ✅ Cerrada (migración pendiente en prod)            |
-| 049  | Verificar el email, traspasar un calendario y exportar los datos       | ✅ Cerrada (migración y "Confirm email" pendientes) |
+| Spec | Alcance                                                                | Estado                                                 |
+| ---- | ---------------------------------------------------------------------- | ------------------------------------------------------ |
+| 001  | Base: auth, esquema con RLS, panel esqueleto, PWA, despliegue          | ✅ Cerrada                                             |
+| 002  | Calendarios, categorías y eventos; vistas mensual, semanal y diaria    | ✅ Cerrada                                             |
+| 003  | Compartición: enlace, ID + PIN, roles Lector/Editor, miembros          | ✅ Cerrada                                             |
+| 004  | Importación única de `.ics` (enlace o archivo)                         | ✅ Cerrada                                             |
+| 005  | Identidad visual, color de acento, marco, agenda, mini calendario      | ✅ Cerrada                                             |
+| 006  | Gestión de cuenta: recuperación, email, contraseña, borrar cuenta      | ✅ Cerrada                                             |
+| 007  | Sincronización solo lectura con Google OAuth 2.0 y grupos              | ✅ Cerrada                                             |
+| 008  | Mejoras de experiencia: ventana de evento, arrastrar, atajos           | ✅ Cerrada                                             |
+| 009  | Sincronización bidireccional con Google                                | ✅ Cerrada                                             |
+| 010  | Renombrado a CaFam                                                     | ✅ Cerrada                                             |
+| 011  | Modo oscuro, animaciones, microinteracciones                           | ✅ Cerrada                                             |
+| 012  | Imágenes en eventos con Supabase Storage                               | ✅ Cerrada                                             |
+| 013  | Eventos recurrentes con reglas personalizables                         | ✅ Cerrada                                             |
+| 014  | Comentarios en eventos                                                 | ✅ Cerrada                                             |
+| 015  | Asistente de chat con proveedor LLM gratuito (Groq)                    | ✅ Cerrada                                             |
+| 016  | Calendario estilo Google Calendar en móvil                             | ✅ Cerrada                                             |
+| 017  | Mover/redimensionar arrastrando, menú contextual, "Deshacer"           | ✅ Cerrada                                             |
+| 018  | Calendarios de iCloud por CalDAV                                       | ✅ Cerrada                                             |
+| 019  | Escritorio, móvil y tiempo real (Supabase Realtime)                    | ✅ Cerrada                                             |
+| 020  | Disponibilidad ("Ocupado") y sincronización rápida                     | ✅ Cerrada                                             |
+| 021  | Animaciones y microinteracciones                                       | ✅ Cerrada                                             |
+| 022  | Eventos desde la foto de un horario                                    | ✅ Cerrada                                             |
+| 023  | Auditoría y 25 correcciones                                            | ✅ Cerrada (migraciones pendientes en prod)            |
+| 024  | Rendimiento: cambio de periodo sin red, asistente en streaming         | ✅ Cerrada                                             |
+| 025  | Sistema de diseño y componentes base                                   | ✅ Cerrada                                             |
+| 026  | Calendario móvil primero                                               | ✅ Cerrada                                             |
+| 027  | Venito y el chat como conversación                                     | ✅ Cerrada                                             |
+| 028  | Notas y listas de tareas                                               | ✅ Cerrada (migraciones pendientes en dev y prod)      |
+| 029  | Pantallas restantes y recorrido en móvil                               | ✅ Cerrada                                             |
+| 030  | Identidad visual "Nexo"                                                | ✅ Cerrada                                             |
+| 031  | Venito pasa a ser una morsa                                            | ✅ Cerrada                                             |
+| 032  | Panel lateral desplazable y calendarios plegables                      | ✅ Cerrada                                             |
+| 033  | Next.js 16.4.6 y `npm audit` sin vulnerabilidades                      | ✅ Cerrada                                             |
+| 034  | Modo sin conexión: copia en el dispositivo, cola y conflictos          | ✅ Cerrada                                             |
+| 035  | Sin conexión, fase 2: Google, iCloud, series, comentarios, imágenes    | ✅ Cerrada                                             |
+| 036  | Venito crea eventos y propone cambios desde el chat                    | 🟡 Hecha, pendiente del eval y del cierre              |
+| 037  | El "+" no tapa "Enviar" en la pantalla del asistente                   | ✅ Cerrada                                             |
+| 038  | La sincronización no borra lo que queda fuera de la ventana            | ✅ Cerrada (migración pendiente en prod)               |
+| 039  | Búsqueda de eventos, también sin conexión                              | ✅ Cerrada (migración pendiente en prod)               |
+| 040  | Recordatorios y notificaciones push                                    | ✅ Cerrada (migración y claves VAPID pendientes)       |
+| 041  | Alta de eventos en lenguaje natural, sin IA                            | ✅ Cerrada                                             |
+| 042  | Vistas de año y de 4 días                                              | ✅ Cerrada (migración pendiente en prod)               |
+| 043  | Exportar a `.ics` y enlace de suscripción de solo lectura              | ✅ Cerrada (migración pendiente en prod)               |
+| 044  | Importar a un calendario existente y mantener actualizado lo importado | ✅ Cerrada (migraciones pendientes en prod)            |
+| 045  | Zona horaria por evento                                                | ✅ Cerrada (migraciones pendientes en prod)            |
+| 046  | Papelera y deshacer de varias acciones                                 | ✅ Cerrada (migración pendiente en prod)               |
+| 047  | Compartir e integrar con el sistema                                    | ✅ Cerrada (migración pendiente en prod)               |
+| 048  | Ampliación de Notas                                                    | ✅ Cerrada (migración pendiente en prod)               |
+| 049  | Verificar el email, traspasar un calendario y exportar los datos       | ✅ Cerrada (migración y "Confirm email" pendientes)    |
+| 050  | Iniciar sesión con Google                                              | 🟡 Hecha; falta la prueba real con el proveedor activo |
 
 > Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
@@ -249,18 +250,18 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 
 ## 🛠️ Tecnología y stack
 
-| Capa         | Tecnología                                                                                  |
-| ------------ | ------------------------------------------------------------------------------------------- |
-| Lenguaje     | TypeScript 5 `strict`, sin `any` explícito (ESLint en error)                                |
-| Framework    | Next.js 16.4.6 (App Router, Turbopack, Server Components, Server Actions), React 19.3       |
-| Estilos      | Tailwind CSS 4 vía `@tailwindcss/postcss`                                                   |
-| Datos y auth | Supabase Free: PostgreSQL 17 con RLS + Supabase Auth (email/contraseña) con `@supabase/ssr` |
-| Validación   | zod 4                                                                                       |
-| Hosting      | Vercel Hobby, repositorio en GitHub                                                         |
-| PWA          | `src/app/manifest.ts` nativo + service worker propio en `public/sw.js`                      |
-| Tests        | Vitest 5 (proyectos `unit` con jsdom y `db` con node), Testing Library                      |
-| Calidad      | ESLint 9, Prettier 3                                                                        |
-| BD           | Supabase CLI para migraciones y tipos                                                       |
+| Capa         | Tecnología                                                                                                     |
+| ------------ | -------------------------------------------------------------------------------------------------------------- |
+| Lenguaje     | TypeScript 5 `strict`, sin `any` explícito (ESLint en error)                                                   |
+| Framework    | Next.js 16.4.6 (App Router, Turbopack, Server Components, Server Actions), React 19.3                          |
+| Estilos      | Tailwind CSS 4 vía `@tailwindcss/postcss`                                                                      |
+| Datos y auth | Supabase Free: PostgreSQL 17 con RLS + Supabase Auth (email/contraseña y Google, spec 050) con `@supabase/ssr` |
+| Validación   | zod 4                                                                                                          |
+| Hosting      | Vercel Hobby, repositorio en GitHub                                                                            |
+| PWA          | `src/app/manifest.ts` nativo + service worker propio en `public/sw.js`                                         |
+| Tests        | Vitest 5 (proyectos `unit` con jsdom y `db` con node), Testing Library                                         |
+| Calidad      | ESLint 9, Prettier 3                                                                                           |
+| BD           | Supabase CLI para migraciones y tipos                                                                          |
 
 **Dependencias de producción:** `next`, `react`, `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`, `ical.js` (2.2.1) y `tsdav` (2.5.0 exacta).
 
@@ -543,7 +544,7 @@ feat: registro de usuario (T7)
 
 El proyecto **aún no está terminado**. Existen specs pendientes y funcionalidades planificadas para versiones futuras:
 
-- Login social.
+- Entrar con Apple: exige el Apple Developer Program (99 USD al año), imposible a coste cero.
 - Microsoft (quedó fuera en la Enmienda 1).
 - i18n (internacionalización).
 
@@ -555,7 +556,7 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 
 Hasta que exista su spec aprobada:
 
-- Login social, Microsoft, i18n.
+- Apple, GitHub u otros proveedores de acceso, Microsoft, i18n.
 - Sin conexión: envío en segundo plano, fechas fuera del rango guardado, series enteras, calendarios traídos, imágenes y comentarios (el resto, en "Fuera de alcance" de la spec 034).
 - Cambiar eventos desde el asistente (salvo crearlos desde una imagen), guardar conversaciones o responder por voz (necesitan otra spec).
 
