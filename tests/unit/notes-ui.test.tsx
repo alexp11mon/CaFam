@@ -251,21 +251,26 @@ describe("a list (RF-6, RF-9)", () => {
     expect(pending()).toEqual(["Pan", "Leche"]);
   });
 
-  it("moves an item with its buttons, which stop at the ends", async () => {
+  it("moves an item with Alt+arrows on its handle and says where (spec 048 RF-4)", async () => {
     const { pending, value } = editor();
-    expect(screen.getByRole("button", { name: "Subir «Pan»" })).toBeDisabled();
-    expect(
-      screen.getByRole("button", { name: "Bajar «Leche»" }),
-    ).toBeDisabled();
-    // Done items do not move.
-    expect(screen.queryByRole("button", { name: "Subir «Huevos»" })).toBeNull();
+    // Done items have no handle.
+    expect(screen.queryByRole("button", { name: "Mover «Huevos»" })).toBeNull();
+    const handle = screen.getByRole("button", { name: "Mover «Pan»" });
+    handle.focus();
+    // Nothing above the first one.
+    await userEvent.keyboard("{Alt>}{ArrowUp}{/Alt}");
+    expect(actions.moveItems).not.toHaveBeenCalled();
 
-    await userEvent.click(screen.getByRole("button", { name: "Bajar «Pan»" }));
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}");
     expect(pending()).toEqual(["Leche", "Pan"]);
     expect(actions.moveItems).toHaveBeenCalledExactlyOnceWith(value.id, [
       { id: "Pan", position: 1 },
       { id: "Leche", position: 0 },
     ]);
+    expect(await screen.findByText("Movido a la posición 2 de 2")).toHaveClass(
+      "sr-only",
+    );
+    expect(screen.getByRole("button", { name: "Mover «Pan»" })).toHaveFocus();
   });
 
   it("renames an item in place when its field is left", async () => {

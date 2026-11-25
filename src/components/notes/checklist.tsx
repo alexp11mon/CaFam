@@ -1,11 +1,12 @@
 "use client";
 
 import { useId, useRef, useState, type KeyboardEvent } from "react";
-import { CheckIcon, ChevronIcon, TrashIcon } from "@/components/shell/icons";
+import { CheckIcon, GripIcon, TrashIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ITEM_TEXT_MAX, ITEMS_MAX } from "@/lib/notes/limits";
 import { moveItem, sortItems } from "@/lib/notes/order";
+import { useItemDrag } from "./use-item-drag";
 import { progress } from "@/lib/notes/progress";
 import type { NoteItem } from "@/lib/notes/types";
 import { dueLabel, isOverdue } from "@/lib/notes/due";
@@ -16,7 +17,10 @@ export interface ChecklistHandlers {
   onAdd: (text: string) => void;
   onToggle: (item: NoteItem) => void;
   onRename: (item: NoteItem, text: string) => void;
+  /** Alt+↑/↓ on the handle (spec 048 RF-4). */
   onMove: (item: NoteItem, direction: "up" | "down") => void;
+  /** Dropped at `toIndex` of the pending ones (spec 048 RF-3). */
+  onPlace?: (item: NoteItem, toIndex: number) => void;
   onDelete: (item: NoteItem) => void;
   onClearDone: () => void;
   /** Spec 048 RF-1. */
@@ -52,6 +56,11 @@ export function Checklist({
   const done = sorted.filter((item) => item.done);
   const count = progress(items);
   const full = items.length >= ITEMS_MAX;
+  const pendingList = useRef<HTMLUListElement>(null);
+  const drag = useItemDrag(pendingList, (id, toIndex) => {
+    const item = pending.find((other) => other.id === id);
+    if (item) handlers.onPlace?.(item, toIndex);
+  });
 
   function add() {
     const text = draft.trim();
@@ -69,14 +78,48 @@ export function Checklist({
     }
   }
 
+  const lastPending = pending.at(-1)?.id;
+
   const row = (item: NoteItem) => {
     const movable = canWrite && !item.done;
     return (
       <li
         key={item.id}
         data-done={item.done || undefined}
-        className="row-in relative flex items-center gap-1 rounded-control py-0.5 pr-1 hover:bg-stone"
+        data-item-id={item.done ? undefined : item.id}
+        data-dragging={drag.dragging === item.id || undefined}
+        className={`row-in relative flex items-center gap-1 rounded-control border-y-2 py-0.5 pr-1 hover:bg-stone ${
+          drag.dragging === item.id ? "bg-stone opacity-60" : ""
+        } ${drag.over === item.id ? "border-t-accent" : "border-t-transparent"} ${
+          drag.over === "end" && item.id === lastPending
+            ? "border-b-accent"
+            : "border-b-transparent"
+        }`}
       >
+        {movable ? (
+          <button
+            type="button"
+            aria-label={`Mover «${item.text}»`}
+            aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
+            title="Arrastra o usa Alt+↑/↓"
+            onKeyDown={(event) => {
+              if (!event.altKey) return;
+              const direction =
+                event.key === "ArrowUp"
+                  ? "up"
+                  : event.key === "ArrowDown"
+                    ? "down"
+                    : null;
+              if (!direction || !moveItem(items, item.id, direction)) return;
+              event.preventDefault();
+              handlers.onMove(item, direction);
+            }}
+            {...drag.handle(item.id)}
+            className="flex min-h-11 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-control text-muted press-quiet focus-visible:outline-2 focus-visible:outline-ink active:cursor-grabbing"
+          >
+            <GripIcon />
+          </button>
+        ) : null}
         <button
           type="button"
           role="checkbox"
@@ -143,26 +186,6 @@ export function Checklist({
             onChange={(due) => handlers.onDue!(item, due)}
           />
         ) : null}
-        {movable ? (
-          <>
-            <IconButton
-              label={`Subir «${item.text}»`}
-              disabled={moveItem(items, item.id, "up") === null}
-              onClick={() => handlers.onMove(item, "up")}
-              className="disabled:opacity-30"
-            >
-              <ChevronIcon direction="up" />
-            </IconButton>
-            <IconButton
-              label={`Bajar «${item.text}»`}
-              disabled={moveItem(items, item.id, "down") === null}
-              onClick={() => handlers.onMove(item, "down")}
-              className="disabled:opacity-30"
-            >
-              <ChevronIcon direction="down" />
-            </IconButton>
-          </>
-        ) : null}
         {canWrite ? (
           <IconButton
             label={`Borrar «${item.text}»`}
@@ -212,7 +235,7 @@ export function Checklist({
       ) : null}
 
       {pending.length > 0 ? (
-        <ul aria-label="Pendientes" className="flex flex-col">
+        <ul ref={pendingList} aria-label="Pendientes" className="flex flex-col">
           {pending.map(row)}
         </ul>
       ) : null}

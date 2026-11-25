@@ -84,7 +84,7 @@ const seriesBase = z.object({
 });
 const scope = z.enum(["this", "following", "all"]);
 const commentBase = z.object({ body: z.string().max(4000) });
-const position = z.number().int().min(0).max(100_000);
+const position = z.number().min(0).max(100_000);
 
 export const offlineChangeSchema = z.discriminatedUnion("type", [
   z.object({

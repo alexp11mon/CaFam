@@ -78,3 +78,43 @@ export function applyPositions(
     byId.has(item.id) ? { ...item, position: byId.get(item.id)! } : item,
   );
 }
+
+/** Closer than this, two positions are renumbered (spec 048 plan D1). */
+const ROOM = 1e-9;
+
+/**
+ * Drops a pending item at `toIndex` of the pending ones (its index once
+ * moved). One row with a position between its new neighbours; every pending
+ * one renumbered when there is no room. Null when nothing changes.
+ */
+export function placeItem(
+  items: readonly NoteItem[],
+  id: string,
+  toIndex: number,
+): { id: string; position: number }[] | null {
+  const pending = sortItems(items).filter((item) => !item.done);
+  const from = pending.findIndex((item) => item.id === id);
+  if (from < 0) return null;
+  const rest = pending.filter((item) => item.id !== id);
+  const to = Math.max(0, Math.min(toIndex, rest.length));
+  if (to === from) return null;
+  const before = rest[to - 1]?.position;
+  const after = rest[to]?.position;
+  const position =
+    before === undefined
+      ? after === undefined
+        ? 0
+        : after >= 1
+          ? after - 1
+          : after / 2
+      : after === undefined
+        ? before + 1
+        : (before + after) / 2;
+  const fits =
+    (before === undefined || position - before > ROOM) &&
+    (after === undefined || after - position > ROOM);
+  if (fits) return [{ id, position }];
+  const moved = pending[from];
+  rest.splice(to, 0, moved);
+  return rest.map((item, index) => ({ id: item.id, position: index }));
+}

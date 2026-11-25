@@ -234,6 +234,18 @@ export function ChevronIcon({
   );
 }
 
+/** The handle that drags an item (spec 048 RF-3). */
+export function GripIcon() {
+  return (
+    <Icon>
+      <path
+        strokeWidth="2.5"
+        d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"
+      />
+    </Icon>
+  );
+}
+
 export function CloseIcon() {
   return (
     <Icon>

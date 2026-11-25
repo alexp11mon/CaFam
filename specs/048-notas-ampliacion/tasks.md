@@ -16,10 +16,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- notes-due item-due-menu checklist` en verde y capturas a 390 px en claro y oscuro.
 
   Cubre: RF-1, RF-2 | Evidencia: 2026-11-25, `npm test -- notes-due item-due-menu notes-ui offline-note-editor` 62/62; P8 completa (3.816 tests, build OK). Capturas a 390 px en claro y oscuro en `capturas/` (`lista-con-fechas`, `menu-fecha`, `tarjeta-proxima-fecha`); la captura mostró que la fecha estrechaba el texto y el menú se salía por la izquierda: la fecha va debajo del texto y el menú se ancla a la fila. Desviación: la fecha se pone desde el botón de calendario de cada elemento (Hoy, Mañana, Próxima semana, otra fecha y hora); el gesto de deslizar en el móvil no se ha hecho.
-- [ ] T3 Reordenar con ratón, dedo y teclado
+- [x] T3 Reordenar con ratón, dedo y teclado
   Hecho cuando: `npm test -- notes-order use-item-drag checklist` en verde: arrastre, mantener pulsado, Alt+flechas con anuncio, posición entre dos y renumerado.
 
-  Cubre: RF-3 a RF-5, RNF-1 | Evidencia: —
+  Cubre: RF-3 a RF-5, RNF-1 | Evidencia: 2026-11-25, `npm test -- notes-order use-item-drag notes-ui` en verde (`placeItem` escribe una fila entre dos y renumera sin hueco; arrastre con ratón al instante, dedo tras 300 ms, dedo rápido = desplazar; Alt+↑/↓ en el asa con "Movido a la posición 2 de 2"); P8 completa (3.823 tests, build OK). Prueba real en Edge (`next start`): arrastrar "Crema" al principio con ratón a 1440 px y manteniendo pulsado con el dedo (eventos táctiles CDP) a 390 px, el orden queda guardado; capturas `arrastrando-*`. El asa sustituye a los botones Subir/Bajar; el teclado sigue intercambiando con el vecino (dos filas).
 - [ ] T4 Vencimientos en el calendario
   Hecho cuando: `npm test -- task-block calendar-filters week-view month-view agenda-view` y `npm run test:db -- calendar-tasks` en verde; capturas a 390 y 1440 px.
 

@@ -29,7 +29,13 @@ import { useHoldLive } from "@/lib/hooks/use-hold-live";
 import { useLiveCalendar } from "@/lib/hooks/use-live-calendar";
 import { NOTE_MESSAGES } from "@/lib/notes/error-messages";
 import { NOTE_TITLE_MAX } from "@/lib/notes/limits";
-import { applyPositions, moveItem, nextPosition } from "@/lib/notes/order";
+import {
+  applyPositions,
+  moveItem,
+  nextPosition,
+  placeItem,
+  sortItems,
+} from "@/lib/notes/order";
 import { dueLabel as itemDueLabel } from "@/lib/notes/due";
 import type { NoteAccess } from "@/lib/notes/permissions";
 import { dueLabel } from "@/lib/notes/progress";
@@ -193,15 +199,27 @@ export function NoteEditor({
     );
   }
 
-  function move(item: NoteItem, direction: "up" | "down") {
-    const positions = moveItem(note.items, item.id, direction);
+  // Saves new positions and says where the item ended (spec 048 RF-4).
+  function reorder(
+    item: NoteItem,
+    positions: { id: string; position: number }[] | null,
+  ) {
     if (!positions) return;
+    const moved = sortItems(applyPositions(note.items, positions)).filter(
+      (other) => !other.done,
+    );
+    const place = moved.findIndex((other) => other.id === item.id) + 1;
     void change(
       withItems((items) => applyPositions(items, positions)),
       () => moveItemsOrQueue(note.id, positions),
-      direction === "up" ? `Subido «${item.text}»` : `Bajado «${item.text}»`,
+      `Movido a la posición ${place} de ${moved.length}`,
     );
   }
+
+  const move = (item: NoteItem, direction: "up" | "down") =>
+    reorder(item, moveItem(note.items, item.id, direction));
+  const place = (item: NoteItem, toIndex: number) =>
+    reorder(item, placeItem(note.items, item.id, toIndex));
 
   async function remove(item: NoteItem) {
     const removed = await change(
@@ -378,6 +396,7 @@ export function NoteEditor({
             onToggle={toggle}
             onRename={rename}
             onMove={move}
+            onPlace={place}
             onDelete={(item) => void remove(item)}
             onClearDone={clear}
             today={today}

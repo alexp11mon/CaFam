@@ -56,7 +56,7 @@ export const noteFieldsSchema = z
 export const newItemSchema = z.object({
   id,
   text: itemTextSchema,
-  position: z.number().int().min(0).max(100_000),
+  position: z.number().min(0).max(100_000),
 });
 
 /** A due date and its optional time (spec 048 RF-1). */
@@ -96,7 +96,7 @@ export function itemRow(change: {
 export const restoreItemSchema = newItemSchema.extend({ done: z.boolean() });
 
 export const positionsSchema = z
-  .array(z.object({ id, position: z.number().int().min(0).max(100_000) }))
+  .array(z.object({ id, position: z.number().min(0).max(100_000) }))
   .min(1)
   .max(200);
 
