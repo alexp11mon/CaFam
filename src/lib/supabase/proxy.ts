@@ -37,7 +37,11 @@ export async function updateSession(request: NextRequest) {
   // the JWT and refreshes an expired session.
   const { data } = await supabase.auth.getClaims();
   const hasSession = Boolean(data?.claims);
-  const access = getRouteAccess(request.nextUrl.pathname, hasSession);
+  const access = getRouteAccess(
+    request.nextUrl.pathname,
+    hasSession,
+    request.nextUrl.search,
+  );
 
   // Without a session the device follows the system, even with an old cookie (spec 011 RF-8).
   if (!hasSession && request.cookies.has(THEME_COOKIE)) {

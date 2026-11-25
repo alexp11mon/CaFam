@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useState } from "react";
+import { useActionState, useEffect, useId, useState } from "react";
 import { ColorPicker } from "@/components/calendar/color-picker";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
@@ -14,6 +14,12 @@ import { EMPTY_IMPORT_VALUES, type ImportState } from "@/lib/ics/import-state";
 import { MAX_BYTES } from "@/lib/ics/limits";
 import { ImportSummary } from "./import-summary";
 import { SwapLabel } from "@/components/ui/swap-label";
+import {
+  dropShared,
+  icsOf,
+  readShared,
+  sharedIdFromLocation,
+} from "@/lib/share/inbox";
 
 const TOO_LARGE = getImportErrorMessage({ kind: "too-large" });
 
@@ -48,9 +54,35 @@ export function ImportForm({
   // The server decides, but a file over the limit is announced before it is sent (RF-26).
   const [fileError, setFileError] = useState<string>();
 
+  // An .ics shared from another app, read from the device (spec 047 RF-6):
+  // it goes with the form only when the person presses "Importar".
+  const [shared, setShared] = useState<{ id: string; file: File } | null>(null);
+  useEffect(() => {
+    const id = sharedIdFromLocation();
+    if (!id) return;
+    let live = true;
+    void readShared(id).then((item) => {
+      const file = item && icsOf(item);
+      if (live && file) setShared({ id, file });
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  useEffect(() => {
+    if (state.result && shared) void dropShared(shared.id);
+  }, [state.result, shared]);
+
+  function send(formData: FormData) {
+    const file = formData.get("file");
+    if (shared && !(file instanceof File && file.size > 0))
+      formData.set("file", shared.file);
+    formAction(formData);
+  }
+
   // noValidate: errors come from the server in Spanish, not from the browser.
   return (
-    <form action={formAction} noValidate className="flex flex-col gap-5">
+    <form action={send} noValidate className="flex flex-col gap-5">
       {state.result ? <ImportSummary result={state.result} /> : null}
       <FormAlert message={state.formError} />
       <TextField
@@ -79,6 +111,11 @@ export function ImportForm({
           }}
           className="w-full rounded-control border border-control bg-paper px-3 py-2 text-base text-ink file:mr-3 file:min-h-11 file:rounded-control file:border-0 file:bg-stone file:px-5 file:font-semibold file:text-ink aria-invalid:border-danger"
         />
+        {shared ? (
+          <p className="text-sm text-ink">
+            Archivo compartido: {shared.file.name}
+          </p>
+        ) : null}
         {fileError ? (
           <p
             id={fileErrorId}

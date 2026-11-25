@@ -77,3 +77,26 @@ describe("NlField", () => {
     expect(screen.getByRole("button", { name: "Aplicar" })).toBeDisabled();
   });
 });
+
+describe("NlField with shared text (spec 047 RF-8)", () => {
+  it("starts with the text and its preview, applied only when asked", () => {
+    const onApply = vi.fn();
+    render(
+      <NlField
+        timeZone="Europe/Madrid"
+        defaultMinutes={60}
+        calendars={[]}
+        fallback={{ date: "2026-12-01", startTime: "09:00" }}
+        onApply={onApply}
+        defaultText="Pádel el 5 de diciembre de 2026 a las 19"
+      />,
+    );
+    expect(screen.getByLabelText("Escribe el evento")).toHaveValue(
+      "Pádel el 5 de diciembre de 2026 a las 19",
+    );
+    expect(
+      screen.getByText("Pádel · Sábado, 5 de diciembre · 19:00–20:00"),
+    ).toBeInTheDocument();
+    expect(onApply).not.toHaveBeenCalled();
+  });
+});

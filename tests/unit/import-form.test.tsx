@@ -1,10 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ImportForm } from "@/components/import/import-form";
 import type { FormAction } from "@/lib/forms/form-state";
 import { MAX_BYTES } from "@/lib/ics/limits";
 import type { ImportState } from "@/lib/ics/import-state";
+import { readShared } from "@/lib/share/inbox";
+import { memoryIndexedDb } from "./memory-indexeddb";
 
 const EMPTY: ImportState = {
   values: {
@@ -289,5 +291,50 @@ describe("ImportForm keep updated (spec 044 RF-5)", () => {
     await userEvent.click(submit());
     const formData = vi.mocked(action).mock.calls[0]?.[1] as FormData;
     expect(formData.get("keep")).toBe("on");
+  });
+});
+
+describe("ImportForm with a shared .ics (spec 047 RF-6)", () => {
+  const ID = "00000000-0000-4000-8000-000000000001";
+
+  it("loads the file from the device and imports it only when asked", async () => {
+    const idb = memoryIndexedDb();
+    vi.stubGlobal("indexedDB", idb);
+    const file = new File(["BEGIN:VCALENDAR"], "cena.ics", {
+      type: "text/calendar",
+    });
+    idb.versions.set("cafam-share", 1);
+    idb.databases.set(
+      "cafam-share",
+      new Map([
+        [
+          "items",
+          new Map([
+            [ID, { id: ID, createdAt: Date.now(), text: "", files: [file] }],
+          ]),
+        ],
+      ]),
+    );
+    window.history.replaceState(null, "", `/dashboard/import?shared=${ID}`);
+    const done: ImportState = {
+      ...EMPTY,
+      result: { calendarId: "c1", created: 1, skipped: 0, cutSeries: 0 },
+    };
+    const action = vi.fn<FormAction<ImportState>>(async () => done);
+    render(<ImportForm action={action} />);
+
+    expect(
+      await screen.findByText("Archivo compartido: cena.ics"),
+    ).toBeInTheDocument();
+    expect(action).not.toHaveBeenCalled();
+
+    await userEvent.click(submit());
+    await waitFor(() => expect(action).toHaveBeenCalledTimes(1));
+    const sent = action.mock.calls[0][1].get("file") as File;
+    expect(sent.name).toBe("cena.ics");
+    // Imported: it leaves the device.
+    await waitFor(async () => expect(await readShared(ID)).toBeNull());
+    window.history.replaceState(null, "", "/");
+    vi.unstubAllGlobals();
   });
 });

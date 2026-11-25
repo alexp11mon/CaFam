@@ -35,6 +35,12 @@ import {
   type Suggestion,
 } from "@/lib/assistant/suggestions";
 import { prepareForAssistant } from "@/lib/images/prepare-image";
+import {
+  dropShared,
+  imagesOf,
+  readShared,
+  sharedIdFromLocation,
+} from "@/lib/share/inbox";
 import { describeAction, type AssistantAction } from "@/lib/assistant/actions";
 import { isNo, isYes } from "@/lib/assistant/write-intent";
 import { ActionCard, runCardStep, type ChatAction } from "./action-card";
@@ -202,6 +208,22 @@ export function AssistantChat({
       }
     }
   }
+
+  // Images shared from another app arrive attached on the chat's own page
+  // (spec 047 RF-7); they are sent only with a question.
+  useEffect(() => {
+    if (onClose) return;
+    const id = sharedIdFromLocation();
+    if (!id) return;
+    window.history.replaceState(window.history.state, "", location.pathname);
+    void readShared(id).then((item) => {
+      if (!item) return;
+      void dropShared(id);
+      void addFiles(imagesOf(item));
+    });
+    // Once, when the page opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function onPaste(event: ClipboardEvent<HTMLTextAreaElement>) {
     // RF-3: a pasted image is attached; pasted text stays text.

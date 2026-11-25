@@ -2,6 +2,8 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImageUploader } from "@/components/images/image-uploader";
+import { PENDING_IMAGES_KEY, readShared } from "@/lib/share/inbox";
+import { memoryIndexedDb } from "./memory-indexeddb";
 
 // Spec 012, T9: adding images from the event detail, with progress, cancel
 // and retry (RF-1, RF-2, RF-4, RF-6, RF-8, RF-20, RF-24).
@@ -197,5 +199,48 @@ describe("ImageUploader", () => {
     expect(h.reserveImages).not.toHaveBeenCalled();
     await userEvent.click(within(row).getByRole("button", { name: "Quitar" }));
     expect(screen.queryByText("grande.jpg")).not.toBeInTheDocument();
+  });
+});
+
+describe("ImageUploader with images shared from another app (spec 047 RF-7)", () => {
+  const ID = "00000000-0000-4000-8000-000000000001";
+
+  it("offers them and uploads them only when asked", async () => {
+    const idb = memoryIndexedDb();
+    vi.stubGlobal("indexedDB", idb);
+    idb.versions.set("cafam-share", 1);
+    idb.databases.set(
+      "cafam-share",
+      new Map([
+        [
+          "items",
+          new Map([
+            [
+              ID,
+              {
+                id: ID,
+                createdAt: Date.now(),
+                text: "",
+                files: [photo("a.jpg"), photo("b.jpg")],
+              },
+            ],
+          ]),
+        ],
+      ]),
+    );
+    sessionStorage.setItem(PENDING_IMAGES_KEY, ID);
+    render(<ImageUploader eventId={EVENT} />);
+    expect(
+      await screen.findByText("2 imágenes compartidas esperan un evento"),
+    ).toBeInTheDocument();
+    expect(h.reserveImages).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Añadir aquí" }));
+    await waitFor(() => expect(h.refresh).toHaveBeenCalledTimes(1));
+    expect(h.reserveImages).toHaveBeenCalledWith(EVENT, expect.any(Array));
+    expect(sessionStorage.getItem(PENDING_IMAGES_KEY)).toBeNull();
+    expect(await readShared(ID)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Añadir aquí" })).toBeNull();
+    vi.unstubAllGlobals();
   });
 });

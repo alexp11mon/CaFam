@@ -1,3 +1,5 @@
+import { SHARE_PATH } from "./next-path";
+
 export type RouteAccess =
   { type: "allow" } | { type: "redirect"; destination: string };
 
@@ -19,7 +21,15 @@ function isProtected(pathname: string): boolean {
 export function getRouteAccess(
   pathname: string,
   hasSession: boolean,
+  /** The query, only read for a share (spec 047 RF-9). */
+  search = "",
 ): RouteAccess {
+  if (!hasSession && SHARE_PATH.test(pathname + search)) {
+    return {
+      type: "redirect",
+      destination: `/login?next=${encodeURIComponent(pathname + search)}`,
+    };
+  }
   if (!hasSession && isProtected(pathname)) {
     return { type: "redirect", destination: "/login" };
   }

@@ -16,11 +16,11 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- sw-share-target offline-sw-sync` en verde: el `POST` guarda en `cafam-share` y responde `303`; lo caducado se borra; el bucle sin conexión sigue igual. `CACHE_NAME` sube.
 
   Cubre: RF-5, RF-10, RNF-2 | Evidencia: 2026-11-25, `sw-share-target` 4, `offline-sw-sync`, `sw-push`, `manifest` en verde; `CACHE_NAME` = `cafam-v9`; P8 completa (3.777 tests, build OK).
-- [ ] T3 Bandeja de lo compartido
+- [x] T3 Bandeja de lo compartido
   Hecho cuando: `npm test -- share-inbox import-form next-path` en verde y capturas a 390 px en claro y oscuro.
   - `.ics` → importar; imágenes → Venito o evento; texto → alta; sin sesión → login y vuelta.
 
-  Cubre: RF-6 a RF-9 | Evidencia: —
+  Cubre: RF-6 a RF-9 | Evidencia: 2026-11-25, `share-inbox` 6, `import-form` 13, `next-path`/`route-access`, `assistant-chat-images`, `image-uploader`, `nl-field` en verde; P8 completa (3.790 tests, build OK); capturas en `capturas/` (bandeja y menú, 390 y 1440 px, claro y oscuro). "Añadir a un evento" usa el buscador de la 039 y el detalle ofrece "Añadir aquí".
 - [ ] T4 Accesos directos y número del icono
   Hecho cuando: `npm test -- manifest use-app-badge` y `npm run test:db -- profile-badge` en verde; iconos generados.
 

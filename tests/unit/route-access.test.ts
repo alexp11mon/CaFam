@@ -55,6 +55,24 @@ describe("getRouteAccess", () => {
     });
   });
 
+  describe("what another app shared (spec 047 RF-9)", () => {
+    const id = "00000000-0000-4000-8000-000000000001";
+
+    it("keeps the share through the login", () => {
+      expect(getRouteAccess("/dashboard/share", false, `?id=${id}`)).toEqual({
+        type: "redirect",
+        destination: `/login?next=${encodeURIComponent(`/dashboard/share?id=${id}`)}`,
+      });
+    });
+
+    it("drops anything but a uuid", () => {
+      expect(getRouteAccess("/dashboard/share", false, "?id=x&y=1")).toEqual({
+        type: "redirect",
+        destination: "/login",
+      });
+    });
+  });
+
   describe("with session (RF-9)", () => {
     it.each(["/login", "/signup"])(
       "redirects %s to the calendar (spec 005 RF-15)",

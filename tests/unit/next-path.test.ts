@@ -42,4 +42,18 @@ describe("getSafeNextPath (RF-7, plan D9)", () => {
   ])("falls back to the calendar for %j (spec 005 RF-15)", (next) => {
     expect(getSafeNextPath(next)).toBe("/dashboard/calendar");
   });
+
+  it("accepts exactly /dashboard/share?id=<uuid> (spec 047 RF-9, plan D4)", () => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    expect(getSafeNextPath(`/dashboard/share?id=${id}`)).toBe(
+      `/dashboard/share?id=${id}`,
+    );
+    for (const next of [
+      `/dashboard/share?id=${id}&x=1`,
+      "/dashboard/share?id=abc",
+      `/dashboard/share/?id=${id}`,
+      `//evil.example.com/dashboard/share?id=${id}`,
+    ])
+      expect(getSafeNextPath(next)).toBe("/dashboard/calendar");
+  });
 });

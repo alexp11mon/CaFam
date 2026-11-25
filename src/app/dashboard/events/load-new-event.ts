@@ -29,7 +29,7 @@ export type NewEventData =
       /** The defaults of the profile (spec 040 RF-6). */
       reminderDefaults: { timed: number | null; allDay: number | null };
       /** "Escribe el evento" for a new one, not a duplicate (spec 041 RF-11). */
-      phrase?: { timeZone: string; defaultMinutes: number };
+      phrase?: { timeZone: string; defaultMinutes: number; text?: string };
       /** The profile's zone, for "Zona horaria" (spec 045 RF-1). */
       timeZone: string;
     };
@@ -125,7 +125,14 @@ export async function loadNewEvent(query: Query): Promise<NewEventData> {
     })),
     categories,
     reminderDefaults,
-    phrase: { timeZone, defaultMinutes: viewOptions.duration },
+    phrase: {
+      timeZone,
+      defaultMinutes: viewOptions.duration,
+      // Shared from another app, in the phrase field (spec 047 RF-8).
+      ...(typeof query.text === "string" && query.text.trim()
+        ? { text: query.text.slice(0, 300) }
+        : {}),
+    },
     timeZone,
   };
 }

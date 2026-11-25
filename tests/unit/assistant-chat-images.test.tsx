@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { readShared } from "@/lib/share/inbox";
+import { memoryIndexedDb } from "./memory-indexeddb";
 
 // Spec 022, T8: attaching images to the assistant (RF-1 to RF-3, RF-10 to
 // RF-12, RF-54 to RF-56, RF-58; plan D2, D9).
@@ -243,5 +245,42 @@ describe("attaching images", () => {
     expect(sentBody(1)).toEqual({
       messages: [{ role: "user", content: "¿Qué hay hoy?" }],
     });
+  });
+});
+
+describe("images shared from another app (spec 047 RF-7)", () => {
+  const ID = "00000000-0000-4000-8000-000000000001";
+
+  it("arrive attached on the chat's page, and nothing is sent yet", async () => {
+    const idb = memoryIndexedDb();
+    vi.stubGlobal("indexedDB", idb);
+    idb.versions.set("cafam-share", 1);
+    idb.databases.set(
+      "cafam-share",
+      new Map([
+        [
+          "items",
+          new Map([
+            [
+              ID,
+              {
+                id: ID,
+                createdAt: Date.now(),
+                text: "",
+                files: [png("a.png"), png("b.png")],
+              },
+            ],
+          ]),
+        ],
+      ]),
+    );
+    window.history.replaceState(null, "", `/dashboard/assistant?shared=${ID}`);
+    setup();
+    expect(
+      await screen.findAllByRole("button", { name: /Quitar imagen/ }),
+    ).toHaveLength(2);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(location.search).toBe("");
+    expect(await readShared(ID)).toBeNull();
   });
 });

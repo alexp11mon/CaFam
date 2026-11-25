@@ -75,6 +75,7 @@ export function ShareEventButton({
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         onClick={share}
+        className="self-start"
       >
         Compartir
       </Button>

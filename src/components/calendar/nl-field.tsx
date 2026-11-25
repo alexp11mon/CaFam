@@ -53,7 +53,10 @@ export function NlField({
   fallback,
   onApply,
   autoFocus = false,
+  defaultText = "",
 }: {
+  /** Text shared from another app, read but not applied (spec 047 RF-8). */
+  defaultText?: string;
   timeZone: string;
   defaultMinutes: number;
   /** Where the user can write; "@nombre" picks one (RF-8). */
@@ -64,12 +67,8 @@ export function NlField({
   /** "+" and N open the form here (RF-13). */
   autoFocus?: boolean;
 }) {
-  const [text, setText] = useState("");
-  const [understood, setUnderstood] = useState<Understood | null>(null);
-
-  function read(next: string) {
-    setText(next);
-    if (!next.trim()) return setUnderstood(null);
+  function understand(next: string): Understood | null {
+    if (!next.trim()) return null;
     const parsed = parseEventText(next, todayKey(timeZone));
     const matchable: MatchableCalendar[] = calendars.map(({ id, name }) => ({
       id,
@@ -77,7 +76,7 @@ export function NlField({
       writable: true,
       reason: null,
     }));
-    setUnderstood({
+    return {
       segments: highlight(next, parsed.spans),
       event: resolveParsed(parsed, {
         timeZone,
@@ -85,7 +84,17 @@ export function NlField({
         calendars: matchable,
         fallback,
       }),
-    });
+    };
+  }
+
+  const [text, setText] = useState(defaultText);
+  const [understood, setUnderstood] = useState<Understood | null>(() =>
+    understand(defaultText),
+  );
+
+  function read(next: string) {
+    setText(next);
+    setUnderstood(understand(next));
   }
 
   function apply() {
