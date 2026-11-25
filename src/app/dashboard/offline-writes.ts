@@ -56,6 +56,7 @@ import {
   type Supabase,
 } from "./events/event-writes";
 import { seriesValues } from "./events/quick-writes";
+import { parseEventId } from "@/lib/recurrence/occurrence-id";
 import { totalsOf } from "./offline-reads-detail";
 
 // Applies one change made offline with the user's session (spec 034 RF-41,
@@ -692,6 +693,15 @@ async function applyNote(
     case "note.create": {
       if (await getNote(supabase, change.id)) return APPLIED;
       const { title, ...rest } = change.fields;
+      // The event it was made for; a repetition gets its row (spec 048 RF-15).
+      let eventRow: string | null = null;
+      const parsedEvent = change.eventId ? parseEventId(change.eventId) : null;
+      if (parsedEvent?.kind === "event") eventRow = parsedEvent.id;
+      else if (parsedEvent) {
+        const row = await materializeWith(supabase, change.eventId!);
+        if ("error" in row) return failed(row.error);
+        eventRow = row.eventId;
+      }
       const inserted = await noteWrite(
         supabase
           .from("notes")
@@ -700,6 +710,7 @@ async function applyNote(
             kind: change.kind,
             title: title ?? "",
             calendar_id: change.calendarId,
+            ...(eventRow ? { event_id: eventRow } : {}),
           })
           .select("id"),
       );

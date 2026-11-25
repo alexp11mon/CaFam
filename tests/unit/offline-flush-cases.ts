@@ -91,6 +91,27 @@ export function flushCases(run: Run) {
       });
     });
 
+    it("sends a note for an event and a due date as they are (spec 048 RF-15)", async () => {
+      const forEvent: OfflineChange = {
+        ...noteCreate("n1"),
+        eventId: "e1_20261210T190000Z",
+      } as OfflineChange;
+      const due = {
+        type: "item.update",
+        noteId: "n1",
+        id: "i1",
+        base: { text: "Pan", done: false, dueDate: null, dueTime: null },
+        change: { dueDate: "2026-12-03", dueTime: "09:00" },
+      } as OfflineChange;
+      // A refused event never takes the note made for it.
+      const outcome = await run({
+        queue: [eventDelete("e1"), forEvent, due],
+        apply: { e1: { status: "rejected", reason: "No existe." } },
+      });
+      expect(outcome.sent).toEqual(["e1", "n1", "i1"]);
+      expect(outcome).toMatchObject({ applied: 2, queue: [] });
+    });
+
     it("keeps a conflict and goes on", async () => {
       const outcome = await run({
         queue: [noteCreate("a"), noteCreate("b")],

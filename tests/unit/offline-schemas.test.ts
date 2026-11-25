@@ -113,3 +113,49 @@ describe("offlineChangeSchema (spec 035 RNF-3)", () => {
     );
   });
 });
+
+// Spec 048 T7 (RF-15): dates, the new order and the event of a note, offline.
+describe("notes of spec 048", () => {
+  const note = "33333333-3333-4333-8333-333333333333";
+  const item = "44444444-4444-4444-8444-444444444444";
+  const itemBase = { text: "Pan", done: false, dueDate: null, dueTime: null };
+
+  it("accepts a due date with an hour, and an hour for the date it has", () => {
+    const update = (change: object) => ({
+      type: "item.update",
+      noteId: note,
+      id: item,
+      base: itemBase,
+      change,
+    });
+    expect(ok(update({ dueDate: "2026-12-03", dueTime: "18:30" }))).toBe(true);
+    expect(ok(update({ dueDate: null, dueTime: null }))).toBe(true);
+    // Only the database knows the date it has: an hour alone is its check (23514).
+    expect(ok(update({ dueTime: "18:30" }))).toBe(true);
+  });
+
+  it("accepts a position between two", () => {
+    expect(
+      ok({
+        type: "item.move",
+        noteId: note,
+        positions: [{ id: item, position: 0.75 }],
+      }),
+    ).toBe(true);
+  });
+
+  it("accepts the event or the repetition a note is made for", () => {
+    const create = (eventId?: string) => ({
+      type: "note.create",
+      id: note,
+      kind: "list",
+      calendarId: null,
+      fields: { title: "Qué llevar" },
+      ...(eventId === undefined ? {} : { eventId }),
+    });
+    expect(ok(create())).toBe(true);
+    expect(ok(create(event))).toBe(true);
+    expect(ok(create(`${event}_20261210T190000Z`))).toBe(true);
+    expect(ok(create("x; drop table"))).toBe(false);
+  });
+});

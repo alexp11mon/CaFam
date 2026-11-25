@@ -162,6 +162,9 @@ export async function createNoteOrQueue(
         kind: (values.kind === "text" ? "text" : "list") as NoteKind,
         calendarId: values.calendarId || null,
         fields: { title: values.title.trim() },
+        ...(formData.get("eventId")
+          ? { eventId: String(formData.get("eventId")) }
+          : {}),
       }
     : null;
   if (!change && !isOnline()) {

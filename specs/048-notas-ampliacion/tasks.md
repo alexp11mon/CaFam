@@ -32,10 +32,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- notes-match assistant-note-writes assistant-core` en verde y `EVAL_ONLY` con las 5 preguntas nuevas contra Groq (una ejecución).
 
   Cubre: RF-12 a RF-14, RNF-3 | Evidencia: 2026-11-25, `npm test -- notes-match assistant-note-writes assistant-core assistant-action-card` en verde (`matchNote` sin tildes ni mayúsculas, ambigua o no encontrada; `create_notes` personal o compartida solo donde puede escribir, `add_note_items` al final de la lista, cuentan en los 3 cambios por mensaje; "Deshacer" quita solo los elementos añadidos o la nota creada si nadie la cambió; tarjeta "Añadido a la nota" con "Abrir" y "Deshacer"); `list_notes` de solo lectura; P8 completa (3.845 tests, build OK). Eval contra Groq con `EVAL_PART=notes` (5 preguntas nuevas en `tests/assistant-eval/note-questions.ts`): primera ejecución 4/5 (N5 sin respuesta por un timeout de Groq; N4 acertó pero dejaba ver un aviso interno, que se quitó); segunda ejecución solo de N4–N5 (`EVAL_ONLY=4-5`), 2/2; ninguna escritura indebida.
-- [ ] T7 Sin conexión
+- [x] T7 Sin conexión
   Hecho cuando: `npm test -- offline-describe offline-flush offline-sw-sync` en verde con los casos nuevos en `offline-flush-cases.ts`.
 
-  Cubre: RF-15 | Evidencia: —
+  Cubre: RF-15 | Evidencia: 2026-11-25, `npx vitest run --project unit offline-describe offline-flush offline-sw-sync offline-schemas` 49/49 y P8 (3850 tests, build). Fechas, orden fraccionario y completar desde el calendario ya iban por la cola; `note.create` lleva `eventId` (repeticiones materializadas en el servidor) y un evento rechazado nunca se lleva la nota. Una hora sin fecha solo la rechaza la base de datos (23514), que conoce la fecha guardada.
 - [ ] T8 Cierre
   Hecho cuando: AGENTS.md (§11 y sección de la spec), README y constitución actualizados; `python -m graphify update .`; P8 completa.
 

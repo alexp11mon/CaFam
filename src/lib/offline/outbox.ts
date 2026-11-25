@@ -61,6 +61,8 @@ export type OfflineChange =
       kind: NoteKind;
       calendarId: string | null;
       fields: NoteFields;
+      /** The event or repetition it is made for (spec 048 RF-9, RF-15). */
+      eventId?: string;
     }
   | {
       type: "note.update";
@@ -174,6 +176,8 @@ export function noteOf(change: OfflineChange): string | null {
 
 /** The event a comment or an image belongs to, if any (spec 035). */
 export function eventOf(change: OfflineChange): string | null {
+  // A note made for an event is the note's, never lost with the event (spec 048).
+  if (change.type === "note.create") return null;
   return "eventId" in change ? change.eventId : null;
 }
 

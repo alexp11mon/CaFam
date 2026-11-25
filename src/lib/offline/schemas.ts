@@ -111,6 +111,11 @@ export const offlineChangeSchema = z.discriminatedUnion("type", [
     kind: z.enum(["list", "text"]),
     calendarId: uuid.nullable(),
     fields: noteFields.partial(),
+    // An event or "<uuid>_<YYYYMMDDTHHMMSSZ>" (spec 048 RF-15).
+    eventId: z
+      .string()
+      .regex(/^[0-9a-f-]{36}(_\d{8}T\d{6}Z)?$/i)
+      .optional(),
   }),
   z.object({
     type: z.literal("note.update"),
