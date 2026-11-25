@@ -433,6 +433,15 @@ self.addEventListener("push", (event) => {
     payload = event.data ? event.data.json() : null;
   } catch {}
   const title = (payload && payload.title) || "CaFam";
+  // A notice that brings today's count updates the icon (spec 047 RF-13).
+  const badge = payload && payload.badge;
+  if (typeof badge === "number" && self.navigator && self.navigator.setAppBadge)
+    event.waitUntil(
+      (badge > 0
+        ? self.navigator.setAppBadge(badge)
+        : self.navigator.clearAppBadge()
+      ).catch(() => {}),
+    );
   event.waitUntil(
     self.registration.showNotification(title, {
       body: (payload && payload.body) || "",

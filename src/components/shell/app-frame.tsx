@@ -5,6 +5,7 @@ import { OfflineProvider } from "@/components/offline/offline-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import type { AccentId } from "@/lib/theme/accents";
 import type { ThemeId } from "@/lib/theme/theme";
+import { AppBadge } from "./app-badge";
 import { AssistantFab } from "./assistant-fab";
 import { BottomBar } from "./bottom-bar";
 import { CalendarHeaderProvider } from "./calendar-header";
@@ -72,6 +73,7 @@ export function AppFrame({
               </div>
               <CreateButton floating />
               {offline ? null : <AssistantFab />}
+              {offline ? null : <AppBadge />}
               <BottomBar signOutAction={signOutAction} />
             </CalendarHeaderProvider>
           </EventClipboardProvider>

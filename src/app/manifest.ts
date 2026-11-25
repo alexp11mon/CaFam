@@ -2,6 +2,14 @@ import type { MetadataRoute } from "next";
 import { NEUTRALS } from "@/lib/theme/accents";
 
 /** Installable PWA manifest (RF-21, RNF-9), with the mist and the icons of the Orilla identity (spec 025 RF-7). */
+const shortcut = (name: string, url: string, icon: string) => ({
+  name,
+  url,
+  icons: [
+    { src: `/icons/shortcut-${icon}.png`, sizes: "96x96", type: "image/png" },
+  ],
+});
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "CaFam",
@@ -28,6 +36,13 @@ export default function manifest(): MetadataRoute.Manifest {
         ],
       },
     },
+    // Long press on the icon (spec 047 RF-11); iOS has none.
+    shortcuts: [
+      shortcut("Nuevo evento", "/dashboard/events/new", "new"),
+      shortcut("Hoy", "/dashboard/calendar?view=day", "today"),
+      shortcut("Notas", "/dashboard/notes", "notes"),
+      shortcut("Preguntar a Venito", "/dashboard/assistant", "venito"),
+    ],
     icons: [
       {
         src: "/icons/icon-192.png",

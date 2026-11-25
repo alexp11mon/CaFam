@@ -1160,6 +1160,7 @@ export type Database = {
       profiles: {
         Row: {
           accent: string
+          badge_today: boolean
           created_at: string
           default_event_minutes: number
           display_name: string
@@ -1177,6 +1178,7 @@ export type Database = {
         }
         Insert: {
           accent?: string
+          badge_today?: boolean
           created_at?: string
           default_event_minutes?: number
           display_name: string
@@ -1194,6 +1196,7 @@ export type Database = {
         }
         Update: {
           accent?: string
+          badge_today?: boolean
           created_at?: string
           default_event_minutes?: number
           display_name?: string

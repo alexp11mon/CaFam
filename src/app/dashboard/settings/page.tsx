@@ -23,6 +23,7 @@ import {
   setDefaultDuration,
   setShareAvailability,
   setShareBusy,
+  setBadgeToday,
   setShowWeekends,
   setTheme,
 } from "./actions";
@@ -97,13 +98,18 @@ async function BusySection() {
 
 async function CalendarSection() {
   const { supabase, userId } = await requireUser();
-  const { showWeekends, duration } = await getViewOptions(supabase, userId);
+  const { showWeekends, duration, badge } = await getViewOptions(
+    supabase,
+    userId,
+  );
   return (
     <ViewOptionsSetting
       showWeekends={showWeekends}
       duration={duration}
       saveWeekends={setShowWeekends}
       saveDuration={setDefaultDuration}
+      badge={badge}
+      saveBadge={setBadgeToday}
     />
   );
 }

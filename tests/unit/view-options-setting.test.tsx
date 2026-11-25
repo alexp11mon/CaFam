@@ -59,3 +59,29 @@ describe("ViewOptionsSetting", () => {
     expect(box).toBeChecked();
   });
 });
+
+describe("ViewOptionsSetting badge (spec 047 RF-12)", () => {
+  it("saves the switch and clears the icon when turned off", async () => {
+    const saveBadge = vi.fn(async () => ({}));
+    const clearAppBadge = vi.fn(async () => undefined);
+    Object.assign(navigator, { clearAppBadge });
+    render(
+      <ViewOptionsSetting
+        showWeekends
+        duration={60}
+        saveWeekends={vi.fn(async () => ({}))}
+        saveDuration={vi.fn(async () => ({}))}
+        badge
+        saveBadge={saveBadge}
+      />,
+    );
+    const box = screen.getByRole("switch", {
+      name: "Número de eventos de hoy en el icono",
+    });
+    expect(box).toBeChecked();
+    await userEvent.click(box);
+    expect(saveBadge).toHaveBeenCalledWith(false);
+    expect(clearAppBadge).toHaveBeenCalledTimes(1);
+    Reflect.deleteProperty(navigator, "clearAppBadge");
+  });
+});

@@ -59,4 +59,23 @@ describe("web app manifest (RF-21, RNF-9)", () => {
       },
     });
   });
+
+  it("offers four shortcuts with their own 96 px icons (spec 047 RF-11)", () => {
+    expect(result.shortcuts?.map(({ name, url }) => ({ name, url }))).toEqual([
+      { name: "Nuevo evento", url: "/dashboard/events/new" },
+      { name: "Hoy", url: "/dashboard/calendar?view=day" },
+      { name: "Notas", url: "/dashboard/notes" },
+      { name: "Preguntar a Venito", url: "/dashboard/assistant" },
+    ]);
+    for (const shortcut of result.shortcuts ?? []) {
+      expect(shortcut.icons).toHaveLength(1);
+      expect(shortcut.icons?.[0]).toMatchObject({
+        sizes: "96x96",
+        type: "image/png",
+      });
+      expect(
+        existsSync(join(process.cwd(), "public", shortcut.icons![0].src)),
+      ).toBe(true);
+    }
+  });
 });

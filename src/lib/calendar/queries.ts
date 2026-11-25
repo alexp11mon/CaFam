@@ -227,14 +227,15 @@ export async function getAppearance(
 export async function getViewOptions(
   supabase: Client,
   userId: string,
-): Promise<{ showWeekends: boolean; duration: Duration }> {
+): Promise<{ showWeekends: boolean; duration: Duration; badge: boolean }> {
   const { data } = await supabase
     .from("profiles")
-    .select("show_weekends, default_event_minutes")
+    .select("show_weekends, default_event_minutes, badge_today")
     .eq("id", userId)
     .maybeSingle();
   return {
     showWeekends: data?.show_weekends ?? true,
+    badge: data?.badge_today ?? true,
     duration: parseDuration(data?.default_event_minutes),
   };
 }

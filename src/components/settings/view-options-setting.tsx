@@ -27,7 +27,12 @@ export function ViewOptionsSetting({
   duration,
   saveWeekends,
   saveDuration,
+  badge: badgeSaved,
+  saveBadge,
 }: {
+  /** "Número de eventos de hoy en el icono" (spec 047 RF-12). */
+  badge?: boolean;
+  saveBadge?: (show: boolean) => Promise<Result>;
   showWeekends: boolean;
   duration: number;
   saveWeekends: (show: boolean) => Promise<Result>;
@@ -35,6 +40,7 @@ export function ViewOptionsSetting({
 }) {
   const [weekends, setWeekends] = useState(showWeekends);
   const [minutes, setMinutes] = useState(duration);
+  const [badge, setBadge] = useState(badgeSaved ?? true);
   const [error, setError] = useState<string>();
   // The text that goes with the pulse: never the only sign (spec 021 RF-51).
   const [saved, setSaved] = useState(false);
@@ -50,6 +56,23 @@ export function ViewOptionsSetting({
       setError(result.error);
       return false;
     }
+    setSaved(true);
+    return true;
+  }
+
+  async function toggleBadge(next: boolean): Promise<boolean> {
+    if (!saveBadge) return false;
+    setBadge(next);
+    setError(undefined);
+    setSaved(false);
+    const result = await attempt(() => saveBadge(next));
+    if (result.error) {
+      setBadge(!next);
+      setError(result.error);
+      return false;
+    }
+    // Off: the number goes now, not on the next reading.
+    if (!next) navigator.clearAppBadge?.().catch(() => {});
     setSaved(true);
     return true;
   }
@@ -91,6 +114,13 @@ export function ViewOptionsSetting({
           ))}
         </Select>
       </div>
+      {saveBadge ? (
+        <Switch
+          label="Número de eventos de hoy en el icono"
+          checked={badge}
+          onCheckedChange={toggleBadge}
+        />
+      ) : null}
       <FormAlert message={error} />
       {saved ? (
         <p role="status" className="text-sm text-ink">

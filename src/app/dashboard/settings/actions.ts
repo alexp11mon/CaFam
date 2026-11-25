@@ -101,7 +101,9 @@ export async function setShareBusy(share: boolean): Promise<Result> {
 const VIEW_NOT_SAVED = "No se ha podido guardar. Inténtalo de nuevo.";
 
 type ViewOptionsUpdate =
-  { show_weekends: boolean } | { default_event_minutes: number };
+  | { show_weekends: boolean }
+  | { default_event_minutes: number }
+  | { badge_today: boolean };
 
 async function saveViewOption(update: ViewOptionsUpdate): Promise<Result> {
   const { supabase, userId } = await requireActionUser();
@@ -123,6 +125,12 @@ async function saveViewOption(update: ViewOptionsUpdate): Promise<Result> {
 export async function setShowWeekends(show: boolean): Promise<Result> {
   if (typeof show !== "boolean") return { error: VIEW_NOT_SAVED };
   return saveViewOption({ show_weekends: show });
+}
+
+/** "Número de eventos de hoy en el icono" (spec 047 RF-12). */
+export async function setBadgeToday(show: boolean): Promise<Result> {
+  if (typeof show !== "boolean") return { error: VIEW_NOT_SAVED };
+  return saveViewOption({ badge_today: show });
 }
 
 /** The length of a new event (spec 019 RF-30, RF-31). */

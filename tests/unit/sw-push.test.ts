@@ -15,7 +15,10 @@ interface FakeWindow {
   navigate: ReturnType<typeof vi.fn>;
 }
 
-function loadWorker(windows: FakeWindow[] = []) {
+function loadWorker(
+  windows: FakeWindow[] = [],
+  navigator: Record<string, unknown> = {},
+) {
   const listeners: Record<string, Listener> = {};
   const showNotification = vi.fn(async () => undefined);
   const openWindow = vi.fn(async () => null);
@@ -26,6 +29,7 @@ function loadWorker(windows: FakeWindow[] = []) {
         listeners[type] = listener;
       },
       registration: { showNotification },
+      navigator,
       clients: {
         matchAll: async () => windows,
         openWindow,
@@ -76,6 +80,27 @@ describe("sw.js push", () => {
       "CaFam",
       expect.objectContaining({ data: { url: "/dashboard/calendar" } }),
     );
+  });
+});
+
+describe("sw.js push and the icon badge (spec 047 RF-13)", () => {
+  it("sets the number a notice brings, and clears it at 0", async () => {
+    const setAppBadge = vi.fn(async () => undefined);
+    const clearAppBadge = vi.fn(async () => undefined);
+    const worker = loadWorker([], { setAppBadge, clearAppBadge });
+    await worker.fire("push", { data: { json: () => ({ badge: 2 }) } });
+    expect(setAppBadge).toHaveBeenCalledWith(2);
+    await worker.fire("push", { data: { json: () => ({ badge: 0 }) } });
+    expect(clearAppBadge).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the icon alone without a number or the API", async () => {
+    const setAppBadge = vi.fn(async () => undefined);
+    await loadWorker([], { setAppBadge }).fire("push", {
+      data: { json: () => ({ title: "x" }) },
+    });
+    expect(setAppBadge).not.toHaveBeenCalled();
+    await loadWorker().fire("push", { data: { json: () => ({ badge: 1 }) } });
   });
 });
 

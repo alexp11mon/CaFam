@@ -21,10 +21,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   - `.ics` → importar; imágenes → Venito o evento; texto → alta; sin sesión → login y vuelta.
 
   Cubre: RF-6 a RF-9 | Evidencia: 2026-11-25, `share-inbox` 6, `import-form` 13, `next-path`/`route-access`, `assistant-chat-images`, `image-uploader`, `nl-field` en verde; P8 completa (3.790 tests, build OK); capturas en `capturas/` (bandeja y menú, 390 y 1440 px, claro y oscuro). "Añadir a un evento" usa el buscador de la 039 y el detalle ofrece "Añadir aquí".
-- [ ] T4 Accesos directos y número del icono
+- [x] T4 Accesos directos y número del icono
   Hecho cuando: `npm test -- manifest use-app-badge` y `npm run test:db -- profile-badge` en verde; iconos generados.
 
-  Cubre: RF-11 a RF-13 | Evidencia: —
+  Cubre: RF-11 a RF-13 | Evidencia: 2026-11-25, `manifest` 5, `use-app-badge` 4, `today-left`, `view-options-setting`, `sw-push` (número que trae el aviso) en verde; `npm run test:db -- profile-badge` 2/2 (migración `20261128100000_profile_badge` aplicada en dev); iconos `public/icons/shortcut-*.png` con `make-icons.mjs`; P8 completa (3.799 tests, build OK). Nota: hoy el servidor de avisos (040) no manda `badge`; el service worker lo atiende cuando lo traiga.
 - [ ] T5 Prueba en el navegador y cierre
   Hecho cuando: con `next start -p 3100` y Edge instalado como app, el menú del icono muestra los accesos directos y el número; `share_target` se prueba en Android si hay dispositivo (si no, queda anotado para el usuario). AGENTS.md (trampas de iOS), README y constitución actualizados; `python -m graphify update .`; P8 completa.
 
