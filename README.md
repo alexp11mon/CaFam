@@ -116,6 +116,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 044  | Importar a un calendario existente y mantener actualizado lo importado | ✅ Cerrada (migraciones pendientes en prod)       |
 | 045  | Zona horaria por evento                                                | ✅ Cerrada (migraciones pendientes en prod)       |
 | 046  | Papelera y deshacer de varias acciones                                 | ✅ Cerrada (migración pendiente en prod)          |
+| 047  | Compartir e integrar con el sistema                                    | ✅ Cerrada (migración pendiente en prod)          |
 
 > Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
@@ -539,7 +540,6 @@ feat: registro de usuario (T7)
 
 El proyecto **aún no está terminado**. Existen specs pendientes y funcionalidades planificadas para versiones futuras:
 
-- Compartir e integrar con el sistema operativo.
 - Verificación de email en el registro.
 - Traspaso voluntario de calendarios.
 - Exportar los datos de la cuenta.
@@ -555,7 +555,6 @@ El proyecto **aún no está terminado**. Existen specs pendientes y funcionalida
 
 Hasta que exista su spec aprobada:
 
-- Compartir e integrar con el sistema (las dos últimas, en la hoja de ruta de la constitución).
 - Verificación de email en el registro, traspaso voluntario de calendarios, exportar datos de la cuenta, login social, Microsoft, i18n.
 - Sin conexión: envío en segundo plano, fechas fuera del rango guardado, series enteras, calendarios traídos, imágenes y comentarios (el resto, en "Fuera de alcance" de la spec 034).
 - Cambiar eventos desde el asistente (salvo crearlos desde una imagen), guardar conversaciones o responder por voz (necesitan otra spec).

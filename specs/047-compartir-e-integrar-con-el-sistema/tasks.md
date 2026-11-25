@@ -2,7 +2,7 @@
 
 Spec: `specs/047-compartir-e-integrar-con-el-sistema/spec.md`. Plan: `specs/047-compartir-e-integrar-con-el-sistema/plan.md` (aprobados de antemano por el usuario el 2026-11-18). Depende de la 043 (`write-ics`), la 039 (buscador) y la 041 (frase).
 
-> Estado: pendiente.
+> Estado: cerrada el 2026-11-25. Queda para el usuario: probar en Android que CaFam aparece en "Compartir" y los accesos directos del icono instalado.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T4.
 
@@ -25,7 +25,8 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- manifest use-app-badge` y `npm run test:db -- profile-badge` en verde; iconos generados.
 
   Cubre: RF-11 a RF-13 | Evidencia: 2026-11-25, `manifest` 5, `use-app-badge` 4, `today-left`, `view-options-setting`, `sw-push` (número que trae el aviso) en verde; `npm run test:db -- profile-badge` 2/2 (migración `20261128100000_profile_badge` aplicada en dev); iconos `public/icons/shortcut-*.png` con `make-icons.mjs`; P8 completa (3.799 tests, build OK). Nota: hoy el servidor de avisos (040) no manda `badge`; el service worker lo atiende cuando lo traiga.
-- [ ] T5 Prueba en el navegador y cierre
+- [x] T5 Prueba en el navegador y cierre
+  Evidencia: 2026-11-25, `scripts/e2e-share.mjs` con Edge real y `next start -p 3100`: manifest con `share_target` y 4 accesos directos, número del icono `[1]` (Badging API), `.ics` compartido → Importar con el archivo → importado al pulsar, imagen → "¿Qué hago con esta imagen?", texto → alta con la frase (todo por el `POST /share-target` que atiende `sw.js`). No hay dispositivo Android: el menú "Compartir" del sistema y los accesos directos del icono instalado quedan para el usuario. AGENTS.md, README y constitución actualizados; graphify actualizado; P8 completa (3.799 tests, build OK).
   Hecho cuando: con `next start -p 3100` y Edge instalado como app, el menú del icono muestra los accesos directos y el número; `share_target` se prueba en Android si hay dispositivo (si no, queda anotado para el usuario). AGENTS.md (trampas de iOS), README y constitución actualizados; `python -m graphify update .`; P8 completa.
 
 ## Trazabilidad

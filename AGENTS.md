@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Lo imprescindible para trabajar en el proyecto. El bloque de arriba lo gestiona `next dev`: no lo edites. El detalle de cada funcionalidad está en su spec (`specs/NNN-nombre/spec.md`, `plan.md`, `tasks.md`) y en el grafo de graphify; la fuente de verdad de las reglas es [`docs/constitution.md`](docs/constitution.md). Ante una contradicción manda la spec más reciente.
 
-> Última actualización: 2026-11-23 (resumido). Specs cerradas hasta la 046; `main` está subida y la contiene.
+> Última actualización: 2026-11-23 (resumido). Specs cerradas hasta la 047; `main` está subida y la contiene.
 
 ## 0. Mapa del proyecto: graphify (obligatorio, enmienda 13)
 
@@ -88,10 +88,11 @@ Todas cerradas salvo la 036 (hecha; falta `EVAL_PART=write npm run eval:assistan
 | 044 | Importar a un calendario existente sin duplicar y "Mantener actualizado" desde un enlace (cada 6 h) |
 | 045 | Zona horaria por evento (`start_tz`, `end_tz`) |
 | 046 | Papelera de 30 días (`/dashboard/trash`) y pila de deshacer/rehacer de 20 acciones (enmienda 14) |
+| 047 | Compartir un evento (Web Share o menú), recibir lo compartido (`share_target` → `sw.js` → IndexedDB `cafam-share` → `/dashboard/share`), accesos directos y número del icono (`profiles.badge_today`) |
 
 ### Pendiente del usuario (comprueba antes si ya está hecho)
 
-1. `supabase db push` a **prod antes de desplegar** de las migraciones aplicadas solo en dev: las de la 023 (`restore_event_guard`, `assistant_busy_scope`, `join_code_lock`), 028 (`notes`, `notes_calendar_functions`), 038 (`sync_apply_window`), 039 (`event_search`), 040 (`push`), 042 (`views_year`), 043 (`ics_feeds`), 044 (`ics_import_into`, `ics_subscriptions`), 045 (`event_time_zone`, `event_time_zone_keep`, `ics_feed_zone`) y 046 (`trash_30_days`).
+1. `supabase db push` a **prod antes de desplegar** de las migraciones aplicadas solo en dev: las de la 023 (`restore_event_guard`, `assistant_busy_scope`, `join_code_lock`), 028 (`notes`, `notes_calendar_functions`), 038 (`sync_apply_window`), 039 (`event_search`), 040 (`push`), 042 (`views_year`), 043 (`ics_feeds`), 044 (`ics_import_into`, `ics_subscriptions`), 045 (`event_time_zone`, `event_time_zone_keep`, `ics_feed_zone`), 046 (`trash_30_days`) y 047 (`profile_badge`).
 2. Claves VAPID (`node scripts/make-vapid-keys.mjs`) en Vercel y `sync_app_url` en el Vault de prod.
 3. Pruebas en iPhone/Android: push, sin conexión, Google/iCloud reales, papelera, zona horaria; eval y cierre de la 036.
 
@@ -282,8 +283,9 @@ npm run eval:schedule  # 12 horarios al modelo con visión (~12 min, gasta cuota
 - El panel del navegador de la app no registra service workers (sin conexión y push se prueban con Playwright + Edge: `scripts/e2e-offline*.mjs`, `e2e-push.mjs`); oculto, pausa animaciones y falla capturas.
 - jsdom: sin `showModal()`, `scrollIntoView`, layout, `elementsFromPoint` ni `cancel` al pulsar Escape (simúlalos); `user.upload` no llega al `FormData`. En tests espera al texto (`findByText`) antes de comprobar `aria-describedby`. Pasa arrays estables a los arneses de las vistas. El IndexedDB de memoria no tiene `close()`.
 - `es-ES` no agrupa números de 4 cifras: usa `formatCount`. Los cursores de comentarios usan `created_at` tal cual (microsegundos).
+- iOS no admite `share_target` ni accesos directos, y el número del icono solo con la PWA instalada y avisos: solo funciona "Compartir". El `POST /share-target` lo atiende `sw.js`; sin service worker que controle la página, Next responde 404 (no es un fallo). Lo compartido vive 10 min en IndexedDB `cafam-share`. Prueba real: `scripts/e2e-share.mjs`.
 - La primera petición tras un despliegue puede tardar (arranque en frío). iOS no cambia el icono instalado hasta reinstalar la app. Cambiar las claves VAPID invalida todas las suscripciones.
 
 ## 11. Fuera de alcance hasta su spec
 
-Compartir e integrar con el sistema, sincronizar en dos direcciones un calendario importado, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft (exige tarjeta), avisos por correo o de notas, i18n, lo excluido en las specs 034/035; en el asistente: borrar eventos, crear series, guardar conversaciones o voz; en notas: fecha por elemento, reordenar arrastrando, vencimientos en el calendario, notas de evento o desde el asistente.
+Sincronizar en dos direcciones un calendario importado, verificación de email en el registro, traspaso voluntario de calendarios, exportar los datos de la cuenta, login social, Microsoft (exige tarjeta), avisos por correo o de notas, i18n, lo excluido en las specs 034/035; en el asistente: borrar eventos, crear series, guardar conversaciones o voz; en notas: fecha por elemento, reordenar arrastrando, vencimientos en el calendario, notas de evento o desde el asistente.
