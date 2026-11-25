@@ -46,6 +46,20 @@ export default function PrivacyPage() {
           decides conectarla.
         </p>
 
+        <Section title="Entrar con Google">
+          <p>
+            Si usas «Continuar con Google», Google le dice a CaFam tu nombre, tu
+            correo y que la cuenta es tuya (permisos <i>openid</i>, <i>email</i>{" "}
+            y <i>profile</i>). CaFam guarda el nombre como el de tu perfil y
+            entra con ese correo; la foto de tu cuenta de Google no se guarda.
+          </p>
+          <p>
+            Entrar con Google no da acceso a tu Google Calendar: eso solo pasa
+            si además conectas la cuenta en «Cuentas conectadas», con los
+            permisos que se explican abajo.
+          </p>
+        </Section>
+
         <Section title="Qué datos de Google lee CaFam">
           <ul className="list-disc space-y-1 pl-5">
             <li>

@@ -7,7 +7,16 @@ import { getRouteAccess } from "@/lib/auth/route-access";
 const TOKEN = "abcDEF123-_abcDEF123-_abcDEF123-_abcDEF123-_";
 const exchangeCodeForSession = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/supabase/server", () => ({
-  createClient: async () => ({ auth: { exchangeCodeForSession } }),
+  createClient: async () => ({
+    auth: { exchangeCodeForSession },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({ data: { time_zone: "Europe/Madrid" } }),
+        }),
+      }),
+    }),
+  }),
 }));
 
 const { GET } = await import("@/app/auth/callback/route");
@@ -49,5 +58,32 @@ describe("/auth/callback", () => {
   it("is reachable with and without a session (RNF-2)", () => {
     expect(getRouteAccess("/auth/callback", false)).toEqual({ type: "allow" });
     expect(getRouteAccess("/auth/callback", true)).toEqual({ type: "allow" });
+  });
+
+  it("a new account made with Google checks its zone (RF-4)", async () => {
+    exchangeCodeForSession.mockResolvedValue({
+      data: {
+        user: {
+          id: "u1",
+          created_at: new Date().toISOString(),
+          user_metadata: { full_name: "Ana" },
+        },
+      },
+      error: null,
+    });
+    expect(await land("code=abc")).toBe(
+      "/dashboard/calendar?tzcheck=Europe%2FMadrid",
+    );
+    exchangeCodeForSession.mockResolvedValue({
+      data: {
+        user: {
+          id: "u1",
+          created_at: "2026-01-01T00:00:00Z",
+          user_metadata: {},
+        },
+      },
+      error: null,
+    });
+    expect(await land("code=abc")).toBe("/dashboard/calendar");
   });
 });

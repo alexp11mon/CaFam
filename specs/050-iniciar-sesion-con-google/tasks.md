@@ -20,10 +20,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- sign-in-methods identity-actions delete-account-dialog` en verde: enlazar, desvincular solo si queda otra, crear contraseña, borrar sin contraseña.
 
   Cubre: RF-5 a RF-8 | Evidencia: 2026-11-25, `npx vitest run --project unit sign-in-methods identity-actions delete-account-dialog account-delete-action` en verde: "Conectar Google" con `linkIdentity` de vuelta a Ajustes, "Desconectar Google" solo con contraseña, "Crear contraseña" sin la actual (marca `has_password` en los metadatos, porque Supabase no dice si la hay), borrar sin contraseña con el propio email; P8 en verde. Una cuenta solo de Google no cambia el email ni la contraseña hasta crear una (se explica en Ajustes). Si Supabase no deja desvincular la única identidad aunque haya contraseña, se verá en la prueba real (T5).
-- [ ] T4 Zona en la primera entrada y privacidad
+- [x] T4 Zona en la primera entrada y privacidad
   Hecho cuando: `npm test -- time-zone-check` en verde y `/privacy` con la sección; capturas de login y Ajustes a 390 y 1440 px en claro y oscuro.
 
-  Cubre: RF-4, RF-10, RF-11, RNF-3 | Evidencia: —
+  Cubre: RF-4, RF-10, RF-11, RNF-3 | Evidencia: 2026-11-25, `npx vitest run --project unit time-zone-check auth-callback-route` en verde (`/auth/callback` añade `?tzcheck=<zona>` a una cuenta recién creada sin zona; el aviso "Hemos puesto tu zona en … ¿Es correcta?" con "Cambiar" sale solo si difiere de la del navegador); `/privacy` con la sección "Entrar con Google" (nombre y email, la foto no se guarda, no da acceso a Google Calendar); P8 en verde. Capturas `capturas/login-google-*` y `ajustes-formas-de-entrar-*` a 390 y 1440 px, claro y oscuro, con una build con `NEXT_PUBLIC_GOOGLE_LOGIN=1`.
 - [ ] T5 Prueba real
   Hecho cuando: en dev (puerto 3000) con el proveedor activo: cuenta nueva con Google, cuenta existente enlazada por email, desvincular y volver a entrar con contraseña.
 

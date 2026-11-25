@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 
 /** Linking Google from Ajustes comes back there (spec 050 RF-5). */
 const SETTINGS = "/dashboard/settings";
+/** An account this young was just made by this sign-in. */
+const NEW_ACCOUNT_MS = 10 * 60_000;
 
 /**
  * Where Google sends the person back (spec 050 RF-2, RF-9): the code becomes
@@ -23,8 +25,24 @@ export async function GET(request: Request) {
   if (!code) return back("error");
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) return back("error");
 
-  return Response.redirect(new URL(next, url), 303);
+  const destination = new URL(next, url);
+  // RF-4: Google sends no zone, so a new account checks it on its first entry.
+  const user = data?.user;
+  if (
+    user &&
+    next !== SETTINGS &&
+    !user.user_metadata?.time_zone &&
+    Date.now() - Date.parse(user.created_at) < NEW_ACCOUNT_MS
+  ) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("time_zone")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile) destination.searchParams.set("tzcheck", profile.time_zone);
+  }
+  return Response.redirect(destination, 303);
 }
