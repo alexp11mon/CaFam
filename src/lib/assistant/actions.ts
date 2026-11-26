@@ -172,7 +172,9 @@ export type ActionStatus =
   | "cancelled"
   | "superseded"
   | "undone"
-  | "failed";
+  | "failed"
+  /** Spec 052 RF-11: it waited in a saved conversation; no longer valid. */
+  | "expired";
 
 const MONTHS = [
   "enero",
@@ -264,6 +266,12 @@ const HEADS: Record<ActionStatus, Heads> = {
     change: "Cambio no aplicado",
     delete: "Evento no borrado",
     series: "Serie no creada",
+  },
+  expired: {
+    created: "Evento creado",
+    change: "Cambio caducado",
+    delete: "Borrado caducado",
+    series: "Serie caducada",
   },
 };
 

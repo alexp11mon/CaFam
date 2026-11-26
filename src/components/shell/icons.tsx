@@ -330,6 +330,28 @@ export function SendIcon() {
   );
 }
 
+/** A microphone: dictate to Venito (spec 052). */
+export function MicIcon() {
+  return (
+    <Icon>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0" />
+      <path d="M12 17.5V21" />
+    </Icon>
+  );
+}
+
+/** A speaker crossed out: stop reading aloud (spec 052). */
+export function StopSpeakingIcon() {
+  return (
+    <Icon>
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5Z" />
+      <path d="m16 9.5 5 5" />
+      <path d="m21 9.5-5 5" />
+    </Icon>
+  );
+}
+
 /** A sheet with a pencil: a new conversation (spec 027). */
 export function NewChatIcon() {
   return (

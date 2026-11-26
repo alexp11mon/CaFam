@@ -32,6 +32,8 @@ export interface ChatAction {
   error?: string;
   /** What "Deshacer" sends once the change is applied (RF-35). */
   undo?: AssistantUndo;
+  /** Spec 052 RF-11: from a saved conversation; nothing to undo here. */
+  stale?: boolean;
 }
 
 export type CardStep = "confirm" | "cancel" | "undo";
@@ -86,6 +88,7 @@ const LABELS: Record<ActionStatus, string> = {
   superseded: "Sustituido",
   undone: "Deshecho",
   failed: "No aplicado",
+  expired: "Caducada",
 };
 
 const SCOPES: Record<ChangeScope, string> = {
@@ -199,8 +202,9 @@ export function ActionCard({
   }
 
   const canUndo =
-    (!needsConfirm(action) && status === "done") ||
-    (needsConfirm(action) && status === "applied" && card.undo);
+    !card.stale &&
+    ((!needsConfirm(action) && status === "done") ||
+      (needsConfirm(action) && status === "applied" && card.undo));
   const open =
     status === "done" || status === "applied"
       ? action.kind === "created"

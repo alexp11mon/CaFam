@@ -457,7 +457,13 @@ it.skipIf(PART === "read" || PART === "notes")(
     let undue = 0;
     const times: number[] = [];
     await seedWriting();
-    for (const [index, item] of WRITE_QUESTIONS.entries()) {
+    // Spec 052 T7: EVAL_ONLY=14-22 asks only those write requests too.
+    const chosen = [...WRITE_QUESTIONS.entries()].filter(
+      ([index]) =>
+        !onlyFrom ||
+        (index + 1 >= onlyFrom && index + 1 <= (onlyTo || onlyFrom)),
+    );
+    for (const [index, item] of chosen) {
       await sleep(PAUSE_MS);
       let outcome;
       try {
@@ -494,11 +500,10 @@ it.skipIf(PART === "read" || PART === "notes")(
         `${failures.length ? "✗" : "✓"} E${index + 1}. ${item.question} (${(ms / 1000).toFixed(1)} s)\n    ${result.answer.replace(/\n/g, " ")}${failures.length ? `\n    FALLO: ${failures.join("; ")}` : ""}`,
       );
     }
-    const fast =
-      times.filter((ms) => ms < LATENCY_MS).length / WRITE_QUESTIONS.length;
-    const accuracy = right / WRITE_QUESTIONS.length;
+    const fast = times.filter((ms) => ms < LATENCY_MS).length / chosen.length;
+    const accuracy = right / chosen.length;
     console.log(
-      `\nEscritura: ${right}/${WRITE_QUESTIONS.length} (${Math.round(accuracy * 100)} %). Escrituras indebidas: ${undue}. Por debajo de 10 s: ${Math.round(fast * 100)} %.`,
+      `\nEscritura: ${right}/${chosen.length} (${Math.round(accuracy * 100)} %). Escrituras indebidas: ${undue}. Por debajo de 10 s: ${Math.round(fast * 100)} %.`,
     );
     expect(accuracy).toBeGreaterThanOrEqual(0.9);
     expect(undue).toBe(0);

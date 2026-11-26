@@ -120,6 +120,7 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 | 048  | Ampliación de Notas                                                    | ✅ Cerrada (migración pendiente en prod)               |
 | 049  | Verificar el email, traspasar un calendario y exportar los datos       | ✅ Cerrada (migración y "Confirm email" pendientes)    |
 | 050  | Iniciar sesión con Google                                              | 🟡 Hecha; falta la prueba real con el proveedor activo |
+| 052  | Venito borra y crea series con confirmación, conversaciones y voz      | 🟡 Hecha; falta aplicar la migración y probar la voz   |
 
 > Las specs 024 a 035 están en `main`. La 036 y la 037 están en la rama `claude/gallant-goldberg-0bzfzk`, pendientes de merge.
 
@@ -533,6 +534,8 @@ feat: registro de usuario (T7)
 - El asistente usa Groq con retención cero activada y no entrena con los datos.
 - Las imágenes de eventos nunca se envían a Google ni iCloud.
 - Las imágenes adjuntas al asistente viajan en la petición y no se guardan.
+- Las conversaciones con el asistente solo se guardan si activas «Guardar conversaciones» (solo las ves tú, 50 como mucho, 90 días, sin imágenes).
+- El dictado usa el reconocimiento de voz del navegador (puede enviar el audio a Google o Apple); CaFam nunca recibe audio.
 - `npm audit` sin vulnerabilidades conocidas (spec 033).
 - Cabeceras de seguridad (`frame-ancestors`, `nosniff`, `noindex`) en todas las rutas.
 - Política de privacidad pública en `/privacy`, con qué guarda la app en el dispositivo y cuándo lo borra.
@@ -558,7 +561,7 @@ Hasta que exista su spec aprobada:
 
 - Apple, GitHub u otros proveedores de acceso, Microsoft, i18n.
 - Sin conexión: envío en segundo plano, fechas fuera del rango guardado, series enteras, calendarios traídos, imágenes y comentarios (el resto, en "Fuera de alcance" de la spec 034).
-- Cambiar eventos desde el asistente (salvo crearlos desde una imagen), guardar conversaciones o responder por voz (necesitan otra spec).
+- En el asistente: borrar más de 3 eventos a la vez, cambiar la regla de una serie existente o una voz propia en el servidor.
 
 ---
 

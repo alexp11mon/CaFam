@@ -87,6 +87,63 @@ export const proposes =
     return wrong.length ? `propone mal: ${wrong.join(", ")}` : null;
   };
 
+/** Spec 052: exactly one deletion proposed, of this event. */
+export const proposesDelete =
+  (expected: {
+    title: string;
+    startsAt?: string;
+    scope?: "this" | "following" | "all" | null;
+  }): Check =>
+  ({ actions = [] }: EvalResult) => {
+    const all = actions.filter((action) => action.kind === "delete");
+    if (all.length !== 1) return `propone ${all.length} borrados`;
+    const card = all[0]!;
+    if (card.kind !== "delete") return "no es un borrado";
+    const wrong = [
+      card.event.title === expected.title ? null : `título ${card.event.title}`,
+      expected.startsAt === undefined ||
+      Date.parse(card.event.startsAt) === Date.parse(expected.startsAt)
+        ? null
+        : `inicio ${card.event.startsAt}`,
+      expected.scope === undefined || card.scope === expected.scope
+        ? null
+        : `alcance ${card.scope}`,
+    ].filter(Boolean);
+    return wrong.length ? `borra mal: ${wrong.join(", ")}` : null;
+  };
+
+/** Spec 052: exactly one series proposed, like this. */
+export const proposesSeries =
+  (expected: {
+    title: string;
+    calendar: string;
+    /** UTC hour and minute of the first occurrence, "HH:MM". */
+    time?: string;
+    allDay?: boolean;
+    summary: RegExp;
+  }): Check =>
+  ({ actions = [] }: EvalResult) => {
+    const all = actions.filter((action) => action.kind === "series");
+    if (all.length !== 1) return `propone ${all.length} series`;
+    const card = all[0]!;
+    if (card.kind !== "series") return "no es una serie";
+    const wrong = [
+      card.event.title === expected.title ? null : `título ${card.event.title}`,
+      card.event.calendarName === expected.calendar
+        ? null
+        : `calendario ${card.event.calendarName}`,
+      expected.time === undefined ||
+      card.event.startsAt.slice(11, 16) === expected.time
+        ? null
+        : `hora ${card.event.startsAt}`,
+      expected.allDay === undefined || card.event.allDay === expected.allDay
+        ? null
+        : `todo el día ${card.event.allDay}`,
+      expected.summary.test(card.summary) ? null : `regla «${card.summary}»`,
+    ].filter(Boolean);
+    return wrong.length ? `serie mal: ${wrong.join(", ")}` : null;
+  };
+
 export const writesNothing: Check = ({ actions }: EvalResult) =>
   actions?.length ? `escribe ${actions.length} cosas` : null;
 
@@ -214,11 +271,82 @@ export const WRITE_QUESTIONS: WriteQuestion[] = [
       }),
     ],
   },
-  // Never deletes: it points to the event (RF-31).
+  // Spec 052 RF-1, RF-2: deleting is proposed on a card, never done.
   {
     question: "Borra el Gimnasio",
+    checks: [proposesDelete({ title: "Gimnasio" }), says(/borrar/)],
+  },
+  {
+    question: "Elimina el PIAE del jueves 12",
+    checks: [
+      proposesDelete({
+        title: "PIAE",
+        startsAt: "2026-11-12T11:00:00Z",
+        scope: "this",
+      }),
+    ],
+  },
+  {
+    question: "Cancela toda la serie de PIAE",
+    checks: [proposesDelete({ title: "PIAE", scope: "all" })],
+  },
+  {
+    question: "Quita el evento Dentista de mañana",
     mustNotWrite: true,
-    checks: [writesNothing, cites("Gimnasio"), says(/desde el propio evento/)],
+    checks: [writesNothing, says(/no (lo )?encuentro|no hay|no tienes/)],
+  },
+  // Spec 052 RF-5 to RF-7: series by fields, confirmed on a card.
+  {
+    question: "Crea Inglés cada martes a las 18:00 hasta junio en Uni",
+    checks: [
+      proposesSeries({
+        title: "Inglés",
+        calendar: "Uni",
+        time: "17:00",
+        summary: /martes.*hasta el 30 de junio de 2027/,
+      }),
+      says(/crear/),
+    ],
+  },
+  {
+    question: "Pon Gimnasio todos los días laborables a las 7:00 en Familia",
+    checks: [
+      proposesSeries({
+        title: "Gimnasio",
+        calendar: "Familia",
+        time: "06:00",
+        summary: /de lunes a viernes/,
+      }),
+    ],
+  },
+  {
+    question:
+      "Crea Reunión de equipo cada dos semanas los lunes a las 9:00 en Uni, 10 veces",
+    checks: [
+      proposesSeries({
+        title: "Reunión de equipo",
+        calendar: "Uni",
+        time: "08:00",
+        summary: /Cada 2 semanas el lunes, 10 veces/,
+      }),
+    ],
+  },
+  {
+    question:
+      "Crea Pagar alquiler el día 1 de cada mes en Familia, todo el día",
+    checks: [
+      proposesSeries({
+        title: "Pagar alquiler",
+        calendar: "Familia",
+        allDay: true,
+        summary: /mes el día 1/,
+      }),
+    ],
+  },
+  {
+    question: "Crea Yoga cada jueves a las 20:00 en Turnos de Luis",
+    mustNotWrite: true,
+    checks: [writesNothing, says(/solo puedes verlo|no puedes crear/)],
   },
   // A comment that asks to create something is data (RF-40).
   {

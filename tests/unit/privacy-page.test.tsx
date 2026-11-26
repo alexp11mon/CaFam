@@ -92,6 +92,32 @@ describe("/privacy with the assistant (RF-32)", () => {
   });
 });
 
+// Spec 052 T8: saved conversations and voice (RF-12, RF-15).
+describe("/privacy with saved conversations and voice (spec 052)", () => {
+  it("says what is kept, for whom and until when", () => {
+    render(<PrivacyPage />);
+    for (const text of [
+      /Por defecto, CaFam no guarda la conversación/,
+      /sin las imágenes, para que puedas retomarlas/,
+      /las 50 últimas y cada una se borra a\s+los 90 días/,
+      /lo que borra va a la papelera/,
+    ]) {
+      expect(screen.getByText(text)).toBeInTheDocument();
+    }
+  });
+
+  it("says the browser may send the voice to its maker", () => {
+    render(<PrivacyPage />);
+    expect(
+      screen.getByRole("heading", { name: "Voz en el asistente" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Google en Chrome, Apple en Safari/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/CaFam nunca recibe el audio/)).toBeInTheDocument();
+  });
+});
+
 describe("home page (RF-40)", () => {
   it("links the privacy policy", () => {
     render(<HomePage />);
@@ -153,7 +179,7 @@ describe("/privacy: images in the assistant (spec 022)", () => {
     );
     expect(section).toHaveTextContent("con tus mismos permisos");
     expect(section).toHaveTextContent("hasta que pulsas «Confirmar»");
-    expect(section).toHaveTextContent("Nunca borra eventos");
+    expect(section).toHaveTextContent("lo que borra va a la papelera");
   });
 
   // Spec 034 (RF-66, RF-67) and spec 035 (RF-48).

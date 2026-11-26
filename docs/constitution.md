@@ -56,6 +56,7 @@ Queda fuera a propósito: cualquier uso comercial, monetización, publicidad, an
 | 048-notas-ampliacion | Fecha límite por elemento, reordenar arrastrando, tareas con fecha en el calendario, notas de un evento y notas desde Venito |
 | 049-cuenta-verificacion-traspaso-exportar | Confirmar el email al registrarse, traspasar un calendario a otro miembro y descargar los datos de la cuenta en un `.zip` |
 | 050-iniciar-sesion-con-google | "Continuar con Google" con Supabase Auth y "Formas de entrar" en Ajustes; Apple, imposible a coste cero |
+| 052-asistente-borrar-series-memoria-y-voz | Venito propone borrar eventos y crear series (siempre con confirmación), conversaciones guardadas opcionales y voz con la Web Speech API del navegador |
 
 Las specs se numeran por orden de redacción. Las specs 001 a 004, ya cerradas, citan la gestión de cuenta como "spec 005" y OAuth como "spec 006": desde el 2026-10-22 son la 006 y la 007. Las specs cerradas no se editan, con una única excepción: el cambio de nombre a CaFam de la spec 010, que solo sustituye el nombre y no toca requisitos, decisiones ni evidencias (enmienda 3).
 

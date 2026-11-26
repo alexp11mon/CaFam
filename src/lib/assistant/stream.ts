@@ -86,6 +86,9 @@ export function statusFor(tool: string, args: string): string {
     return title ? `Creando «${title}»…` : STATUS.creating;
   }
   if (tool === "propose_changes") return STATUS.change;
+  // Spec 052 RF-1, RF-5.
+  if (tool === "propose_deletes") return "Preparando el borrado…";
+  if (tool === "propose_series") return "Preparando la serie…";
   if (tool === "find_free_time") return STATUS.free;
   if (tool === "get_comments") return STATUS.comments;
   // Spec 048 RF-12, RF-14.

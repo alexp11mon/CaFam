@@ -8,6 +8,7 @@ import { todayKey } from "@/lib/calendar/format";
 import { occurrenceId } from "@/lib/recurrence/occurrence-id";
 import { expandRows } from "@/lib/recurrence/read-series";
 import type { Refs } from "./citations";
+import { WRITE_TOOL_DEFINITIONS } from "./tool-definitions";
 import { dayBounds, parsePeriod, weekdayName } from "./dates";
 import { busyFromEvent, freeSlots, type BusyInterval } from "./free-slots";
 import {
@@ -559,12 +560,10 @@ const TOOLS: Record<
   list_notes: listNotes,
 };
 
-const WRITE_NAMES = new Set([
-  "create_events",
-  "propose_changes",
-  "create_notes",
-  "add_note_items",
-]);
+// From the definitions, so a write tool offered to the model can always run (spec 052).
+const WRITE_NAMES = new Set(
+  WRITE_TOOL_DEFINITIONS.map((tool) => tool.function.name),
+);
 
 /** Runs a tool the model asked for; bad names or arguments go back to the model. */
 export async function runTool(

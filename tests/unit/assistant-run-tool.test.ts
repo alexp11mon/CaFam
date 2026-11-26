@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 import { createRefs } from "@/lib/assistant/citations";
+import { WRITE_TOOL_DEFINITIONS } from "@/lib/assistant/tool-definitions";
 import {
   runTool,
   type CitedEvent,
@@ -40,6 +41,20 @@ describe("runTool and the write tools", () => {
     expect(await runTool("create_events", "{oops", context)).toEqual({
       status: "invalid_arguments",
     });
+  });
+
+  // Spec 052: every write tool offered to the model can also be run.
+  it("runs every write tool the model is offered", async () => {
+    const names = WRITE_TOOL_DEFINITIONS.map((tool) => tool.function.name);
+    expect(names).toEqual(
+      expect.arrayContaining(["propose_deletes", "propose_series"]),
+    );
+    const writes = Object.fromEntries(
+      names.map((name) => [name, async () => ({ status: name })]),
+    );
+    for (const name of names) {
+      expect(await runTool(name, "{}", ctx(writes))).toEqual({ status: name });
+    }
   });
 
   it("still refuses names it does not know", async () => {

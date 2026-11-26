@@ -15,14 +15,22 @@ import { canWriteEvents } from "@/lib/sync/read-only";
 export async function loadAssistantContext(): Promise<{
   timeZone: string;
   calendars: { id: string; name: string }[];
+  /** Spec 052 RF-9: "Guardar conversaciones". */
+  saveChats: boolean;
 }> {
   const { supabase, userId } = await requireActionUser();
-  const [timeZone, all] = await Promise.all([
+  const [timeZone, all, profile] = await Promise.all([
     getProfileTimeZone(supabase, userId),
     getMyCalendars(supabase, userId),
+    supabase
+      .from("profiles")
+      .select("save_chats")
+      .eq("id", userId)
+      .maybeSingle(),
   ]);
   return {
     timeZone,
     calendars: all.filter(canWriteEvents).map(({ id, name }) => ({ id, name })),
+    saveChats: profile.data?.save_chats === true,
   };
 }

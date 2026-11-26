@@ -13,6 +13,8 @@ import type { ChatAction } from "./action-card";
 
 function undoOf(card: ChatAction): AssistantUndo | null {
   const { action } = card;
+  // Spec 052 RF-11: a saved conversation's cards are history.
+  if (card.stale) return null;
   if (
     (action.kind === "created" || action.kind === "note") &&
     card.status === "done"

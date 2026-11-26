@@ -13,7 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { IconButton } from "@/components/ui/icon-button";
 import { Venito } from "@/components/brand/venito";
-import { CloseIcon, NewChatIcon, SendIcon } from "@/components/shell/icons";
+import {
+  CloseIcon,
+  NewChatIcon,
+  SendIcon,
+  StopSpeakingIcon,
+} from "@/components/shell/icons";
 import {
   NETWORK_TEXT,
   QUESTION_MESSAGES,
@@ -47,6 +52,16 @@ import {
   type AssistantAction,
 } from "@/lib/assistant/actions";
 import { isNo, isYes } from "@/lib/assistant/write-intent";
+import { loadConversation } from "@/app/dashboard/assistant/conversation-actions";
+import {
+  CONVERSATION_TEXTS,
+  imagesText,
+  toSaved,
+} from "@/lib/assistant/conversations";
+import { useSpeakAnswers } from "@/lib/hooks/use-speak-answers";
+import { saveConversation } from "@/app/dashboard/assistant/conversation-actions";
+import { ChatMenu } from "./chat-menu";
+import { MicButton } from "./mic-button";
 import { ActionCard, runCardStep, type ChatAction } from "./action-card";
 import { useStackCards } from "./stack-cards";
 import { CitedEvents } from "./cited-events";
@@ -70,6 +85,8 @@ interface Message {
   events?: CitedEvent[];
   /** Spec 022 RF-11: the images sent with this message, as data URLs. */
   images?: string[];
+  /** Spec 052 RF-11: a saved message keeps only how many images it had. */
+  imageCount?: number;
   proposal?: ChatProposal;
   /** Spec 036: what Venito created or proposes in this answer. */
   actions?: ChatAction[];
@@ -130,6 +147,8 @@ function threadContent(message: Message, timeZone: string): string {
 export interface ChatContext {
   timeZone: string;
   calendars: readonly ChatCalendar[];
+  /** Spec 052 RF-9: "Guardar conversaciones". */
+  saveChats?: boolean;
 }
 
 export function AssistantChat({
@@ -174,6 +193,14 @@ export function AssistantChat({
     Intl.DateTimeFormat().resolvedOptions().timeZone;
   const calendars = givenCalendars ?? loaded?.calendars ?? [];
   const [messages, setMessages] = useState<Message[]>([]);
+  // Spec 052 RF-9: the switch as the user left it, or as the profile says.
+  const [savingChoice, setSavingChoice] = useState<boolean | null>(null);
+  const saveChats = savingChoice ?? loaded?.saveChats ?? false;
+  const conversation = useRef<string | null>(null);
+  const speech = useSpeakAnswers();
+  // Spec 052 RF-13: what the field had when dictation started.
+  const dictatedFrom = useRef("");
+  const [listening, setListening] = useState(false);
   useStackCards(messages, onChanged);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [attachErrors, setAttachErrors] = useState<string[]>([]);
@@ -196,6 +223,15 @@ export function AssistantChat({
 
   // R6: nobody reads the answer of a question asked from a page that is gone.
   useEffect(() => () => controller.current?.abort(), []);
+
+  // Spec 052 RF-9: saved each time Venito answers, only with the switch on.
+  useEffect(() => {
+    if (!saveChats || messages.at(-1)?.role !== "assistant") return;
+    conversation.current ??= crypto.randomUUID();
+    void saveConversation(conversation.current, toSaved(messages)).catch(
+      () => {},
+    );
+  }, [messages, saveChats]);
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
   }, [messages.length, pending]);
@@ -435,6 +471,8 @@ export function AssistantChat({
         },
       ]);
       if (cards.some((card) => card.action.kind === "created")) onChanged?.();
+      // Spec 052 RF-14: only the text, never the cards.
+      speech.say(body.answer);
     } catch {
       giveBack();
       if (!abort.signal.aborted) setError({ text: NETWORK_TEXT, retry: true });
@@ -516,6 +554,8 @@ export function AssistantChat({
 
   function restart() {
     controller.current?.abort();
+    conversation.current = null;
+    speech.stop();
     // RF-56: the pending proposal is dropped without creating anything.
     setMessages([]);
     setAttachments([]);
@@ -525,6 +565,38 @@ export function AssistantChat({
     setError(undefined);
     setFieldError(undefined);
     field.current?.focus();
+  }
+
+  /** Spec 052 RF-10, RF-11: goes on with a saved conversation. */
+  async function openConversation(id: string): Promise<boolean> {
+    const result = await loadConversation(id).catch(() => null);
+    if (!result?.ok) {
+      setError({
+        text: result?.error ?? CONVERSATION_TEXTS.gone,
+        retry: false,
+      });
+      return false;
+    }
+    controller.current?.abort();
+    speech.stop();
+    conversation.current = id;
+    setMessages(
+      result.messages.map((message) => ({
+        ...(message as Message),
+        // Its undo tokens are history: only the calendar's own stack undoes.
+        actions: (message.actions as ChatAction[] | undefined)?.map((card) => ({
+          ...card,
+          stale: true,
+        })),
+      })),
+    );
+    setAttachments([]);
+    setAttachErrors([]);
+    carried.current = [];
+    setDraft("");
+    setError(undefined);
+    setFieldError(undefined);
+    return true;
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -599,9 +671,24 @@ export function AssistantChat({
                 : "en línea"}
           </p>
         </div>
+        {speech.speaking ? (
+          <IconButton label="Parar la lectura" onClick={speech.stop}>
+            <StopSpeakingIcon />
+          </IconButton>
+        ) : null}
         <IconButton label="Nueva conversación" onClick={restart}>
           <NewChatIcon />
         </IconButton>
+        <ChatMenu
+          saveChats={saveChats}
+          onSaveChatsChange={setSavingChoice}
+          onOpenConversation={openConversation}
+          speak={
+            speech.supported
+              ? { on: speech.on, onChange: speech.setOn }
+              : undefined
+          }
+        />
         {onClose ? (
           <IconButton label="Cerrar el chat" onClick={onClose}>
             <CloseIcon />
@@ -646,6 +733,11 @@ export function AssistantChat({
                 <p className="rounded-card rounded-br-block border border-accent-edge bg-accent px-4 py-2 whitespace-pre-line text-on-accent">
                   <span className="sr-only">Tú: </span>
                   {message.content}
+                  {message.imageCount && !message.images?.length ? (
+                    <span className="mt-1 block text-sm opacity-90">
+                      {imagesText(message.imageCount)}
+                    </span>
+                  ) : null}
                   {message.images?.length ? (
                     <span className="mt-2 flex flex-wrap justify-end gap-2">
                       {message.images.map((url, i) => (
@@ -811,6 +903,21 @@ export function AssistantChat({
             disabled={pending || quotaReached}
             onPick={(files) => void addFiles(files)}
           />
+          <MicButton
+            disabled={pending || quotaReached}
+            onListening={(on) => {
+              if (on) dictatedFrom.current = draft.trim();
+              setListening(on);
+            }}
+            onText={(heard) =>
+              setDraft(
+                dictatedFrom.current
+                  ? `${dictatedFrom.current} ${heard}`
+                  : heard,
+              )
+            }
+            onError={setFieldError}
+          />
           <div className="flex min-w-0 flex-1 flex-col">
             <label htmlFor={fieldId} className="sr-only">
               Tu pregunta
@@ -821,7 +928,7 @@ export function AssistantChat({
               name="question"
               rows={Math.min(4, Math.max(1, draft.split("\n").length))}
               value={draft}
-              placeholder="Escribe a Venito…"
+              placeholder={listening ? "Escuchando…" : "Escribe a Venito…"}
               disabled={quotaReached}
               aria-invalid={Boolean(fieldError)}
               aria-describedby={fieldError ? `${fieldId}-error` : undefined}

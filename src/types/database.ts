@@ -80,6 +80,41 @@ export type Database = {
           },
         ]
       }
+      assistant_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          messages: Json
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          messages: Json
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assistant_questions: {
         Row: {
           asked_at: string
@@ -1191,6 +1226,7 @@ export type Database = {
           notify: Json
           reminder_all_day_minutes: number | null
           reminder_minutes: number | null
+          save_chats: boolean
           share_availability: boolean
           share_busy: boolean
           show_tasks: boolean
@@ -1210,6 +1246,7 @@ export type Database = {
           notify?: Json
           reminder_all_day_minutes?: number | null
           reminder_minutes?: number | null
+          save_chats?: boolean
           share_availability?: boolean
           share_busy?: boolean
           show_tasks?: boolean
@@ -1229,6 +1266,7 @@ export type Database = {
           notify?: Json
           reminder_all_day_minutes?: number | null
           reminder_minutes?: number | null
+          save_chats?: boolean
           share_availability?: boolean
           share_busy?: boolean
           show_tasks?: boolean
@@ -1501,6 +1539,7 @@ export type Database = {
       }
       apply_orphan_decisions: { Args: never; Returns: undefined }
       assistant_answered: { Args: { p_id: number }; Returns: undefined }
+      assistant_conversations_purge: { Args: never; Returns: number }
       assistant_busy: {
         Args: { p_from: string; p_person_ids: string[]; p_to: string }
         Returns: {

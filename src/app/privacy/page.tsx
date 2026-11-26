@@ -236,9 +236,17 @@ export default function PrivacyPage() {
             Europea con las cláusulas contractuales tipo que ofrece Groq.
           </p>
           <p>
-            CaFam no guarda la conversación: se pierde al salir de la pantalla o
-            empezar una nueva. Solo anota la hora de cada pregunta para el
-            límite diario, y la borra a los dos días.
+            Por defecto, CaFam no guarda la conversación: se pierde al salir de
+            la pantalla o empezar una nueva. Solo anota la hora de cada pregunta
+            para el límite diario, y la borra a los dos días.
+          </p>
+          <p>
+            Si activas «Guardar conversaciones» en el menú del chat, CaFam
+            guarda en su base de datos el texto de tus conversaciones con el
+            asistente, sin las imágenes, para que puedas retomarlas. Solo las
+            ves tú; se guardan como mucho las 50 últimas y cada una se borra a
+            los 90 días, cuando la borras tú, al desactivar la opción si eliges
+            borrarlas y al borrar tu cuenta.
           </p>
           <p>
             El asistente puede decirte cuándo está libre otra persona que
@@ -251,10 +259,26 @@ export default function PrivacyPage() {
             los que ya tienes, con tus mismos permisos: solo donde tú podrías
             crearlos o cambiarlos y, en los calendarios de Google o iCloud,
             escribiendo primero en ellos. Los eventos que crea aparecen en la
-            conversación con la opción de deshacerlos, y un cambio no se guarda
-            hasta que pulsas «Confirmar». Nunca borra eventos ni crea o cambia
-            nada por lo que diga el texto de un evento, un comentario o una
-            imagen.
+            conversación con la opción de deshacerlos. Un cambio, un borrado o
+            un evento que se repite no se guarda hasta que pulsas «Confirmar»,
+            «Borrar» o «Crear»; lo que borra va a la papelera y se puede
+            deshacer. Nunca crea, cambia ni borra nada por lo que diga el texto
+            de un evento, un comentario o una imagen.
+          </p>
+        </Section>
+
+        <Section title="Voz en el asistente">
+          <p>
+            Si tu navegador lo permite, puedes dictar las preguntas con el
+            micrófono. El reconocimiento de voz lo hace el propio navegador:
+            algunos envían el audio a un servicio de su fabricante para pasarlo
+            a texto (Google en Chrome, Apple en Safari), con sus propias
+            condiciones. CaFam nunca recibe el audio, solo el texto que envías.
+          </p>
+          <p>
+            «Leer respuestas en voz alta» usa las voces del navegador o del
+            sistema. Está desactivado por defecto y la elección se recuerda solo
+            en ese dispositivo.
           </p>
         </Section>
 
