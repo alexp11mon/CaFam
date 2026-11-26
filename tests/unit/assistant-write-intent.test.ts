@@ -32,6 +32,11 @@ describe("wantsWrite", () => {
     "Cancela el dentista",
     "Quita el fútbol del sábado",
     "Repite inglés cada martes a las 18",
+    // "Pasa" and "lleva" only with where it goes (eval E12).
+    "Pasa Gimnasio al calendario Uni",
+    "Lleva la cena al viernes",
+    "pasa el dentista a las 19:00",
+    "Traslada Fútbol al sábado",
   ])("offers writing for «%s»", (text) => {
     expect(wantsWrite([user(text)])).toBe(true);
   });
@@ -41,6 +46,8 @@ describe("wantsWrite", () => {
     "¿Cuándo es el cumpleaños de Ana?",
     "¿Qué tardes tenemos libres Luis y yo?",
     "¿Qué se ha comentado de la cena?",
+    "¿Qué pasa el lunes?",
+    "¿Quién lleva el postre a la cena?",
   ])("does not offer writing for «%s»", (text) => {
     expect(wantsWrite([user(text)])).toBe(false);
   });

@@ -30,6 +30,7 @@ const WRITE_STEMS = [
   "cambi",
   "mueve",
   "mover",
+  "traslad",
   "muevel",
   "pasal",
   "pasam",
@@ -51,10 +52,18 @@ const WRITE_STEMS = [
   "repit",
 ];
 
-const hasWriteVerb = (text: string) =>
-  plainWords(text).some((word) =>
-    WRITE_STEMS.some((stem) => word.startsWith(stem)),
+// "Pasa" and "lleva" also read ("¿qué pasa el lunes?", "¿quién lleva el
+// postre?"): they write only when they say where the event goes.
+const MOVE_TO =
+  /\b(pasa|lleva)\b.*\b(al calendario|a otro calendario|al (lunes|martes|miercoles|jueves|viernes|sabado|domingo|dia)|a las? \d)/;
+
+const hasWriteVerb = (text: string) => {
+  const words = plainWords(text);
+  return (
+    words.some((word) => WRITE_STEMS.some((stem) => word.startsWith(stem))) ||
+    MOVE_TO.test(words.join(" "))
   );
+};
 
 /** How many user messages back a request is followed while Venito asks. */
 const FOLLOW_BACK = 3;
