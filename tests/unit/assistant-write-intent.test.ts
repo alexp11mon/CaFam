@@ -26,6 +26,12 @@ describe("wantsWrite", () => {
     "Renombra el evento de mañana",
     "Retrasa la cena media hora",
     "Edita Comida Uni",
+    // Spec 052 RF-1, RF-5: deleting and repeating.
+    "Borra la cena del viernes",
+    "elimina PIAE de mañana",
+    "Cancela el dentista",
+    "Quita el fútbol del sábado",
+    "Repite inglés cada martes a las 18",
   ])("offers writing for «%s»", (text) => {
     expect(wantsWrite([user(text)])).toBe(true);
   });

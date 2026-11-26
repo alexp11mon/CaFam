@@ -7,12 +7,17 @@ import { encodeLine, type StreamLine } from "@/lib/assistant/stream";
 // Spec 036, T7: Venito's cards in the conversation (RF-24a to RF-24c,
 // RF-32, RF-38, RF-44, RF-45; plan D5, D10, D11, D12).
 
-const { confirmChange, undoAssistantAction } = vi.hoisted(() => ({
-  confirmChange: vi.fn(),
-  undoAssistantAction: vi.fn(),
-}));
+const { confirmChange, confirmDelete, undoAssistantAction } = vi.hoisted(
+  () => ({
+    confirmChange: vi.fn(),
+    confirmDelete: vi.fn(),
+    undoAssistantAction: vi.fn(),
+  }),
+);
 vi.mock("@/app/dashboard/assistant/write-actions", () => ({
   confirmChange,
+  confirmDelete,
+  confirmSeries: vi.fn(),
   undoAssistantAction,
 }));
 
@@ -163,6 +168,31 @@ describe("AssistantChat with Venito's cards", () => {
     expect(
       screen.getByText("Hecho: he aplicado el cambio."),
     ).toBeInTheDocument();
+    expect(onChanged).toHaveBeenCalledTimes(1);
+  });
+
+  // Spec 052 RF-2: "sí" and "no" answer a deletion as they do a change.
+  it("deletes a pending deletion with «sí», without asking Venito", async () => {
+    confirmDelete.mockResolvedValue({ ok: true });
+    fetchMock.mockResolvedValue(
+      answer("Revisa y pulsa Borrar.", [
+        {
+          kind: "delete",
+          key: "d1",
+          event,
+          scope: null,
+          remove: { id: ID, scope: null, updatedAt: "u1" },
+        },
+      ]),
+    );
+    const { say, onChanged } = setup();
+    await say("Borra Comida Uni");
+    await screen.findByText("Borrado pendiente");
+    await say("sí");
+    expect(await screen.findByText("Evento borrado")).toBeInTheDocument();
+    expect(confirmDelete).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Hecho: lo he borrado.")).toBeInTheDocument();
     expect(onChanged).toHaveBeenCalledTimes(1);
   });
 

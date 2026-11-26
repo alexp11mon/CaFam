@@ -163,3 +163,56 @@ function readEnd(parts: Map<string, string>): RecurrenceEnd | null {
     ? { kind: "until", date: `${match[1]}-${match[2]}-${match[3]}` }
     : null;
 }
+
+/** Spec 052 RF-5: what Venito says of a series; the server writes the rule. */
+export interface RuleFields {
+  freq: RecurrenceRule["freq"];
+  interval?: number | null;
+  byDay?: readonly Weekday[] | null;
+  /** Last day, included. */
+  until?: string | null;
+  count?: number | null;
+}
+
+/**
+ * The rule of a series that starts on `startDate` (a date key), or null when
+ * CaFam cannot keep it. A daily rule on some days is a weekly one
+ * ("todos los días laborables"); the rest take their day from the start.
+ */
+export function ruleFromFields(
+  fields: RuleFields,
+  startDate: string,
+): RecurrenceRule | null {
+  const date = parseDateKey(startDate);
+  if (!date) return null;
+  if (fields.until && fields.count != null) return null;
+  if (fields.until && fields.until < startDate) return null;
+  const end: RecurrenceEnd =
+    fields.count != null
+      ? { kind: "count", count: fields.count }
+      : fields.until
+        ? { kind: "until", date: fields.until }
+        : { kind: "never" };
+  const interval = fields.interval ?? 1;
+  const days = fields.byDay?.length ? [...new Set(fields.byDay)] : null;
+  const ownDay = WEEKDAYS[weekdayIndex(startDate)]!;
+  const sorted = (list: Weekday[]) =>
+    WEEKDAYS.filter((day) => list.includes(day));
+  const candidate =
+    fields.freq === "weekly" || (fields.freq === "daily" && days)
+      ? { freq: "weekly", interval, byDay: sorted(days ?? [ownDay]), end }
+      : fields.freq === "daily"
+        ? { freq: "daily", interval, end }
+        : fields.freq === "monthly"
+          ? { freq: "monthly", interval, monthly: { day: date.day }, end }
+          : fields.freq === "yearly"
+            ? {
+                freq: "yearly",
+                interval,
+                yearly: { month: date.month, day: date.day },
+                end,
+              }
+            : null;
+  const parsed = recurrenceRuleSchema.safeParse(candidate);
+  return parsed.success ? parsed.data : null;
+}

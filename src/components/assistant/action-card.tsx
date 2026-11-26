@@ -3,6 +3,8 @@
 import { useState } from "react";
 import {
   confirmChange,
+  confirmDelete,
+  confirmSeries,
   undoAssistantAction,
 } from "@/app/dashboard/assistant/write-actions";
 import { lossText } from "@/components/recurrence/series-scope-dialog";
@@ -10,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/ui/link-button";
 import {
   describeAction,
+  needsConfirm,
   whenText,
   type ActionEvent,
   type ActionStatus,
@@ -44,13 +47,25 @@ export async function runCardStep(
   if (step === "cancel")
     return { ...card, status: "cancelled", error: undefined };
   if (step === "confirm") {
-    if (card.action.kind !== "change") return card;
-    const result = await confirmChange(card.action.change);
+    const { action } = card;
+    if (!needsConfirm(action)) return card;
+    const result =
+      action.kind === "delete"
+        ? await confirmDelete(action.remove)
+        : action.kind === "series"
+          ? await confirmSeries(action.series)
+          : action.kind === "change"
+            ? await confirmChange(action.change)
+            : null;
+    if (!result) return card;
     return result.ok
       ? { ...card, status: "applied", error: undefined, undo: result.undo }
       : { ...card, status: "failed", error: result.error };
   }
-  const undo = card.action.kind === "change" ? card.undo : card.action.undo;
+  const undo =
+    card.action.kind === "created" || card.action.kind === "note"
+      ? card.action.undo
+      : card.undo;
   if (!undo) return card;
   const result = await undoAssistantAction(undo);
   return result.ok
@@ -77,6 +92,42 @@ const SCOPES: Record<ChangeScope, string> = {
   this: "Solo este evento de la serie.",
   following: "Este y los siguientes de la serie.",
   all: "Todos los eventos de la serie.",
+};
+
+/** Spec 052 RF-2: the scopes of a deletion, as the dialog of spec 013. */
+const DELETE_SCOPES: Record<ChangeScope, string> = {
+  this: "Solo este.",
+  following: "Este y los siguientes.",
+  all: "Toda la serie.",
+};
+
+/** Spec 052: the heading of a card that waits for its own button. */
+const KIND_LABELS = {
+  delete: {
+    pending: "Borrado pendiente",
+    applied: "Evento borrado",
+    failed: "No borrado",
+    button: "Borrar",
+  },
+  series: {
+    pending: "Serie pendiente",
+    applied: "Serie creada",
+    failed: "No creada",
+    button: "Crear",
+  },
+} as const;
+
+const label = (action: AssistantAction, status: ActionStatus) => {
+  if (action.kind === "note" && status === "done") {
+    return action.added ? "Añadido a la nota" : "Nota creada";
+  }
+  if (
+    (action.kind === "delete" || action.kind === "series") &&
+    (status === "pending" || status === "applied" || status === "failed")
+  ) {
+    return KIND_LABELS[action.kind][status];
+  }
+  return LABELS[status];
 };
 
 function EventLines({
@@ -148,8 +199,8 @@ export function ActionCard({
   }
 
   const canUndo =
-    (action.kind !== "change" && status === "done") ||
-    (action.kind === "change" && status === "applied" && card.undo);
+    (!needsConfirm(action) && status === "done") ||
+    (needsConfirm(action) && status === "applied" && card.undo);
   const open =
     status === "done" || status === "applied"
       ? action.kind === "created"
@@ -162,10 +213,12 @@ export function ActionCard({
               href: `/dashboard/notes/${action.note.id}`,
               title: action.note.title,
             }
-          : {
-              href: `/dashboard/events/${action.after.id}`,
-              title: action.after.title,
-            }
+          : action.kind === "change"
+            ? {
+                href: `/dashboard/events/${action.after.id}`,
+                title: action.after.title,
+              }
+            : null
       : null;
 
   return (
@@ -180,13 +233,7 @@ export function ActionCard({
             : "text-muted"
         }`}
       >
-        {action.kind === "note" && status === "done"
-          ? action.added
-            ? "Añadido a la nota"
-            : "Nota creada"
-          : action.kind === "created" && status === "done"
-            ? LABELS.done
-            : LABELS[status]}
+        {label(action, status)}
       </p>
 
       {action.kind === "created" ? (
@@ -220,6 +267,46 @@ export function ActionCard({
               : "Personal"}
           </p>
         </div>
+      ) : action.kind === "delete" ? (
+        // Spec 052 RF-2: what goes, and what a series would lose.
+        <>
+          <EventLines event={action.event} timeZone={timeZone} />
+          {action.scope ? (
+            <p className="text-sm text-muted">
+              {DELETE_SCOPES[action.scope]}
+              {action.loss ? ` ${lossText(action.loss)}` : ""}
+            </p>
+          ) : null}
+        </>
+      ) : action.kind === "series" ? (
+        // Spec 052 RF-6: the rule in words and its first dates.
+        <>
+          <EventLines event={action.event} timeZone={timeZone} />
+          <p className="text-sm font-semibold">{action.summary}</p>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold tracking-wide text-muted uppercase">
+              Primeras fechas
+            </span>
+            <ul className="text-sm text-muted tabular-nums">
+              {action.dates.map((start) => (
+                <li key={start}>
+                  {whenText(
+                    {
+                      startsAt: start,
+                      endsAt: new Date(
+                        Date.parse(start) +
+                          Date.parse(action.event.endsAt) -
+                          Date.parse(action.event.startsAt),
+                      ).toISOString(),
+                      allDay: action.event.allDay,
+                    },
+                    timeZone,
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
       ) : (
         <>
           {/* Once applied or undone, the two sides are history. */}
@@ -259,11 +346,16 @@ export function ActionCard({
         </p>
       ) : null}
 
-      {action.kind === "change" &&
-      (status === "pending" || status === "failed") ? (
+      {needsConfirm(action) && (status === "pending" || status === "failed") ? (
         <div className="flex flex-wrap gap-2">
-          <Button disabled={busy} onClick={() => void step("confirm")}>
-            Confirmar
+          <Button
+            variant={action.kind === "delete" ? "danger" : "primary"}
+            disabled={busy}
+            onClick={() => void step("confirm")}
+          >
+            {action.kind === "delete" || action.kind === "series"
+              ? KIND_LABELS[action.kind].button
+              : "Confirmar"}
           </Button>
           <Button
             variant="quiet"

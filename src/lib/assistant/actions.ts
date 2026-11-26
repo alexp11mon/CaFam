@@ -7,6 +7,7 @@ import {
 } from "@/lib/calendar/time-zone";
 import { weekdayName } from "./dates";
 import type { Loss } from "@/lib/forms/form-state";
+import type { RecurrenceRule } from "@/lib/recurrence/rule";
 
 // What Venito wrote or proposes in one answer (spec 036, plan "Modelo de
 // datos"). Pure and shared by the route, the actions and the chat; the
@@ -47,6 +48,27 @@ export interface PendingChange {
   fields: ChangeFields;
 }
 
+/** Spec 052 RF-2: a deletion shown but not done until "Borrar". */
+export interface PendingDelete {
+  id: string;
+  scope: ChangeScope | null;
+  /** updated_at of the row (or its series) when it was proposed. */
+  updatedAt: string;
+}
+
+/** Spec 052 RF-6: a series shown but not created until "Crear". */
+export interface PendingSeries {
+  calendarId: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  /** Its first occurrence. */
+  startsAt: string;
+  endsAt: string;
+  allDay: boolean;
+  rule: RecurrenceRule;
+}
+
 /** What a note card shows (spec 048 RF-12). */
 export interface ActionNote {
   id: string;
@@ -57,6 +79,15 @@ export interface ActionNote {
 }
 
 export type AssistantUndo =
+  /** Spec 052 RF-3: a deletion Venito made, back from the trash (spec 046). */
+  | {
+      kind: "restore";
+      trashId: string;
+      guard?: { id: string; updatedAt: string };
+      again?: { id: string; scope: ChangeScope };
+    }
+  /** Spec 052: deletes the series Venito created if nobody changed it. */
+  | { kind: "unseries"; id: string; updatedAt: string }
   /**
    * Spec 048: deletes the note Venito created, if nobody changed it, or only
    * the items it added (never anything else of the note).
@@ -104,7 +135,34 @@ export type AssistantAction =
       /** RF-30: what a change to a series would lose. */
       loss?: Loss;
       change: PendingChange;
+    }
+  /** Spec 052 RF-2: an event Venito proposes to delete. */
+  | {
+      kind: "delete";
+      key: string;
+      event: ActionEvent;
+      scope: ChangeScope | null;
+      loss?: Loss;
+      remove: PendingDelete;
+    }
+  /** Spec 052 RF-6: a series Venito proposes to create. */
+  | {
+      kind: "series";
+      key: string;
+      /** Its first occurrence. */
+      event: ActionEvent;
+      /** The rule in Spanish (spec 013 summary). */
+      summary: string;
+      /** Starts of the first 3 occurrences. */
+      dates: string[];
+      series: PendingSeries;
     };
+
+/** Spec 036, 052: cards that wait for "Confirmar", "Borrar" or "Crear". */
+export const needsConfirm = (action: AssistantAction) =>
+  action.kind === "change" ||
+  action.kind === "delete" ||
+  action.kind === "series";
 
 /** Where a card is: created ones and changes have their own steps. */
 export type ActionStatus =
@@ -162,20 +220,51 @@ export function whenText(
 const eventText = (event: ActionEvent, timeZone: string) =>
   `${event.title}, ${whenText(event, timeZone)}`;
 
-const HEADS: Record<ActionStatus, { created: string; change: string }> = {
-  done: { created: "Evento creado", change: "Cambio aplicado" },
+type Heads = Record<"created" | "change" | "delete" | "series", string>;
+
+const HEADS: Record<ActionStatus, Heads> = {
+  done: {
+    created: "Evento creado",
+    change: "Cambio aplicado",
+    delete: "Evento borrado",
+    series: "Serie creada",
+  },
   pending: {
     created: "Evento creado",
     change: "Cambio pendiente de confirmar",
+    delete: "Borrado pendiente de confirmar",
+    series: "Serie pendiente de confirmar",
   },
-  applied: { created: "Evento creado", change: "Cambio aplicado" },
-  cancelled: { created: "Evento creado", change: "Cambio cancelado" },
-  superseded: { created: "Evento creado", change: "Cambio sustituido" },
+  applied: {
+    created: "Evento creado",
+    change: "Cambio aplicado",
+    delete: "Evento borrado",
+    series: "Serie creada",
+  },
+  cancelled: {
+    created: "Evento creado",
+    change: "Cambio cancelado",
+    delete: "Borrado cancelado",
+    series: "Serie cancelada",
+  },
+  superseded: {
+    created: "Evento creado",
+    change: "Cambio sustituido",
+    delete: "Borrado sustituido",
+    series: "Serie sustituida",
+  },
   undone: {
     created: "Evento creado y deshecho",
     change: "Cambio aplicado y deshecho",
+    delete: "Evento borrado y restaurado",
+    series: "Serie creada y deshecha",
   },
-  failed: { created: "Evento no creado", change: "Cambio no aplicado" },
+  failed: {
+    created: "Evento no creado",
+    change: "Cambio no aplicado",
+    delete: "Evento no borrado",
+    series: "Serie no creada",
+  },
 };
 
 /**
@@ -202,6 +291,12 @@ export function describeAction(
   }
   if (action.kind === "created") {
     return `[${HEADS[status].created}: ${eventText(action.event, timeZone)}, en ${action.event.calendarName}]`;
+  }
+  if (action.kind === "delete") {
+    return `[${HEADS[status].delete}: ${eventText(action.event, timeZone)}, en ${action.event.calendarName}]`;
+  }
+  if (action.kind === "series") {
+    return `[${HEADS[status].series}: ${action.event.title}, ${action.summary}, desde el ${whenText(action.event, timeZone)}, en ${action.event.calendarName}]`;
   }
   return `[${HEADS[status].change}: ${eventText(action.before, timeZone)} → ${eventText(action.after, timeZone)}, en ${action.after.calendarName}]`;
 }

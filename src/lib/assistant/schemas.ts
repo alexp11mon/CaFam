@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { MAX_COUNT, MAX_INTERVAL } from "@/lib/recurrence/limits";
+import { recurrenceRuleSchema, weekdaySchema } from "@/lib/recurrence/schemas";
 import { QUESTION_MESSAGES } from "./error-messages";
 import { MAX_ATTACHMENTS } from "./attachments";
 import {
@@ -186,6 +188,46 @@ export type ChangeArgs = z.infer<
   typeof proposeChangesArgsSchema
 >["changes"][number];
 
+// Spec 052 RF-1: 1 to 3 events to delete, named as the user says them.
+export const proposeDeletesArgsSchema = z.object({
+  deletes: z
+    .array(
+      z.object({
+        event: shortText(TITLE_MAX).min(1),
+        eventDate: maybe(dateKey),
+        scope: maybe(changeScopeSchema),
+      }),
+    )
+    .min(1)
+    .max(MAX_WRITES),
+});
+
+export type DeleteArgs = z.infer<
+  typeof proposeDeletesArgsSchema
+>["deletes"][number];
+
+// Spec 052 RF-5, plan D2: the fields of a rule; the server writes the RRULE.
+export const proposeSeriesArgsSchema = z.object({
+  series: z
+    .array(
+      z.object({
+        title: shortText(TITLE_MAX).min(1),
+        ...timeFields,
+        freq: z.enum(["daily", "weekly", "monthly", "yearly"]),
+        interval: maybe(z.int().min(1).max(MAX_INTERVAL)),
+        byDay: maybe(z.array(weekdaySchema).min(1).max(7)),
+        until: maybe(dateKey),
+        count: maybe(z.int().min(1).max(MAX_COUNT)),
+      }),
+    )
+    .min(1)
+    .max(MAX_WRITES),
+});
+
+export type SeriesArgs = z.infer<
+  typeof proposeSeriesArgsSchema
+>["series"][number];
+
 const instant = z.iso.datetime({ offset: true });
 // A row or an occurrence "<uuid>_<YYYYMMDDTHHMMSSZ>" (spec 013).
 const eventId = z
@@ -214,7 +256,40 @@ export const pendingChangeSchema = z.object({
   fields: changeFieldsSchema,
 });
 
+/** Spec 052 RF-2: what "Borrar" sends back; checked again on the server. */
+export const pendingDeleteSchema = z.object({
+  id: eventId,
+  scope: changeScopeSchema.nullable(),
+  updatedAt: z.string().max(64),
+});
+
+/** Spec 052 RF-6: what "Crear" of a series sends back. */
+export const pendingSeriesSchema = z
+  .object({
+    calendarId: z.uuid(),
+    title: shortText(TITLE_MAX).min(1),
+    description: z.string().max(2000).nullable(),
+    location: z.string().max(200).nullable(),
+    startsAt: instant,
+    endsAt: instant,
+    allDay: z.boolean(),
+    rule: recurrenceRuleSchema,
+  })
+  .refine((fields) => Date.parse(fields.endsAt) > Date.parse(fields.startsAt));
+
 export const assistantUndoSchema = z.discriminatedUnion("kind", [
+  // Spec 052 RF-3: a deletion comes back from the trash (spec 046).
+  z.object({
+    kind: z.literal("restore"),
+    trashId: z.uuid(),
+    guard: z.object({ id: z.uuid(), updatedAt: z.string().max(64) }).optional(),
+    again: z.object({ id: eventId, scope: changeScopeSchema }).optional(),
+  }),
+  z.object({
+    kind: z.literal("unseries"),
+    id: z.uuid(),
+    updatedAt: z.string().max(64),
+  }),
   z.object({
     kind: z.literal("unnote"),
     id: z.uuid(),

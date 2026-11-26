@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   fromRRule,
+  ruleFromFields,
   toRRule,
   type RecurrenceRule,
   shiftRule,
@@ -217,5 +218,68 @@ describe("shiftRule", () => {
       end: { kind: "count", count: 5 },
     } as const;
     expect(shiftRule(rule, "2026-11-11", "2026-11-12")).toEqual(rule);
+  });
+});
+
+// Spec 052 RF-5: the rule of a series Venito proposes, built by the server
+// from fields, never an RRULE written by the model.
+describe("ruleFromFields", () => {
+  // 2026-11-24 is a Tuesday.
+  const start = "2026-11-24";
+
+  it("weekly with the days said", () => {
+    expect(
+      ruleFromFields(
+        { freq: "weekly", byDay: ["TU"], until: "2027-06-30" },
+        start,
+      ),
+    ).toEqual({
+      freq: "weekly",
+      interval: 1,
+      byDay: ["TU"],
+      end: { kind: "until", date: "2027-06-30" },
+    });
+  });
+
+  it("weekly without days takes the start's weekday", () => {
+    expect(ruleFromFields({ freq: "weekly", interval: 2 }, start)).toEqual({
+      freq: "weekly",
+      interval: 2,
+      byDay: ["TU"],
+      end: { kind: "never" },
+    });
+  });
+
+  it("daily on some days is a weekly rule: weekdays", () => {
+    expect(
+      ruleFromFields(
+        { freq: "daily", byDay: ["MO", "TU", "WE", "TH", "FR"], count: 20 },
+        start,
+      ),
+    ).toEqual({
+      freq: "weekly",
+      interval: 1,
+      byDay: ["MO", "TU", "WE", "TH", "FR"],
+      end: { kind: "count", count: 20 },
+    });
+  });
+
+  it("monthly and yearly take the start's day", () => {
+    expect(ruleFromFields({ freq: "monthly" }, start)).toMatchObject({
+      monthly: { day: 24 },
+    });
+    expect(ruleFromFields({ freq: "yearly" }, start)).toMatchObject({
+      yearly: { month: 11, day: 24 },
+    });
+  });
+
+  it.each([
+    [{ freq: "weekly", until: "2026-11-01" }],
+    [{ freq: "weekly", until: "2027-01-01", count: 3 }],
+    [{ freq: "weekly", interval: 0 }],
+    [{ freq: "weekly", count: 0 }],
+    [{ freq: "hourly" }],
+  ])("is null for a rule CaFam cannot keep: %j", (fields) => {
+    expect(ruleFromFields(fields as never, start)).toBeNull();
   });
 });

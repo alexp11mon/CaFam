@@ -1,7 +1,9 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { writeTools } from "@/app/dashboard/assistant/assistant-writes";
 import {
   applyPendingChange,
+  applyPendingDelete,
+  applyPendingSeries,
   undoWrite,
 } from "@/app/dashboard/assistant/change-writes";
 import type { AssistantUndo, PendingChange } from "@/lib/assistant/actions";
@@ -16,6 +18,9 @@ import {
   getOwnCalendarId,
   type TestUser,
 } from "./helpers";
+
+// Deleting refreshes the views (spec 052): outside Next there is no cache.
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 // Spec 036, T4 and T5: Venito writes with the user's session, so RLS decides
 // (RF-1 to RF-30, RF-39; plan D1, D7).
@@ -408,5 +413,185 @@ describe("changes and undo against the database", () => {
       .eq("id", samEvent!.id)
       .single();
     expect(data!.starts_at).toBe("2026-12-14T07:00:00+00:00");
+  });
+});
+
+// Spec 052 T2, T3: deleting and series, confirmed with the user's session.
+describe("deletions and series against the database", () => {
+  async function event(title: string, day: string, calendar = anaCal) {
+    const { data, error } = await admin
+      .from("events")
+      .insert({
+        calendar_id: calendar,
+        title,
+        starts_at: `${day}T18:00:00Z`,
+        ends_at: `${day}T19:00:00Z`,
+        created_by: ana.id,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return data.id;
+  }
+
+  async function proposeDelete(user: TestUser, args: object) {
+    const { api, actions } = tools(user);
+    const result = await api.propose_deletes({ deletes: [args] });
+    return { result, action: actions[0] };
+  }
+
+  it("deletes nothing until confirmed, then through the trash, and undoes it (RF-1, RF-3)", async () => {
+    const id = await event("Cena de empresa", "2026-12-15");
+    const { action } = await proposeDelete(ana, { event: "Cena de empresa" });
+    if (action?.kind !== "delete") throw new Error("no card");
+    const { count: still } = await admin
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("id", id);
+    expect(still).toBe(1);
+
+    const confirmed = await applyPendingDelete(ana.client, action.remove);
+    expect(confirmed).toMatchObject({ ok: true, undo: { kind: "restore" } });
+    const { count: gone } = await admin
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("id", id);
+    expect(gone).toBe(0);
+    const { count: trashed } = await admin
+      .from("event_trash")
+      .select("id", { count: "exact", head: true })
+      .eq("title", "Cena de empresa");
+    expect(trashed).toBe(1);
+
+    if (!confirmed.ok || !confirmed.undo) throw new Error("no undo");
+    expect(await undoWith(ana, confirmed.undo)).toEqual({ ok: true });
+    const { data: back } = await admin
+      .from("events")
+      .select("starts_at")
+      .eq("title", "Cena de empresa");
+    expect(back).toEqual([{ starts_at: "2026-12-15T18:00:00+00:00" }]);
+  });
+
+  it("deletes one PIAE only by default (RF-2)", async () => {
+    const { action } = await proposeDelete(ana, {
+      event: "PIAE",
+      eventDate: "2026-12-17",
+    });
+    if (action?.kind !== "delete") throw new Error("no card");
+    expect(action.scope).toBe("this");
+    expect(await applyPendingDelete(ana.client, action.remove)).toMatchObject({
+      ok: true,
+    });
+    const { data } = await admin
+      .from("events")
+      .select("exdates")
+      .eq("title", "PIAE")
+      .is("series_id", null)
+      .single();
+    expect(data!.exdates).toEqual(["2026-12-17T11:00:00+00:00"]);
+  });
+
+  it("does not delete if the event changed meanwhile", async () => {
+    const id = await event("Reunión movida", "2026-12-16");
+    const { action } = await proposeDelete(ana, { event: "Reunión movida" });
+    if (action?.kind !== "delete") throw new Error("no card");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await admin.from("events").update({ location: "Sala 2" }).eq("id", id);
+    expect(await applyPendingDelete(ana.client, action.remove)).toMatchObject({
+      ok: false,
+    });
+  });
+
+  it("a reader gets no card, and the database refuses anyway (RF-4)", async () => {
+    const id = await event("Turno de guardia", "2026-12-19", samCal);
+    const { result, action } = await proposeDelete(ana, {
+      event: "Turno de guardia",
+    });
+    expect(result).toMatchObject({ status: "forbidden" });
+    expect(action).toBeUndefined();
+    const { data: row } = await admin
+      .from("events")
+      .select("updated_at")
+      .eq("id", id)
+      .single();
+    expect(
+      await applyPendingDelete(ana.client, {
+        id,
+        scope: null,
+        updatedAt: row!.updated_at,
+      }),
+    ).toMatchObject({ ok: false });
+    const { count } = await admin
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("id", id);
+    expect(count).toBe(1);
+  });
+
+  it("creates the series only when confirmed, and undoes it (RF-5, RF-6)", async () => {
+    const { api, actions } = tools(ana);
+    const result = await api.propose_series({
+      series: [
+        {
+          title: "Inglés",
+          calendar: "Uni",
+          start: "18:00",
+          freq: "weekly",
+          byDay: ["TU"],
+          until: "2027-06-30",
+        },
+      ],
+    });
+    expect(result).toMatchObject({ status: "proposed_series" });
+    const action = actions[0];
+    if (action?.kind !== "series") throw new Error("no card");
+    expect(action.dates).toHaveLength(3);
+    const { count: none } = await admin
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("title", "Inglés");
+    expect(none).toBe(0);
+
+    const confirmed = await applyPendingSeries(
+      ana.client,
+      ana.id,
+      TZ,
+      action.series,
+    );
+    expect(confirmed).toMatchObject({ ok: true, undo: { kind: "unseries" } });
+    const { data } = await admin
+      .from("events")
+      .select("starts_at, recurrence, recurrence_tz, created_by")
+      .eq("title", "Inglés")
+      .single();
+    expect(data).toEqual({
+      // Wednesday 2 December: the first Tuesday is the 8th, 18:00 in Madrid.
+      starts_at: "2026-12-08T17:00:00+00:00",
+      recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=TU;UNTIL=20270630T235959",
+      recurrence_tz: TZ,
+      created_by: ana.id,
+    });
+
+    if (!confirmed.ok || !confirmed.undo) throw new Error("no undo");
+    expect(await undoWith(ana, confirmed.undo)).toEqual({ ok: true });
+    const { count } = await admin
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("title", "Inglés");
+    expect(count).toBe(0);
+  });
+
+  it("a series in a calendar Ana only reads is refused by the database", async () => {
+    const result = await applyPendingSeries(ana.client, ana.id, TZ, {
+      calendarId: samCal,
+      title: "Intruso",
+      description: null,
+      location: null,
+      startsAt: "2026-12-08T17:00:00.000Z",
+      endsAt: "2026-12-08T18:00:00.000Z",
+      allDay: false,
+      rule: { freq: "daily", interval: 1, end: { kind: "count", count: 2 } },
+    });
+    expect(result).toMatchObject({ ok: false });
   });
 });

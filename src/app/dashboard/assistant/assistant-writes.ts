@@ -10,8 +10,12 @@ import {
   createEventsArgsSchema,
   MAX_WRITES,
   proposeChangesArgsSchema,
+  proposeDeletesArgsSchema,
+  proposeSeriesArgsSchema,
   type ChangeArgs,
   type CreateEventArgs,
+  type DeleteArgs,
+  type SeriesArgs,
 } from "@/lib/assistant/schemas";
 import {
   findEventsByTitle,
@@ -26,7 +30,14 @@ import {
   type CalendarRecord,
   type EventRecord,
 } from "@/lib/calendar/queries";
-import { planSeriesChange } from "@/lib/recurrence/series-write";
+import { expandSeries } from "@/lib/recurrence/expand";
+import { ruleFromFields } from "@/lib/recurrence/rule";
+import {
+  planSeriesChange,
+  planSeriesDelete,
+  seriesColumns,
+} from "@/lib/recurrence/series-write";
+import { summarizeRule } from "@/lib/recurrence/summary";
 import { formatTime, zonedDateKey } from "@/lib/calendar/time-zone";
 import { providerName } from "@/lib/sync/provider-labels";
 import {
@@ -73,7 +84,15 @@ type ToolAnswer = Record<string, unknown> & { status: string };
 export const WRITE_TEXTS = {
   tooMany: `Puedo crear o cambiar como mucho ${MAX_WRITES} eventos por mensaje: no he hecho ninguno. Pídemelos en varios mensajes.`,
   noWritable: "No tienes ningún calendario en el que puedas crear eventos.",
+  badRule:
+    "No sé crear esa repetición: no da ninguna fecha o no es una regla que CaFam pueda guardar. Dímela de otra forma.",
 } as const;
+
+/** Spec 052 RF-7: series only live in calendars of CaFam (spec 013). */
+export const seriesSyncedText = (name: string, options: readonly string[]) =>
+  options.length
+    ? `No puedo crear eventos que se repiten en «${name}»: es un calendario traído de Google o iCloud. Puedo crearlos en: ${options.join(", ")}.`
+    : `No puedo crear eventos que se repiten en «${name}»: es un calendario traído de Google o iCloud.`;
 
 const list = (names: readonly string[]) => names.join(", ");
 
@@ -327,10 +346,11 @@ export function writeTools(ctx: WriteToolsContext) {
     };
   }
 
-  /** RF-28: why this event cannot be changed, or null. */
+  /** RF-28, spec 052 RF-4: why this event cannot be changed, or null. */
   function cannotChange(
     event: EventRecord,
     calendar: WritableCalendar | undefined,
+    verb: "cambiar" | "borrar" = "cambiar",
   ): ToolAnswer | null {
     if (calendar?.writable) return null;
     const why = !calendar
@@ -342,7 +362,7 @@ export function writeTools(ctx: WriteToolsContext) {
           : `solo puedes ver «${calendar.name}»`;
     return {
       status: "forbidden",
-      notice: `No puedes cambiar «${event.title}»: ${why}.`,
+      notice: `No puedes ${verb} «${event.title}»: ${why}.`,
     };
   }
 
@@ -513,10 +533,160 @@ export function writeTools(ctx: WriteToolsContext) {
     };
   }
 
-  /** Shared by both tools: too many, malformed, or one by one in order (D3, D6). */
+  /** Spec 052 RF-1 to RF-4: a deletion shown on a card; nothing is deleted. */
+  async function proposeDeleteOne(input: DeleteArgs): Promise<ToolAnswer> {
+    if (ctx.signal?.aborted) return { status: "cancelled" };
+    const target = await anchorOf(input.event, input.eventDate ?? null);
+    if (!target.ok) return target.answer;
+    const event = await getEvent(ctx.supabase, target.event.id);
+    if (!event) return { status: "event_not_found", title: input.event };
+    const all = await loadCalendars();
+    const source = all.find((calendar) => calendar.id === event.calendarId);
+    const forbidden = cannotChange(event, source, "borrar");
+    if (forbidden || !source) return forbidden!;
+
+    // RF-2: an occurrence goes alone unless the user says otherwise (spec 013).
+    const scope = event.series ? (input.scope ?? "this") : null;
+    const loss =
+      event.series && scope
+        ? await unconfirmedLoss(
+            ctx.supabase,
+            event.series.id,
+            planSeriesDelete(event.series, scope).loss,
+            false,
+          )
+        : null;
+    const updatedAt = await updatedAtOf(
+      ctx.supabase,
+      event.rowId ?? event.series?.id ?? event.id,
+    );
+    const ref = ctx.refs.add({
+      id: event.id,
+      title: event.title,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      allDay: event.allDay,
+      calendarName: source.name,
+      color: source.color,
+    });
+    ctx.onAction({
+      kind: "delete",
+      key: crypto.randomUUID(),
+      event: cardOf(event, source),
+      scope,
+      ...(loss ? { loss } : {}),
+      remove: { id: event.id, scope, updatedAt },
+    });
+    return {
+      status: "proposed_delete",
+      ref,
+      title: event.title,
+      ...modelTimes(event, ctx.timeZone),
+      calendar: source.name,
+      ...(scope ? { scope } : {}),
+    };
+  }
+
+  /** Spec 052 RF-5 to RF-7: a series shown on a card; nothing is created. */
+  async function proposeSeriesOne(input: SeriesArgs): Promise<ToolAnswer> {
+    if (ctx.signal?.aborted) return { status: "cancelled" };
+    const all = await loadCalendars();
+    const match = matchCalendar(input.calendar, all);
+    const problem = calendarProblem(match, all, "crear");
+    if (problem || match.status !== "ok") return problem!;
+    const calendar = match.calendar;
+    if (calendar.record.synced) {
+      return {
+        status: "synced_calendar",
+        notice: seriesSyncedText(
+          calendar.name,
+          all
+            .filter((other) => other.writable && !other.record.synced)
+            .map((other) => other.name),
+        ),
+      };
+    }
+
+    // Plan D2: without a day, the series starts at its next occurrence.
+    const times = resolveTimes(
+      {
+        ...input,
+        date: input.date ?? zonedDateKey(ctx.now.toISOString(), ctx.timeZone),
+      },
+      { timeZone: ctx.timeZone, defaultMinutes: await loadDefault() },
+    );
+    if (times.status === "end_before_start") {
+      return {
+        status: times.status,
+        notice: `La hora de fin (${times.end}) no es posterior a la de inicio (${times.start}): no he preparado «${input.title}».`,
+      };
+    }
+    if (times.status !== "ok") return { status: times.status };
+    const startDate = times.allDay
+      ? times.startsAt.slice(0, 10)
+      : zonedDateKey(times.startsAt, ctx.timeZone);
+    const rule = ruleFromFields(input, startDate);
+    const columns = rule && seriesColumns(times, rule, ctx.timeZone);
+    if (!rule || !columns) {
+      return { status: "invalid_rule", notice: WRITE_TEXTS.badRule };
+    }
+    const first = Date.parse(columns.starts_at);
+    const dates = expandSeries(
+      {
+        startsAt: columns.starts_at,
+        endsAt: columns.ends_at,
+        allDay: times.allDay,
+        recurrence: columns.recurrence,
+        recurrenceTz: columns.recurrence_tz,
+      },
+      new Date(first),
+      // Five years cover a yearly rule's 3 first dates.
+      new Date(first + 5 * 366 * 86_400_000),
+    )
+      .slice(0, 3)
+      .map((occurrence) => occurrence.startsAt);
+
+    const series = {
+      calendarId: calendar.id,
+      title: input.title,
+      description: input.description || null,
+      location: input.location || null,
+      startsAt: columns.starts_at,
+      endsAt: columns.ends_at,
+      allDay: times.allDay,
+      rule,
+    };
+    const summary = summarizeRule(rule);
+    ctx.onAction({
+      kind: "series",
+      key: crypto.randomUUID(),
+      event: {
+        id: crypto.randomUUID(),
+        title: series.title,
+        startsAt: series.startsAt,
+        endsAt: series.endsAt,
+        allDay: series.allDay,
+        calendarName: calendar.name,
+        color: calendar.color,
+        location: series.location,
+      },
+      summary,
+      dates,
+      series,
+    });
+    return {
+      status: "proposed_series",
+      title: series.title,
+      rule: summary,
+      first: modelTimes(series, ctx.timeZone),
+      calendar: calendar.name,
+    };
+  }
+
+  /** Shared by the tools: too many, malformed, or one by one in order (D3, D6). */
   async function each<T>(
     args: unknown,
-    key: "events" | "changes",
+    key: "events" | "changes" | "deletes" | "series",
     parse: (args: unknown) => { success: true; data: T[] } | { success: false },
     run: (input: T) => Promise<ToolAnswer>,
   ): Promise<ToolAnswer> {
@@ -569,6 +739,34 @@ export function writeTools(ctx: WriteToolsContext) {
             : { success: false };
         },
         proposeOne,
+      );
+    },
+    /** Spec 052 RF-1: prepares 1 to 3 deletions; nothing is deleted (D1). */
+    async propose_deletes(args: unknown): Promise<ToolAnswer> {
+      return each(
+        args,
+        "deletes",
+        (value) => {
+          const parsed = proposeDeletesArgsSchema.safeParse(value);
+          return parsed.success
+            ? { success: true, data: parsed.data.deletes }
+            : { success: false };
+        },
+        proposeDeleteOne,
+      );
+    },
+    /** Spec 052 RF-5, RF-6: prepares series; nothing is created (D2). */
+    async propose_series(args: unknown): Promise<ToolAnswer> {
+      return each(
+        args,
+        "series",
+        (value) => {
+          const parsed = proposeSeriesArgsSchema.safeParse(value);
+          return parsed.success
+            ? { success: true, data: parsed.data.series }
+            : { success: false };
+        },
+        proposeSeriesOne,
       );
     },
   };

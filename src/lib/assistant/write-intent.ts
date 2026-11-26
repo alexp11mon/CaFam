@@ -14,9 +14,9 @@ export function plainWords(text: string): string[] {
     .filter(Boolean);
 }
 
-// Word starts of "create" and "change" in Spanish, imperative included
-// ("créame", "pásalo", "apúntame"). Deleting stays out: Venito never deletes
-// (RF-31) and answers that with the read tools.
+// Word starts of "create", "change", "delete" and "repeat" in Spanish,
+// imperative included ("créame", "pásalo", "bórralo"). Deleting is only ever
+// proposed and confirmed (spec 052 RF-1).
 const WRITE_STEMS = [
   "crea",
   "crear",
@@ -41,6 +41,14 @@ const WRITE_STEMS = [
   "corrig",
   "alarg",
   "acort",
+  "borr",
+  "elimin",
+  "cancel",
+  "quita",
+  "quital",
+  "suprim",
+  "repet",
+  "repit",
 ];
 
 const hasWriteVerb = (text: string) =>

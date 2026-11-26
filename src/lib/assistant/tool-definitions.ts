@@ -274,4 +274,90 @@ export const WRITE_TOOL_DEFINITIONS: ToolDefinition[] = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "propose_deletes",
+      description:
+        "Prepara el borrado de 1 a 3 eventos que ya existen. No borra nada: el usuario lo confirma.",
+      parameters: {
+        type: "object",
+        properties: {
+          deletes: {
+            type: "array",
+            maxItems: 3,
+            items: {
+              type: "object",
+              properties: {
+                event: {
+                  type: "string",
+                  description: "Título del evento que hay que borrar",
+                },
+                eventDate: nullableString(
+                  "Día AAAA-MM-DD de ese evento si el usuario lo dice",
+                ),
+                scope: {
+                  type: ["string", "null"],
+                  enum: ["this", "following", "all", null],
+                  description:
+                    "Solo en eventos que se repiten: all si dice toda la serie, following si dice a partir de este; si no, null",
+                },
+              },
+              required: ["event"],
+            },
+          },
+        },
+        required: ["deletes"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "propose_series",
+      description:
+        'Prepara eventos que se repiten. No crea nada: el usuario lo confirma. Ejemplo: «Inglés cada martes a las 18 hasta junio» es {"series":[{"title":"Inglés","start":"18:00","freq":"weekly","byDay":["TU"],"until":"2027-06-30"}]}.',
+      parameters: {
+        type: "object",
+        properties: {
+          series: {
+            type: "array",
+            maxItems: 3,
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "Título del evento" },
+                ...timeProperties,
+                freq: {
+                  type: "string",
+                  enum: ["daily", "weekly", "monthly", "yearly"],
+                  description: "Cada cuánto se repite",
+                },
+                interval: {
+                  type: ["integer", "null"],
+                  description:
+                    "Cada cuántos (2 = cada dos semanas); si no, null",
+                },
+                byDay: {
+                  type: ["array", "null"],
+                  items: {
+                    type: "string",
+                    enum: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"],
+                  },
+                  description: "Días de la semana en que se repite",
+                },
+                until: nullableString("Último día AAAA-MM-DD, si lo dice"),
+                count: {
+                  type: ["integer", "null"],
+                  description: "Número de veces, si lo dice",
+                },
+              },
+              required: ["title", "freq"],
+            },
+          },
+        },
+        required: ["series"],
+      },
+    },
+  },
 ];

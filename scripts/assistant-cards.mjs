@@ -1,4 +1,5 @@
-// Spec 036, T10: Venito's cards in a real browser, without Groq. The answer
+// Spec 036, T10 (and spec 052 T4: deleting and series): Venito's cards in a
+// real browser, without Groq. The answer
 // of POST /api/assistant is replaced by one with a created event and a
 // pending change, seeded for real, so "Confirmar" and "Deshacer" run the real
 // Server Actions against the database. Takes the screenshots of P9 and
@@ -168,6 +169,61 @@ async function cards(user) {
   return { created, change, comidaId: comida.id, dentistaId: dentista.id };
 }
 
+/** Spec 052: a deletion and a series, as propose_deletes/propose_series. */
+async function moreCards(user) {
+  const cena = await insertEvent({
+    calendar_id: user.calendarId,
+    created_by: user.userId,
+    title: "Cena de empresa",
+    starts_at: thursdayAt(21),
+    ends_at: thursdayAt(23),
+  });
+  const card = (id, title, startsAt, endsAt) => ({
+    id,
+    title,
+    startsAt,
+    endsAt,
+    allDay: false,
+    calendarName: "alexponmon@gmail.test",
+    color: "#A0C4FF",
+    location: null,
+  });
+  const remove = {
+    kind: "delete",
+    key: randomUUID(),
+    event: card(cena.id, "Cena de empresa", thursdayAt(21), thursdayAt(23)),
+    scope: null,
+    remove: { id: cena.id, scope: null, updatedAt: cena.updated_at },
+  };
+  const week = 7 * 86_400_000;
+  const first = thursdayAt(18);
+  const series = {
+    kind: "series",
+    key: randomUUID(),
+    event: card(randomUUID(), "Inglés", first, thursdayAt(19)),
+    summary: "Cada semana el jueves, 10 veces",
+    dates: [0, 1, 2].map((n) =>
+      new Date(Date.parse(first) + n * week).toISOString(),
+    ),
+    series: {
+      calendarId: user.calendarId,
+      title: "Inglés",
+      description: null,
+      location: null,
+      startsAt: first,
+      endsAt: thursdayAt(19),
+      allDay: false,
+      rule: {
+        freq: "weekly",
+        interval: 1,
+        byDay: ["TH"],
+        end: { kind: "count", count: 10 },
+      },
+    },
+  };
+  return { remove, series, cenaId: cena.id };
+}
+
 const ndjson = (lines) =>
   lines.map((line) => JSON.stringify(line)).join("\n") + "\n";
 
@@ -196,8 +252,8 @@ async function open(browser, user, { width, theme }) {
   return { context, page };
 }
 
-/** Asks Venito; the route answers with the two cards. */
-async function ask(page, actions) {
+/** Asks Venito; the route answers with the cards. */
+async function ask(page, actions, waitFor = "Cambio pendiente") {
   await page.route("**/api/assistant", (route) =>
     route.request().method() === "POST"
       ? route.fulfill({
@@ -226,7 +282,7 @@ async function ask(page, actions) {
     "Crea Comida Uni en alexponmon@gmail.test justo cuando acabe PIAE hasta las 14:30 y pasa el dentista a las 18:00",
   );
   await field.press("Enter");
-  await page.getByText("Cambio pendiente").waitFor();
+  await page.getByText(waitFor).first().waitFor();
   await page.waitForTimeout(500);
 }
 
@@ -304,8 +360,53 @@ try {
     await admin.from("events").delete().eq("calendar_id", user.calendarId);
   }
 
-  // 3. The screenshots of P9.
+  // 3. Spec 052: "Borrar" through the trash and "Crear" a series, for real.
+  {
+    const more = await moreCards(user);
+    const { context, page } = await open(browser, user, {
+      width: 390,
+      theme: "light",
+    });
+    await ask(page, [more.remove, more.series], "Borrado pendiente");
+    await page.getByRole("button", { name: "Borrar" }).click();
+    await page.getByText("Evento borrado").waitFor();
+    const { count: gone } = await admin
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("id", more.cenaId);
+    check(gone === 0, "«Borrar» borra la cena");
+    const { count: trashed } = await admin
+      .from("event_trash")
+      .select("id", { count: "exact", head: true })
+      .eq("title", "Cena de empresa");
+    check(trashed === 1, "la cena borrada está en la papelera");
+
+    await page.getByRole("button", { name: "Crear" }).click();
+    await page.getByText("Serie creada").waitFor();
+    const { data: rows } = await admin
+      .from("events")
+      .select("recurrence")
+      .eq("title", "Inglés");
+    check(
+      rows.length === 1 && rows[0].recurrence.includes("BYDAY=TH"),
+      "«Crear» crea la serie de Inglés",
+    );
+    await page.screenshot({ path: join(outDir, "borrar-serie-390-claro.png") });
+
+    await page.getByRole("button", { name: "Deshacer" }).first().click();
+    await page.getByText("Deshecho").first().waitFor();
+    const { count: back } = await admin
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("title", "Cena de empresa");
+    check(back === 1, "«Deshacer» restaura la cena desde la papelera");
+    await context.close();
+    await admin.from("events").delete().eq("calendar_id", user.calendarId);
+  }
+
+  // 4. The screenshots of P9.
   const seeded = await cards(user);
+  const more = await moreCards(user);
   for (const accent of ACCENTS) {
     await admin.from("profiles").update({ accent }).eq("id", user.userId);
     for (const theme of THEMES) {
@@ -323,6 +424,15 @@ try {
         );
         await page.screenshot({ path: file });
         console.log(file);
+        // Spec 052: the deletion and the series waiting for their button.
+        await page.unroute("**/api/assistant");
+        await ask(page, [more.remove, more.series], "Borrado pendiente");
+        await page
+          .getByRole("region", { name: /Borrado pendiente/ })
+          .scrollIntoViewIfNeeded();
+        const other = file.replace("tarjetas-", "borrar-serie-");
+        await page.screenshot({ path: other });
+        console.log(other);
         await context.close();
       }
     }

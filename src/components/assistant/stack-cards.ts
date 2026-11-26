@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { undoAssistantAction } from "@/app/dashboard/assistant/write-actions";
 import { useUndoStack } from "@/components/calendar/undo-stack";
 import { undoLabel } from "@/lib/calendar/undo-stack";
-import type { AssistantUndo } from "@/lib/assistant/actions";
+import { needsConfirm, type AssistantUndo } from "@/lib/assistant/actions";
 import type { ChatAction } from "./action-card";
 
 // What Venito created or changed goes on the stack of the tab too, so Ctrl/⌘+Z
@@ -12,20 +12,39 @@ import type { ChatAction } from "./action-card";
 // is where it is created again. Each token is stacked once.
 
 function undoOf(card: ChatAction): AssistantUndo | null {
-  if (card.action.kind !== "change" && card.status === "done")
-    return card.action.undo;
-  if (card.action.kind === "change" && card.status === "applied")
+  const { action } = card;
+  if (
+    (action.kind === "created" || action.kind === "note") &&
+    card.status === "done"
+  )
+    return action.undo;
+  if (needsConfirm(action) && card.status === "applied")
     return card.undo ?? null;
   return null;
 }
 
 function titleOf(card: ChatAction): string {
-  return card.action.kind === "created"
-    ? card.action.event.title
-    : card.action.kind === "note"
-      ? card.action.note.title
-      : card.action.after.title;
+  const { action } = card;
+  return action.kind === "note"
+    ? action.note.title
+    : action.kind === "change"
+      ? action.after.title
+      : action.event.title;
 }
+
+const VERBS: Record<ChatAction["action"]["kind"], string> = {
+  created: "Evento creado",
+  note: "Nota",
+  change: "cambiar",
+  delete: "Evento borrado",
+  series: "Serie creada",
+};
+
+/** Each token once: a deletion is told by its copy in the trash. */
+const keyOf = (undo: AssistantUndo) =>
+  undo.kind === "restore"
+    ? `restore:${undo.trashId}`
+    : `${undo.kind}:${undo.id}:${undo.updatedAt}:${"itemIds" in undo ? (undo.itemIds?.join() ?? "") : ""}`;
 
 export function useStackCards(
   messages: readonly { actions?: ChatAction[] }[],
@@ -39,20 +58,20 @@ export function useStackCards(
       for (const card of message.actions ?? []) {
         const undo = undoOf(card);
         if (!undo) continue;
-        const key = `${undo.kind}:${undo.id}:${undo.updatedAt}:${"itemIds" in undo ? (undo.itemIds?.join() ?? "") : ""}`;
+        const key = keyOf(undo);
         if (stacked.current.has(key)) continue;
         stacked.current.add(key);
-        const verb =
-          card.action.kind === "created"
-            ? "Evento creado"
-            : card.action.kind === "note"
-              ? "Nota"
-              : "cambiar";
-        stack.record(undoLabel(verb, titleOf(card)), null, async () => {
-          const result = await undoAssistantAction(undo);
-          if (result.ok) onChanged?.();
-          return result.ok ? { ok: true } : { ok: false, error: result.error };
-        });
+        stack.record(
+          undoLabel(VERBS[card.action.kind], titleOf(card)),
+          null,
+          async () => {
+            const result = await undoAssistantAction(undo);
+            if (result.ok) onChanged?.();
+            return result.ok
+              ? { ok: true }
+              : { ok: false, error: result.error };
+          },
+        );
       }
     }
   }, [messages, stack, onChanged]);

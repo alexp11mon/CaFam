@@ -9,7 +9,11 @@ import {
   assistantUndoSchema,
   createEventsArgsSchema,
   pendingChangeSchema,
+  pendingDeleteSchema,
+  pendingSeriesSchema,
   proposeChangesArgsSchema,
+  proposeDeletesArgsSchema,
+  proposeSeriesArgsSchema,
 } from "@/lib/assistant/schemas";
 import { WRITE_TOOL_DEFINITIONS } from "@/lib/assistant/tool-definitions";
 
@@ -164,7 +168,7 @@ describe("pending change and undo from the browser", () => {
       }).success,
     ).toBe(true);
     expect(
-      assistantUndoSchema.safeParse({ kind: "restore", trashId: ID }).success,
+      assistantUndoSchema.safeParse({ kind: "restore", trashId: "x" }).success,
     ).toBe(false);
   });
 });
@@ -176,7 +180,135 @@ describe("WRITE_TOOL_DEFINITIONS", () => {
       "add_note_items",
       "create_events",
       "propose_changes",
+      "propose_deletes",
+      "propose_series",
     ]);
+  });
+});
+
+// Spec 052 T1: deleting and series (RF-1, RF-5).
+describe("propose_deletes arguments", () => {
+  it("takes 1 to 3 events by title, day and scope", () => {
+    const parsed = proposeDeletesArgsSchema.parse({
+      deletes: [{ event: "Cena", eventDate: "2026-11-27", scope: null }],
+    });
+    expect(parsed.deletes[0]).toMatchObject({ event: "Cena" });
+    expect(
+      proposeDeletesArgsSchema.safeParse({
+        deletes: [1, 2, 3, 4].map(() => ({ event: "Cena" })),
+      }).success,
+    ).toBe(false);
+    expect(proposeDeletesArgsSchema.safeParse({ deletes: [] }).success).toBe(
+      false,
+    );
+  });
+});
+
+describe("propose_series arguments", () => {
+  it("takes fields of a rule, never an RRULE", () => {
+    const parsed = proposeSeriesArgsSchema.parse({
+      series: [
+        {
+          title: "Inglés",
+          date: "2026-11-24",
+          start: "18:00",
+          freq: "weekly",
+          byDay: ["TU"],
+          until: "2027-06-30",
+          count: null,
+          interval: null,
+          calendar: null,
+        },
+      ],
+    });
+    expect(parsed.series[0]).toMatchObject({ freq: "weekly", byDay: ["TU"] });
+    expect(
+      proposeSeriesArgsSchema.safeParse({
+        series: [{ title: "Inglés", freq: "FREQ=WEEKLY" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      proposeSeriesArgsSchema.safeParse({
+        series: [{ title: "Inglés", freq: "weekly", byDay: ["martes"] }],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("checks what Borrar and Crear send back", () => {
+    expect(
+      pendingDeleteSchema.safeParse({ id: ID, scope: null, updatedAt: "x" })
+        .success,
+    ).toBe(true);
+    expect(
+      pendingSeriesSchema.safeParse({
+        calendarId: CAL,
+        title: "Inglés",
+        description: null,
+        location: null,
+        startsAt: "2026-11-24T17:00:00.000Z",
+        endsAt: "2026-11-24T18:00:00.000Z",
+        allDay: false,
+        rule: {
+          freq: "weekly",
+          interval: 1,
+          byDay: ["TU"],
+          end: { kind: "never" },
+        },
+      }).success,
+    ).toBe(true);
+    expect(
+      assistantUndoSchema.safeParse({ kind: "restore", trashId: ID }).success,
+    ).toBe(true);
+    expect(
+      assistantUndoSchema.safeParse({
+        kind: "unseries",
+        id: ID,
+        updatedAt: "x",
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe("describeAction of deletions and series (spec 052)", () => {
+  const remove: AssistantAction = {
+    kind: "delete",
+    key: "k",
+    event: comida,
+    scope: null,
+    remove: { id: ID, scope: null, updatedAt: "x" },
+  };
+  const series: AssistantAction = {
+    kind: "series",
+    key: "s",
+    event: comida,
+    summary: "Cada semana el jueves",
+    dates: [comida.startsAt],
+    series: {
+      calendarId: CAL,
+      title: comida.title,
+      description: null,
+      location: null,
+      startsAt: comida.startsAt,
+      endsAt: comida.endsAt,
+      allDay: false,
+      rule: {
+        freq: "weekly",
+        interval: 1,
+        byDay: ["TH"],
+        end: { kind: "never" },
+      },
+    },
+  };
+
+  it("says what is pending and what was done", () => {
+    expect(describeAction(remove, TZ, "pending")).toBe(
+      "[Borrado pendiente de confirmar: Comida Uni, jueves 19 de noviembre, de 13:30 a 14:30, en alexponmon@gmail.com]",
+    );
+    expect(describeAction(remove, TZ, "applied")).toContain("[Evento borrado:");
+    expect(describeAction(series, TZ, "pending")).toBe(
+      "[Serie pendiente de confirmar: Comida Uni, Cada semana el jueves, desde el jueves 19 de noviembre, de 13:30 a 14:30, en alexponmon@gmail.com]",
+    );
+    expect(describeAction(series, TZ, "applied")).toContain("[Serie creada:");
   });
 });
 

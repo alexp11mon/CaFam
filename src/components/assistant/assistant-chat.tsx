@@ -41,7 +41,11 @@ import {
   readShared,
   sharedIdFromLocation,
 } from "@/lib/share/inbox";
-import { describeAction, type AssistantAction } from "@/lib/assistant/actions";
+import {
+  describeAction,
+  needsConfirm,
+  type AssistantAction,
+} from "@/lib/assistant/actions";
 import { isNo, isYes } from "@/lib/assistant/write-intent";
 import { ActionCard, runCardStep, type ChatAction } from "./action-card";
 import { useStackCards } from "./stack-cards";
@@ -90,12 +94,24 @@ const clock = () => Date.now();
 /** Spec 036: a fresh card for an action that just arrived. */
 const cardOf = (action: AssistantAction): ChatAction => ({
   action,
-  status: action.kind === "change" ? "pending" : "done",
+  status: needsConfirm(action) ? "pending" : "done",
 });
 
 const pendingChange = (card: ChatAction) =>
-  card.action.kind === "change" &&
+  needsConfirm(card.action) &&
   (card.status === "pending" || card.status === "failed");
+
+/** Spec 036 D5, spec 052: Venito's line after a plain "sí". */
+function doneText(cards: ChatAction[]): string {
+  const kinds = new Set(cards.map((card) => card.action.kind));
+  if (kinds.size === 1 && kinds.has("delete")) return "Hecho: lo he borrado.";
+  if (kinds.size === 1 && kinds.has("series")) {
+    return "Hecho: he creado la serie.";
+  }
+  return cards.length > 1
+    ? "Hecho: he aplicado los cambios."
+    : "Hecho: he aplicado el cambio.";
+}
 
 /** Plan D10: the cards travel inside Venito's words, one line each. */
 function threadContent(message: Message, timeZone: string): string {
@@ -372,7 +388,7 @@ export function AssistantChat({
       const cards = (body.actions ?? arrived.map((card) => card.action)).map(
         cardOf,
       );
-      const newChange = cards.some((card) => card.action.kind === "change");
+      const newChange = cards.some((card) => needsConfirm(card.action));
       // Plan D2: the assistant asked something before proposing.
       carried.current = !proposal && images.length ? images : [];
       setMessages((current) => [
@@ -481,9 +497,11 @@ export function AssistantChat({
               ? "Vale, no lo cambio."
               : failed
                 ? `No he podido aplicar el cambio: ${failed}`
-                : applied > 1
-                  ? "Hecho: he aplicado los cambios."
-                  : "Hecho: he aplicado el cambio.",
+                : doneText(
+                    done
+                      .map(({ card }) => card)
+                      .filter((card) => card.status === "applied"),
+                  ),
           at: clock(),
         },
       ]);

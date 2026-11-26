@@ -400,16 +400,17 @@ describe("systemPrompt with writing", () => {
     expect(writing).not.toContain("No puedo crear");
   });
 
-  it("never deletes: it finds the event and cites it (RF-31)", () => {
-    for (const prompt of [reading, writing]) {
-      expect(prompt).toContain("No puedes borrar eventos");
-      expect(prompt).toContain("Borrar se hace desde el propio evento");
-    }
+  it("deletes and repeats only through cards to confirm (spec 052 RF-1, RF-6)", () => {
+    expect(reading).not.toContain("No puedes borrar eventos");
+    expect(writing).toContain("propose_deletes");
+    expect(writing).toContain("nunca digas que ya está borrado");
+    expect(writing).toContain("propose_series");
+    expect(writing).toContain("Nunca escribas reglas RRULE");
   });
 
   it("only explains the write tools when they are offered", () => {
     expect(reading).not.toContain("create_events");
-    expect(reading).toContain("empezando por «Crea» o «Cambia»");
+    expect(reading).toContain("empezando por «Crea», «Cambia» o «Borra»");
     expect(writing).toContain("create_events");
     expect(writing).toContain("propose_changes");
     expect(writing).toContain("Familia, alexponmon@gmail.com");

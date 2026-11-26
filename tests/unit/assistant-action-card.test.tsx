@@ -7,12 +7,17 @@ import type { AssistantAction } from "@/lib/assistant/actions";
 // Spec 036, T7: the cards of what Venito created or proposes (RF-17,
 // RF-24 to RF-24d, RF-30, RF-32 to RF-37).
 
-const { confirmChange, undoAssistantAction } = vi.hoisted(() => ({
-  confirmChange: vi.fn(),
-  undoAssistantAction: vi.fn(),
-}));
+const { confirmChange, confirmDelete, confirmSeries, undoAssistantAction } =
+  vi.hoisted(() => ({
+    confirmChange: vi.fn(),
+    confirmDelete: vi.fn(),
+    confirmSeries: vi.fn(),
+    undoAssistantAction: vi.fn(),
+  }));
 vi.mock("@/app/dashboard/assistant/write-actions", () => ({
   confirmChange,
+  confirmDelete,
+  confirmSeries,
   undoAssistantAction,
 }));
 
@@ -254,5 +259,114 @@ describe("ActionCard of a note", () => {
     await userEvent.click(screen.getByRole("button", { name: "Deshacer" }));
     expect(undoAssistantAction).toHaveBeenCalledWith(note.undo);
     expect(await screen.findByText("Deshecho")).toBeInTheDocument();
+  });
+});
+
+// Spec 052 T4: deleting and series wait for "Borrar" and "Crear" (RF-2, RF-6).
+describe("ActionCard of a deletion", () => {
+  const remove: AssistantAction = {
+    kind: "delete",
+    key: "d1",
+    event,
+    scope: "all",
+    loss: { exceptions: 0, images: 3, comments: 2 },
+    remove: { id: ID, scope: "all", updatedAt: "u1" },
+  };
+
+  it("shows the event, the scope and the loss, and deletes nothing yet", () => {
+    render(<Harness initial={{ action: remove, status: "pending" }} />);
+    expect(screen.getByText("Borrado pendiente")).toBeInTheDocument();
+    expect(screen.getByText("Comida Uni")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Toda la serie. Se perderán 3 imágenes y 2 comentarios.",
+      ),
+    ).toBeInTheDocument();
+    expect(confirmDelete).not.toHaveBeenCalled();
+  });
+
+  it("deletes on «Borrar» and restores on «Deshacer» (RF-3)", async () => {
+    const undo = { kind: "restore" as const, trashId: ID };
+    confirmDelete.mockResolvedValue({ ok: true, undo });
+    undoAssistantAction.mockResolvedValue({ ok: true });
+    const onChanged = vi.fn();
+    render(
+      <Harness
+        initial={{ action: remove, status: "pending" }}
+        onChanged={onChanged}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Borrar" }));
+    expect(confirmDelete).toHaveBeenCalledWith(remove.remove);
+    expect(await screen.findByText("Evento borrado")).toBeInTheDocument();
+    expect(onChanged).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByRole("button", { name: "Deshacer" }));
+    expect(undoAssistantAction).toHaveBeenCalledWith(undo);
+    expect(await screen.findByText("Deshecho")).toBeInTheDocument();
+  });
+
+  it("cancels without deleting", async () => {
+    render(<Harness initial={{ action: remove, status: "pending" }} />);
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(screen.getByText("Cancelado")).toBeInTheDocument();
+    expect(confirmDelete).not.toHaveBeenCalled();
+  });
+});
+
+describe("ActionCard of a series", () => {
+  const series: AssistantAction = {
+    kind: "series",
+    key: "s1",
+    event,
+    summary: "Cada semana el jueves, 3 veces",
+    dates: [
+      "2026-11-19T12:30:00.000Z",
+      "2026-11-26T12:30:00.000Z",
+      "2026-12-03T12:30:00.000Z",
+    ],
+    series: {
+      calendarId: "22222222-2222-4222-8222-222222222222",
+      title: "Comida Uni",
+      description: null,
+      location: null,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      allDay: false,
+      rule: {
+        freq: "weekly",
+        interval: 1,
+        byDay: ["TH"],
+        end: { kind: "count", count: 3 },
+      },
+    },
+  };
+
+  it("says the rule in Spanish and its first 3 dates (RF-6)", () => {
+    render(<Harness initial={{ action: series, status: "pending" }} />);
+    expect(screen.getByText("Serie pendiente")).toBeInTheDocument();
+    expect(
+      screen.getByText("Cada semana el jueves, 3 veces"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("jueves 3 de diciembre, de 13:30 a 14:30"),
+    ).toBeInTheDocument();
+  });
+
+  it("creates on «Crear» and offers to undo it", async () => {
+    const undo = { kind: "unseries" as const, id: ID, updatedAt: "u2" };
+    confirmSeries.mockResolvedValue({ ok: true, undo });
+    render(<Harness initial={{ action: series, status: "pending" }} />);
+    await userEvent.click(screen.getByRole("button", { name: "Crear" }));
+    expect(confirmSeries).toHaveBeenCalledWith(series.series);
+    expect(await screen.findByText("Serie creada")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Deshacer" })).toBeEnabled();
+  });
+
+  it("keeps it with the reason when it cannot be created", async () => {
+    confirmSeries.mockResolvedValue({ ok: false, error: "No se puede." });
+    render(<Harness initial={{ action: series, status: "pending" }} />);
+    await userEvent.click(screen.getByRole("button", { name: "Crear" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("No se puede.");
+    expect(screen.getByRole("button", { name: "Crear" })).toBeEnabled();
   });
 });

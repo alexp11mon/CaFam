@@ -6,6 +6,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   applyPendingChange: vi.fn(),
+  applyPendingDelete: vi.fn(),
+  applyPendingSeries: vi.fn(),
   undoWrite: vi.fn(),
   refresh: vi.fn(),
 }));
@@ -18,13 +20,15 @@ vi.mock("@/lib/calendar/queries", async (actual) => ({
 vi.mock("@/app/dashboard/assistant/change-writes", async (actual) => ({
   ...(await actual<object>()),
   applyPendingChange: mocks.applyPendingChange,
+  applyPendingDelete: mocks.applyPendingDelete,
+  applyPendingSeries: mocks.applyPendingSeries,
   undoWrite: mocks.undoWrite,
 }));
 vi.mock("@/app/dashboard/events/event-writes", () => ({
   refresh: mocks.refresh,
 }));
 
-const { confirmChange, undoAssistantAction } =
+const { confirmChange, confirmDelete, confirmSeries, undoAssistantAction } =
   await import("@/app/dashboard/assistant/write-actions");
 
 const ID = "11111111-1111-4111-8111-111111111111";
@@ -86,10 +90,75 @@ describe("undoAssistantAction", () => {
     expect(mocks.refresh).toHaveBeenCalled();
   });
 
-  it("refuses a token of the quick actions", async () => {
-    expect(await undoAssistantAction({ kind: "restore", trashId: ID })).toEqual(
-      { ok: false, error: "Ya no se puede deshacer." },
-    );
+  it("refuses a malformed token", async () => {
+    expect(
+      await undoAssistantAction({ kind: "restore", trashId: "x" }),
+    ).toEqual({ ok: false, error: "Ya no se puede deshacer." });
     expect(mocks.undoWrite).not.toHaveBeenCalled();
+  });
+
+  it("restores a deletion from the trash (spec 052 RF-3)", async () => {
+    mocks.undoWrite.mockResolvedValue({ ok: true });
+    const token = { kind: "restore", trashId: ID };
+    expect(await undoAssistantAction(token)).toEqual({ ok: true });
+    expect(mocks.undoWrite).toHaveBeenCalledWith({}, "Atlantic/Canary", token);
+  });
+});
+
+// Spec 052 T2, T3: "Borrar" and "Crear" of Venito's cards.
+describe("confirmDelete", () => {
+  const remove = { id: ID, scope: "all", updatedAt: "x" };
+
+  it("deletes what validates and refreshes", async () => {
+    const undo = { kind: "restore", trashId: ID };
+    mocks.applyPendingDelete.mockResolvedValue({ ok: true, undo });
+    expect(await confirmDelete(remove)).toEqual({ ok: true, undo });
+    expect(mocks.applyPendingDelete).toHaveBeenCalledWith({}, remove);
+    expect(mocks.refresh).toHaveBeenCalled();
+  });
+
+  it("refuses what does not validate", async () => {
+    expect(await confirmDelete({ ...remove, scope: "some" })).toEqual({
+      ok: false,
+      error: "Este cambio ya no es válido. Pídemelo otra vez.",
+    });
+    expect(mocks.applyPendingDelete).not.toHaveBeenCalled();
+  });
+});
+
+describe("confirmSeries", () => {
+  const series = {
+    calendarId: "22222222-2222-4222-8222-222222222222",
+    title: "Inglés",
+    description: null,
+    location: null,
+    startsAt: "2026-11-24T17:00:00.000Z",
+    endsAt: "2026-11-24T18:00:00.000Z",
+    allDay: false,
+    rule: {
+      freq: "weekly",
+      interval: 1,
+      byDay: ["TU"],
+      end: { kind: "never" },
+    },
+  };
+
+  it("creates the series in the profile's zone", async () => {
+    mocks.applyPendingSeries.mockResolvedValue({ ok: true });
+    expect(await confirmSeries(series)).toEqual({ ok: true });
+    expect(mocks.applyPendingSeries).toHaveBeenCalledWith(
+      {},
+      "u1",
+      "Atlantic/Canary",
+      series,
+    );
+    expect(mocks.refresh).toHaveBeenCalled();
+  });
+
+  it("refuses a rule CaFam cannot keep, without writing (RF-5)", async () => {
+    expect(
+      await confirmSeries({ ...series, rule: { freq: "hourly", interval: 1 } }),
+    ).toMatchObject({ ok: false });
+    expect(mocks.applyPendingSeries).not.toHaveBeenCalled();
   });
 });

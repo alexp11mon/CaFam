@@ -33,6 +33,7 @@ vi.mock("@/lib/assistant/tools", async (actual) => ({
 vi.mock("@/app/dashboard/events/event-writes", async (actual) => ({
   ...(await actual<object>()),
   createSingle: mocks.createSingle,
+  unconfirmedLoss: mocks.seriesLoss,
 }));
 vi.mock("@/app/dashboard/events/quick-writes", async (actual) => ({
   ...(await actual<object>()),
@@ -109,6 +110,7 @@ beforeEach(() => {
   mocks.findEventsByTitle.mockResolvedValue([PIAE]);
   mocks.createSingle.mockResolvedValue({ ok: true, id: NEW_ID });
   mocks.updatedAtOf.mockResolvedValue("2026-11-18T09:00:01+00:00");
+  mocks.seriesLoss.mockResolvedValue(null);
 });
 
 describe("create_events", () => {
@@ -580,5 +582,244 @@ describe("propose_changes", () => {
         ],
       }),
     ).toMatchObject({ status: "too_many" });
+  });
+});
+
+// Spec 052 T2, T3: deleting and series are proposed on a card; nothing is
+// written until the user confirms (RF-1 to RF-7).
+describe("propose_deletes", () => {
+  const CENA = {
+    id: "c1",
+    rowId: "c1",
+    calendarId: "c-uni",
+    title: "Cena",
+    description: null,
+    location: null,
+    startsAt: "2026-11-20T19:00:00.000Z",
+    endsAt: "2026-11-20T21:00:00.000Z",
+    allDay: false,
+    color: null,
+    categoryId: null,
+    createdBy: "u1",
+    series: null,
+  };
+
+  beforeEach(() => {
+    mocks.findEventsByTitle.mockResolvedValue([
+      {
+        id: "c1",
+        calendarId: "c-uni",
+        title: "Cena",
+        startsAt: CENA.startsAt,
+        endsAt: CENA.endsAt,
+        allDay: false,
+        location: null,
+      },
+    ]);
+    mocks.getEvent.mockResolvedValue(CENA);
+    mocks.updatedAtOf.mockResolvedValue("2026-11-18T08:00:00+00:00");
+  });
+
+  it("proposes the deletion and deletes nothing (RF-1, RF-2)", async () => {
+    const { tools, actions } = setup();
+    const result = await tools.propose_deletes({
+      deletes: [{ event: "Cena" }],
+    });
+    expect(result).toMatchObject({
+      status: "proposed_delete",
+      title: "Cena",
+      date: "2026-11-20",
+      start: "20:00",
+      calendar: "Uni",
+    });
+    expect(actions).toEqual([
+      expect.objectContaining({
+        kind: "delete",
+        event: expect.objectContaining({ title: "Cena", calendarName: "Uni" }),
+        scope: null,
+        remove: {
+          id: "c1",
+          scope: null,
+          updatedAt: "2026-11-18T08:00:00+00:00",
+        },
+      }),
+    ]);
+    expect(mocks.createSingle).not.toHaveBeenCalled();
+  });
+
+  it("explains a calendar the user only reads, without a card (RF-4)", async () => {
+    mocks.getEvent.mockResolvedValue({ ...CENA, calendarId: "c-ana" });
+    const { tools, actions } = setup();
+    expect(
+      await tools.propose_deletes({ deletes: [{ event: "Cena" }] }),
+    ).toEqual({
+      status: "forbidden",
+      notice: "No puedes borrar «Cena»: solo puedes ver «Trabajo de Ana».",
+    });
+    expect(actions).toEqual([]);
+  });
+
+  it("shows the scope and the loss of a series (RF-2)", async () => {
+    mocks.getEvent.mockResolvedValue({
+      ...CENA,
+      id: "s1_20261120T190000Z",
+      rowId: null,
+      series: {
+        id: "s1",
+        recurrence: "FREQ=WEEKLY;INTERVAL=1;BYDAY=FR",
+        recurrenceTz: TZ,
+        summary: "Cada semana el viernes",
+        originalStart: CENA.startsAt,
+        changed: false,
+        exceptions: 0,
+        startsAt: "2026-11-06T19:00:00.000Z",
+        endsAt: "2026-11-06T21:00:00.000Z",
+        allDay: false,
+      },
+    });
+    mocks.seriesLoss.mockResolvedValue({ images: 3, comments: 2 });
+    const { tools, actions } = setup();
+    await tools.propose_deletes({ deletes: [{ event: "Cena", scope: "all" }] });
+    expect(mocks.updatedAtOf).toHaveBeenCalledWith(expect.anything(), "s1");
+    expect(actions[0]).toMatchObject({
+      kind: "delete",
+      scope: "all",
+      loss: { images: 3, comments: 2 },
+      remove: { id: "s1_20261120T190000Z", scope: "all" },
+    });
+  });
+
+  it("refuses more than 3 (RF-1)", async () => {
+    const { tools, actions } = setup();
+    expect(
+      await tools.propose_deletes({
+        deletes: [1, 2, 3, 4].map(() => ({ event: "Cena" })),
+      }),
+    ).toMatchObject({ status: "too_many" });
+    expect(actions).toEqual([]);
+  });
+});
+
+describe("propose_series", () => {
+  it("proposes the series with its rule in words and 3 dates (RF-5, RF-6)", async () => {
+    const { tools, actions } = setup();
+    const result = await tools.propose_series({
+      series: [
+        {
+          title: "Inglés",
+          calendar: "Uni",
+          date: "2026-11-18",
+          start: "18:00",
+          freq: "weekly",
+          byDay: ["TU"],
+          until: "2027-06-30",
+        },
+      ],
+    });
+    expect(result).toMatchObject({
+      status: "proposed_series",
+      rule: "Cada semana el martes, hasta el 30 de junio de 2027",
+      // 2026-11-18 is a Wednesday: the series starts the next Tuesday.
+      first: { date: "2026-11-24", start: "18:00", end: "19:00" },
+    });
+    expect(actions).toEqual([
+      expect.objectContaining({
+        kind: "series",
+        summary: "Cada semana el martes, hasta el 30 de junio de 2027",
+        dates: [
+          "2026-11-24T17:00:00.000Z",
+          "2026-12-01T17:00:00.000Z",
+          "2026-12-08T17:00:00.000Z",
+        ],
+        series: {
+          calendarId: "c-uni",
+          title: "Inglés",
+          description: null,
+          location: null,
+          startsAt: "2026-11-24T17:00:00.000Z",
+          endsAt: "2026-11-24T18:00:00.000Z",
+          allDay: false,
+          rule: {
+            freq: "weekly",
+            interval: 1,
+            byDay: ["TU"],
+            end: { kind: "until", date: "2027-06-30" },
+          },
+        },
+      }),
+    ]);
+    expect(mocks.createSingle).not.toHaveBeenCalled();
+  });
+
+  it("starts today when no day is said: weekdays at 7 (RF-5)", async () => {
+    const { tools, actions } = setup();
+    await tools.propose_series({
+      series: [
+        {
+          title: "Gimnasio",
+          calendar: "Uni",
+          start: "07:00",
+          freq: "daily",
+          byDay: ["MO", "TU", "WE", "TH", "FR"],
+        },
+      ],
+    });
+    expect(actions[0]).toMatchObject({
+      summary: "Cada semana de lunes a viernes",
+      dates: [
+        "2026-11-18T06:00:00.000Z",
+        "2026-11-19T06:00:00.000Z",
+        "2026-11-20T06:00:00.000Z",
+      ],
+    });
+  });
+
+  it("refuses a calendar of Google (RF-7)", async () => {
+    const { tools, actions } = setup();
+    expect(
+      await tools.propose_series({
+        series: [
+          {
+            title: "Inglés",
+            calendar: "alexponmon@gmail.com",
+            start: "18:00",
+            freq: "weekly",
+          },
+        ],
+      }),
+    ).toEqual({
+      status: "synced_calendar",
+      notice:
+        "No puedo crear eventos que se repiten en «alexponmon@gmail.com»: es un calendario traído de Google o iCloud. Puedo crearlos en: Uni.",
+    });
+    expect(actions).toEqual([]);
+  });
+
+  it("refuses a rule without any date (RF-5)", async () => {
+    const { tools, actions } = setup();
+    expect(
+      await tools.propose_series({
+        series: [
+          {
+            title: "Inglés",
+            calendar: "Uni",
+            date: "2026-11-24",
+            start: "18:00",
+            freq: "weekly",
+            until: "2026-11-01",
+          },
+        ],
+      }),
+    ).toMatchObject({ status: "invalid_rule" });
+    expect(actions).toEqual([]);
+  });
+
+  it("asks the hour when it is not said and the day is not all-day", async () => {
+    const { tools } = setup();
+    expect(
+      await tools.propose_series({
+        series: [{ title: "Inglés", calendar: "Uni", freq: "weekly" }],
+      }),
+    ).toEqual({ status: "need_time" });
   });
 });
