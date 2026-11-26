@@ -1225,8 +1225,8 @@ export type Database = {
           default_event_minutes: number
           display_name: string
           id: string
-          locale: string
           last_view: string | null
+          locale: string
           notify: Json
           reminder_all_day_minutes: number | null
           reminder_minutes: number | null
@@ -1246,8 +1246,8 @@ export type Database = {
           default_event_minutes?: number
           display_name: string
           id: string
-          locale?: string
           last_view?: string | null
+          locale?: string
           notify?: Json
           reminder_all_day_minutes?: number | null
           reminder_minutes?: number | null
@@ -1267,8 +1267,8 @@ export type Database = {
           default_event_minutes?: number
           display_name?: string
           id?: string
-          locale?: string
           last_view?: string | null
+          locale?: string
           notify?: Json
           reminder_all_day_minutes?: number | null
           reminder_minutes?: number | null
@@ -1545,7 +1545,6 @@ export type Database = {
       }
       apply_orphan_decisions: { Args: never; Returns: undefined }
       assistant_answered: { Args: { p_id: number }; Returns: undefined }
-      assistant_conversations_purge: { Args: never; Returns: number }
       assistant_busy: {
         Args: { p_from: string; p_person_ids: string[]; p_to: string }
         Returns: {
@@ -1561,6 +1560,7 @@ export type Database = {
           starts_at: string
         }[]
       }
+      assistant_conversations_purge: { Args: never; Returns: number }
       assistant_people: {
         Args: never
         Returns: {
