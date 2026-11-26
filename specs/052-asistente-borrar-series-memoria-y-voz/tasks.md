@@ -2,7 +2,7 @@
 
 Spec: `specs/052-asistente-borrar-series-memoria-y-voz/spec.md`. Plan: `specs/052-asistente-borrar-series-memoria-y-voz/plan.md` (aprobados de antemano por el usuario el 2026-11-18). Depende de la 046.
 
-> Estado: hecha salvo lo que necesita al usuario (2026-11-26): aplicar la migración de la T5 en dev (el puerto 5432 está bloqueado desde la red del agente), la prueba de voz real de la T6 y la ejecución del eval de la T7 (la cuota diaria de Groq estaba agotada).
+> Estado: hecha salvo lo que necesita al usuario (2026-11-26): aplicar la migración de la T5 en dev (el puerto 5432 está bloqueado desde la red del agente), la prueba de voz real de la T6.
 
 Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar cada una; `npm run test:db` en T2, T3 y T5.
 
@@ -32,10 +32,10 @@ Cada tarea se hace sola y con el test primero. P8 en verde y su salida al cerrar
   Hecho cuando: `npm test -- speech mic-button use-speak-answers` en verde con las APIs simuladas (soporte, sin soporte, error de permiso, parar) y prueba en Edge y Chrome reales.
 
   Cubre: RF-13 a RF-15, RNF-2 | Evidencia: `speech`, `mic-button`, `use-speak-answers` en verde con APIs simuladas. **Falta (usuario):** prueba en Edge y Chrome reales.
-- [~] T7 Evaluación
+- [x] T7 Evaluación
   Hecho cuando: `EVAL_PART=write EVAL_ONLY=<nuevas> npm run eval:assistant` contra Groq y dev con el 90 % (una ejecución; usuarios `@cafam.test` borrados).
 
-  Cubre: RF-16 | Evidencia: preguntas E14–E22 escritas; la ejecución del 2026-11-26 recibió 429 (cuota diaria agotada). **Falta (usuario):** `EVAL_PART=write EVAL_ONLY=14-22 npm run eval:assistant` otro día.
+  Cubre: RF-16 | Evidencia: 2026-11-26, `EVAL_PART=write EVAL_ONLY=14-22`: «Escritura: 9/9 (100 %). Escrituras indebidas: 0. Por debajo de 10 s: 100 %». La primera ejecución del día destapó que `runTool` no ejecutaba `propose_deletes` ni `propose_series` (corregido en 92b4672) y su resultado no cuenta.
 - [x] T8 Cierre
   Hecho cuando: AGENTS.md (§11 y sección), README, constitución y `/privacy` actualizados; `python -m graphify update .`; P8 completa.
 
