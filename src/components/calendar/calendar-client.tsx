@@ -48,6 +48,7 @@ import {
   type CalendarTask,
   type CalendarTasks,
 } from "./task-block";
+import { useT } from "@/components/i18n/locale-provider";
 
 type WorkspaceProps = ComponentProps<typeof CalendarWorkspace>;
 
@@ -126,6 +127,7 @@ export function CalendarClient({
   WorkspaceProps,
   "view" | "date" | "days" | "events" | "monthMarks" | "busyIntervals" | "enter"
 >) {
+  const t = useT();
   const { today, timeZone, showWeekends = true, busyPeople = [] } = workspace;
   const [location, setLocation] = useState<{
     seen: EventWindow<AgendaEvent>;
@@ -384,7 +386,7 @@ export function CalendarClient({
           toast.show(result.error);
           return;
         }
-        toast.show(`Completada «${task.text}»`, {
+        toast.show(t("Completada «{text}»", { text: task.text }), {
           undo: async () => {
             await tick(task, false);
             forget();
@@ -392,7 +394,7 @@ export function CalendarClient({
         });
       },
     };
-  }, [loadTasks, saveShowTasks, tasksShown, taskList, toast]);
+  }, [loadTasks, saveShowTasks, tasksShown, taskList, toast, t]);
 
   return (
     <TasksContext value={tasks}>
@@ -417,7 +419,7 @@ export function CalendarClient({
         {/* A period that was not loaded: the view is already there, its events
           are on their way (RF-4). */}
         <p role="status" className="sr-only">
-          {events.loading ? "Cargando eventos…" : ""}
+          {events.loading ? t("Cargando eventos…") : ""}
         </p>
         {availableRange &&
         view !== "year" &&
@@ -429,7 +431,7 @@ export function CalendarClient({
             role="alert"
             className="rounded-control border border-line bg-paper px-4 py-3 text-ink"
           >
-            {OFFLINE_MESSAGES.outOfRange}
+            {t(OFFLINE_MESSAGES.outOfRange)}
           </p>
         ) : null}
         {events.failed ? (
@@ -437,9 +439,11 @@ export function CalendarClient({
             role="alert"
             className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-danger bg-paper px-4 py-3 text-danger"
           >
-            <span>No se han podido cargar los eventos de estas fechas.</span>
+            <span>
+              {t("No se han podido cargar los eventos de estas fechas.")}
+            </span>
             <Button variant="secondary" onClick={events.retry}>
-              Reintentar
+              {t("Reintentar")}
             </Button>
           </div>
         ) : null}

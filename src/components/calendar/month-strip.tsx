@@ -3,12 +3,14 @@
 import { CalendarLink } from "./calendar-nav";
 import { useEffect, useRef } from "react";
 import { monthStrip } from "@/lib/calendar/month-strip";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * Row of months under the phone header in the month view, with the visible
  * one marked as the selection (spec 016 RF-20..RF-22).
  */
 export function MonthStrip({ month }: { month: string }) {
+  const t = useT();
   const row = useRef<HTMLUListElement>(null);
 
   // Centre the visible month; only the row moves, never the page (scrollIntoView would).
@@ -22,7 +24,7 @@ export function MonthStrip({ month }: { month: string }) {
   }, [month]);
 
   return (
-    <nav aria-label="Meses">
+    <nav aria-label={t("Meses")}>
       <ul
         ref={row}
         className="flex items-center gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none]"

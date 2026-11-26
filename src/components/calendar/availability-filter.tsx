@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { Avatar } from "@/components/people/avatar";
 import { assignTints } from "@/lib/people/avatar";
+import { useT } from "@/components/i18n/locale-provider";
 
 // The people whose busy times the grid shows (spec 020 RF-5, RF-6, RF-17).
 
@@ -25,6 +26,7 @@ export function AvailabilityFilter({
   tints?: ReadonlyMap<string, string>;
   onToggle: (personId: string, shown: boolean) => void;
 }) {
+  const t = useT();
   const headingId = useId();
   const noteId = useId();
   if (people.length === 0) return null;
@@ -37,7 +39,7 @@ export function AvailabilityFilter({
       className="flex flex-col gap-2 rounded-card surface p-3"
     >
       <h2 id={headingId} className="text-base font-semibold text-ink">
-        Disponibilidad
+        {t("Disponibilidad")}
       </h2>
       <ul className="flex flex-col">
         {people.map((p) => (
@@ -59,7 +61,7 @@ export function AvailabilityFilter({
       </ul>
       {full ? (
         <p id={noteId} className="text-sm text-muted">
-          Como mucho 8 personas a la vez
+          {t("Como mucho 8 personas a la vez")}
         </p>
       ) : null}
     </section>

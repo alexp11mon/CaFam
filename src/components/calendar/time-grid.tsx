@@ -31,6 +31,7 @@ import { DraggableEvent } from "./draggable-event";
 import { ScrollOnMount } from "./scroll-on-mount";
 import { SlotLayer } from "./slot-layer";
 import { DayTasks } from "./task-block";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 /** The event being created, drawn at its hours (spec 008 RF-40). */
 export interface GridDraft {
@@ -92,6 +93,8 @@ export function TimeGrid({
   onCreate?: CreateInGrid;
   draft?: GridDraft | null;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const now = useNow();
   const root = useRef<HTMLDivElement>(null);
   // Pinch or Ctrl + wheel change it, remembered on this device (spec 017 RF-49 to RF-53).
@@ -139,7 +142,7 @@ export function TimeGrid({
                     <CalendarLink
                       view="day"
                       date={day}
-                      aria-label={formatDateKeyFull(day)}
+                      aria-label={formatDateKeyFull(day, locale)}
                       aria-current={isToday ? "date" : undefined}
                       className={`${number} focus-visible:outline-2 focus-visible:outline-ink`}
                     >
@@ -147,7 +150,7 @@ export function TimeGrid({
                     </CalendarLink>
                   ) : (
                     <span
-                      aria-label={formatDateKeyFull(day)}
+                      aria-label={formatDateKeyFull(day, locale)}
                       aria-current={isToday ? "date" : undefined}
                       className={number}
                     >
@@ -166,7 +169,7 @@ export function TimeGrid({
             className="grid min-h-6 gap-y-0.5 border-b border-line py-0.5"
             style={columns}
           >
-            <span className="sr-only">Todo el día</span>
+            <span className="sr-only">{t("Todo el día")}</span>
             {days.map((day, index) => (
               // Behind the blocks: where an event lands on the strip (plan D3).
               <div
@@ -265,7 +268,7 @@ export function TimeGrid({
                   {onCreate ? (
                     <SlotLayer
                       day={day}
-                      dayLabel={formatDateKeyFull(day)}
+                      dayLabel={formatDateKeyFull(day, locale)}
                       onCreate={onCreate}
                       duration={duration}
                     />
@@ -341,7 +344,7 @@ export function TimeGrid({
           </ScrollOnMount>
         </div>
       </div>
-      {isEmpty ? <p className="sr-only">No hay eventos</p> : null}
+      {isEmpty ? <p className="sr-only">{t("No hay eventos")}</p> : null}
     </div>
   );
 }
@@ -360,6 +363,7 @@ function DraftBlock({
   hourPx: number;
   onChange?: (range: DraftRange) => void;
 }) {
+  const t = useT();
   const phone = useIsPhone();
   const drag = useRef<{
     kind: "move" | "resize";
@@ -413,7 +417,7 @@ function DraftBlock({
       className={`absolute inset-x-0.5 z-10 overflow-hidden rounded-block border border-dashed border-ink bg-paper px-1 text-xs text-ink ${editable ? "touch-none select-none" : "pointer-events-none"}`}
     >
       <span className="block font-semibold">
-        {draft.title || "(Sin título)"}
+        {draft.title || t("(Sin título)")}
       </span>
       <span className="block tabular-nums">
         {fromMinutes(draft.startMinute)} – {fromMinutes(draft.endMinute)}

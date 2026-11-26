@@ -8,6 +8,7 @@ import { todayKey } from "@/lib/calendar/format";
 import { parseEventText } from "@/lib/nl/parse";
 import { highlight, previewText, type Segment } from "@/lib/nl/preview";
 import { resolveParsed, type ResolvedEvent } from "@/lib/nl/resolve";
+import { useT } from "@/components/i18n/locale-provider";
 
 export type { ResolvedEvent };
 
@@ -67,6 +68,7 @@ export function NlField({
   /** "+" and N open the form here (RF-13). */
   autoFocus?: boolean;
 }) {
+  const t = useT();
   function understand(next: string): Understood | null {
     if (!next.trim()) return null;
     const parsed = parseEventText(next, todayKey(timeZone));
@@ -111,11 +113,11 @@ export function NlField({
   return (
     <div className="flex flex-col gap-2">
       <TextField
-        label="Escribe el evento"
+        label={t("Escribe el evento")}
         // Never sent: the form gets what "Aplicar" fills in.
         name="phrase"
         form="none"
-        placeholder="Cena con Ana el viernes a las 21"
+        placeholder={t("Cena con Ana el viernes a las 21")}
         value={text}
         onChange={(event) => read(event.target.value)}
         onKeyDown={onKeyDown}
@@ -160,7 +162,7 @@ export function NlField({
         disabled={!understood}
         className="self-start"
       >
-        Aplicar
+        {t("Aplicar")}
       </Button>
     </div>
   );

@@ -6,6 +6,7 @@ import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import { ACCENTS, type AccentId } from "@/lib/theme/accents";
 import { centreOf, revealPaint } from "@/lib/theme/apply-theme";
 import { SelectionRing } from "./selection-ring";
+import { useT } from "@/components/i18n/locale-provider";
 
 type Result = { error?: string };
 
@@ -25,6 +26,7 @@ export function AccentPicker({
   current: AccentId;
   setAccent: (accent: AccentId) => Promise<Result>;
 }) {
+  const t = useT();
   const [selected, setSelected] = useState(current);
   const [error, setError] = useState<string>();
 
@@ -50,14 +52,14 @@ export function AccentPicker({
   return (
     <fieldset className="flex flex-col gap-4">
       <legend className="mb-1 text-lg font-semibold text-ink">
-        Color de acento
+        {t("Color de acento")}
       </legend>
       <p className="text-muted">
-        Marca el día de hoy, la hora actual y lo que tienes seleccionado.
+        {t("Marca el día de hoy, la hora actual y lo que tienes seleccionado.")}
       </p>
       <div
         role="radiogroup"
-        aria-label="Color de acento"
+        aria-label={t("Color de acento")}
         className="relative grid grid-cols-2 gap-3 sm:grid-cols-3"
       >
         {ACCENTS.map((accent) => (

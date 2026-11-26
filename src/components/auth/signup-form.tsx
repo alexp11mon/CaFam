@@ -7,6 +7,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { FormAction, SignUpState } from "@/lib/auth/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 const INITIAL_STATE: SignUpState = { values: { displayName: "", email: "" } };
 
@@ -22,6 +23,7 @@ function useBrowserTimeZone(): string {
 }
 
 export function SignupForm({ action }: { action: FormAction<SignUpState> }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
   const timeZone = useBrowserTimeZone();
   const errors = state.fieldErrors ?? {};
@@ -31,7 +33,7 @@ export function SignupForm({ action }: { action: FormAction<SignUpState> }) {
     <form action={formAction} noValidate className="flex flex-col gap-4">
       <FormAlert message={state.formError} />
       <TextField
-        label="Nombre visible"
+        label={t("Nombre visible")}
         name="displayName"
         autoComplete="name"
         maxLength={50}
@@ -48,11 +50,11 @@ export function SignupForm({ action }: { action: FormAction<SignUpState> }) {
         error={errors.email}
       />
       <TextField
-        label="Contraseña"
+        label={t("Contraseña")}
         name="password"
         type="password"
         autoComplete="new-password"
-        hint="Mínimo 8 caracteres"
+        hint={t("Mínimo 8 caracteres")}
         error={errors.password}
       />
       <input type="hidden" name="timeZone" value={timeZone} />
@@ -61,7 +63,7 @@ export function SignupForm({ action }: { action: FormAction<SignUpState> }) {
         <SwapLabel
           busy={pending}
           idle="Crear cuenta"
-          busyText="Creando cuenta…"
+          busyText={t("Creando cuenta…")}
         />
       </Button>
     </form>

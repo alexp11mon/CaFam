@@ -1,3 +1,4 @@
+import { spanishT, type T } from "@/lib/i18n/translate";
 // The undo and redo stack of the tab (spec 046 RF-11 to RF-16, plan D4).
 // Pure: each entry carries a step that undoes it and answers with the step
 // that redoes it, and the other way round. Lives only in memory.
@@ -72,8 +73,13 @@ const VERBS: Record<string, string> = {
 };
 
 /** "mover «Dentista»", or the notice itself when it is not an action of the list. */
-export function undoLabel(notice: string, title?: string): string {
-  const verb =
-    VERBS[notice] ?? notice.charAt(0).toLowerCase() + notice.slice(1);
-  return title ? `${verb} «${title}»` : verb;
+export function undoLabel(
+  notice: string,
+  title?: string,
+  t: T = spanishT,
+): string {
+  const known = VERBS[notice];
+  const text = t(known ?? notice);
+  const verb = known ? text : text.charAt(0).toLowerCase() + text.slice(1);
+  return title ? t("{verb} «{title}»", { verb, title }) : verb;
 }

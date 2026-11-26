@@ -6,22 +6,26 @@ import { ChangesSheet } from "./changes-sheet";
 import { useConnection } from "@/lib/hooks/use-connection";
 import { useOfflineQueue, useOfflineSnapshot } from "@/lib/hooks/use-offline";
 import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
+import { dateFormat } from "@/lib/i18n/format";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locale";
+import { spanishT, type T } from "@/lib/i18n/translate";
 
 /** "Sin conexión · datos de las 18:40", with the day when the copy is older (RF-9). */
 export function badgeText(
   savedAt: string | null,
   timeZone: string,
   now: Date,
+  t: T = spanishT,
+  locale: Locale = DEFAULT_LOCALE,
 ): string {
-  if (!savedAt) return OFFLINE_MESSAGES.offline;
+  if (!savedAt) return t(OFFLINE_MESSAGES.offline);
   const saved = new Date(savedAt);
   const day = (date: Date) =>
-    new Intl.DateTimeFormat("es-ES", {
-      day: "numeric",
-      month: "short",
-      timeZone,
-    }).format(date);
-  const time = new Intl.DateTimeFormat("es-ES", {
+    dateFormat(locale, { day: "numeric", month: "short", timeZone }).format(
+      date,
+    );
+  const time = dateFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
     timeZone,
@@ -29,6 +33,7 @@ export function badgeText(
   return OFFLINE_MESSAGES.badge(
     time,
     day(saved) === day(now) ? null : day(saved),
+    t,
   );
 }
 
@@ -39,6 +44,8 @@ export function badgeText(
  */
 export function ConnectionBadge() {
   const [open, setOpen] = useState(false);
+  const t = useT();
+  const locale = useLocale();
   const online = useConnection();
   const { queue, conflicts, rejected } = useOfflineQueue();
   const copy = useOfflineSnapshot();
@@ -51,8 +58,10 @@ export function ConnectionBadge() {
         copy?.savedAt ?? null,
         copy?.profile.timeZone ?? "Europe/Madrid",
         new Date(),
+        t,
+        locale,
       );
-  const count = waiting > 0 ? OFFLINE_MESSAGES.pendingCount(waiting) : null;
+  const count = waiting > 0 ? OFFLINE_MESSAGES.pendingCount(waiting, t) : null;
   const label = [text, count].filter(Boolean).join(" · ");
 
   return (

@@ -17,6 +17,7 @@ import {
   revokeInvite,
   saveAccessCode,
 } from "./actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Compartir" };
 
@@ -49,17 +50,17 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
         href={`/dashboard/calendars/${id}/members`}
         className="inline-flex min-h-11 items-center text-sm font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
       >
-        Ver miembros
+        <T>{"Ver miembros"}</T>
       </Link>
       <section aria-labelledby="invite-heading" className="flex flex-col gap-4">
         <h2 id="invite-heading" className="text-lg font-semibold text-ink">
-          Invitar con un enlace
+          <T>{"Invitar con un enlace"}</T>
         </h2>
         <InviteForm action={createInvite.bind(null, id)} />
       </section>
       <section aria-labelledby="active-heading" className="flex flex-col gap-4">
         <h2 id="active-heading" className="text-lg font-semibold text-ink">
-          Invitaciones vigentes
+          <T>{"Invitaciones vigentes"}</T>
         </h2>
         <InviteList
           invites={invites}
@@ -69,7 +70,7 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
       </section>
       <section aria-labelledby="code-heading" className="flex flex-col gap-4">
         <h2 id="code-heading" className="text-lg font-semibold text-ink">
-          Invitar con ID y PIN
+          <T>{"Invitar con ID y PIN"}</T>
         </h2>
         <AccessCodePanel
           code={accessCode}
@@ -79,7 +80,7 @@ async function Share({ params }: { params: Promise<{ id: string }> }) {
       </section>
       <section aria-labelledby="feed-heading" className="flex flex-col gap-4">
         <h2 id="feed-heading" className="text-lg font-semibold text-ink">
-          Suscripción (.ics)
+          <T>{"Suscripción (.ics)"}</T>
         </h2>
         <IcsFeedPanel
           active={feed}
@@ -98,7 +99,13 @@ export default function SharePage({
 }) {
   return (
     <PageShell title="Compartir calendario">
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <Share params={params} />
       </Suspense>
     </PageShell>

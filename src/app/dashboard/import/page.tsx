@@ -4,6 +4,7 @@ import { PageShell } from "@/components/calendar/page-shell";
 import { ImportForm } from "@/components/import/import-form";
 import { getMyCalendars, requireUser } from "@/lib/calendar/queries";
 import { importCalendar } from "./actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Importar calendario" };
 
@@ -26,11 +27,19 @@ export default function ImportPage() {
   return (
     <PageShell title="Importar calendario">
       <p className="text-ink">
-        Trae un calendario de Google, iCloud u Outlook con su enlace .ics o con
-        un archivo .ics, a un calendario nuevo o a uno que ya tienes. Los
-        eventos que ya estaban no se repiten.
+        <T>
+          {
+            "Trae un calendario de Google, iCloud u Outlook con su enlace .ics o con un archivo .ics, a un calendario nuevo o a uno que ya tienes. Los eventos que ya estaban no se repiten."
+          }
+        </T>
       </p>
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <Form />
       </Suspense>
     </PageShell>

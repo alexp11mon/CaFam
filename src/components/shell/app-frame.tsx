@@ -15,6 +15,7 @@ import { ThemeSync } from "./theme-sync";
 import { CreateButton } from "./create-fab";
 import { TopBar } from "./top-bar";
 import { TopNav } from "./top-nav";
+import { T } from "@/components/i18n/locale-provider";
 
 /**
  * Frame of every screen with a session (constitution, amendment 11; spec 030
@@ -54,7 +55,7 @@ export function AppFrame({
         href="#contenido"
         className="sr-only rounded-control bg-ink px-4 py-2 font-semibold text-on-ink focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
       >
-        Saltar al contenido
+        <T>{"Saltar al contenido"}</T>
       </a>
       <ThemeSync theme={theme} />
       <ToastProvider>
@@ -92,7 +93,7 @@ export function FrameSkeleton() {
   return (
     <div className="flex flex-1 items-center justify-center p-6">
       <p role="status" className="text-muted">
-        Cargando…
+        <T>{"Cargando…"}</T>
       </p>
     </div>
   );

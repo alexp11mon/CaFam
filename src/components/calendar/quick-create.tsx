@@ -37,6 +37,7 @@ import { useHoldLive } from "@/lib/hooks/use-hold-live";
 import { markPulse } from "@/lib/motion/marks";
 import { originFrom } from "@/lib/motion/origin";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 type State = FormState<keyof EventFormValues>;
 
@@ -76,6 +77,8 @@ export function QuickCreate({
   /** The provisional block shows what is typed (RF-40). */
   onTitleChange: (title: string) => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
   const headingId = useId();
@@ -253,7 +256,7 @@ export function QuickCreate({
     >
       <form action={formAction} noValidate className="flex flex-col gap-4 p-5">
         <h2 id={headingId} className="sr-only">
-          Nuevo evento
+          {t("Nuevo evento")}
         </h2>
         <input type="hidden" name="mode" value="modal" />
         <input type="hidden" name="startDate" value={days.start} />
@@ -273,7 +276,7 @@ export function QuickCreate({
           autoFocus
         />
         <TextField
-          label="Título"
+          label={t("Título")}
           name="title"
           maxLength={100}
           value={title}
@@ -286,13 +289,15 @@ export function QuickCreate({
         />
         <div className="flex flex-col gap-2">
           <p className="font-semibold first-letter:uppercase">
-            {formatDayHeading(days.start)}
-            {days.end !== days.start ? ` – ${formatDayHeading(days.end)}` : ""}
+            {formatDayHeading(days.start, locale)}
+            {days.end !== days.start
+              ? ` – ${formatDayHeading(days.end, locale)}`
+              : ""}
           </p>
           {location ? <p className="text-muted">{location}</p> : null}
           {allDay ? (
             <div className="flex items-center justify-between gap-3">
-              <p className="text-muted">Todo el día</p>
+              <p className="text-muted">{t("Todo el día")}</p>
               <Button
                 variant="secondary"
                 onClick={() => {
@@ -301,13 +306,13 @@ export function QuickCreate({
                   setEnd("10:00");
                 }}
               >
-                Añadir hora
+                {t("Añadir hora")}
               </Button>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <TimeField
-                label="Hora de inicio"
+                label={t("Hora de inicio")}
                 name="startTime"
                 value={start}
                 onValueChange={(next) => {
@@ -321,7 +326,7 @@ export function QuickCreate({
                 error={errors.startTime}
               />
               <TimeField
-                label="Hora de fin"
+                label={t("Hora de fin")}
                 name="endTime"
                 value={end}
                 onValueChange={(next) => {
@@ -348,7 +353,7 @@ export function QuickCreate({
           />
           <div className="min-w-0 flex-1">
             <Select
-              label="Calendario"
+              label={t("Calendario")}
               name="calendarId"
               value={calendarId}
               onChange={(event) => {
@@ -368,10 +373,14 @@ export function QuickCreate({
         {/* The actions land just after the form (spec 021 RF-19). */}
         <div className="settle flex flex-wrap justify-end gap-3">
           <Button variant="secondary" onClick={moreOptions}>
-            Más opciones
+            {t("Más opciones")}
           </Button>
           <Button type="submit" disabled={pending}>
-            <SwapLabel busy={pending} idle="Guardar" busyText="Guardando…" />
+            <SwapLabel
+              busy={pending}
+              idle={t("Guardar")}
+              busyText={t("Guardando…")}
+            />
           </Button>
         </div>
       </form>

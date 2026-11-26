@@ -10,6 +10,7 @@ import {
   zoneCity,
   zoneOptions,
 } from "@/lib/calendar/event-zone";
+import { useT } from "@/components/i18n/locale-provider";
 
 // "Zona horaria" of the full event form (spec 045 RF-1, RF-2, plan D3, D4):
 // folded as "En tu zona (…)"; open, a searchable list of the IANA zones with
@@ -53,6 +54,7 @@ function ZoneInput({
   onZone: (zone: string) => void;
   listId: string;
 }) {
+  const t = useT();
   const [text, setText] = useState(zone);
   const [error, setError] = useState<string>();
   return (
@@ -64,7 +66,7 @@ function ZoneInput({
       type="search"
       list={listId}
       autoComplete="off"
-      placeholder="Busca una ciudad"
+      placeholder={t("Busca una ciudad")}
       value={text}
       error={error}
       onChange={(event) => {
@@ -76,7 +78,7 @@ function ZoneInput({
       }}
       onBlur={() => {
         if (!validZone(text)) {
-          setError("Elige una zona de la lista.");
+          setError(t("Elige una zona de la lista."));
         } else {
           remember(text);
         }
@@ -95,6 +97,7 @@ export function TimeZoneField({
   initialStart: string;
   initialEnd: string;
 }) {
+  const t = useT();
   const listId = useId();
   const [start, setStart] = useState(initialStart || profileZone);
   const [end, setEnd] = useState(initialEnd || initialStart || profileZone);
@@ -119,14 +122,14 @@ export function TimeZoneField({
       {open ? (
         <>
           <ZoneInput
-            label={split ? "Zona de inicio" : "Zona horaria"}
+            label={split ? t("Zona de inicio") : "Zona horaria"}
             zone={start}
             onZone={setStart}
             listId={listId}
           />
           {split ? (
             <ZoneInput
-              label="Zona de fin"
+              label={t("Zona de fin")}
               zone={end}
               onZone={setEnd}
               listId={listId}
@@ -146,22 +149,24 @@ export function TimeZoneField({
               onChange={(event) => setSplit(event.target.checked)}
               className="size-5 accent-ink"
             />
-            Inicio y fin en zonas distintas
+            {t("Inicio y fin en zonas distintas")}
           </label>
           <p className="text-sm text-muted">
-            Las horas se leen en esta zona; cada persona lo verá en la suya.
+            {t(
+              "Las horas se leen en esta zona; cada persona lo verá en la suya.",
+            )}
           </p>
         </>
       ) : (
         <div className="flex min-h-11 flex-wrap items-center justify-between gap-2">
           <p className="text-ink">
-            En tu zona{" "}
+            {t("En tu zona")}{" "}
             <span className="text-muted">
               ({zoneCity(profileZone)}, {profileZone})
             </span>
           </p>
           <Button variant="quiet" onClick={() => setOpen(true)}>
-            Cambiar zona horaria
+            {t("Cambiar zona horaria")}
           </Button>
         </div>
       )}

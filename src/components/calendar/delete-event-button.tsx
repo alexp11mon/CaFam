@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import type { UndoToken } from "@/lib/calendar/undo";
 import type { ConfirmState, Done, FormAction } from "@/lib/forms/form-state";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * "Borrar evento" of a single event: deletes at once, because the notice
@@ -17,6 +18,7 @@ export function DeleteEventButton({
   action: FormAction<ConfirmState>;
   onDone?: (done: Done, undo?: UndoToken) => void;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {});
 
   // Effects run again each time Activity shows the route: handle each result once.
@@ -36,7 +38,7 @@ export function DeleteEventButton({
         // Supr in the detail presses it (spec 017 RF-55).
         data-delete-event=""
       >
-        Borrar evento
+        {t("Borrar evento")}
       </Button>
       <FormAlert message={state.formError} />
     </form>

@@ -11,6 +11,7 @@ import { assignTints } from "@/lib/people/avatar";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
 import { StaggerList } from "@/components/ui/stagger-list";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 export interface MemberItem {
   userId: string;
@@ -37,6 +38,7 @@ function RoleForm({
   member: MemberItem;
   action: MemberListProps["changeRoleAction"];
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(
     action.bind(null, member.userId),
     {},
@@ -46,7 +48,7 @@ function RoleForm({
     <form action={formAction} className="flex flex-wrap items-end gap-2">
       <FormAlert message={state.formError} />
       <Select
-        label={`Rol de ${member.name}`}
+        label={t("Rol de {name}", { name: member.name })}
         name="role"
         defaultValue={member.role}
       >
@@ -57,9 +59,13 @@ function RoleForm({
         type="submit"
         variant="secondary"
         disabled={pending}
-        aria-label={`Guardar rol de ${member.name}`}
+        aria-label={t("Guardar rol de {name}", { name: member.name })}
       >
-        <SwapLabel busy={pending} idle="Guardar rol" busyText="Guardando…" />
+        <SwapLabel
+          busy={pending}
+          idle="Guardar rol"
+          busyText={t("Guardando…")}
+        />
       </Button>
     </form>
   );
@@ -77,6 +83,7 @@ export function MemberList({
   expelAction,
   leaveAction,
 }: MemberListProps) {
+  const t = useT();
   const isOwner = members.some(
     (member) => member.userId === currentUserId && member.role === "owner",
   );
@@ -109,11 +116,15 @@ export function MemberList({
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <RoleForm member={member} action={changeRoleAction} />
                 <ConfirmDialog
-                  triggerLabel="Expulsar"
-                  triggerAriaLabel={`Expulsar a ${member.name}`}
-                  title={`¿Expulsar a ${member.name}?`}
-                  description="Perderá el acceso al calendario. Los eventos que creó se quedan."
-                  confirmLabel="Sí, expulsar"
+                  triggerLabel={t("Expulsar")}
+                  triggerAriaLabel={t("Expulsar a {name}", {
+                    name: member.name,
+                  })}
+                  title={t("¿Expulsar a {name}?", { name: member.name })}
+                  description={t(
+                    "Perderá el acceso al calendario. Los eventos que creó se quedan.",
+                  )}
+                  confirmLabel={t("Sí, expulsar")}
                   action={expelAction.bind(null, member.userId)}
                 />
               </div>
@@ -124,10 +135,12 @@ export function MemberList({
       {isOwner ? null : (
         <div>
           <ConfirmDialog
-            triggerLabel="Salir"
-            title="¿Salir de este calendario?"
-            description="Dejarás de verlo. Los eventos que creaste se quedan, y solo podrás volver con una invitación nueva."
-            confirmLabel="Sí, salir"
+            triggerLabel={t("Salir")}
+            title={t("¿Salir de este calendario?")}
+            description={t(
+              "Dejarás de verlo. Los eventos que creaste se quedan, y solo podrás volver con una invitación nueva.",
+            )}
+            confirmLabel={t("Sí, salir")}
             action={leaveAction}
           />
         </div>

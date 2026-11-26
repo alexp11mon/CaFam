@@ -1,3 +1,5 @@
+import { T } from "@/components/i18n/locale-provider";
+
 import { useId, type Ref, type TextareaHTMLAttributes } from "react";
 
 interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -29,7 +31,7 @@ export function TextArea({ label, name, error, ...props }: TextAreaProps) {
       />
       {error ? (
         <p id={errorId} aria-live="polite" className="text-sm text-danger">
-          {error}
+          <T>{error}</T>
         </p>
       ) : null}
     </div>

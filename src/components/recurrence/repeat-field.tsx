@@ -10,6 +10,7 @@ import {
 import { fromRRule, toRRule } from "@/lib/recurrence/rule";
 import { summarizeRule } from "@/lib/recurrence/summary";
 import { RecurrenceEditor } from "./recurrence-editor";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 /**
  * "Repetir" of the event form (RF-1, RF-2, RF-5). The field sends the kind of
@@ -32,6 +33,8 @@ export function RepeatField({
   error?: string;
   name?: string;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [value, setValue] = useState(defaultValue || "none");
   const [editing, setEditing] = useState(false);
   // A server response carries what was submitted: adopt it.
@@ -41,7 +44,7 @@ export function RepeatField({
     setValue(defaultValue || "none");
   }
 
-  const options = repeatOptions(startDate);
+  const options = repeatOptions(startDate, locale);
   const custom = value.startsWith(CUSTOM_PREFIX)
     ? fromRRule(value.slice(CUSTOM_PREFIX.length))
     : null;
@@ -62,7 +65,7 @@ export function RepeatField({
     <div className="flex flex-col gap-1">
       <input type="hidden" name={name} value={sent} />
       <Select
-        label="Repetir"
+        label={t("Repetir")}
         name={`${name}-choice`}
         form="none"
         value={disabledReason ? "none" : current}
@@ -80,8 +83,10 @@ export function RepeatField({
               {option.label}
             </option>
           ))}
-        {custom ? <option value={value}>{summarizeRule(custom)}</option> : null}
-        <option value="custom">Personalizado…</option>
+        {custom ? (
+          <option value={value}>{summarizeRule(custom, locale)}</option>
+        ) : null}
+        <option value="custom">{t("Personalizado…")}</option>
       </Select>
       {reason ? <p className="text-sm text-muted">{reason}</p> : null}
       <RecurrenceEditor

@@ -1,3 +1,5 @@
+import { T } from "@/components/i18n/locale-provider";
+
 import { useId, type Ref, type SelectHTMLAttributes } from "react";
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
@@ -36,7 +38,7 @@ export function Select({
       </select>
       {error ? (
         <p id={errorId} aria-live="polite" className="text-sm text-danger">
-          {error}
+          <T>{error}</T>
         </p>
       ) : null}
     </div>

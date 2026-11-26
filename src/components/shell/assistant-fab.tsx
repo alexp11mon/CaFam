@@ -13,6 +13,7 @@ import { loadAssistantContext } from "@/app/dashboard/assistant/context-actions"
 import { Venito } from "@/components/brand/venito";
 import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
 import { activeSection } from "@/lib/shell/nav";
+import { useT } from "@/components/i18n/locale-provider";
 
 // The chat's own JS stays out of every screen's first load (spec 027 RNF-2).
 const loadChat = () => import("@/components/assistant/assistant-chat");
@@ -34,6 +35,7 @@ const CLOSE_SWIPE_PX = 80;
  * lives while the app is open, and only in memory.
  */
 export function AssistantFab() {
+  const t = useT();
   const pathname = usePathname();
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -138,7 +140,7 @@ export function AssistantFab() {
         : "idle";
   const note =
     activity === "thinking"
-      ? ", está respondiendo"
+      ? t(", está respondiendo")
       : activity === "answered"
         ? ", ha respondido"
         : "";
@@ -148,7 +150,7 @@ export function AssistantFab() {
       <button
         ref={button}
         type="button"
-        aria-label={`Venito, tu asistente${note}`}
+        aria-label={t("Venito, tu asistente{note}", { note })}
         aria-haspopup="dialog"
         aria-expanded={open}
         onPointerDown={warm}
@@ -167,7 +169,7 @@ export function AssistantFab() {
       </button>
       <dialog
         ref={dialog}
-        aria-label="Chat con Venito"
+        aria-label={t("Chat con Venito")}
         onClose={() => {
           setOpen(false);
           button.current?.focus();
@@ -186,7 +188,7 @@ export function AssistantFab() {
             <Suspense
               fallback={
                 <p role="status" className="p-6 text-muted">
-                  Venito se está asomando…
+                  {t("Venito se está asomando…")}
                 </p>
               }
             >

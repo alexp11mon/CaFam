@@ -25,6 +25,38 @@ export const TEXT_ATTRIBUTES = new Set([
   "aria-roledescription",
 ]);
 
+/** Props that these components pass through t() themselves (spec 053). */
+export const TRANSLATED_PROPS: Readonly<Record<string, readonly string[]>> = {
+  AuthCard: ["title"],
+  PageShell: ["title", "backLabel"],
+  Section: ["title"],
+  Row: ["label"],
+  EmptyState: ["title"],
+  ErrorScreen: ["title", "text"],
+  EventModal: ["title"],
+  FoldSection: ["title"],
+  StaggerList: ["aria-label"],
+  ConfirmDialog: [
+    "triggerLabel",
+    "triggerAriaLabel",
+    "title",
+    "description",
+    "confirmLabel",
+  ],
+};
+
+/** The literal of an attribute that its component translates, if any. */
+function translatedProp(node: ts.Node, sf: ts.SourceFile): string | null {
+  if (!ts.isJsxAttribute(node) || !node.initializer) return null;
+  const element = node.parent.parent;
+  const tag = element.tagName.getText(sf);
+  if (!TRANSLATED_PROPS[tag]?.includes(node.name.getText(sf))) return null;
+  const init = ts.isJsxExpression(node.initializer)
+    ? node.initializer.expression
+    : node.initializer;
+  return init ? literalText(init) : null;
+}
+
 const STOP =
   /\b(el|la|los|las|de|del|un|una|que|con|para|por|sin|tu|tus|no|se|en|es|al|ya|hay|y|o|a|su|sus|lo|te|mi|más|este|esta|esto)\b/i;
 
@@ -38,7 +70,7 @@ export function looksSpanish(text: string): boolean {
   if (!isVisible(s)) return false;
   if (/^[\w-]+(\/[\w-]+)+$/.test(s) || /^[a-z0-9_.:-]+$/.test(s)) return false;
   if (/[{}<>=;]|^\/|https?:|\.(tsx?|svg|png|jpe?g|ics|json)\b/.test(s))
-    return /[áéíóúñ¿¡«»…]/i.test(s) && /[{}]/.test(s) && !/[<>=;]/.test(s);
+    return /[áéíóúñ¿¡«»…]/i.test(s) && / /.test(s) && !/[<>=;]/.test(s);
   if (/[áéíóúñ¿¡«»…]/i.test(s)) return true;
   return / /.test(s) && STOP.test(s) && /^[A-ZÁÉÍÓÚÑ¿¡«"(]/.test(s);
 }
@@ -117,11 +149,20 @@ export function translatedTexts(): Map<string, string> {
             : callee === "plural" && ownPlural
               ? node.arguments.slice(1, 3)
               : [];
-        for (const arg of args) {
+        // t(cond ? "a" : "b") has two keys.
+        const branches = (arg: ts.Expression): ts.Expression[] =>
+          ts.isConditionalExpression(arg)
+            ? [...branches(arg.whenTrue), ...branches(arg.whenFalse)]
+            : ts.isParenthesizedExpression(arg)
+              ? branches(arg.expression)
+              : [arg];
+        for (const arg of args.flatMap(branches)) {
           const text = literalText(arg);
           if (text !== null) keys.set(text, file);
         }
       }
+      const prop = translatedProp(node, sf);
+      if (prop) keys.set(prop, file);
       if (
         ts.isJsxElement(node) &&
         node.openingElement.tagName.getText(sf) === "T"
@@ -175,7 +216,8 @@ export function strayTexts(): { file: string; line: number; text: string }[] {
       if (
         ts.isJsxAttribute(node) &&
         TEXT_ATTRIBUTES.has(node.name.getText(sf)) &&
-        node.initializer
+        node.initializer &&
+        translatedProp(node, sf) === null
       ) {
         const init = ts.isJsxExpression(node.initializer)
           ? node.initializer.expression

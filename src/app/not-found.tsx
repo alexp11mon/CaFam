@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ErrorScreen } from "@/components/ui/error-screen";
 import { LinkButton } from "@/components/ui/link-button";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Página no encontrada" };
 
@@ -11,7 +12,9 @@ export default function NotFound() {
       title="No encontramos esta página"
       text="Puede que el enlace esté mal, que ya no exista o que no tengas acceso."
     >
-      <LinkButton href="/dashboard/calendar">Ir al calendario</LinkButton>
+      <LinkButton href="/dashboard/calendar">
+        <T>{"Ir al calendario"}</T>
+      </LinkButton>
     </ErrorScreen>
   );
 }

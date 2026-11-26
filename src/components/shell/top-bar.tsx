@@ -11,6 +11,7 @@ import { CaretIcon } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
 import { ConnectionBadge } from "@/components/offline/connection-badge";
 import { CrossfadeText } from "@/components/ui/crossfade-text";
+import { useT } from "@/components/i18n/locale-provider";
 
 const ICON_BUTTON =
   "flex size-11 shrink-0 items-center justify-center rounded-control text-muted press-quiet hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
@@ -23,6 +24,7 @@ const ICON_BUTTON =
  * the calendar's bar, by the thumb (spec 026 RF-5).
  */
 export function TopBar({ displayName }: { displayName: string }) {
+  const t = useT();
   const current = activeSection(usePathname());
   const { state, pickerOpen, setPickerOpen } = useCalendarHeader();
   const section = NAV_ITEMS.find((item) => item.section === current)?.label;
@@ -51,7 +53,7 @@ export function TopBar({ displayName }: { displayName: string }) {
       <ThemeToggle className={ICON_BUTTON} labelClassName="sr-only" />
       <Link
         href="/dashboard/settings"
-        aria-label={`Ajustes de ${displayName}`}
+        aria-label={t("Ajustes de {displayName}", { displayName })}
         className={ICON_BUTTON}
       >
         {/* Only the user's own avatar here: the first tint, as nobody else is drawn. */}

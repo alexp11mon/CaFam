@@ -22,6 +22,7 @@ import { CommentForm } from "./comment-form";
 import { CommentItem } from "./comment-item";
 import { CommentsSkeleton } from "./comments-skeleton";
 import { StaggerList } from "@/components/ui/stagger-list";
+import { useT } from "@/components/i18n/locale-provider";
 
 const cursorOf = (comment: CommentView): CommentCursor => ({
   createdAt: comment.createdAt,
@@ -39,6 +40,7 @@ export function EventComments({
   eventId: string;
   timeZone: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const modal = useEventModal();
   const { show } = useToast();
@@ -146,7 +148,9 @@ export function EventComments({
       if (fresh.length > 0) {
         setAnnouncement(
           fresh
-            .map((comment) => `Nuevo comentario de ${comment.author}`)
+            .map((comment) =>
+              t("Nuevo comentario de {author}", { author: comment.author }),
+            )
             .join(". "),
         );
       }
@@ -167,7 +171,7 @@ export function EventComments({
       clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [apply, eventId]);
+  }, [apply, eventId, t]);
 
   const since = () => (comments[0] ? cursorOf(comments[0]) : undefined);
 
@@ -206,7 +210,7 @@ export function EventComments({
       className="flex flex-col gap-4 border-t border-line pt-4"
     >
       <h3 id={headingId} className="text-lg font-semibold text-ink">
-        Comentarios
+        {t("Comentarios")}
       </h3>
       {/* New comments of others are heard without moving the focus (RNF accesibilidad). */}
       <p data-testid="comments-live" aria-live="polite" className="sr-only">
@@ -224,7 +228,7 @@ export function EventComments({
               void loadComments(eventId).then(loaded);
             }}
           >
-            Reintentar
+            {t("Reintentar")}
           </Button>
         </div>
       ) : (
@@ -236,11 +240,11 @@ export function EventComments({
               disabled={loadingOlder}
               className="self-start"
             >
-              Ver anteriores
+              {t("Ver anteriores")}
             </Button>
           ) : null}
           {comments.length === 0 ? (
-            <p className="text-muted">Aún no hay comentarios.</p>
+            <p className="text-muted">{t("Aún no hay comentarios.")}</p>
           ) : (
             <StaggerList
               aria-labelledby={headingId}

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import type { LayoutEventInput } from "@/lib/calendar/layout";
+import { useT } from "@/components/i18n/locale-provider";
 
 // Someone else's busy time in the week and day grid (spec 020 RF-8, RF-9,
 // RF-11, RF-14, RF-15; plan D6). Not an event: no link, no id, no drag, no
@@ -30,6 +31,7 @@ export function BusyBlock({
   className?: string;
   style?: CSSProperties;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const noteId = useId();
   const root = useRef<HTMLDivElement>(null);
@@ -62,7 +64,7 @@ export function BusyBlock({
         type="button"
         aria-expanded={open}
         aria-controls={open ? noteId : undefined}
-        aria-label={`${label}, ${hours ?? "todo el día"}`}
+        aria-label={`${label}, ${hours ?? t("todo el día")}`}
         onClick={() => setOpen((value) => !value)}
         // The tint marks the person; no pastel fill, unlike events (plan D6).
         style={{ borderLeftColor: item.tint }}
@@ -70,7 +72,7 @@ export function BusyBlock({
       >
         <span className="truncate font-semibold">{label}</span>
         <span className="truncate tabular-nums text-muted">
-          {hours ?? "Todo el día"}
+          {hours ?? t("Todo el día")}
         </span>
       </button>
       {open ? (
@@ -83,8 +85,10 @@ export function BusyBlock({
           <p className="font-semibold">{item.name}</p>
           <p className="tabular-nums">
             {hours
-              ? `Ocupado de ${hours.replace(" – ", " a ")}`
-              : "Ocupado todo el día"}
+              ? t("Ocupado de {hours}", {
+                  hours: hours.replace(" – ", t(" a ")),
+                })
+              : t("Ocupado todo el día")}
           </p>
         </div>
       ) : null}

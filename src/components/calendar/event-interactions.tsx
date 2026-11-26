@@ -44,6 +44,7 @@ import { usePresence } from "@/lib/hooks/use-presence";
 import { POP_OUT_MS } from "@/lib/motion/play";
 import { useUndoToast } from "./use-undo-toast";
 import { captureReturn, markPulse } from "@/lib/motion/marks";
+import { useT } from "@/components/i18n/locale-provider";
 
 export type ChangeNotice = "moved" | "resized" | "color";
 
@@ -129,6 +130,7 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
   /** The view's date: where Ctrl/⌘+V pastes without a slot chosen (RF-59). */
   date?: string;
 }): { api: EventInteractionsApi; events: T[]; dialog: ReactNode } {
+  const t = useT();
   const router = useRouter();
   const { show } = useToast();
   const showUndo = useUndoToast();
@@ -426,10 +428,10 @@ export function useEventInteractionsState<T extends CalendarEventItem>({
     if (!cardGone) return;
     show(
       takeRemoteRefresh()
-        ? "Otra persona ha borrado este evento"
+        ? t("Otra persona ha borrado este evento")
         : UNDO_NOTICES.deleted,
     );
-  }, [cardGone, show]);
+  }, [cardGone, show, t]);
 
   const closeMenu = useCallback(
     (restoreFocus: boolean) => {

@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import { useCalendarHeader } from "./calendar-header";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * Which calendars the phone shows: the filters in a sheet from the bottom,
@@ -10,6 +11,7 @@ import { useCalendarHeader } from "./calendar-header";
  * come with it. The calendar mounts its filters in the slot.
  */
 export function CalendarSheet() {
+  const t = useT();
   const titleId = useId();
   const { setDrawerSlot, sheet: dialog, sheetClosed } = useCalendarHeader();
   const close = () => dialog.current?.close();
@@ -29,14 +31,14 @@ export function CalendarSheet() {
       <div className="flex flex-col gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-between gap-3 pl-1">
           <h2 id={titleId} className="text-lg font-semibold">
-            Calendarios
+            {t("Calendarios")}
           </h2>
           <button
             type="button"
             onClick={close}
             className="min-h-11 rounded-control px-4 font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
-            Cerrar
+            {t("Cerrar")}
           </button>
         </div>
         <div ref={setDrawerSlot} />

@@ -1,4 +1,6 @@
 "use client";
+import type { Locale } from "@/lib/i18n/locale";
+import { dateFormat } from "@/lib/i18n/format";
 
 import { CalendarLink } from "./calendar-nav";
 import { useId, useState } from "react";
@@ -8,6 +10,7 @@ import { formatDateKeyFull } from "@/lib/calendar/format";
 import { visibleMarks, type MonthMarks } from "@/lib/calendar/month-marks";
 import { getVisibleRange, type CalendarView } from "@/lib/calendar/ranges";
 import { parseDateKey } from "@/lib/calendar/time-zone";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 type Load = (
   month: string,
@@ -15,11 +18,8 @@ type Load = (
 
 const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
 
-const monthTitle = new Intl.DateTimeFormat("es-ES", {
-  month: "long",
-  year: "numeric",
-  timeZone: "UTC",
-});
+const monthTitle = (locale: Locale) =>
+  dateFormat(locale, { month: "long", year: "numeric", timeZone: "UTC" });
 
 function shiftMonth(month: string, delta: -1 | 1): string {
   const [year, value] = month.split("-").map(Number) as [number, number];
@@ -56,6 +56,8 @@ export function MiniMonth({
   visibleCalendarIds: ReadonlySet<string>;
   loadMonthMarks: Load;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [month, setMonth] = useState(initialMonth);
   const [cache, setCache] = useState<Record<string, MonthMarks>>({
     [initialMonth]: initialMarks,
@@ -76,7 +78,7 @@ export function MiniMonth({
     try {
       result = await loadMonthMarks(next);
     } catch {
-      result = { error: "No se ha podido cargar el mes." };
+      result = { error: t("No se ha podido cargar el mes.") };
     }
     setPending(false);
     if ("error" in result) {
@@ -99,7 +101,7 @@ export function MiniMonth({
 
   return (
     <section
-      aria-label="Mini calendario"
+      aria-label={t("Mini calendario")}
       className="flex flex-col gap-2 rounded-card surface p-2 sm:p-3"
     >
       <div className="flex items-center justify-between gap-2">
@@ -108,7 +110,7 @@ export function MiniMonth({
           aria-live="polite"
           className="pl-2 text-base font-semibold text-ink first-letter:uppercase"
         >
-          {monthTitle.format(new Date(`${month}-01T00:00:00Z`))}
+          {monthTitle(locale).format(new Date(`${month}-01T00:00:00Z`))}
         </h2>
         <div className="flex">
           <button
@@ -118,7 +120,7 @@ export function MiniMonth({
             className={NAV_BUTTON}
           >
             <ChevronIcon direction="left" />
-            <span className="sr-only">Mostrar mes anterior</span>
+            <span className="sr-only">{t("Mostrar mes anterior")}</span>
           </button>
           <button
             type="button"
@@ -127,7 +129,7 @@ export function MiniMonth({
             className={NAV_BUTTON}
           >
             <ChevronIcon direction="right" />
-            <span className="sr-only">Mostrar mes siguiente</span>
+            <span className="sr-only">{t("Mostrar mes siguiente")}</span>
           </button>
         </div>
       </div>
@@ -155,7 +157,7 @@ export function MiniMonth({
                 const isToday = day === today;
                 const inMonth = day.startsWith(month);
                 const dots = marks[day] ?? [];
-                const label = `${formatDateKeyFull(day)}${isToday ? ", hoy" : ""}${dots.length > 0 ? ", con eventos" : ""}`;
+                const label = `${formatDateKeyFull(day, locale)}${isToday ? ", hoy" : ""}${dots.length > 0 ? ", con eventos" : ""}`;
                 return (
                   <td key={day} className="p-0">
                     <CalendarLink

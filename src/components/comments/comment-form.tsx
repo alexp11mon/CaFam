@@ -11,6 +11,7 @@ import {
   formatCount,
 } from "@/lib/comments/limits";
 import { commentBodySchema } from "@/lib/comments/schemas";
+import { useT } from "@/components/i18n/locale-provider";
 
 type Outcome = { ok: boolean; error?: string; fieldError?: string };
 
@@ -20,6 +21,7 @@ export function CommentForm({
 }: {
   onSend: (body: string, clientId: string) => Promise<Outcome>;
 }) {
+  const t = useT();
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<{ field?: string; form?: string }>({});
@@ -70,7 +72,7 @@ export function CommentForm({
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-2">
       <TextArea
-        label="Escribe un comentario"
+        label={t("Escribe un comentario")}
         name="body"
         rows={2}
         value={text}
@@ -86,7 +88,7 @@ export function CommentForm({
           </span>
         ) : null}
         <Button ref={button} type="submit" disabled={pending}>
-          Comentar
+          {t("Comentar")}
         </Button>
       </div>
     </form>

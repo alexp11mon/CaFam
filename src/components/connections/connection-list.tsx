@@ -5,6 +5,7 @@ import { CONNECT_ERRORS, isConnectError } from "@/lib/sync/error-messages";
 import { providerName } from "@/lib/sync/provider-labels";
 import type { Connection } from "@/lib/sync/queries";
 import { StaggerList } from "@/components/ui/stagger-list";
+import { T } from "@/components/i18n/locale-provider";
 
 const LINK =
   "inline-flex min-h-11 items-center text-sm font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink";
@@ -28,16 +29,16 @@ export function ConnectionList({
 
       <div className="flex flex-wrap gap-3">
         <LinkButton href="/dashboard/connections/new?provider=google">
-          Conectar Google
+          <T>{"Conectar Google"}</T>
         </LinkButton>
         <LinkButton href="/dashboard/connections/new?provider=icloud">
-          Conectar iCloud
+          <T>{"Conectar iCloud"}</T>
         </LinkButton>
       </div>
 
       {connections.length === 0 ? (
         <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
-          Aún no has conectado ninguna cuenta.
+          <T>{"Aún no has conectado ninguna cuenta."}</T>
         </p>
       ) : (
         <StaggerList className="grid gap-3 sm:grid-cols-2">
@@ -66,7 +67,7 @@ export function ConnectionList({
                 aria-label={`Gestionar ${connection.email}`}
                 className={`${LINK} self-start`}
               >
-                Gestionar
+                <T>{"Gestionar"}</T>
               </Link>
             </li>
           ))}
@@ -74,9 +75,9 @@ export function ConnectionList({
       )}
 
       <p className="max-w-prose text-muted">
-        ¿Solo quieres una copia de un calendario de otro servicio?{" "}
+        <T>{"¿Solo quieres una copia de un calendario de otro servicio?"}</T>{" "}
         <Link href="/dashboard/import" className={LINK}>
-          Importar un .ics
+          <T>{"Importar un .ics"}</T>
         </Link>
       </p>
     </div>

@@ -7,6 +7,7 @@ import { TextField } from "@/components/ui/text-field";
 import type { ForgotPasswordState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 const INITIAL_STATE: ForgotPasswordState = { values: { email: "" } };
 const SENT_MESSAGE =
@@ -21,6 +22,7 @@ export function ForgotPasswordForm({
   action: FormAction<ForgotPasswordState>;
   expired?: boolean;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
 
   if (state.sent) {
@@ -46,7 +48,11 @@ export function ForgotPasswordForm({
         error={state.fieldErrors?.email}
       />
       <Button type="submit" disabled={pending}>
-        <SwapLabel busy={pending} idle="Enviar enlace" busyText="Enviando…" />
+        <SwapLabel
+          busy={pending}
+          idle="Enviar enlace"
+          busyText={t("Enviando…")}
+        />
       </Button>
     </form>
   );

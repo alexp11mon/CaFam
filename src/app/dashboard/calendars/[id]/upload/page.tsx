@@ -9,6 +9,7 @@ import { getConnections } from "@/lib/sync/queries";
 import { uploadCounts } from "@/lib/sync/upload-plan";
 import { uploadToGoogle } from "./actions";
 import { calendarEvents, uploadableCalendar } from "./load-upload";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Subir a una cuenta conectada" };
 
@@ -34,9 +35,11 @@ async function Upload({ params }: { params: Promise<{ id: string }> }) {
   return (
     <section className="flex flex-col gap-4 rounded-card bg-paper p-4 sm:p-6">
       <p className="text-ink">
-        Se creará en la cuenta que elijas el calendario{" "}
-        <span className="font-semibold">«{calendar.name}»</span> con sus
-        eventos, y en CaFam pasará a estar conectado con ella.
+        <T>{"Se creará en la cuenta que elijas el calendario"}</T>{" "}
+        <span className="font-semibold">«{calendar.name}»</span>{" "}
+        <T>
+          {"con sus eventos, y en CaFam pasará a estar conectado con ella."}
+        </T>
       </p>
       {accounts.length > 0 ? (
         <UploadForm
@@ -54,12 +57,15 @@ async function Upload({ params }: { params: Promise<{ id: string }> }) {
       ) : (
         <div className="flex flex-col gap-3">
           <p className="text-ink">
-            Para subirlo necesitas una cuenta de Google o iCloud conectada que
-            pueda escribir.
+            <T>
+              {
+                "Para subirlo necesitas una cuenta de Google o iCloud conectada que pueda escribir."
+              }
+            </T>
           </p>
           <div>
             <LinkButton href="/dashboard/connections">
-              Cuentas conectadas
+              <T>{"Cuentas conectadas"}</T>
             </LinkButton>
           </div>
         </div>
@@ -80,7 +86,13 @@ export default function UploadPage({
       backHref="/dashboard/calendars"
       backLabel="Volver a Mis calendarios"
     >
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <Upload params={params} />
       </Suspense>
     </PageShell>

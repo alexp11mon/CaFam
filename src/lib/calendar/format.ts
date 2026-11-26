@@ -8,6 +8,8 @@ import {
   weekdayIndex,
   zonedDateKey,
 } from "./time-zone";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locale";
+import { dateFormat } from "@/lib/i18n/format";
 
 interface EventTimes {
   startsAt: string;
@@ -15,29 +17,36 @@ interface EventTimes {
   allDay: boolean;
 }
 
-function formatDay(instant: Date | number | string, timeZone: string): string {
-  return new Intl.DateTimeFormat("es-ES", {
-    dateStyle: "full",
-    timeZone,
-  }).format(new Date(instant));
+function formatDay(
+  instant: Date | number | string,
+  timeZone: string,
+  locale: Locale,
+): string {
+  return dateFormat(locale, { dateStyle: "full", timeZone }).format(
+    new Date(instant),
+  );
 }
 
 /** Human-readable "when" of an event; all-day events are dates, never converted (plan D6). */
-export function formatEventWhen(event: EventTimes, timeZone: string): string {
+export function formatEventWhen(
+  event: EventTimes,
+  timeZone: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
   if (event.allDay) {
     const { startDate, endDate } = allDayFromRange(
       event.startsAt,
       event.endsAt,
     );
-    const first = formatDay(`${startDate}T00:00:00Z`, "UTC");
+    const first = formatDay(`${startDate}T00:00:00Z`, "UTC", locale);
     return startDate === endDate
       ? first
-      : `${first} – ${formatDay(`${endDate}T00:00:00Z`, "UTC")}`;
+      : `${first} – ${formatDay(`${endDate}T00:00:00Z`, "UTC", locale)}`;
   }
 
   const start = Date.parse(event.startsAt);
   const end = Date.parse(event.endsAt);
-  const firstDay = formatDay(start, timeZone);
+  const firstDay = formatDay(start, timeZone, locale);
   const startTime = formatTime(start, timeZone);
   if (end === start) return `${firstDay}, ${startTime}`;
 
@@ -45,7 +54,7 @@ export function formatEventWhen(event: EventTimes, timeZone: string): string {
   if (zonedDateKey(start, timeZone) === zonedDateKey(end, timeZone)) {
     return `${firstDay}, ${startTime} – ${endTime}`;
   }
-  return `${firstDay}, ${startTime} – ${formatDay(end, timeZone)}, ${endTime}`;
+  return `${firstDay}, ${startTime} – ${formatDay(end, timeZone, locale)}, ${endTime}`;
 }
 
 export interface EventFormDates {
@@ -94,35 +103,53 @@ export function todayKey(timeZone: string, now: Date = new Date()): string {
 const WEEKDAY_LABELS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
 
 /** Short weekday of a date key, Monday first. */
-export function weekdayLabel(dateKey: string): string {
+export function weekdayLabel(
+  dateKey: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  if (locale !== "es") return formatKey(dateKey, { weekday: "short" }, locale);
   return WEEKDAY_LABELS[weekdayIndex(dateKey)] ?? "";
 }
 
 function formatKey(
   dateKey: string,
   options: Intl.DateTimeFormatOptions,
+  locale: Locale,
 ): string {
-  return new Intl.DateTimeFormat("es-ES", {
-    ...options,
-    timeZone: "UTC",
-  }).format(new Date(`${dateKey}T00:00:00Z`));
+  return dateFormat(locale, { ...options, timeZone: "UTC" }).format(
+    new Date(`${dateKey}T00:00:00Z`),
+  );
 }
 
 /** "miércoles, 21 de octubre" for a date key (spec 008 quick window). */
-export function formatDayHeading(dateKey: string): string {
-  return formatKey(dateKey, { weekday: "long", day: "numeric", month: "long" });
+export function formatDayHeading(
+  dateKey: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  return formatKey(
+    dateKey,
+    { weekday: "long", day: "numeric", month: "long" },
+    locale,
+  );
 }
 
 /** "miércoles, 21 de octubre de 2026" for a date key. */
-export function formatDateKeyFull(dateKey: string): string {
-  return formatKey(dateKey, { dateStyle: "full" });
+export function formatDateKeyFull(
+  dateKey: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  return formatKey(dateKey, { dateStyle: "full" }, locale);
 }
 
 /** Heading of the period shown by a view. */
-export function formatPeriodTitle(view: CalendarView, dateKey: string): string {
-  if (view === "day") return formatDateKeyFull(dateKey);
+export function formatPeriodTitle(
+  view: CalendarView,
+  dateKey: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  if (view === "day") return formatDateKeyFull(dateKey, locale);
   if (view === "month") {
-    return formatKey(dateKey, { month: "long", year: "numeric" });
+    return formatKey(dateKey, { month: "long", year: "numeric" }, locale);
   }
   // The year is its number (spec 042 RF-4).
   if (view === "year") return dateKey.slice(0, 4);
@@ -132,5 +159,5 @@ export function formatPeriodTitle(view: CalendarView, dateKey: string): string {
     view === "agenda" ? AGENDA_DAYS : view === "4days" ? FOUR_DAYS : 7;
   const last = addDays(first, length - 1);
   const short = { day: "numeric", month: "short" } as const;
-  return `${formatKey(first, short)} – ${formatKey(last, { ...short, year: "numeric" })}`;
+  return `${formatKey(first, short, locale)} – ${formatKey(last, { ...short, year: "numeric" }, locale)}`;
 }

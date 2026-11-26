@@ -5,6 +5,7 @@ import { PageShell } from "@/components/calendar/page-shell";
 import { LinkButton } from "@/components/ui/link-button";
 import { createEvent } from "../actions";
 import { loadNewEvent } from "../load-new-event";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Nuevo evento" };
 
@@ -17,9 +18,11 @@ async function NewEvent({ searchParams }: { searchParams: SearchParams }) {
   if (data.kind === "no-calendar") {
     return (
       <div className="flex flex-col items-center gap-4 rounded-card bg-paper px-4 py-6 text-center text-ink">
-        <p>No tienes ningún calendario donde puedas crear eventos.</p>
+        <p>
+          <T>{"No tienes ningún calendario donde puedas crear eventos."}</T>
+        </p>
         <LinkButton href="/dashboard/calendars/new">
-          Crear calendario
+          <T>{"Crear calendario"}</T>
         </LinkButton>
       </div>
     );
@@ -54,7 +57,13 @@ export default function NewEventPage({
       backHref="/dashboard/calendar"
       backLabel="Volver al calendario"
     >
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <NewEvent searchParams={searchParams} />
       </Suspense>
     </PageShell>

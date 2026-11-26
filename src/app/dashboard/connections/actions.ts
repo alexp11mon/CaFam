@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AUTH_MESSAGES } from "@/lib/auth/error-messages";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
-import { getProfileTimeZone, requireActionUser } from "@/lib/calendar/queries";
+import {
+  getProfileLocale,
+  getProfileTimeZone,
+  requireActionUser,
+} from "@/lib/calendar/queries";
+import { translator } from "@/i18n/translator";
+import type { T } from "@/lib/i18n/translate";
 import { calendarSchema } from "@/lib/calendar/schemas";
 import {
   fieldErrorsFromZod,
@@ -60,7 +66,15 @@ async function ownsConnection({ supabase }: User, id: string) {
 }
 
 /** Text of a finished update: totals and how many calendars failed (RF-23). */
-function resultText(sync: ConnectionSync): SyncState {
+/** The result text in the language of the profile: it carries counts (spec 053). */
+async function resultFor(user: User, sync: ConnectionSync): Promise<SyncState> {
+  return resultText(
+    sync,
+    translator(await getProfileLocale(user.supabase, user.userId)),
+  );
+}
+
+function resultText(sync: ConnectionSync, t: T): SyncState {
   if (sync.status === "needs_reauth") return { formError: SYNC_ERRORS.revoked };
   if (sync.status === "too_soon") {
     const minutes = Math.max(
@@ -68,7 +82,12 @@ function resultText(sync: ConnectionSync): SyncState {
       Math.ceil((Date.parse(sync.nextAt) - Date.now()) / 60_000),
     );
     return {
-      message: `Se ha actualizado hace poco. Podrás volver a actualizar dentro de ${minutes} ${minutes === 1 ? "minuto" : "minutos"}.`,
+      message: t(
+        minutes === 1
+          ? "Se ha actualizado hace poco. Podrás volver a actualizar dentro de 1 minuto."
+          : "Se ha actualizado hace poco. Podrás volver a actualizar dentro de {minutes} minutos.",
+        { minutes },
+      ),
     };
   }
 
@@ -83,12 +102,14 @@ function resultText(sync: ConnectionSync): SyncState {
       total[key] += result.summary[key] ?? 0;
     }
   }
-  const parts = [`Actualizado: ${summaryText(total)}`];
+  const parts = [
+    t("Actualizado: {summary}", { summary: summaryText(total, t) }),
+  ];
   if (failed > 0) {
     parts.push(
       failed === 1
-        ? "1 calendario no se ha podido actualizar."
-        : `${failed} calendarios no se han podido actualizar.`,
+        ? t("1 calendario no se ha podido actualizar.")
+        : t("{failed} calendarios no se han podido actualizar.", { failed }),
     );
   }
   return { message: parts.join(" "), updated: true };
@@ -172,7 +193,7 @@ export async function saveSelection(
   }
 
   revalidatePath("/dashboard", "layout");
-  return sync ? resultText(sync) : { message: "Cambios guardados." };
+  return sync ? resultFor(user, sync) : { message: "Cambios guardados." };
 }
 
 /** "Actualizar ahora" (RF-23, RF-24). Bound with the connection id. */
@@ -190,7 +211,7 @@ export async function syncNow(connectionId: string): Promise<SyncState> {
     return { formError: AUTH_MESSAGES.connection };
   }
   revalidatePath("/dashboard", "layout");
-  return resultText(sync);
+  return resultFor(user, sync);
 }
 
 /**

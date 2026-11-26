@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EN } from "@/i18n/en";
+import { limits } from "@/i18n/en/limits";
 import { allLiterals, spanishLiterals, translatedTexts } from "./i18n-scan";
 import { NOT_SHOWN, PENDING } from "./i18n-pending";
 
@@ -27,7 +28,10 @@ describe("the English catalog", () => {
     const literals = allLiterals();
     const keys = new Set(translatedTexts().keys());
     expect(
-      Object.keys(EN).filter((key) => !keys.has(key) && !literals.has(key)),
+      Object.keys(EN).filter(
+        // limits.ts builds its keys from the limits themselves.
+        (key) => !keys.has(key) && !literals.has(key) && !(key in limits),
+      ),
     ).toEqual([]);
   });
 

@@ -1,20 +1,19 @@
 "use client";
+import type { Locale } from "@/lib/i18n/locale";
+import { dateFormat } from "@/lib/i18n/format";
 
 import { useState } from "react";
 import type { ConversationItem } from "@/app/dashboard/assistant/conversation-actions";
 import { TrashIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import { useT } from "@/components/i18n/locale-provider";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 // Spec 052 RF-10: the saved conversations, newest first. Opening one goes on
 // with it; each can be forgotten, or all at once.
 
-const DAY = new Intl.DateTimeFormat("es-ES", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-});
+const DAY = (locale: Locale) =>
+  dateFormat(locale, { day: "numeric", month: "short", year: "numeric" });
 
 export function ConversationList({
   items,
@@ -29,6 +28,7 @@ export function ConversationList({
   onDeleteAll: () => void;
 }) {
   const t = useT();
+  const locale = useLocale();
   const [confirming, setConfirming] = useState(false);
   return (
     <section
@@ -58,7 +58,7 @@ export function ConversationList({
                     {item.title}
                   </span>
                   <span className="text-sm text-muted tabular-nums">
-                    {DAY.format(new Date(item.updatedAt))}
+                    {DAY(locale).format(new Date(item.updatedAt))}
                   </span>
                 </button>
                 <IconButton

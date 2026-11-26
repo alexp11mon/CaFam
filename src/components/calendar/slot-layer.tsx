@@ -9,6 +9,7 @@ import {
   type MinuteRange,
 } from "@/lib/calendar/slots";
 import { fromMinutes } from "@/lib/calendar/time-options";
+import { useT } from "@/components/i18n/locale-provider";
 
 const DAY_MINUTES = 24 * 60;
 // Below this many pixels a mouse press is still a click, not a drag.
@@ -43,6 +44,7 @@ export function SlotLayer({
   dayLabel: string;
   onCreate: (day: string, range: MinuteRange, anchor: Box) => void;
 }) {
+  const t = useT();
   const layer = useRef<HTMLDivElement>(null);
   const gesture = useRef<Gesture | null>(null);
   // The slot a finger tapped, opened by the click that follows (see onPointerUp).
@@ -158,7 +160,7 @@ export function SlotLayer({
         onPointerDown={(event) => event.stopPropagation()}
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-1 focus:z-20 focus:rounded-full focus:bg-ink focus:px-3 focus:py-1 focus:text-xs focus:font-semibold focus:text-on-ink"
       >
-        Crear evento el {dayLabel}
+        {t("Crear evento el {dayLabel}", { dayLabel })}
       </button>
       {preview ? (
         <div
@@ -169,7 +171,7 @@ export function SlotLayer({
           }}
           className="pointer-events-none absolute inset-x-0.5 overflow-hidden rounded-block border border-dashed border-ink bg-paper px-1 text-xs text-ink"
         >
-          <span className="block font-semibold">(Sin título)</span>
+          <span className="block font-semibold">{t("(Sin título)")}</span>
           <span className="block tabular-nums">
             {fromMinutes(preview.start)} – {fromMinutes(preview.end)}
           </span>

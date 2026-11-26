@@ -1,4 +1,5 @@
 "use client";
+import type { T } from "@/lib/i18n/translate";
 
 import { useActionState, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { getMergeAccess, type MergeMember } from "@/lib/sharing/merge-access";
 import { ColorPicker } from "./color-picker";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 type MergeFormState = FormState<MergeField>;
 export type MergeFormValues = MergeFormState["values"];
@@ -29,8 +31,8 @@ function listNames(names: string[]): string {
   return `${names.slice(0, -1).join(", ")} y ${names.at(-1)}`;
 }
 
-function eventsLabel(count: number): string {
-  return count === 1 ? "1 evento" : `${count} eventos`;
+function eventsLabel(count: number, t: T): string {
+  return count === 1 ? t("1 evento") : t("{count} eventos", { count });
 }
 
 /**
@@ -50,6 +52,7 @@ export function MergeForm({
   /** Members of the owned calendars, to warn who is affected (RF-36, RF-37). */
   members?: MergeMember[];
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {
     values: initial,
   });
@@ -111,7 +114,7 @@ export function MergeForm({
 
   const sourceError =
     errors.sourceIds ??
-    (canContinue ? undefined : "Elige al menos dos calendarios.");
+    (canContinue ? undefined : t("Elige al menos dos calendarios."));
 
   return (
     <form
@@ -123,7 +126,7 @@ export function MergeForm({
       <FormAlert message={state.formError} />
       <fieldset className="flex flex-col gap-1">
         <legend className="mb-1 text-sm font-medium text-ink">
-          Calendarios a juntar
+          {t("Calendarios a juntar")}
         </legend>
         {calendars.map((calendar) => (
           <label
@@ -146,7 +149,7 @@ export function MergeForm({
               style={{ backgroundColor: calendar.color }}
             />
             <span className="min-w-0 break-words tabular-nums">
-              {calendar.name} · {eventsLabel(calendar.eventCount)}
+              {calendar.name} · {eventsLabel(calendar.eventCount, t)}
             </span>
           </label>
         ))}
@@ -158,7 +161,7 @@ export function MergeForm({
       </fieldset>
 
       <Select
-        label="Resultado"
+        label={t("Resultado")}
         name="targetId"
         // Remounted when the choice changes so the options match the chosen calendars.
         key={chosen.map((calendar) => calendar.id).join(",")}
@@ -166,7 +169,7 @@ export function MergeForm({
         onChange={(event) => setTarget(event.target.value)}
         error={errors.targetId}
       >
-        <option value="">Un calendario nuevo</option>
+        <option value="">{t("Un calendario nuevo")}</option>
         {chosen.map((calendar) => (
           <option key={calendar.id} value={calendar.id}>
             {calendar.name}
@@ -177,7 +180,7 @@ export function MergeForm({
       {targetId === "" ? (
         <>
           <TextField
-            label="Nombre del calendario nuevo"
+            label={t("Nombre del calendario nuevo")}
             name="newName"
             maxLength={50}
             defaultValue={state.values.newName}
@@ -197,11 +200,11 @@ export function MergeForm({
           <SwapLabel
             busy={pending}
             idle="Juntar calendarios"
-            busyText="Juntando…"
+            busyText={t("Juntando…")}
           />
         </Button>
         <LinkButton href="/dashboard/calendars" variant="secondary">
-          Cancelar
+          {t("Cancelar")}
         </LinkButton>
       </div>
 
@@ -212,30 +215,39 @@ export function MergeForm({
       >
         <div className="flex flex-col gap-4">
           <h2 id={titleId} className="text-lg font-semibold">
-            {`¿Juntar en «${targetName}»?`}
+            {t("¿Juntar en «{name}»?", { name: targetName })}
           </h2>
-          <p>Desaparecerán: {listNames(disappearing.map((c) => c.name))}.</p>
+          <p>
+            {t("Desaparecerán:")} {listNames(disappearing.map((c) => c.name))}.
+          </p>
           <p>
             {moved === 0
-              ? "No hay eventos que mover."
-              : `${moved === 1 ? "Se moverá" : "Se moverán"} ${eventsLabel(moved)} a «${targetName}».`}
+              ? t("No hay eventos que mover.")
+              : t(
+                  moved === 1
+                    ? "Se moverá 1 evento a «{name}»."
+                    : "Se moverán {count} eventos a «{name}».",
+                  { count: moved, name: targetName },
+                )}
           </p>
           {access.losing.length > 0 ? (
-            <p>Perderán el acceso: {listNames(access.losing)}.</p>
+            <p>
+              {t("Perderán el acceso:")} {listNames(access.losing)}.
+            </p>
           ) : null}
           {access.gaining.length > 0 ? (
             <p>
-              Pasarán a ver los eventos de los otros calendarios:{" "}
+              {t("Pasarán a ver los eventos de los otros calendarios:")}{" "}
               {listNames(access.gaining)}.
             </p>
           ) : null}
-          <p className="font-semibold">No se puede deshacer.</p>
+          <p className="font-semibold">{t("No se puede deshacer.")}</p>
           <div className="flex flex-wrap justify-end gap-3">
             <Button variant="secondary" onClick={() => dialog.current?.close()}>
-              Cancelar
+              {t("Cancelar")}
             </Button>
             <Button type="submit" variant="danger" disabled={pending}>
-              Sí, juntar
+              {t("Sí, juntar")}
             </Button>
           </div>
         </div>

@@ -11,6 +11,7 @@ import type {
 } from "@/lib/forms/form-state";
 import { ConfirmDialog } from "./confirm-dialog";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 type CategoryState = FormState<"name">;
 
@@ -33,6 +34,7 @@ interface CategoryManagerProps {
 }
 
 function CreateForm({ action }: { action: FormAction<CategoryState> }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {
     values: { name: "" },
   });
@@ -41,7 +43,7 @@ function CreateForm({ action }: { action: FormAction<CategoryState> }) {
     <form action={formAction} noValidate className="flex flex-col gap-3">
       <FormAlert message={state.formError} />
       <TextField
-        label="Nueva categoría"
+        label={t("Nueva categoría")}
         name="name"
         maxLength={40}
         defaultValue={state.values.name}
@@ -51,8 +53,8 @@ function CreateForm({ action }: { action: FormAction<CategoryState> }) {
         <Button type="submit" disabled={pending}>
           <SwapLabel
             busy={pending}
-            idle="Añadir categoría"
-            busyText="Añadiendo…"
+            idle={t("Añadir categoría")}
+            busyText={t("Añadiendo…")}
           />
         </Button>
       </div>
@@ -71,6 +73,7 @@ function CategoryRow({
   renameAction: CategoryManagerProps["renameAction"];
   deleteAction: CategoryManagerProps["deleteAction"];
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
     renameAction.bind(null, category.id),
@@ -82,7 +85,7 @@ function CategoryRow({
       <form action={formAction} noValidate className="flex flex-col gap-3">
         <FormAlert message={state.formError} />
         <TextField
-          label={`Nuevo nombre de «${category.name}»`}
+          label={t("Nuevo nombre de «{name}»", { name: category.name })}
           name="name"
           maxLength={40}
           defaultValue={state.values.name}
@@ -93,11 +96,11 @@ function CategoryRow({
             <SwapLabel
               busy={pending}
               idle="Guardar nombre"
-              busyText="Guardando…"
+              busyText={t("Guardando…")}
             />
           </Button>
           <Button variant="secondary" onClick={() => setEditing(false)}>
-            Cancelar
+            {t("Cancelar")}
           </Button>
         </div>
       </form>
@@ -113,17 +116,19 @@ function CategoryRow({
         <div className="flex flex-wrap gap-2">
           <Button
             variant="secondary"
-            aria-label={`Renombrar ${category.name}`}
+            aria-label={t("Renombrar {name}", { name: category.name })}
             onClick={() => setEditing(true)}
           >
-            Renombrar
+            {t("Renombrar")}
           </Button>
           <ConfirmDialog
-            triggerLabel="Borrar"
+            triggerLabel={t("Borrar")}
             triggerAriaLabel={`Borrar ${category.name}`}
-            title={`¿Borrar la categoría «${category.name}»?`}
-            description="Sus eventos no se borran: quedarán «Sin categoría»."
-            confirmLabel="Sí, borrar"
+            title={t("¿Borrar la categoría «{name}»?", { name: category.name })}
+            description={t(
+              "Sus eventos no se borran: quedarán «Sin categoría».",
+            )}
+            confirmLabel={t("Sí, borrar")}
             action={deleteAction.bind(null, category.id)}
           />
         </div>
@@ -140,12 +145,13 @@ export function CategoryManager({
   renameAction,
   deleteAction,
 }: CategoryManagerProps) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-6">
       {canEdit ? <CreateForm action={createAction} /> : null}
       {categories.length === 0 ? (
         <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
-          Este calendario aún no tiene categorías.
+          {t("Este calendario aún no tiene categorías.")}
         </p>
       ) : (
         <ul className="flex flex-col gap-3">

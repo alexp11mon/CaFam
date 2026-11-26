@@ -8,6 +8,7 @@ import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { providerName } from "@/lib/sync/provider-labels";
 import type { ProviderName } from "@/lib/sync/providers/types";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 type CreateState = FormState<"name">;
 
@@ -19,6 +20,7 @@ export function CreateCalendarForm({
   action: FormAction<CreateState>;
   provider?: ProviderName;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {
     values: { name: "" },
   });
@@ -32,7 +34,7 @@ export function CreateCalendarForm({
       <div className="flex-1 sm:max-w-sm">
         <FormAlert message={state.formError} />
         <TextField
-          label="Nombre del calendario"
+          label={t("Nombre del calendario")}
           name="name"
           maxLength={50}
           defaultValue={state.values.name}
@@ -43,8 +45,8 @@ export function CreateCalendarForm({
         <Button type="submit" variant="secondary" disabled={pending}>
           <SwapLabel
             busy={pending}
-            idle={`Crear en ${providerName(provider)}`}
-            busyText="Creando…"
+            idle={t("Crear en {value}", { value: providerName(provider) })}
+            busyText={t("Creando…")}
           />
         </Button>
       </div>

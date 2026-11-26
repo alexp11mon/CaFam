@@ -1,5 +1,6 @@
 import { LinkButton } from "@/components/ui/link-button";
 import { SCOPE_NAMES } from "@/lib/sync/scopes";
+import { T } from "@/components/i18n/locale-provider";
 
 /**
  * An account that only reads, shown to its owner: connecting again with the
@@ -16,13 +17,19 @@ export function ReconnectNotice({
   return (
     <section className="flex flex-col gap-3 rounded-card border border-control bg-paper p-4 sm:p-6">
       <p className="text-ink">
-        La cuenta <span className="font-semibold break-all">{email}</span> solo
-        puede leer. Vuelve a conectarla para crear y cambiar eventos de Google
-        desde CaFam.
+        <T>{"La cuenta"}</T>{" "}
+        <span className="font-semibold break-all">{email}</span>{" "}
+        <T>
+          {
+            "solo puede leer. Vuelve a conectarla para crear y cambiar eventos de Google desde CaFam."
+          }
+        </T>
       </p>
       {missing.length > 0 ? (
         <div className="text-sm text-ink">
-          <p>En Google no se marcó el permiso para:</p>
+          <p>
+            <T>{"En Google no se marcó el permiso para:"}</T>
+          </p>
           <ul className="mt-1 list-disc pl-5">
             {missing.map((scope) => (
               <li key={scope}>{SCOPE_NAMES[scope]}</li>
@@ -32,7 +39,7 @@ export function ReconnectNotice({
       ) : null}
       <div>
         <LinkButton href="/dashboard/connections/new?provider=google">
-          Volver a conectar
+          <T>{"Volver a conectar"}</T>
         </LinkButton>
       </div>
     </section>

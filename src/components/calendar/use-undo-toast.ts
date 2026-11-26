@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/components/i18n/locale-provider";
 
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
@@ -73,6 +74,7 @@ export function tokenStep(token: UndoToken, refresh: () => void): Step {
  */
 export function useUndoToast() {
   const { show } = useToast();
+  const t = useT();
   const stack = useUndoStack();
   const router = useRouter();
   return useCallback(
@@ -82,7 +84,7 @@ export function useUndoToast() {
       };
       if (!undo) return show(text);
       const step = tokenStep(undo, refresh);
-      if (stack) return stack.record(undoLabel(text, title), text, step);
+      if (stack) return stack.record(undoLabel(text, title, t), text, step);
       // Outside the app frame: the notice alone, as before the stack.
       show(text, {
         undo: async () => {
@@ -91,6 +93,6 @@ export function useUndoToast() {
         },
       });
     },
-    [show, stack, router],
+    [show, stack, router, t],
   );
 }

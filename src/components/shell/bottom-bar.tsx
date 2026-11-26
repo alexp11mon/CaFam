@@ -12,6 +12,7 @@ import { BAR_ICON, BAR_ITEM } from "./bar-styles";
 import { NavLink } from "./nav-link";
 import { SECTION_ICONS } from "./icons";
 import { MoreSheet } from "./more-sheet";
+import { useT } from "@/components/i18n/locale-provider";
 
 const BAR_ITEMS = BAR_SECTIONS.map(
   (section) => NAV_ITEMS.find((entry) => entry.section === section) as NavItem,
@@ -27,11 +28,12 @@ export function BottomBar({
 }: {
   signOutAction: () => Promise<void>;
 }) {
+  const t = useT();
   const current = activeSection(usePathname());
 
   return (
     <nav
-      aria-label="Principal"
+      aria-label={t("Principal")}
       className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 rounded-card surface-float tab:hidden"
     >
       <ul className="flex">

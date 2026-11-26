@@ -10,6 +10,7 @@ import type { CalendarField } from "@/lib/calendar/schemas";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { ColorPicker } from "./color-picker";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 type CalendarFormState = FormState<CalendarField>;
 
@@ -25,6 +26,7 @@ export function CalendarForm({
   submitLabel: string;
   pendingLabel: string;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {
     values: initial,
   });
@@ -35,14 +37,14 @@ export function CalendarForm({
     <form action={formAction} noValidate className="flex flex-col gap-4">
       <FormAlert message={state.formError} />
       <TextField
-        label="Nombre"
+        label={t("Nombre")}
         name="name"
         maxLength={50}
         defaultValue={state.values.name}
         error={errors.name}
       />
       <TextArea
-        label="Descripción"
+        label={t("Descripción")}
         name="description"
         maxLength={500}
         defaultValue={state.values.description}
@@ -62,7 +64,7 @@ export function CalendarForm({
           />
         </Button>
         <LinkButton href="/dashboard/calendars" variant="secondary">
-          Cancelar
+          {t("Cancelar")}
         </LinkButton>
       </div>
     </form>

@@ -7,6 +7,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { SwapLabel } from "@/components/ui/swap-label";
 import { TextField } from "@/components/ui/text-field";
 import type { FormAction, ResendState } from "@/lib/auth/form-state";
+import { useT } from "@/components/i18n/locale-provider";
 
 // Spec 049, T2: the account waits for the link of its email (RF-1, RF-3).
 
@@ -34,6 +35,7 @@ export function ResendForm({
   askEmail?: boolean;
   label?: string;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, INITIAL);
   return (
     <form action={formAction} noValidate className="flex flex-col gap-3">
@@ -55,7 +57,7 @@ export function ResendForm({
         <input type="hidden" name="email" value={email} />
       ) : null}
       <Button type="submit" variant="secondary" disabled={pending}>
-        <SwapLabel busy={pending} idle={label} busyText="Enviando…" />
+        <SwapLabel busy={pending} idle={t(label)} busyText={t("Enviando…")} />
       </Button>
     </form>
   );
@@ -71,6 +73,7 @@ export function CheckEmail({
   expired?: boolean;
   action: FormAction<ResendState>;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-4">
       {expired ? (
@@ -78,8 +81,10 @@ export function CheckEmail({
       ) : (
         <p className="text-ink">
           {email
-            ? `Te hemos enviado un enlace a ${email}. Ábrelo para entrar.`
-            : "Te hemos enviado un enlace por correo. Ábrelo para entrar."}
+            ? t("Te hemos enviado un enlace a {email}. Ábrelo para entrar.", {
+                email,
+              })
+            : t("Te hemos enviado un enlace por correo. Ábrelo para entrar.")}
         </p>
       )}
       <ResendForm action={action} askEmail={expired && !email} />
@@ -87,7 +92,7 @@ export function CheckEmail({
         href="/signup"
         className="min-h-11 self-center py-3 text-sm font-semibold text-accent-ink underline-offset-4 hover:underline"
       >
-        Cambiar de email
+        {t("Cambiar de email")}
       </Link>
     </div>
   );

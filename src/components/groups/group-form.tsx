@@ -6,6 +6,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 type GroupState = FormState<"name">;
 
@@ -20,6 +21,7 @@ export function GroupForm({
   /** The group was created: the sheet that holds the form closes (spec 032 RF-13). */
   onCreated?: () => void;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, INITIAL);
 
   // Each result once: Activity runs the effects again (AGENTS trap).
@@ -39,17 +41,21 @@ export function GroupForm({
       <div className="flex-1 sm:max-w-sm">
         <FormAlert message={state.formError} />
         <TextField
-          label="Nombre del grupo"
+          label={t("Nombre del grupo")}
           name="name"
           maxLength={40}
           defaultValue={state.values.name}
           error={state.fieldErrors?.name}
-          hint="Junta calendarios para mostrarlos u ocultarlos a la vez."
+          hint={t("Junta calendarios para mostrarlos u ocultarlos a la vez.")}
         />
       </div>
       <div>
         <Button type="submit" variant="secondary" disabled={pending}>
-          <SwapLabel busy={pending} idle="Crear grupo" busyText="Creando…" />
+          <SwapLabel
+            busy={pending}
+            idle="Crear grupo"
+            busyText={t("Creando…")}
+          />
         </Button>
       </div>
     </form>

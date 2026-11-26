@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * "Añadir imágenes" (spec 012 RF-1, RF-2). `image/*` without `capture`: on
@@ -14,6 +15,7 @@ export function ImagePicker({
   onPick: (files: File[]) => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   const input = useRef<HTMLInputElement>(null);
   return (
     <>
@@ -23,7 +25,7 @@ export function ImagePicker({
         onClick={() => input.current?.click()}
         className="self-start"
       >
-        Añadir imágenes
+        {t("Añadir imágenes")}
       </Button>
       <input
         ref={input}

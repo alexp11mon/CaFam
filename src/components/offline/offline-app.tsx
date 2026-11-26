@@ -49,6 +49,7 @@ import {
   safeFrom,
   useOfflineLocation,
 } from "./offline-router";
+import { useT } from "@/components/i18n/locale-provider";
 
 const PAGE =
   "mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 max-tab:gap-2 max-tab:pt-1 max-tab:pb-0 sm:px-6";
@@ -72,16 +73,19 @@ function useOfflineModal(): EventModalApi {
 }
 
 function NeedsNetwork() {
+  const t = useT();
   return (
     <main className={NARROW}>
       <Card>
         <EmptyState
-          title={OFFLINE_MESSAGES.needsNetwork}
+          title={t(OFFLINE_MESSAGES.needsNetwork)}
           action={
-            <LinkButton href="/dashboard/calendar">Ir al calendario</LinkButton>
+            <LinkButton href="/dashboard/calendar">
+              {t("Ir al calendario")}
+            </LinkButton>
           }
         >
-          {OFFLINE_MESSAGES.needsNetworkPage}
+          {t(OFFLINE_MESSAGES.needsNetworkPage)}
         </EmptyState>
       </Card>
     </main>
@@ -89,6 +93,7 @@ function NeedsNetwork() {
 }
 
 function Calendar({ copy, search }: { copy: Snapshot; search: string }) {
+  const t = useT();
   // Built once per copy: a new window would take the view back (spec 024).
   const props = useMemo(() => offlineCalendarProps(copy), [copy]);
   const params = new URLSearchParams(search);
@@ -103,7 +108,7 @@ function Calendar({ copy, search }: { copy: Snapshot; search: string }) {
   return (
     <main className={PAGE}>
       <h1 className="text-2xl font-semibold text-ink max-tab:sr-only">
-        Calendario
+        {t("Calendario")}
       </h1>
       <CalendarClient
         {...props}
@@ -143,6 +148,7 @@ function EventScreen({ copy, id }: { copy: Snapshot; id: string }) {
 }
 
 function NewEvent({ copy, search }: { copy: Snapshot; search: string }) {
+  const t = useT();
   const { queue } = useOfflineQueue();
   const modal = useOfflineModal();
   const [form] = useState(() =>
@@ -155,15 +161,15 @@ function NewEvent({ copy, search }: { copy: Snapshot; search: string }) {
   if (!form) return <NeedsNetwork />;
   return (
     <main className={NARROW}>
-      <h1 className="text-2xl font-semibold text-ink">Nuevo evento</h1>
+      <h1 className="text-2xl font-semibold text-ink">{t("Nuevo evento")}</h1>
       <EventModalProvider value={modal}>
         <EventForm
           action={createEvent}
           initial={form.initial}
           calendars={form.calendars}
           categories={form.categories}
-          submitLabel="Crear evento"
-          pendingLabel="Creando…"
+          submitLabel={t("Crear evento")}
+          pendingLabel={t("Creando…")}
           cancelHref="/dashboard/calendar"
           focusTitle
           timeZone={copy.profile.timeZone}
@@ -215,6 +221,7 @@ function OfflineSearch({
   copy: Snapshot;
   query: string | null;
 }) {
+  const t = useT();
   const search = useMemo(
     () => async (text: string) => searchOffline(copy, text),
     [copy],
@@ -227,7 +234,7 @@ function OfflineSearch({
   return (
     <main className={NARROW}>
       <h1 className="text-2xl font-semibold text-ink max-tab:sr-only">
-        Buscar
+        {t("Buscar")}
       </h1>
       <SearchScreen
         initialQuery={query ?? ""}
@@ -246,6 +253,7 @@ function OfflineSearch({
 }
 
 function Screen({ copy }: { copy: Snapshot }) {
+  const t = useT();
   const location = useOfflineLocation();
   const url = new URL(location, "http://local");
   const route = matchRoute(url.pathname) ?? { kind: "calendar" as const };
@@ -259,7 +267,7 @@ function Screen({ copy }: { copy: Snapshot }) {
     case "notes":
       return (
         <main className={NARROW}>
-          <h1 className="text-2xl font-semibold text-ink">Notas</h1>
+          <h1 className="text-2xl font-semibold text-ink">{t("Notas")}</h1>
           <NotesBoard
             notes={copy.notes}
             today={todayKey(copy.profile.timeZone)}
@@ -270,7 +278,7 @@ function Screen({ copy }: { copy: Snapshot }) {
     case "newNote":
       return (
         <main className={NARROW}>
-          <h1 className="text-2xl font-semibold text-ink">Nueva nota</h1>
+          <h1 className="text-2xl font-semibold text-ink">{t("Nueva nota")}</h1>
           <NoteForm action={createNote} calendars={writableCalendars(copy)} />
         </main>
       );

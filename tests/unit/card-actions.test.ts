@@ -19,6 +19,7 @@ vi.mock("@/lib/calendar/queries", () => ({
   },
   getCalendar: async () => h.calendar,
   getProfileTimeZone: async () => "Europe/Madrid",
+  getProfileLocale: async () => "es",
 }));
 vi.mock("@/lib/sharing/queries", () => ({
   getMembers: async () => h.members,

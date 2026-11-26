@@ -9,6 +9,7 @@ import {
   startDictation,
   type Dictation,
 } from "@/lib/speech/recognition";
+import { useT } from "@/components/i18n/locale-provider";
 
 // Spec 052 RF-13, RF-15, RNF-2: dictate to Venito. Tap to start and tap to
 // stop, or hold and let go; the text goes into the field while it is said
@@ -44,6 +45,7 @@ export function MicButton({
   onText: (text: string) => void;
   onError: (text: string | undefined) => void;
 }) {
+  const t = useT();
   const supported = useSyncExternalStore(
     never,
     () => canDictate(),
@@ -88,7 +90,7 @@ export function MicButton({
       {note ? (
         <div
           role="dialog"
-          aria-label="Dictado por voz"
+          aria-label={t("Dictado por voz")}
           className="absolute bottom-12 left-0 z-10 flex w-72 flex-col gap-2 rounded-card surface-float p-3 text-sm text-ink"
         >
           <p>{MIC_NOTE}</p>
@@ -103,13 +105,13 @@ export function MicButton({
               start();
             }}
           >
-            Entendido
+            {t("Entendido")}
           </Button>
         </div>
       ) : null}
       <button
         type="button"
-        aria-label={listening ? "Dejar de dictar" : "Dictar"}
+        aria-label={listening ? t("Dejar de dictar") : t("Dictar")}
         aria-pressed={listening}
         disabled={disabled}
         onPointerDown={() => {
@@ -133,7 +135,7 @@ export function MicButton({
       </button>
       {listening ? (
         <span role="status" className="sr-only">
-          Escuchando…
+          {t("Escuchando…")}
         </span>
       ) : null}
     </div>

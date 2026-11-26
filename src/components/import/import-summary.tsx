@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ImportSummaryData } from "@/lib/ics/import-state";
+import { T } from "@/components/i18n/locale-provider";
 
 const ACTION_LINK =
   "inline-flex min-h-11 items-center font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink";
@@ -18,10 +19,12 @@ export function ImportSummary({ result }: { result: ImportSummaryData }) {
       {into ? (
         <>
           <p className="font-semibold">
-            {created === 1
-              ? "Se ha añadido 1 evento"
-              : `Se han añadido ${created} eventos`}{" "}
-            a «{into.name}».
+            {created === 1 ? (
+              <T>{"Se ha añadido 1 evento"}</T>
+            ) : (
+              <T vars={{ created }}>{"Se han añadido {created} eventos"}</T>
+            )}{" "}
+            <T vars={{ name: into.name }}>{"a «{name}»."}</T>
           </p>
           {into.existing > 0 ? (
             <p>
@@ -34,13 +37,15 @@ export function ImportSummary({ result }: { result: ImportSummaryData }) {
         </>
       ) : (
         <p className="font-semibold">
-          Calendario creado con {events(created)}.
+          <T>{"Calendario creado con"}</T> {events(created)}.
         </p>
       )}
       {skipped > 0 ? (
         <p>
           {events(skipped)} {skipped === 1 ? "se ha omitido" : "se han omitido"}{" "}
-          por tener una zona horaria desconocida o fechas incorrectas.
+          <T>
+            {"por tener una zona horaria desconocida o fechas incorrectas."}
+          </T>
         </p>
       ) : null}
       {cutSeries > 0 ? (
@@ -48,27 +53,32 @@ export function ImportSummary({ result }: { result: ImportSummaryData }) {
           {cutSeries === 1
             ? "1 serie sin fin se ha cortado"
             : `${cutSeries} series sin fin se han cortado`}{" "}
-          a un año desde hoy.
+          <T>{"a un año desde hoy."}</T>
         </p>
       ) : null}
       {kept === "yes" ? (
-        <p>Se actualizará desde el enlace cada 6 horas.</p>
+        <p>
+          <T>{"Se actualizará desde el enlace cada 6 horas."}</T>
+        </p>
       ) : kept === "failed" ? (
         <p>
-          No se ha podido guardar el enlace para mantenerlo actualizado. Los
-          eventos sí se han importado.
+          <T>
+            {
+              "No se ha podido guardar el enlace para mantenerlo actualizado. Los eventos sí se han importado."
+            }
+          </T>
         </p>
       ) : null}
       <div className="flex flex-wrap gap-x-4">
         <Link href="/dashboard/calendar" className={ACTION_LINK}>
-          Abrir calendario
+          <T>{"Abrir calendario"}</T>
         </Link>
         {into ? null : (
           <Link
             href={`/dashboard/calendars/${calendarId}/edit`}
             className={ACTION_LINK}
           >
-            Editar calendario
+            <T>{"Editar calendario"}</T>
           </Link>
         )}
       </div>

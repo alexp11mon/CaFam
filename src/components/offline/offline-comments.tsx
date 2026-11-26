@@ -15,6 +15,7 @@ import type { OfflineChange } from "@/lib/offline/outbox";
 import { addChange } from "@/lib/offline/queue-store";
 import { PERSON_TINTS, assignTints } from "@/lib/people/avatar";
 import { PendingMark } from "./pending-mark";
+import { useT } from "@/components/i18n/locale-provider";
 
 const UNDO_TEXT = {
   added: "Comentario guardado",
@@ -36,6 +37,7 @@ export function OfflineComments({
   calendarId: string;
   timeZone: string;
 }) {
+  const t = useT();
   const headingId = useId();
   const reasonId = useId();
   const now = useNow();
@@ -72,22 +74,22 @@ export function OfflineComments({
       className="flex flex-col gap-4 border-t border-line pt-4"
     >
       <h3 id={headingId} className="text-lg font-semibold text-ink">
-        Comentarios
+        {t("Comentarios")}
       </h3>
       {hasOlder ? (
         <div className="flex flex-col items-start gap-1">
           <Button variant="secondary" disabled aria-describedby={reasonId}>
-            Ver anteriores
+            {t("Ver anteriores")}
           </Button>
           <p id={reasonId} className="text-sm text-muted">
-            {OFFLINE_MESSAGES.needsNetwork}
+            {t(OFFLINE_MESSAGES.needsNetwork)}
           </p>
         </div>
       ) : null}
       {now === null ? (
         <CommentsSkeleton />
       ) : comments.length === 0 ? (
-        <p className="text-muted">Aún no hay comentarios.</p>
+        <p className="text-muted">{t("Aún no hay comentarios.")}</p>
       ) : (
         <ul aria-labelledby={headingId} className="flex flex-col gap-4">
           {comments.map((comment) => (

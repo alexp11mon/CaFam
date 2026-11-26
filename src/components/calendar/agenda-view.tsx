@@ -23,6 +23,7 @@ import type { AgendaEvent } from "@/lib/calendar/to-view-events";
 import { todayType, typesOf } from "@/lib/calendar/transition-types";
 import { EventBlock } from "./event-block";
 import { DayTasks } from "./task-block";
+import { useT } from "@/components/i18n/locale-provider";
 
 export type { AgendaEvent } from "@/lib/calendar/to-view-events";
 
@@ -93,6 +94,7 @@ export function AgendaView({
   /** Drawn over the first day from today on, on a phone (spec 030 RF-8). */
   todayBanner?: ReactNode;
 }) {
+  const t = useT();
   const go = useCalendarGo();
   const [chunks, setChunks] = useState<Chunk[]>(() => [
     { first: days[0]!, last: days.at(-1)!, events: null },
@@ -326,7 +328,9 @@ export function AgendaView({
                 {item.label}
               </p>
               {item.empty ? (
-                <p className="pt-2 pl-14 text-sm text-muted">Sin eventos</p>
+                <p className="pt-2 pl-14 text-sm text-muted">
+                  {t("Sin eventos")}
+                </p>
               ) : null}
             </div>
           );
@@ -357,7 +361,7 @@ export function AgendaView({
             onClick={() => setError(null)}
             className="inline-flex min-h-11 items-center rounded-control border border-control bg-paper px-4 font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
-            Reintentar
+            {t("Reintentar")}
           </button>
         </div>
       ) : null}

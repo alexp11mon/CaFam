@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { useT } from "@/components/i18n/locale-provider";
 
 function isIosSafariBrowser(): boolean {
   const { userAgent, maxTouchPoints } = navigator;
@@ -20,13 +21,15 @@ const subscribe = () => () => {};
 
 /** iOS shows no install prompt, so Safari users get the steps (plan R7, RF-22). */
 export function IosInstallHint() {
+  const t = useT();
   const show = useSyncExternalStore(subscribe, isIosSafariBrowser, () => false);
   if (!show) return null;
 
   return (
     <p className="rounded-control bg-paper px-4 py-3 text-sm text-ink">
-      Para instalar CaFam en tu iPhone o iPad, pulsa <strong>Compartir</strong>{" "}
-      y después <strong>Añadir a pantalla de inicio</strong>.
+      {t("Para instalar CaFam en tu iPhone o iPad, pulsa")}{" "}
+      <strong>{t("Compartir")}</strong> {t("y después")}{" "}
+      <strong>{t("Añadir a pantalla de inicio")}</strong>.
     </p>
   );
 }

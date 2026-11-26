@@ -10,6 +10,7 @@ import type { InviteField } from "@/lib/sharing/schemas";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
 import { CopyButton } from "./copy-button";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 export type InviteState = FormState<InviteField> & {
   /** Only lives in the state of the submit that created it: the token is never stored (RF-1). */
@@ -20,6 +21,7 @@ const INITIAL_STATE: InviteState = { values: { role: "viewer", maxUses: "1" } };
 
 /** Creates an invite link and shows it once (RF-1..RF-3). */
 export function InviteForm({ action }: { action: FormAction<InviteState> }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
   const errors = state.fieldErrors ?? {};
 
@@ -27,7 +29,7 @@ export function InviteForm({ action }: { action: FormAction<InviteState> }) {
     <form action={formAction} noValidate className="flex flex-col gap-4">
       <FormAlert message={state.formError} />
       <Select
-        label="Rol"
+        label={t("Rol")}
         name="role"
         defaultValue={state.values.role}
         error={errors.role}
@@ -36,7 +38,7 @@ export function InviteForm({ action }: { action: FormAction<InviteState> }) {
         <option value="editor">{ROLE_LABELS.editor}</option>
       </Select>
       <TextField
-        label="Usos máximos"
+        label={t("Usos máximos")}
         name="maxUses"
         inputMode="numeric"
         autoComplete="off"
@@ -47,16 +49,17 @@ export function InviteForm({ action }: { action: FormAction<InviteState> }) {
         <Button type="submit" disabled={pending}>
           <SwapLabel
             busy={pending}
-            idle="Crear invitación"
-            busyText="Creando…"
+            idle={t("Crear invitación")}
+            busyText={t("Creando…")}
           />
         </Button>
       </div>
       {state.inviteUrl ? (
         <div className="flex flex-col gap-3 rounded-card bg-paper p-4">
           <p className="text-sm font-medium text-ink">
-            Enlace de invitación. Solo se muestra ahora: cópialo antes de salir
-            de esta página.
+            {t(
+              "Enlace de invitación. Solo se muestra ahora: cópialo antes de salir de esta página.",
+            )}
           </p>
           <p className="text-sm font-medium break-all text-ink select-all">
             {state.inviteUrl}

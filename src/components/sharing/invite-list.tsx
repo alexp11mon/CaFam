@@ -1,6 +1,7 @@
 import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
 import type { ConfirmState } from "@/lib/forms/form-state";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
+import { T } from "@/components/i18n/locale-provider";
 
 export interface InviteItem {
   id: string;
@@ -12,9 +13,13 @@ export interface InviteItem {
 
 const DAY_MS = 86_400_000;
 
-function expiryLabel(expiresAt: string, now: number): string {
+function expiryLabel(expiresAt: string, now: number) {
   const days = Math.max(1, Math.ceil((Date.parse(expiresAt) - now) / DAY_MS));
-  return `Caduca en ${days} ${days === 1 ? "día" : "días"}`;
+  return (
+    <T vars={{ days }}>
+      {days === 1 ? "Caduca en 1 día" : "Caduca en {days} días"}
+    </T>
+  );
 }
 
 /**
@@ -41,7 +46,7 @@ export function InviteList({
   if (valid.length === 0) {
     return (
       <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
-        No hay invitaciones vigentes.
+        <T>{"No hay invitaciones vigentes."}</T>
       </p>
     );
   }
@@ -54,10 +59,12 @@ export function InviteList({
           className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-paper p-4"
         >
           <div className="flex min-w-0 flex-col gap-1 text-ink">
-            <span className="font-semibold">{ROLE_LABELS[invite.role]}</span>
+            <span className="font-semibold">
+              <T>{ROLE_LABELS[invite.role]}</T>
+            </span>
             <span className="text-sm text-muted tabular-nums">
-              Usos restantes: {invite.maxUses - invite.useCount} de{" "}
-              {invite.maxUses}
+              <T>{"Usos restantes:"}</T> {invite.maxUses - invite.useCount}{" "}
+              <T vars={{ maxUses: invite.maxUses }}>{"de {maxUses}"}</T>
             </span>
             <span className="text-sm text-muted tabular-nums">
               {expiryLabel(invite.expiresAt, current)}
@@ -65,7 +72,8 @@ export function InviteList({
           </div>
           <ConfirmDialog
             triggerLabel="Revocar"
-            triggerAriaLabel={`Revocar invitación de ${ROLE_LABELS[invite.role]}`}
+            triggerAriaLabel="Revocar invitación de {role}"
+            vars={{ role: ROLE_LABELS[invite.role] }}
             title="¿Revocar esta invitación?"
             description="El enlace dejará de funcionar de inmediato. Quienes ya se unieron con él mantienen su acceso."
             confirmLabel="Sí, revocar"

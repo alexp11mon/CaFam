@@ -3,12 +3,14 @@
 import { useState, useTransition } from "react";
 import { setShowWeekends } from "@/app/dashboard/settings/actions";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * Shows the weekends again without going to Ajustes (spec 019 RF-28). Only
  * drawn while they are hidden; the action revalidates the calendar.
  */
 export function WeekendToggle({ className = "" }: { className?: string }) {
+  const t = useT();
   const [error, setError] = useState<string>();
   const [pending, start] = useTransition();
 
@@ -30,7 +32,7 @@ export function WeekendToggle({ className = "" }: { className?: string }) {
         }
         className={className}
       >
-        Mostrar fines de semana
+        {t("Mostrar fines de semana")}
       </button>
       {error ? (
         <p role="alert" className="text-sm text-danger">

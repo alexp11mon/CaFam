@@ -3,6 +3,7 @@ import { Venito } from "@/components/brand/venito";
 import type { Metadata } from "next";
 import { RetryButton } from "@/components/pwa/retry-button";
 import { OfflineApp } from "@/components/offline/offline-app";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Sin conexión" };
 
@@ -14,9 +15,15 @@ function NoCopy() {
         <Logo />
         {/* Nothing to do without a network: Venito naps (spec 027 RF-7). */}
         <Venito mood="sleeping" className="size-28" />
-        <h1 className="text-2xl font-semibold text-ink">Sin conexión</h1>
+        <h1 className="text-2xl font-semibold text-ink">
+          <T>{"Sin conexión"}</T>
+        </h1>
         <p className="text-muted">
-          No hay conexión a internet. Comprueba tu red y vuelve a intentarlo.
+          <T>
+            {
+              "No hay conexión a internet. Comprueba tu red y vuelve a intentarlo."
+            }
+          </T>
         </p>
         <RetryButton />
       </div>

@@ -19,6 +19,7 @@ import {
   todayType,
   typesOf,
 } from "@/lib/calendar/transition-types";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 const VIEWS: {
   view: CalendarView;
@@ -91,11 +92,16 @@ export function ViewToolbar({
   /** Remembers the chosen view in the account (spec 008 RF-25). */
   saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const current = VIEWS.find((item) => item.view === view)!;
   const sidebar = useSidebar();
 
   return (
-    <nav aria-label="Navegación del calendario" className="flex flex-col gap-3">
+    <nav
+      aria-label={t("Navegación del calendario")}
+      className="flex flex-col gap-3"
+    >
       <div className="flex flex-wrap items-center gap-2">
         {/* Folds the side panel, from 1024 px where it is a column (spec 019 RF-17, RF-22). */}
         <button
@@ -103,7 +109,7 @@ export function ViewToolbar({
           aria-expanded={!sidebar.collapsed}
           aria-controls="calendar-side-panel"
           aria-label={
-            sidebar.collapsed ? "Desplegar el panel" : "Plegar el panel"
+            sidebar.collapsed ? t("Desplegar el panel") : t("Plegar el panel")
           }
           onClick={() => setSidebarCollapsed(!sidebar.collapsed)}
           className={`${BUTTON} hidden px-0 lg:inline-flex`}
@@ -118,7 +124,7 @@ export function ViewToolbar({
             aria-keyshortcuts="T"
             className={BUTTON}
           >
-            Hoy
+            {t("Hoy")}
           </button>
         ) : (
           <>
@@ -129,7 +135,7 @@ export function ViewToolbar({
               aria-keyshortcuts="T"
               className={BUTTON}
             >
-              Hoy
+              {t("Hoy")}
             </CalendarLink>
             <CalendarLink
               view={view}
@@ -152,13 +158,13 @@ export function ViewToolbar({
               <ChevronIcon direction="right" />
             </CalendarLink>
             <h2 className="min-w-0 text-lg font-semibold text-ink tabular-nums first-letter:uppercase">
-              {formatPeriodTitle(view, date)}
+              {formatPeriodTitle(view, date, locale)}
             </h2>
             {/* Folded, the mini month opens from the title (RF-19). */}
             {sidebar.collapsed ? (
               <button
                 type="button"
-                aria-label="Elegir fecha"
+                aria-label={t("Elegir fecha")}
                 aria-expanded={sidebar.pickerOpen}
                 aria-controls="calendar-date-picker"
                 onClick={() => setSidebarPicker(!sidebar.pickerOpen)}

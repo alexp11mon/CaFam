@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { NOTE_BODY_MAX } from "@/lib/notes/limits";
+import { useT } from "@/components/i18n/locale-provider";
 
 /** How long after the last key the text is saved. */
 export const AUTOSAVE_MS = 800;
@@ -20,6 +21,7 @@ export function TextNote({
   /** Resolves true when it was saved. */
   onSave: (body: string) => Promise<boolean>;
 }) {
+  const t = useT();
   const fieldId = useId();
   const [text, setText] = useState(body);
   const [state, setState] = useState<"idle" | "saving" | "saved" | "failed">(
@@ -61,7 +63,7 @@ export function TextNote({
   if (!canWrite) {
     return (
       <p className="min-h-40 whitespace-pre-line text-ink">
-        {body || <span className="text-muted">Nota vacía.</span>}
+        {body || <span className="text-muted">{t("Nota vacía.")}</span>}
       </p>
     );
   }
@@ -69,14 +71,14 @@ export function TextNote({
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor={fieldId} className="sr-only">
-        Texto de la nota
+        {t("Texto de la nota")}
       </label>
       <textarea
         id={fieldId}
         value={text}
         maxLength={NOTE_BODY_MAX}
         rows={12}
-        placeholder="Escribe aquí…"
+        placeholder={t("Escribe aquí…")}
         onChange={(event) => {
           setText(event.target.value);
           latest.current = event.target.value;
@@ -89,11 +91,11 @@ export function TextNote({
       />
       <p role="status" className="min-h-5 text-sm text-muted">
         {state === "saving"
-          ? "Guardando…"
+          ? t("Guardando…")
           : state === "saved"
-            ? "Guardado"
+            ? t("Guardado")
             : state === "failed"
-              ? "No se ha podido guardar"
+              ? t("No se ha podido guardar")
               : ""}
       </p>
     </div>

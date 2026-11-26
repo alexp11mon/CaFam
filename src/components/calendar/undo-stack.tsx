@@ -19,6 +19,7 @@ import {
   type Step,
   type UndoStack,
 } from "@/lib/calendar/undo-stack";
+import { useT } from "@/components/i18n/locale-provider";
 
 // The stack of the tab (spec 046 RF-11 to RF-17, plan D4): every action that
 // offers "Deshacer" goes on top; Ctrl/⌘+Z undoes the last one even after its
@@ -49,6 +50,7 @@ function modalOpen(): boolean {
 }
 
 export function UndoStackProvider({ children }: { children: ReactNode }) {
+  const t = useT();
   const { show } = useToast();
   const stack = useRef<UndoStack>(EMPTY_STACK);
   const busy = useRef(false);
@@ -76,26 +78,28 @@ export function UndoStackProvider({ children }: { children: ReactNode }) {
           show(result.error);
           return;
         }
-        const done = side === "undo" ? "Deshecho" : "Rehecho";
+        const done = side === "undo" ? t("Deshecho") : t("Rehecho");
         show(
           `${done}: ${taken.entry.label}`,
           result.inverse
             ? {
                 undo: () => runRef.current(side === "undo" ? "redo" : "undo"),
-                label: side === "undo" ? "Rehacer" : "Deshacer",
+                label: side === "undo" ? t("Rehacer") : t("Deshacer"),
                 keys: false,
               }
             : undefined,
         );
       } catch {
         show(
-          "No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.",
+          t(
+            "No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.",
+          ),
         );
       } finally {
         busy.current = false;
       }
     },
-    [show],
+    [show, t],
   );
 
   useEffect(() => {

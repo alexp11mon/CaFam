@@ -1,7 +1,7 @@
-// Every visible text of the offline mode (spec 034 RNF-8).
+import { spanishT, type T } from "@/lib/i18n/translate";
 
-const plural = (n: number, one: string, many: string) =>
-  `${n} ${n === 1 ? one : many}`;
+// Every visible text of the offline mode (spec 034 RNF-8). Strings are
+// Spanish keys, translated where shown; functions take the translator (spec 053).
 
 export const OFFLINE_MESSAGES = {
   needsNetwork: "Necesita conexión",
@@ -18,14 +18,22 @@ export const OFFLINE_MESSAGES = {
     "Este dispositivo aún no tiene una copia de tus datos. Conéctate una vez para usar CaFam sin conexión.",
   offline: "Sin conexión",
   online: "Conexión recuperada",
-  badge: (time: string, date: string | null) =>
-    `Sin conexión · datos ${date ? `del ${date} a las` : "de las"} ${time}`,
-  synced: (n: number) =>
-    `${plural(n, "cambio sincronizado", "cambios sincronizados")}`,
-  pendingCount: (n: number) =>
-    plural(n, "cambio pendiente", "cambios pendientes"),
-  signOutWarning: (n: number) =>
-    `Tienes ${plural(n, "cambio sin enviar", "cambios sin enviar")}. Si cierras sesión, se perderán.`,
+  badge: (time: string, date: string | null, t: T = spanishT) =>
+    date
+      ? t("Sin conexión · datos del {date} a las {time}", { date, time })
+      : t("Sin conexión · datos de las {time}", { time }),
+  synced: (n: number, t: T = spanishT) =>
+    n === 1
+      ? t("1 cambio sincronizado")
+      : t("{n} cambios sincronizados", { n }),
+  pendingCount: (n: number, t: T = spanishT) =>
+    n === 1 ? t("1 cambio pendiente") : t("{n} cambios pendientes", { n }),
+  signOutWarning: (n: number, t: T = spanishT) =>
+    n === 1
+      ? t("Tienes 1 cambio sin enviar. Si cierras sesión, se perderá.")
+      : t("Tienes {n} cambios sin enviar. Si cierras sesión, se perderán.", {
+          n,
+        }),
   signOutAnyway: "Cerrar sesión igualmente",
   signOutOffline: "Para cerrar sesión necesitas conexión.",
   cancel: "Cancelar",
@@ -45,12 +53,15 @@ export const OFFLINE_MESSAGES = {
     "Este dispositivo no tiene espacio para guardar más imágenes sin conexión.",
   imageRemoved: "Imagen quitada",
   imageDeleted: "Imagen borrada",
-  imagesKept: (n: number) =>
-    `${plural(n, "imagen guardada", "imágenes guardadas")} para enviar con conexión`,
+  imagesKept: (n: number, t: T = spanishT) =>
+    n === 1
+      ? t("1 imagen guardada para enviar con conexión")
+      : t("{n} imágenes guardadas para enviar con conexión", { n }),
   remove: "Quitar",
   held: "La cuenta de este calendario necesita volver a conectarse. Tus cambios esperan y se enviarán al conectarla.",
   reconnect: "Volver a conectar",
   download: "Descargar",
-  repeatsNow: (summary: string) => `Ahora se repite: ${summary}`,
+  repeatsNow: (summary: string, t: T = spanishT) =>
+    t("Ahora se repite: {summary}", { summary }),
   changedByOther: "Otra persona lo ha cambiado mientras no tenías conexión.",
 } as const;

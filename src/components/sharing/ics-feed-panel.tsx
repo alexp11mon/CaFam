@@ -8,6 +8,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { SwapLabel } from "@/components/ui/swap-label";
 import type { ConfirmState, FormAction } from "@/lib/forms/form-state";
 import { CopyButton } from "./copy-button";
+import { useT } from "@/components/i18n/locale-provider";
 
 export interface FeedState {
   formError?: string;
@@ -30,15 +31,16 @@ export function IcsFeedPanel({
   createAction: FormAction<FeedState>;
   disableAction: FormAction<ConfirmState>;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(createAction, {});
   const webcal = state.url?.replace(/^https?:\/\//, "webcal://");
 
   return (
     <div className="flex flex-col gap-4">
       <p className="text-ink">
-        Para ver este calendario en Google Calendar, Apple Calendar u Outlook
-        sin conectar una cuenta. Es de solo lectura y esas apps lo actualizan
-        cada pocas horas (Google puede tardar hasta un día).
+        {t(
+          "Para ver este calendario en Google Calendar, Apple Calendar u Outlook sin conectar una cuenta. Es de solo lectura y esas apps lo actualizan cada pocas horas (Google puede tardar hasta un día).",
+        )}
       </p>
       <p className="rounded-card bg-accent-soft p-3 text-sm text-accent-ink">
         {FEED_WARNING}
@@ -47,12 +49,12 @@ export function IcsFeedPanel({
       {state.url && webcal && active ? (
         <div className="flex flex-col gap-3 rounded-card bg-paper p-4">
           <p className="text-sm text-muted">
-            Guárdalo ahora: no se puede volver a ver.
+            {t("Guárdalo ahora: no se puede volver a ver.")}
           </p>
           <input
             readOnly
             value={state.url}
-            aria-label="Enlace de suscripción"
+            aria-label={t("Enlace de suscripción")}
             onFocus={(event) => event.currentTarget.select()}
             className="w-full rounded-control border border-control bg-paper px-3 py-2 text-base text-ink"
           />
@@ -64,17 +66,18 @@ export function IcsFeedPanel({
               rel="noreferrer"
               className={LINK_BUTTON}
             >
-              Abrir en Google Calendar
+              {t("Abrir en Google Calendar")}
             </a>
             <a href={webcal} className={LINK_BUTTON}>
-              Abrir en Apple Calendar
+              {t("Abrir en Apple Calendar")}
             </a>
           </div>
         </div>
       ) : active ? (
         <p className="text-ink">
-          Hay un enlace activo. Por seguridad no se puede volver a ver: si lo
-          necesitas, crea uno nuevo y el anterior dejará de funcionar.
+          {t(
+            "Hay un enlace activo. Por seguridad no se puede volver a ver: si lo necesitas, crea uno nuevo y el anterior dejará de funcionar.",
+          )}
         </p>
       ) : null}
       <form action={formAction} className="flex flex-wrap gap-2">
@@ -82,18 +85,20 @@ export function IcsFeedPanel({
           <SwapLabel
             busy={pending}
             idle={active ? "Crear uno nuevo" : "Crear enlace"}
-            busyText="Creando…"
+            busyText={t("Creando…")}
           />
         </Button>
       </form>
       {active ? (
         <div>
           <ConfirmDialog
-            triggerLabel="Desactivar"
-            triggerAriaLabel="Desactivar el enlace de suscripción"
-            title="¿Desactivar el enlace de suscripción?"
-            description="Las apps que lo usan dejarán de recibir los eventos. Podrás crear uno nuevo cuando quieras."
-            confirmLabel="Sí, desactivar"
+            triggerLabel={t("Desactivar")}
+            triggerAriaLabel={t("Desactivar el enlace de suscripción")}
+            title={t("¿Desactivar el enlace de suscripción?")}
+            description={t(
+              "Las apps que lo usan dejarán de recibir los eventos. Podrás crear uno nuevo cuando quieras.",
+            )}
+            confirmLabel={t("Sí, desactivar")}
             action={disableAction}
           />
         </div>

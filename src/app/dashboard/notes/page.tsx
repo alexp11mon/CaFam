@@ -5,6 +5,7 @@ import { LinkButton } from "@/components/ui/link-button";
 import { todayKey } from "@/lib/calendar/format";
 import { getProfileTimeZone, requireUser } from "@/lib/calendar/queries";
 import { getNotes } from "@/lib/notes/queries";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Notas" };
 
@@ -25,17 +26,23 @@ export default function NotesPage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-4 py-4 sm:px-6 tab:py-6">
       <div className="flex items-center justify-between gap-3 max-tab:hidden">
-        <h1 className="text-2xl font-semibold text-ink">Notas</h1>
+        <h1 className="text-2xl font-semibold text-ink">
+          <T>{"Notas"}</T>
+        </h1>
         {/* On a phone "+" in the bottom bar does this (spec 025 plan D7). */}
         <div className="hidden lg:block">
-          <LinkButton href="/dashboard/notes/new">Nueva nota</LinkButton>
+          <LinkButton href="/dashboard/notes/new">
+            <T>{"Nueva nota"}</T>
+          </LinkButton>
         </div>
       </div>
-      <h1 className="sr-only tab:hidden">Notas</h1>
+      <h1 className="sr-only tab:hidden">
+        <T>{"Notas"}</T>
+      </h1>
       <Suspense
         fallback={
           <p role="status" className="text-muted">
-            Cargando tus notas…
+            <T>{"Cargando tus notas…"}</T>
           </p>
         }
       >

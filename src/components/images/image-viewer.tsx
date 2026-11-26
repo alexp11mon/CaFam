@@ -1,4 +1,5 @@
 "use client";
+import { dateFormat } from "@/lib/i18n/format";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -20,12 +21,14 @@ import { isOnline } from "@/lib/offline/connection";
 import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 import { isQueued, withOutbox } from "@/lib/offline/with-outbox";
 import { useImageBlob } from "./use-image-blob";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 const LINK_BUTTON =
   "inline-flex min-h-11 items-center justify-center rounded-control border border-control bg-paper px-5 py-2 text-base font-semibold text-ink press hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 /** Offline without the full image: its thumbnail and why (spec 035 RF-31). */
 function ThumbInstead({ image, alt }: { image: EventImage; alt: string }) {
+  const t = useT();
   const blob = useImageBlob(objectPath(image.objectId, "thumb"), {
     id: image.id,
     kind: "thumb",
@@ -42,12 +45,13 @@ function ThumbInstead({ image, alt }: { image: EventImage; alt: string }) {
           className="max-h-full w-auto max-w-full rounded-control bg-paper object-contain p-1.5 ring-1 ring-line"
         />
       ) : null}
-      <p className="text-muted">{OFFLINE_MESSAGES.fullImageNeedsNetwork}</p>
+      <p className="text-muted">{t(OFFLINE_MESSAGES.fullImageNeedsNetwork)}</p>
     </div>
   );
 }
 
 function FullImage({ image, alt }: { image: EventImage; alt: string }) {
+  const t = useT();
   const online = useConnection();
   const blob = useImageBlob(objectPath(image.objectId, "full"), {
     id: image.id,
@@ -57,10 +61,12 @@ function FullImage({ image, alt }: { image: EventImage; alt: string }) {
     return <ThumbInstead image={image} alt={alt} />;
   }
   if (blob.status === "denied") {
-    return <p className="text-muted">Esta imagen ya no está disponible.</p>;
+    return (
+      <p className="text-muted">{t("Esta imagen ya no está disponible.")}</p>
+    );
   }
   if (blob.status === "loading") {
-    return <p className="text-muted">Cargando…</p>;
+    return <p className="text-muted">{t("Cargando…")}</p>;
   }
   return (
     <Image
@@ -82,6 +88,7 @@ function DownloadLink({
   image: EventImage;
   fileName: string;
 }) {
+  const t = useT();
   const blob = useImageBlob(objectPath(image.objectId, "full"), {
     id: image.id,
     kind: "full",
@@ -89,7 +96,7 @@ function DownloadLink({
   if (blob.status !== "ready") return null;
   return (
     <a href={blob.url} download={fileName} className={LINK_BUTTON}>
-      Descargar
+      {t("Descargar")}
     </a>
   );
 }
@@ -114,6 +121,8 @@ export function ImageViewer({
   eventId?: string;
   onClose: () => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const showUndo = useUndoToast();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -168,7 +177,7 @@ export function ImageViewer({
 
   if (!image) return null;
   const alt = imageAlt(title, position, images.length);
-  const when = new Intl.DateTimeFormat("es-ES", {
+  const when = dateFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -180,10 +189,10 @@ export function ImageViewer({
     const result = await withOutbox(
       () => deleteImage(image.id),
       eventId ? { type: "image.delete", id: image.id, eventId } : null,
-    ).catch(() => ({ error: OFFLINE_MESSAGES.needsNetwork }));
+    ).catch(() => ({ error: t(OFFLINE_MESSAGES.needsNetwork) }));
     if (isQueued(result)) {
       // Gone from the gallery at once, with its "Deshacer" (RF-37).
-      showUndo(OFFLINE_MESSAGES.imageDeleted, result.undo);
+      showUndo(t(OFFLINE_MESSAGES.imageDeleted), result.undo);
       return { done: "deleted" };
     }
     return result.error ? { formError: result.error } : { done: "deleted" };
@@ -212,15 +221,15 @@ export function ImageViewer({
           </h2>
           <p className="text-sm text-muted">
             <span className="tabular-nums">
-              Imagen {position + 1} de {images.length}
-            </span>
-            {" · "}Subida por {image.author}
-            {" · "}
+              {t("Imagen")} {position + 1}{" "}
+              {t("de {length}", { length: images.length })}
+            </span>{" "}
+            {t("· Subida por {author} ·", { author: image.author })}{" "}
             <span className="tabular-nums">{when}</span>
           </p>
         </div>
         <Button variant="secondary" onClick={() => dialog.current?.close()}>
-          Cerrar
+          {t("Cerrar")}
         </Button>
       </header>
       <div
@@ -243,14 +252,14 @@ export function ImageViewer({
           onClick={() => go(-1)}
           disabled={position === 0}
         >
-          Anterior
+          {t("Anterior")}
         </Button>
         <Button
           variant="secondary"
           onClick={() => go(1)}
           disabled={position === images.length - 1}
         >
-          Siguiente
+          {t("Siguiente")}
         </Button>
         <DownloadLink
           key={`download-${image.id}`}
@@ -261,9 +270,11 @@ export function ImageViewer({
           <ConfirmDialog
             key={`delete-${image.id}`}
             triggerLabel="Borrar imagen"
-            title="¿Borrar esta imagen?"
-            description="La imagen se borrará de forma definitiva para todos."
-            confirmLabel="Sí, borrar"
+            title={t("¿Borrar esta imagen?")}
+            description={t(
+              "La imagen se borrará de forma definitiva para todos.",
+            )}
+            confirmLabel={t("Sí, borrar")}
             action={remove}
             onDone={() => {
               dialog.current?.close();

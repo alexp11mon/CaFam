@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/locale-provider";
 import { Logo } from "@/components/brand/logo";
 import type { ReactNode } from "react";
 import { LinkKeepingNext } from "@/components/auth/next-field";
@@ -15,15 +16,17 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
         <p className="mb-6">
           <Logo />
         </p>
-        <h1 className="mb-6 text-2xl font-semibold text-ink">{title}</h1>
+        <h1 className="mb-6 text-2xl font-semibold text-ink">
+          <T>{title}</T>
+        </h1>
         {children}
         <p className="mt-6 text-sm text-ink">
-          {footer.text}{" "}
+          <T>{footer.text}</T>{" "}
           <LinkKeepingNext
             href={footer.href}
             className="font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
           >
-            {footer.linkLabel}
+            <T>{footer.linkLabel}</T>
           </LinkKeepingNext>
         </p>
       </div>

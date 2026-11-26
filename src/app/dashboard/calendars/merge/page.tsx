@@ -11,6 +11,7 @@ import {
 import { getMembers } from "@/lib/sharing/queries";
 import { canMerge } from "@/lib/sync/read-only";
 import { mergeCalendars } from "../actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Juntar calendarios" };
 
@@ -24,7 +25,9 @@ async function Merge() {
   if (owned.length < 2) {
     return (
       <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
-        Necesitas al menos dos calendarios propios para poder juntarlos.
+        <T>
+          {"Necesitas al menos dos calendarios propios para poder juntarlos."}
+        </T>
       </p>
     );
   }
@@ -59,10 +62,19 @@ export default function MergePage() {
   return (
     <PageShell title="Juntar calendarios">
       <p className="text-ink">
-        Los eventos y las categorías de los calendarios elegidos pasan a uno
-        solo y los demás desaparecen. No se puede deshacer.
+        <T>
+          {
+            "Los eventos y las categorías de los calendarios elegidos pasan a uno solo y los demás desaparecen. No se puede deshacer."
+          }
+        </T>
       </p>
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <Merge />
       </Suspense>
     </PageShell>

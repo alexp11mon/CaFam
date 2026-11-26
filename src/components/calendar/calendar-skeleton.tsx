@@ -1,3 +1,5 @@
+import { useId } from "react";
+import { T } from "@/components/i18n/locale-provider";
 import type { CalendarView } from "@/lib/calendar/ranges";
 
 const BLOCK = "rounded-control bg-paper motion-safe:animate-pulse";
@@ -8,13 +10,18 @@ const BLOCK = "rounded-control bg-paper motion-safe:animate-pulse";
  * the status that screen readers hear.
  */
 export function CalendarSkeleton({ view }: { view: CalendarView }) {
+  // aria-label must be a string; the label is a translated hidden span (spec 053).
+  const id = useId();
   return (
     <div
       role="status"
       aria-busy="true"
-      aria-label="Cargando calendario…"
+      aria-labelledby={id}
       className="flex flex-col gap-4"
     >
+      <span id={id} hidden>
+        <T>{"Cargando calendario…"}</T>
+      </span>
       {/* On a phone the header replaces the toolbar (spec 016 RF-19). */}
       <div aria-hidden="true" className="flex gap-2 max-tab:hidden">
         <div className={`h-11 w-20 ${BLOCK}`} />

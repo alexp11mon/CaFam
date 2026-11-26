@@ -6,6 +6,7 @@ import type { CalendarEventItem } from "@/lib/calendar/layout";
 import { boxOf } from "@/lib/calendar/popover";
 import { originFrom } from "@/lib/motion/origin";
 import { CALENDAR_COLORS } from "@/lib/calendar/palette";
+import { useT } from "@/components/i18n/locale-provider";
 
 export type MenuChoice =
   | { kind: "color"; color: string | null }
@@ -39,6 +40,7 @@ export function EventMenu({
   /** Closed and shrinking back to where it opened (spec 021 RF-9). */
   leaving?: boolean;
 }) {
+  const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const ownColor =
     event.color.toUpperCase() === calendarColor?.toUpperCase()
@@ -150,7 +152,7 @@ export function EventMenu({
           style={{ backgroundColor: calendarColor }}
           className="size-4 rounded-full ring-1 ring-pastel-ink/20"
         />
-        <span className="flex-1">Color del calendario</span>
+        <span className="flex-1">{t("Color del calendario")}</span>
         {ownColor === null ? <CheckIcon /> : null}
       </button>
       <div role="separator" className="mx-3 h-px bg-line" />
@@ -161,7 +163,7 @@ export function EventMenu({
         onClick={() => choose({ kind: "duplicate" })}
         className={ITEM}
       >
-        Duplicar
+        {t("Duplicar")}
       </button>
       <button
         type="button"
@@ -170,7 +172,7 @@ export function EventMenu({
         onClick={() => choose({ kind: "delete" })}
         className={`${ITEM} text-danger`}
       >
-        Borrar
+        {t("Borrar")}
       </button>
     </div>
   );

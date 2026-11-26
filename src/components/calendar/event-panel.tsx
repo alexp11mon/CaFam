@@ -42,6 +42,7 @@ import { entityOf } from "@/lib/offline/outbox";
 import { useHoldLive } from "@/lib/hooks/use-hold-live";
 import { useConnection } from "@/lib/hooks/use-connection";
 import { OfflineComments } from "@/components/offline/offline-comments";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * An event's detail, which turns into its edit form in the same place
@@ -82,6 +83,7 @@ export function EventPanel({
   /** An occurrence of a series (spec 013 RF-15). */
   series?: { limitReached: boolean } | null;
 }) {
+  const t = useT();
   const modal = useEventModal();
   // Offline as online: comments and images wait in the queue, Google and
   // iCloud included (spec 035 RF-1, RF-18, RF-30).
@@ -147,7 +149,7 @@ export function EventPanel({
             onClick={() => setEditing(false)}
             className="self-start"
           >
-            Volver al detalle
+            {t("Volver al detalle")}
           </Button>
           <EventForm
             action={updateAction}
@@ -155,8 +157,8 @@ export function EventPanel({
             initial={editInitial}
             calendars={calendars}
             categories={categories}
-            submitLabel="Guardar cambios"
-            pendingLabel="Guardando…"
+            submitLabel={t("Guardar cambios")}
+            pendingLabel={t("Guardando…")}
             cancelHref="/dashboard/calendar"
             series={series ?? undefined}
             reminders={reminders ? { initial: reminders } : undefined}
@@ -232,7 +234,7 @@ export function EventPanel({
                   modal?.expand();
                 }}
               >
-                Editar
+                {t("Editar")}
               </Button>
               <LinkButton
                 href={`/dashboard/events/new?from=${detail.id}`}
@@ -240,7 +242,7 @@ export function EventPanel({
                 replace
                 variant="secondary"
               >
-                Duplicar
+                {t("Duplicar")}
               </LinkButton>
             </>
           }

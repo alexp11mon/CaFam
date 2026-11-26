@@ -1,35 +1,36 @@
 // Due dates of notes and items (spec 048 RF-1, RF-2). Dates are YYYY-MM-DD
 // keys and times HH:MM, read in the profile's zone. Pure.
 import { addDays } from "@/lib/calendar/time-zone";
+import { dateFormat } from "@/lib/i18n/format";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locale";
 
-const DAY = new Intl.DateTimeFormat("es-ES", {
-  weekday: "short",
-  day: "numeric",
-  timeZone: "UTC",
-});
-const DAY_MONTH = new Intl.DateTimeFormat("es-ES", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
+const DAY = { weekday: "short", day: "numeric", timeZone: "UTC" } as const;
+const DAY_MONTH = { ...DAY, month: "short" } as const;
+// Spec 053: the three words in each language.
+const WORDS: Record<Locale, [string, string, string]> = {
+  es: ["hoy", "mañana", "ayer"],
+  en: ["today", "tomorrow", "yesterday"],
+};
 
 /** "hoy", "mañana", "ayer", "vie 27" this month or "vie, 4 dic"; with " · 18:30". */
 export function dueLabel(
   date: string,
   time: string | null | undefined,
   today: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): string {
+  const [todayWord, tomorrow, yesterday] = WORDS[locale];
   const day =
     date === today
-      ? "hoy"
+      ? todayWord
       : date === addDays(today, 1)
-        ? "mañana"
+        ? tomorrow
         : date === addDays(today, -1)
-          ? "ayer"
-          : (date.slice(0, 7) === today.slice(0, 7) ? DAY : DAY_MONTH).format(
-              new Date(`${date}T00:00:00Z`),
-            );
+          ? yesterday
+          : dateFormat(
+              locale,
+              date.slice(0, 7) === today.slice(0, 7) ? DAY : DAY_MONTH,
+            ).format(new Date(`${date}T00:00:00Z`));
   return time ? `${day} · ${time.slice(0, 5)}` : day;
 }
 

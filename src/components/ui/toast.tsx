@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { isTyping } from "@/lib/calendar/shortcuts";
+import { useT } from "@/components/i18n/locale-provider";
 
 const DURATION_MS = 4000;
 // "Deshacer" stays this long (spec 017 RF-26).
@@ -55,6 +56,7 @@ export function useToast() {
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const t = useT();
   // A new id restarts the countdown even when the text repeats. A new notice
   // replaces the last one and its "Deshacer": only the last action (RF-30).
   // `previous` is the notice a new one replaced, fading out under it while
@@ -157,7 +159,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             inert
             className={`${NOTICE} bg-ink shadow-float ${previous.undo ? "py-0.5 pr-1 pl-4" : "px-4 py-2.5"}`}
           >
-            {previous.text}
+            {t(previous.text)}
           </p>
         ) : null}
         {toast ? (
@@ -167,7 +169,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             data-leaving={toast.leaving ? "" : undefined}
             className={`${NOTICE} bg-ink shadow-float ${toast.undo ? "py-0.5 pr-1 pl-4" : "px-4 py-2.5"}`}
           >
-            {toast.text}
+            {t(toast.text)}
             {toast.undo ? (
               <button
                 type="button"
@@ -175,7 +177,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 onClick={() => runUndo(toast.undo!)}
                 className="press settle pointer-events-auto min-h-11 rounded-control px-4 font-semibold text-on-ink underline decoration-on-ink/50 underline-offset-4 hover:decoration-on-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-ink disabled:opacity-60"
               >
-                {toast.label ?? "Deshacer"}
+                {t(toast.label ?? "Deshacer")}
               </button>
             ) : null}
           </p>

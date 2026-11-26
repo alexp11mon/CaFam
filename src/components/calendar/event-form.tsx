@@ -30,6 +30,7 @@ import { ReminderField, type ReminderDefaults } from "./reminder-field";
 import { fillField, NlField, type ResolvedEvent } from "./nl-field";
 import { useEventModal } from "./event-modal";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 export type { EventFormValues };
 
@@ -92,6 +93,7 @@ export function EventForm({
   /** Editing an occurrence: saving asks the scope first (spec 013 RF-15, RF-32). */
   series?: { limitReached: boolean };
 }) {
+  const t = useT();
   // Offline it waits on the device (spec 034 plan D17).
   const [queued] = useState(() => eventFormOrQueue(action, eventId));
   const [state, formAction, pending] = useActionState(queued, {
@@ -230,8 +232,8 @@ export function EventForm({
       <div className="flex flex-col gap-4">
         <p role="status" className="text-ink">
           {uploadedFor === savedId && failed
-            ? "El evento se ha guardado, pero alguna imagen no se ha subido."
-            : "Evento guardado. Subiendo imágenes…"}
+            ? t("El evento se ha guardado, pero alguna imagen no se ha subido.")
+            : t("Evento guardado. Subiendo imágenes…")}
         </p>
         <UploadList
           items={uploads.items}
@@ -245,7 +247,7 @@ export function EventForm({
             onClick={() => leave(savedId)}
             className="self-start"
           >
-            Continuar sin ellas
+            {t("Continuar sin ellas")}
           </Button>
         ) : null}
       </div>
@@ -288,7 +290,7 @@ export function EventForm({
         />
       ) : null}
       <TextField
-        label="Título"
+        label={t("Título")}
         name="title"
         maxLength={100}
         defaultValue={values.title}
@@ -299,7 +301,7 @@ export function EventForm({
         error={errors.title}
       />
       <Select
-        label="Calendario"
+        label={t("Calendario")}
         name="calendarId"
         defaultValue={values.calendarId}
         onChange={(event) => changeCalendar(event.target.value)}
@@ -319,11 +321,11 @@ export function EventForm({
           onChange={(event) => setAllDay(event.target.checked)}
           className="size-5 accent-ink"
         />
-        Todo el día
+        {t("Todo el día")}
       </label>
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
-          label="Fecha de inicio"
+          label={t("Fecha de inicio")}
           name="startDate"
           type="date"
           defaultValue={values.startDate}
@@ -332,7 +334,7 @@ export function EventForm({
         />
         {allDay ? null : (
           <TimeField
-            label="Hora de inicio"
+            label={t("Hora de inicio")}
             name="startTime"
             value={startTime}
             onValueChange={changeStart}
@@ -341,7 +343,7 @@ export function EventForm({
           />
         )}
         <TextField
-          label="Fecha de fin"
+          label={t("Fecha de fin")}
           name="endDate"
           type="date"
           defaultValue={values.endDate}
@@ -350,7 +352,7 @@ export function EventForm({
         />
         {allDay ? null : (
           <TimeField
-            label="Hora de fin"
+            label={t("Hora de fin")}
             name="endTime"
             value={endTime}
             onValueChange={(next) => {
@@ -390,21 +392,21 @@ export function EventForm({
         />
       ) : null}
       <TextArea
-        label="Descripción"
+        label={t("Descripción")}
         name="description"
         maxLength={2000}
         defaultValue={values.description}
         error={errors.description}
       />
       <TextField
-        label="Lugar"
+        label={t("Lugar")}
         name="location"
         maxLength={200}
         defaultValue={values.location}
         error={errors.location}
       />
       <Select
-        label="Categoría"
+        label={t("Categoría")}
         name="categoryId"
         // Remounted when the calendar changes so the dropped category shows as empty.
         key={calendarId}
@@ -412,7 +414,7 @@ export function EventForm({
         onChange={(event) => setCategoryId(event.target.value)}
         error={errors.categoryId}
       >
-        <option value="">Sin categoría</option>
+        <option value="">{t("Sin categoría")}</option>
         {calendarCategories.map((category) => (
           <option key={category.id} value={category.id}>
             {category.name}
@@ -422,11 +424,11 @@ export function EventForm({
       <ColorPicker
         name="color"
         defaultValue={values.color}
-        emptyLabel="Color del calendario"
+        emptyLabel={t("Color del calendario")}
         error={errors.color}
       />
       {withImages ? (
-        <section aria-label="Imágenes" className="flex flex-col gap-2">
+        <section aria-label={t("Imágenes")} className="flex flex-col gap-2">
           {uploads.items.length > 0 ? (
             <input type="hidden" name="images" value="1" />
           ) : null}
@@ -470,11 +472,11 @@ export function EventForm({
         ) : null}
         {modal ? (
           <Button variant="secondary" onClick={modal.requestClose}>
-            Cancelar
+            {t("Cancelar")}
           </Button>
         ) : (
           <LinkButton href={cancelHref} variant="secondary">
-            Cancelar
+            {t("Cancelar")}
           </LinkButton>
         )}
       </div>

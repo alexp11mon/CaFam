@@ -6,6 +6,7 @@ import { matchPerson } from "./people-match";
 import { rowInstants } from "./proposal-rows";
 import { AssistantUnavailable } from "./provider";
 import type { ProposalRow } from "./schemas";
+import { spanishT, type T } from "@/lib/i18n/translate";
 
 // The model's proposal checked and completed with the session (spec 022, plan
 // "proposal", D3, D8). The model only reads the images: which calendar, the
@@ -33,6 +34,8 @@ export interface ProposalDeps {
   timeZone: string;
   /** Events the user sees in the range, series expanded (getEventsInRange). */
   loadEvents: (from: Date, to: Date) => Promise<readonly ExistingEvent[]>;
+  /** Spec 053: the texts in the language of the profile. */
+  t?: T;
 }
 
 export const DEFAULT_TITLE = "Trabajo";
@@ -89,30 +92,44 @@ const names = (calendars: readonly ProposalCalendar[]) =>
 function chooseCalendar(
   named: string | null | undefined,
   calendars: readonly ProposalCalendar[],
+  t: T,
 ): { id: string } | { text: string } {
   const writable = calendars.filter((c) => c.canWrite);
-  if (writable.length === 0) return { text: PROPOSAL_TEXTS.noWritable };
+  if (writable.length === 0) return { text: t(PROPOSAL_TEXTS.noWritable) };
   const options = names(writable);
   if (!named?.trim()) {
     return {
-      text: `¿En qué calendario creo los eventos? Puedes elegir: ${options}.`,
+      text: t(
+        "¿En qué calendario creo los eventos? Puedes elegir: {options}.",
+        {
+          options,
+        },
+      ),
     };
   }
   const match = matchPerson(named, writable);
   if (match.status === "ok") return { id: match.person.id };
   if (match.status === "ambiguous") {
     return {
-      text: `¿En cuál de estos calendarios? ${match.options.join(", ")}.`,
+      text: t("¿En cuál de estos calendarios? {options}.", {
+        options: match.options.join(", "),
+      }),
     };
   }
   const readOnly = matchPerson(named, calendars);
   if (readOnly.status === "ok") {
     return {
-      text: `No puedes crear eventos en «${readOnly.person.name}». Puedes crear eventos en: ${options}.`,
+      text: t(
+        "No puedes crear eventos en «{name}». Puedes crear eventos en: {options}.",
+        { name: readOnly.person.name, options },
+      ),
     };
   }
   return {
-    text: `No encuentro el calendario «${named.trim()}». Puedes crear eventos en: ${options}.`,
+    text: t(
+      "No encuentro el calendario «{name}». Puedes crear eventos en: {options}.",
+      { name: named.trim(), options },
+    ),
   };
 }
 
@@ -157,17 +174,18 @@ export async function buildProposal(
   // RF-54: an answer that is not the agreed JSON is the provider failing.
   if (!parsed?.success) throw new AssistantUnavailable("invalid proposal JSON");
   const answer = parsed.data;
+  const t = deps.t ?? spanishT;
 
   if (answer.question?.trim()) {
     return { kind: "message", text: answer.question.trim() };
   }
   if ((answer.people ?? 0) > CROWDED_TABLE) {
-    return { kind: "message", text: PROPOSAL_TEXTS.cropNeeded };
+    return { kind: "message", text: t(PROPOSAL_TEXTS.cropNeeded) };
   }
   if (answer.events.length === 0) {
-    return { kind: "message", text: PROPOSAL_TEXTS.nothingFound };
+    return { kind: "message", text: t(PROPOSAL_TEXTS.nothingFound) };
   }
-  const calendar = chooseCalendar(answer.calendar, deps.calendars);
+  const calendar = chooseCalendar(answer.calendar, deps.calendars, t);
   if ("text" in calendar) return { kind: "message", text: calendar.text };
 
   // Two images may repeat a day: the same row is proposed once.
@@ -204,17 +222,26 @@ export async function buildProposal(
   const omitted = sorted.length - kept.length;
   const lines = [
     rows.length === 1
-      ? "He leído 1 evento. Revísalo y pulsa «Crear»."
-      : `He leído ${rows.length} eventos. Revísalos y pulsa «Crear».`,
+      ? t("He leído 1 evento. Revísalo y pulsa «Crear».")
+      : t("He leído {count} eventos. Revísalos y pulsa «Crear».", {
+          count: rows.length,
+        }),
   ];
   if (omitted > 0) {
     lines.push(
-      `He dejado fuera ${omitted} ${omitted === 1 ? "evento" : "eventos"}: como mucho propongo ${MAX_PROPOSAL}.`,
+      t(
+        omitted === 1
+          ? "He dejado fuera 1 evento: como mucho propongo {max}."
+          : "He dejado fuera {count} eventos: como mucho propongo {max}.",
+        { count: omitted, max: MAX_PROPOSAL },
+      ),
     );
   }
   if (answer.unreadable?.trim()) {
     lines.push(
-      `No he podido leer: ${answer.unreadable.trim().replace(/\.$/, "")}.`,
+      t("No he podido leer: {what}.", {
+        what: answer.unreadable.trim().replace(/\.$/, ""),
+      }),
     );
   }
   return {

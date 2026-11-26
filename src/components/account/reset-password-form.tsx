@@ -7,6 +7,7 @@ import { TextField } from "@/components/ui/text-field";
 import type { ResetPasswordState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 const INITIAL_STATE: ResetPasswordState = {};
 
@@ -16,24 +17,25 @@ export function ResetPasswordForm({
 }: {
   action: FormAction<ResetPasswordState>;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
 
   return (
     <form action={formAction} noValidate className="flex flex-col gap-4">
       <FormAlert message={state.formError} />
       <TextField
-        label="Nueva contraseña"
+        label={t("Nueva contraseña")}
         name="password"
         type="password"
         autoComplete="new-password"
-        hint="Mínimo 8 caracteres"
+        hint={t("Mínimo 8 caracteres")}
         error={state.fieldErrors?.password}
       />
       <Button type="submit" disabled={pending}>
         <SwapLabel
           busy={pending}
-          idle="Guardar contraseña"
-          busyText="Guardando…"
+          idle={t("Guardar contraseña")}
+          busyText={t("Guardando…")}
         />
       </Button>
     </form>

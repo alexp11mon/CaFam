@@ -20,6 +20,7 @@ import {
   readShared,
   sharedIdFromLocation,
 } from "@/lib/share/inbox";
+import { useT } from "@/components/i18n/locale-provider";
 
 const TOO_LARGE = getImportErrorMessage({ kind: "too-large" });
 
@@ -40,6 +41,7 @@ export function ImportForm({
   /** Normal calendars where the user is owner or editor. */
   destinations?: ImportDestination[];
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {
     values: EMPTY_IMPORT_VALUES,
   });
@@ -86,7 +88,7 @@ export function ImportForm({
       {state.result ? <ImportSummary result={state.result} /> : null}
       <FormAlert message={state.formError} />
       <TextField
-        label="Enlace .ics"
+        label={t("Enlace .ics")}
         name="url"
         inputMode="url"
         autoComplete="off"
@@ -96,7 +98,7 @@ export function ImportForm({
       />
       <div className="flex flex-col gap-1">
         <label htmlFor={fileId} className="text-sm font-medium text-ink">
-          Archivo .ics
+          {t("Archivo .ics")}
         </label>
         <input
           id={fileId}
@@ -113,7 +115,7 @@ export function ImportForm({
         />
         {shared ? (
           <p className="text-sm text-ink">
-            Archivo compartido: {shared.file.name}
+            {t("Archivo compartido: {name}", { name: shared.file.name })}
           </p>
         ) : null}
         {fileError ? (
@@ -128,11 +130,13 @@ export function ImportForm({
       </div>
       {destinations.length > 0 ? (
         <fieldset className="flex flex-col gap-1">
-          <legend className="mb-1 text-sm font-medium text-ink">Destino</legend>
+          <legend className="mb-1 text-sm font-medium text-ink">
+            {t("Destino")}
+          </legend>
           {(
             [
-              ["new", "Un calendario nuevo"],
-              ["existing", "Un calendario que ya tengo"],
+              ["new", t("Un calendario nuevo")],
+              ["existing", t("Un calendario que ya tengo")],
             ] as const
           ).map(([value, label]) => (
             <label key={value} className="flex min-h-11 items-center gap-3">
@@ -151,7 +155,7 @@ export function ImportForm({
       ) : null}
       {existing ? (
         <Select
-          label="Calendario"
+          label={t("Calendario")}
           name="calendar"
           defaultValue={state.values.calendar || destinations[0]?.id}
           error={errors.calendar}
@@ -165,7 +169,7 @@ export function ImportForm({
       ) : (
         <>
           <TextField
-            label="Nombre del calendario (opcional)"
+            label={t("Nombre del calendario (opcional)")}
             name="name"
             maxLength={50}
             defaultValue={state.values.name}
@@ -187,11 +191,12 @@ export function ImportForm({
             aria-invalid={Boolean(errors.keep)}
             className="size-5 shrink-0 accent-ink"
           />
-          Mantener actualizado desde este enlace
+          {t("Mantener actualizado desde este enlace")}
         </label>
         <p id={keepHintId} className="text-sm text-muted">
-          Cada 6 horas se añaden, cambian y quitan los eventos que vienen del
-          enlace. Lo que crees tú en el calendario no se toca.
+          {t(
+            "Cada 6 horas se añaden, cambian y quitan los eventos que vienen del enlace. Lo que crees tú en el calendario no se toca.",
+          )}
         </p>
         {errors.keep ? (
           <p role="alert" className="text-sm text-danger">
@@ -204,11 +209,11 @@ export function ImportForm({
           <SwapLabel
             busy={pending}
             idle="Importar calendario"
-            busyText="Importando…"
+            busyText={t("Importando…")}
           />
         </Button>
         <LinkButton href="/dashboard/calendars" variant="secondary">
-          Cancelar
+          {t("Cancelar")}
         </LinkButton>
       </div>
     </form>

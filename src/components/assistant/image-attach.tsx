@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, type RefObject } from "react";
 import { CloseIcon, ImageIcon } from "@/components/shell/icons";
 import { IconButton } from "@/components/ui/icon-button";
+import { useT } from "@/components/i18n/locale-provider";
 
 export interface Attachment {
   id: string;
@@ -25,12 +26,13 @@ export function ImageAttach({
   /** The file input, when something else must open it too (a suggestion). */
   picker?: RefObject<HTMLInputElement | null>;
 }) {
+  const t = useT();
   const own = useRef<HTMLInputElement>(null);
   const input = picker ?? own;
   return (
     <>
       <IconButton
-        label="Adjuntar imagen"
+        label={t("Adjuntar imagen")}
         disabled={disabled}
         onClick={() => input.current?.click()}
       >
@@ -55,16 +57,17 @@ export function ImageAttach({
 
 /** Where the images go, said before the first one is sent (spec 022 RF-58). */
 export function AttachNote() {
+  const t = useT();
   return (
     <p className="text-xs text-muted">
-      Si el cuadrante tiene muchas personas, recorta la foto a la fila de las
-      fechas y la tuya. Las imágenes se envían a Groq para leerlas; CaFam no las
-      guarda.{" "}
+      {t(
+        "Si el cuadrante tiene muchas personas, recorta la foto a la fila de las fechas y la tuya. Las imágenes se envían a Groq para leerlas; CaFam no las guarda.",
+      )}{" "}
       <Link
         href="/privacy"
         className="font-semibold text-ink underline decoration-control underline-offset-4"
       >
-        Privacidad
+        {t("Privacidad")}
       </Link>
     </p>
   );
@@ -80,23 +83,27 @@ export function AttachPreview({
   errors: readonly string[];
   onRemove: (id: string) => void;
 }) {
+  const t = useT();
   if (attachments.length === 0 && errors.length === 0) return null;
   return (
     <div className="flex flex-col gap-2">
       {attachments.length > 0 ? (
-        <ul aria-label="Imágenes para enviar" className="flex flex-wrap gap-2">
+        <ul
+          aria-label={t("Imágenes para enviar")}
+          className="flex flex-wrap gap-2"
+        >
           {attachments.map((attachment, index) => (
             <li key={attachment.id} className="relative">
               {/* A data URL kept in memory: next/image would not help here. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={attachment.url}
-                alt={`Imagen ${index + 1} para enviar`}
+                alt={t("Imagen {value} para enviar", { value: index + 1 })}
                 className="size-16 rounded-control border border-line object-cover"
               />
               <button
                 type="button"
-                aria-label={`Quitar imagen ${index + 1}`}
+                aria-label={t("Quitar imagen {value}", { value: index + 1 })}
                 onClick={() => onRemove(attachment.id)}
                 className="absolute -top-2 -right-2 flex size-11 items-center justify-center rounded-full press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
               >

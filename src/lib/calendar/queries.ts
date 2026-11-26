@@ -190,6 +190,20 @@ export async function getProfileTimeZone(
   return data?.time_zone ?? DEFAULT_TIME_ZONE;
 }
 
+/** The language of the profile (spec 053 RF-2). */
+export async function getProfileLocale(
+  supabase: Client,
+  userId: string,
+): Promise<Locale> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("locale")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return isLocale(data?.locale) ? data.locale : DEFAULT_LOCALE;
+}
+
 /** The last view the user chose, or null (spec 008 RF-25, RF-26). */
 export async function getLastView(
   supabase: Client,

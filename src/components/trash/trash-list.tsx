@@ -13,6 +13,7 @@ import {
   type TrashEntry,
 } from "@/lib/calendar/trash";
 import { TrashItem } from "./trash-item";
+import { useT } from "@/components/i18n/locale-provider";
 
 /** The trash of every calendar where I am Propietario or Editor (RF-3, RF-4). */
 export function TrashList({
@@ -27,6 +28,7 @@ export function TrashList({
   /** When the server read it: the time of the first paint (useNow is null there). */
   readAt: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const { show } = useToast();
   const now = new Date(useNow() ?? Date.parse(readAt));
@@ -34,8 +36,8 @@ export function TrashList({
 
   if (groups.length === 0) {
     return (
-      <EmptyState title="La papelera está vacía">
-        Lo que borres en tus calendarios se guarda aquí 30 días.
+      <EmptyState title={t("La papelera está vacía")}>
+        {t("Lo que borres en tus calendarios se guarda aquí 30 días.")}
       </EmptyState>
     );
   }
@@ -65,11 +67,18 @@ export function TrashList({
               </h2>
               {calendar.isOwner ? (
                 <ConfirmDialog
-                  triggerLabel="Vaciar la papelera"
-                  triggerAriaLabel={`Vaciar la papelera de ${calendar.name}`}
-                  title="¿Vaciar la papelera?"
-                  description={`Se borrarán para siempre ${items.length === 1 ? "1 evento" : `${items.length} eventos`} de «${calendar.name}», con sus imágenes y comentarios. No se puede deshacer.`}
-                  confirmLabel="Vaciar la papelera"
+                  triggerLabel={t("Vaciar la papelera")}
+                  triggerAriaLabel={t("Vaciar la papelera de {name}", {
+                    name: calendar.name,
+                  })}
+                  title={t("¿Vaciar la papelera?")}
+                  description={t(
+                    items.length === 1
+                      ? "Se borrarán para siempre 1 evento de «{name}», con sus imágenes y comentarios. No se puede deshacer."
+                      : "Se borrarán para siempre {count} eventos de «{name}», con sus imágenes y comentarios. No se puede deshacer.",
+                    { count: items.length, name: calendar.name },
+                  )}
+                  confirmLabel={t("Vaciar la papelera")}
                   action={() => emptyTrash(calendar.id)}
                   onDone={() => {
                     show("Papelera vaciada");

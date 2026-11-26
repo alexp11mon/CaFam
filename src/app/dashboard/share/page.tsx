@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ShareInbox } from "@/components/share/share-inbox";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Compartido" };
 
@@ -19,11 +20,13 @@ async function Inbox({ searchParams }: Props) {
 export default function SharePage(props: Props) {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-4 px-4 py-4 sm:px-6 tab:py-6">
-      <h1 className="text-2xl font-semibold text-ink">Compartido</h1>
+      <h1 className="text-2xl font-semibold text-ink">
+        <T>{"Compartido"}</T>
+      </h1>
       <Suspense
         fallback={
           <p role="status" className="text-muted">
-            Cargando…
+            <T>{"Cargando…"}</T>
           </p>
         }
       >

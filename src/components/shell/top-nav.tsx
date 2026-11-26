@@ -17,6 +17,7 @@ import { SearchIcon, SECTION_ICONS } from "./icons";
 import { MoreSheet } from "./more-sheet";
 import { ThemeToggle } from "./theme-toggle";
 import { ConnectionBadge } from "@/components/offline/connection-badge";
+import { useT } from "@/components/i18n/locale-provider";
 
 const TABS = BAR_SECTIONS.map(
   (section) => NAV_ITEMS.find((entry) => entry.section === section) as NavItem,
@@ -37,6 +38,7 @@ export function TopNav({
   displayName: string;
   signOutAction: () => Promise<void>;
 }) {
+  const t = useT();
   const current = activeSection(usePathname());
 
   return (
@@ -51,7 +53,7 @@ export function TopNav({
             CaFam
           </span>
         </Link>
-        <nav aria-label="Principal" className="mx-auto">
+        <nav aria-label={t("Principal")} className="mx-auto">
           <ul className="flex gap-1 rounded-full surface p-1">
             {TABS.map((entry) => {
               const ItemIcon = SECTION_ICONS[entry.section];
@@ -84,7 +86,7 @@ export function TopNav({
           {/* Spec 039 RF-1. */}
           <Link
             href="/dashboard/search"
-            aria-label="Buscar"
+            aria-label={t("Buscar")}
             aria-keyshortcuts="/"
             className={ICON}
           >
@@ -95,7 +97,7 @@ export function TopNav({
           <ThemeToggle className={ICON} labelClassName="sr-only" />
           <Link
             href="/dashboard/settings"
-            aria-label={`Ajustes de ${displayName}`}
+            aria-label={t("Ajustes de {displayName}", { displayName })}
             className="ml-1 flex size-10 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             <span

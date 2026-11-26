@@ -14,6 +14,7 @@ import { excerpt, highlight } from "@/lib/search/highlight";
 import { MIN_QUERY, SEARCH_DEBOUNCE_MS } from "@/lib/search/limits";
 import type { SearchResult } from "@/lib/search/queries";
 import { addRecent, readRecent, removeRecent } from "@/lib/search/recent";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 export type SearchFn = (
   query: string,
@@ -42,9 +43,10 @@ const ROUND =
 
 /** The comment that matched, with the words marked (RF-7). */
 function Excerpt({ text, query }: { text: string; query: string }) {
+  const t = useT();
   return (
     <p className="truncate px-1 text-sm text-muted">
-      <span className="sr-only">Comentario: </span>
+      <span className="sr-only">{t("Comentario:")} </span>
       {highlight(excerpt(text, query), query).map((piece, index) =>
         piece.mark ? (
           <mark
@@ -80,6 +82,8 @@ export function SearchScreen({
   /** Above the results, e.g. the offline range (RF-10). */
   note?: string;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const fieldId = useId();
   const field = useRef<HTMLInputElement>(null);
@@ -166,7 +170,7 @@ export function SearchScreen({
         {list.map((group) => (
           <div key={group.day} className="flex flex-col gap-2">
             <h3 className="text-sm font-semibold text-ink">
-              {capitalize(formatDateKeyFull(group.day))}
+              {capitalize(formatDateKeyFull(group.day, locale))}
             </h3>
             <ul className="flex flex-col gap-3">
               {group.events.map((result) => {
@@ -183,11 +187,11 @@ export function SearchScreen({
                       line={lineOf(result, timeZone)}
                     />
                     <p className="px-1 text-sm text-muted">
-                      {calendar?.name ?? "Calendario"}
+                      {calendar?.name ?? t("Calendario")}
                       {calendar?.hidden ? (
                         <>
                           {" · "}
-                          <span>Oculto en el calendario</span>
+                          <span>{t("Oculto en el calendario")}</span>
                         </>
                       ) : null}
                     </p>
@@ -208,7 +212,7 @@ export function SearchScreen({
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
         <label htmlFor={fieldId} className="sr-only">
-          Buscar eventos
+          {t("Buscar eventos")}
         </label>
         <div className="flex min-h-11 flex-1 items-center gap-2 rounded-control border border-control bg-paper px-3 text-muted focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink">
           <SearchIcon />
@@ -218,7 +222,7 @@ export function SearchScreen({
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Título, lugar, descripción o comentario"
+            placeholder={t("Título, lugar, descripción o comentario")}
             autoComplete="off"
             enterKeyHint="search"
             className="min-w-0 flex-1 bg-transparent py-2 text-base text-ink outline-none placeholder:text-muted"
@@ -227,7 +231,7 @@ export function SearchScreen({
         <button
           type="button"
           onClick={close}
-          aria-label="Cerrar"
+          aria-label={t("Cerrar")}
           className={`${ROUND} text-ink hover:bg-paper`}
         >
           <CloseIcon />
@@ -239,18 +243,18 @@ export function SearchScreen({
       <p role="status" aria-live="polite" className="sr-only">
         {done
           ? count === 0
-            ? "Sin resultados"
+            ? t("Sin resultados")
             : `${count} ${count === 1 ? "resultado" : "resultados"}`
           : ""}
       </p>
 
       {state.kind === "idle" && recent.length > 0 ? (
         <section
-          aria-label="Búsquedas recientes"
+          aria-label={t("Búsquedas recientes")}
           className="flex flex-col gap-1"
         >
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">
-            Búsquedas recientes
+            {t("Búsquedas recientes")}
           </h2>
           <ul className="flex flex-col">
             {recent.map((item) => (
@@ -264,7 +268,7 @@ export function SearchScreen({
                 </button>
                 <button
                   type="button"
-                  aria-label={`Quitar «${item}»`}
+                  aria-label={t("Quitar «{item}»", { item })}
                   onClick={() => setRecent(removeRecent(item))}
                   className={`${ROUND} text-muted hover:bg-paper hover:text-ink`}
                 >
@@ -277,46 +281,46 @@ export function SearchScreen({
       ) : null}
 
       {state.kind === "loading" ? (
-        <p className="text-muted">Buscando…</p>
+        <p className="text-muted">{t("Buscando…")}</p>
       ) : null}
 
       {state.kind === "error" ? (
         <div className="flex flex-col items-start gap-3">
           <p role="alert" className="text-danger">
-            No se ha podido buscar.
+            {t("No se ha podido buscar.")}
           </p>
           <Button variant="secondary" onClick={() => setAttempt((n) => n + 1)}>
-            Reintentar
+            {t("Reintentar")}
           </Button>
         </div>
       ) : null}
 
       {done && count === 0 ? (
         <EmptyState
-          title="Sin resultados"
+          title={t("Sin resultados")}
           art={<Venito mood="confused" className="size-24" />}
         >
-          Prueba con otra palabra o busca más atrás en el tiempo.
+          {t("Prueba con otra palabra o busca más atrás en el tiempo.")}
         </EmptyState>
       ) : null}
 
       {groups ? (
         <>
-          {section("Próximos", groups.upcoming)}
-          {section("Pasados", groups.past)}
+          {section(t("Próximos"), groups.upcoming)}
+          {section(t("Pasados"), groups.past)}
         </>
       ) : null}
 
       {done?.more ? (
         <p className="text-sm text-muted">
-          Hay más resultados: afina la búsqueda
+          {t("Hay más resultados: afina la búsqueda")}
         </p>
       ) : null}
 
       {done ? (
         <div>
           <Button variant="quiet" onClick={() => setMoreBack((n) => n + 1)}>
-            Buscar más atrás
+            {t("Buscar más atrás")}
           </Button>
         </div>
       ) : null}

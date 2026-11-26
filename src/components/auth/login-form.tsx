@@ -12,6 +12,7 @@ import type {
 } from "@/lib/auth/form-state";
 import { ResendForm } from "./check-email";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 const INITIAL_STATE: SignInState = { values: { email: "" } };
 
@@ -23,6 +24,7 @@ export function LoginForm({
   /** "Reenviar el enlace" of an account still unconfirmed (spec 049 RF-3). */
   resendAction?: FormAction<ResendState>;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
 
   // noValidate: errors come from the server in Spanish, not from the browser (RNF-1).
@@ -39,14 +41,18 @@ export function LoginForm({
           defaultValue={state.values.email}
         />
         <TextField
-          label="Contraseña"
+          label={t("Contraseña")}
           name="password"
           type="password"
           autoComplete="current-password"
         />
         <NextField />
         <Button type="submit" disabled={pending}>
-          <SwapLabel busy={pending} idle="Entrar" busyText="Entrando…" />
+          <SwapLabel
+            busy={pending}
+            idle={t("Entrar")}
+            busyText={t("Entrando…")}
+          />
         </Button>
       </form>
       {state.unconfirmed && resendAction ? (
@@ -54,7 +60,7 @@ export function LoginForm({
           <ResendForm
             action={resendAction}
             email={state.values.email}
-            label="Reenviar el enlace"
+            label={t("Reenviar el enlace")}
           />
         </div>
       ) : null}

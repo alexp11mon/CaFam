@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { createContext, use, type CSSProperties } from "react";
+import { useT } from "@/components/i18n/locale-provider";
 
 /** A pending note or item with a due date (spec 048 RF-6). */
 export interface CalendarTask {
@@ -58,6 +59,7 @@ export function TaskBlock({
   task: CalendarTask;
   onComplete?: (task: CalendarTask) => void;
 }) {
+  const t = useT();
   const label = taskLabel(task);
   return (
     <div className="flex min-w-0 items-center gap-1 rounded-block border border-dashed border-control bg-paper text-xs text-ink">
@@ -66,7 +68,7 @@ export function TaskBlock({
           type="button"
           role="checkbox"
           aria-checked={false}
-          aria-label={`Completar «${task.text}»`}
+          aria-label={t("Completar «{text}»", { text: task.text })}
           onClick={() => onComplete(task)}
           className="flex size-6 shrink-0 items-center justify-center rounded-block press-quiet focus-visible:outline-2 focus-visible:outline-ink"
         >
@@ -82,7 +84,7 @@ export function TaskBlock({
         title={label}
         className={`min-w-0 flex-1 truncate py-0.5 pr-1 hover:underline focus-visible:outline-2 focus-visible:outline-ink ${task.itemId ? "" : "pl-1"}`}
       >
-        <span className="sr-only">Tarea:</span> {label}
+        <span className="sr-only">{t("Tarea:")}</span> {label}
       </Link>
     </div>
   );
@@ -101,6 +103,7 @@ export function DayTasks({
   className?: string;
   style?: CSSProperties;
 }) {
+  const t = useT();
   const tasks = useCalendarTasks();
   const list = tasks?.shown ? tasks.byDay.get(day) : undefined;
   if (!tasks || !list?.length) return null;
@@ -108,7 +111,7 @@ export function DayTasks({
   const more = list.length - shown.length;
   return (
     <ul
-      aria-label="Tareas con fecha"
+      aria-label={t("Tareas con fecha")}
       data-testid="day-tasks"
       className={`flex min-w-0 flex-col gap-0.5 ${className}`}
       style={style}

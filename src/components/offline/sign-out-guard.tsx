@@ -9,6 +9,7 @@ import { waitingCount } from "@/lib/offline/queue-store";
 import { forgetDevice } from "@/lib/offline/snapshot-store";
 import { forgetPushSubscription } from "@/lib/push/browser";
 import { removeDeviceSubscription } from "@/app/dashboard/settings/push-actions";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * "Cerrar sesión" (spec 034 RF-60 to RF-62, plan D12): it needs the network,
@@ -24,6 +25,7 @@ export function SignOutGuard({
   className: string;
   children: ReactNode;
 }) {
+  const t = useT();
   const online = useConnection();
   const waiting = waitingCount(useOfflineQueue());
   const [asking, setAsking] = useState(false);
@@ -60,7 +62,7 @@ export function SignOutGuard({
       >
         {children}
         <span className="ml-auto text-sm text-muted">
-          {OFFLINE_MESSAGES.needsNetwork}
+          {t(OFFLINE_MESSAGES.needsNetwork)}
         </span>
       </button>
     );
@@ -92,15 +94,15 @@ export function SignOutGuard({
       >
         <div className="flex flex-col gap-4">
           <h2 id={titleId} className="text-lg font-semibold">
-            Cerrar sesión
+            {t("Cerrar sesión")}
           </h2>
-          <p>{OFFLINE_MESSAGES.signOutWarning(waiting)}</p>
+          <p>{OFFLINE_MESSAGES.signOutWarning(waiting, t)}</p>
           <div className="flex flex-wrap justify-end gap-3">
             <Button variant="secondary" onClick={() => setAsking(false)}>
-              {OFFLINE_MESSAGES.cancel}
+              {t(OFFLINE_MESSAGES.cancel)}
             </Button>
             <Button type="submit" variant="danger">
-              {OFFLINE_MESSAGES.signOutAnyway}
+              {t(OFFLINE_MESSAGES.signOutAnyway)}
             </Button>
           </div>
         </div>

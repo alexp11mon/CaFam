@@ -14,6 +14,7 @@ import type { SyncedInfo } from "@/lib/sync/read-only";
 import type { Database } from "@/types/database";
 import { FoldChevron } from "@/components/ui/fold-chevron";
 import { StaggerList } from "@/components/ui/stagger-list";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 type CalendarRole = Database["public"]["Enums"]["calendar_role"];
 
@@ -67,12 +68,13 @@ export function CalendarList({
   /** Leaves a calendar that belongs to someone else (RF-27, RF-34). */
   leaveAction: (calendarId: string) => Promise<ConfirmState>;
 }) {
+  const t = useT();
   if (calendars.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-card bg-paper px-4 py-6 text-center text-ink">
-        <p>Todavía no tienes calendarios.</p>
+        <p>{t("Todavía no tienes calendarios.")}</p>
         <LinkButton href="/dashboard/calendars/new">
-          Crear calendario
+          {t("Crear calendario")}
         </LinkButton>
       </div>
     );
@@ -147,6 +149,8 @@ function CalendarRow({
   ) => Promise<{ error?: string }>;
   leaveAction: (calendarId: string) => Promise<ConfirmState>;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const detailsId = useId();
 
   return (
@@ -178,7 +182,9 @@ function CalendarRow({
           ) : null}
         </span>
         {calendar.orphan ? (
-          <span className={`${BADGE} max-sm:hidden`}>Sin propietario</span>
+          <span className={`${BADGE} max-sm:hidden`}>
+            {t("Sin propietario")}
+          </span>
         ) : null}
         <span className={BADGE}>{ROLE_LABELS[calendar.role]}</span>
         <span className="text-muted">
@@ -191,14 +197,23 @@ function CalendarRow({
         className="flex flex-col gap-2 border-t border-line px-4 pt-2 pb-3"
       >
         {calendar.orphan ? (
-          <p className="text-sm text-muted sm:hidden">Sin propietario</p>
+          <p className="text-sm text-muted sm:hidden">{t("Sin propietario")}</p>
         ) : null}
         {calendar.synced ? (
           // Every member sees the last update; only the owner the account (spec 007 RF-26).
           <p className="text-sm text-muted tabular-nums">
             {calendar.synced.lastSyncedAt
-              ? `Traído de ${providerName(calendar.synced.provider)}, actualizado el ${formatWhen(calendar.synced.lastSyncedAt, timeZone)}.`
-              : `Traído de ${providerName(calendar.synced.provider)}, todavía no se ha actualizado.`}
+              ? t("Traído de {provider}, actualizado el {when}.", {
+                  provider: providerName(calendar.synced.provider),
+                  when: formatWhen(
+                    calendar.synced.lastSyncedAt,
+                    timeZone,
+                    locale,
+                  ),
+                })
+              : t("Traído de {provider}, todavía no se ha actualizado.", {
+                  provider: providerName(calendar.synced.provider),
+                })}
             {calendar.synced.accountEmail
               ? ` Cuenta: ${calendar.synced.accountEmail}.`
               : null}
@@ -225,72 +240,78 @@ function CalendarRow({
           {calendar.role === "owner" ? (
             <Link
               href={`/dashboard/calendars/${calendar.id}/edit`}
-              aria-label={`Editar ${calendar.name}`}
+              aria-label={t("Editar {name}", { name: calendar.name })}
               className={ACTION_LINK}
             >
-              Editar
+              {t("Editar")}
             </Link>
           ) : null}
           {calendar.canUpload ? (
             <Link
               href={`/dashboard/calendars/${calendar.id}/upload`}
-              aria-label={`Subir ${calendar.name} a Google o iCloud`}
+              aria-label={t("Subir {name} a Google o iCloud", {
+                name: calendar.name,
+              })}
               className={ACTION_LINK}
             >
-              Subir a Google o iCloud
+              {t("Subir a Google o iCloud")}
             </Link>
           ) : null}
           {/* A file download, not a page: a plain link (spec 043 RF-1). */}
           <a
             href={`/api/ics/export?calendar=${calendar.id}`}
             download
-            aria-label={`Exportar ${calendar.name} (.ics)`}
+            aria-label={t("Exportar {name} (.ics)", { name: calendar.name })}
             className={ACTION_LINK}
           >
-            Exportar (.ics)
+            {t("Exportar (.ics)")}
           </a>
           {calendar.role !== "viewer" ? (
             <Link
               href={`/dashboard/calendars/${calendar.id}/categories`}
-              aria-label={`Categorías de ${calendar.name}`}
+              aria-label={t("Categorías de {name}", { name: calendar.name })}
               className={ACTION_LINK}
             >
-              Categorías
+              {t("Categorías")}
             </Link>
           ) : null}
           {calendar.role !== "viewer" ? (
             // Spec 046 RF-3: its trash, for Propietario and Editores (RF-4).
             <Link
               href={`/dashboard/trash#papelera-${calendar.id}`}
-              aria-label={`Papelera de ${calendar.name}`}
+              aria-label={t("Papelera de {name}", { name: calendar.name })}
               className={ACTION_LINK}
             >
-              Papelera
+              {t("Papelera")}
             </Link>
           ) : null}
           {calendar.role === "owner" ? (
             <Link
               href={`/dashboard/calendars/${calendar.id}/share`}
-              aria-label={`Compartir y miembros de ${calendar.name}`}
+              aria-label={t("Compartir y miembros de {name}", {
+                name: calendar.name,
+              })}
               className={ACTION_LINK}
             >
-              Compartir y miembros
+              {t("Compartir y miembros")}
             </Link>
           ) : (
             <>
               <Link
                 href={`/dashboard/calendars/${calendar.id}/members`}
-                aria-label={`Miembros de ${calendar.name}`}
+                aria-label={t("Miembros de {name}", { name: calendar.name })}
                 className={ACTION_LINK}
               >
-                Miembros
+                {t("Miembros")}
               </Link>
               <ConfirmDialog
-                triggerLabel="Salir"
-                triggerAriaLabel={`Salir de ${calendar.name}`}
-                title={`¿Salir de «${calendar.name}»?`}
-                description="Dejarás de verlo. Los eventos que creaste se quedan, y solo podrás volver con una invitación nueva."
-                confirmLabel="Sí, salir"
+                triggerLabel={t("Salir")}
+                triggerAriaLabel={t("Salir de {name}", { name: calendar.name })}
+                title={t("¿Salir de «{name}»?", { name: calendar.name })}
+                description={t(
+                  "Dejarás de verlo. Los eventos que creaste se quedan, y solo podrás volver con una invitación nueva.",
+                )}
+                confirmLabel={t("Sí, salir")}
                 action={leaveAction.bind(null, calendar.id)}
               />
             </>

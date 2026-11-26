@@ -8,6 +8,7 @@ import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { providerName } from "@/lib/sync/provider-labels";
 import type { ProviderName } from "@/lib/sync/providers/types";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 type UploadState = FormState<"connectionId">;
 
@@ -33,6 +34,7 @@ export function UploadForm({
   occurrences?: number;
   action: FormAction<UploadState>;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {
     values: { connectionId: accounts[0]?.id ?? "" },
   });
@@ -46,7 +48,7 @@ export function UploadForm({
     <form action={formAction} noValidate className="flex flex-col gap-4">
       <FormAlert message={state.formError} />
       <Select
-        label="Cuenta"
+        label={t("Cuenta")}
         name="connectionId"
         value={chosen}
         onChange={(event) => setChosen(event.target.value)}
@@ -60,37 +62,45 @@ export function UploadForm({
       </Select>
       <div className="flex flex-col gap-1 text-ink">
         <p className="tabular-nums">
-          Se copiarán a {provider} <strong>{count(toGoogle)}</strong>.
+          {t("Se copiarán a {provider}", { provider })}{" "}
+          <strong>{count(toGoogle)}</strong>.
         </p>
         {onlyCafam > 0 ? (
           <p className="tabular-nums">
             {count(onlyCafam)}{" "}
             {onlyCafam === 1
-              ? "se quedará solo en CaFam: está fuera del rango que se sincroniza (de 6 meses antes de hoy a 1 año después) o pasa del máximo de 2.000."
-              : "se quedarán solo en CaFam: están fuera del rango que se sincroniza (de 6 meses antes de hoy a 1 año después) o pasan del máximo de 2.000."}
+              ? t(
+                  "se quedará solo en CaFam: está fuera del rango que se sincroniza (de 6 meses antes de hoy a 1 año después) o pasa del máximo de 2.000.",
+                )
+              : t(
+                  "se quedarán solo en CaFam: están fuera del rango que se sincroniza (de 6 meses antes de hoy a 1 año después) o pasan del máximo de 2.000.",
+                )}
           </p>
         ) : null}
         {series > 0 ? (
           <p className="tabular-nums">
-            {series === 1 ? "1 serie se subirá" : `${series} series se subirán`}{" "}
-            como{" "}
+            {series === 1
+              ? t("1 serie se subirá")
+              : t("{series} series se subirán", { series })}{" "}
+            {t("como")}{" "}
             {occurrences === 1
               ? "1 evento suelto"
               : `${occurrences} eventos sueltos`}
-            ; las repeticiones fuera de la ventana se perderán.
+            {t("; las repeticiones fuera de la ventana se perderán.")}
           </p>
         ) : null}
         <p className="text-sm text-muted">
-          Los miembros, las categorías y los colores siguen como están. Puede
-          tardar unos minutos.
+          {t(
+            "Los miembros, las categorías y los colores siguen como están. Puede tardar unos minutos.",
+          )}
         </p>
       </div>
       <div>
         <Button type="submit" disabled={pending}>
           <SwapLabel
             busy={pending}
-            idle={`Subir a ${provider}`}
-            busyText="Subiendo…"
+            idle={t("Subir a {provider}", { provider })}
+            busyText={t("Subiendo…")}
           />
         </Button>
       </div>

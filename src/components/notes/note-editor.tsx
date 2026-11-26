@@ -1,4 +1,5 @@
 "use client";
+import { dateFormat } from "@/lib/i18n/format";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -47,6 +48,7 @@ import { noteOf } from "@/lib/offline/outbox";
 import { useConnection } from "@/lib/hooks/use-connection";
 import { networkReason } from "@/lib/offline/gates";
 import { TextNote } from "./text-note";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 type Fields = Partial<
   Pick<
@@ -84,6 +86,8 @@ export function NoteEditor({
   today: string;
   userId: string;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const toast = useToast();
   const [note, setNote] = useState(fromServer);
@@ -155,7 +159,7 @@ export function NoteEditor({
       withItems((items) => [...items, item]),
       () =>
         addItemOrQueue(note, { id: item.id, text, position: item.position }),
-      `Añadido «${text}»`,
+      t("Añadido «{text}»", { text }),
     );
   }
 
@@ -170,7 +174,9 @@ export function NoteEditor({
         ),
       ),
       () => updateItemOrQueue(note.id, item, { done }),
-      done ? `Hecho: «${item.text}»` : `Pendiente otra vez: «${item.text}»`,
+      t(done ? "Hecho: «{text}»" : "Pendiente otra vez: «{text}»", {
+        text: item.text,
+      }),
     );
   }
 
@@ -186,8 +192,11 @@ export function NoteEditor({
       ),
       () => updateItemOrQueue(note.id, item, next),
       next.dueDate
-        ? `Fecha de «${item.text}»: ${itemDueLabel(next.dueDate, next.dueTime, today)}`
-        : `Sin fecha: «${item.text}»`,
+        ? t("Fecha de «{text}»: {due}", {
+            text: item.text,
+            due: itemDueLabel(next.dueDate, next.dueTime, today, locale),
+          })
+        : t("Sin fecha: «{text}»", { text: item.text }),
     );
   }
 
@@ -215,7 +224,10 @@ export function NoteEditor({
     void change(
       withItems((items) => applyPositions(items, positions)),
       () => moveItemsOrQueue(note.id, positions),
-      `Movido a la posición ${place} de ${moved.length}`,
+      t("Movido a la posición {place} de {total}", {
+        place,
+        total: moved.length,
+      }),
     );
   }
 
@@ -298,19 +310,19 @@ export function NoteEditor({
           className="inline-flex min-h-11 items-center gap-1 rounded-control pr-2 text-sm font-semibold text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
           <ChevronIcon direction="left" />
-          Notas
+          {t("Notas")}
         </Link>
         <span className="flex-1" />
         <PendingMark pending={waiting} label />
         {canWrite ? (
           <>
             <IconButton
-              label={note.pinned ? "Dejar de fijar" : "Fijar arriba"}
+              label={note.pinned ? t("Dejar de fijar") : "Fijar arriba"}
               aria-pressed={note.pinned}
               onClick={() =>
                 void setFields(
                   { pinned: !note.pinned },
-                  note.pinned ? "Nota sin fijar" : "Nota fijada",
+                  note.pinned ? t("Nota sin fijar") : "Nota fijada",
                 )
               }
               className={note.pinned ? "text-accent-ink" : ""}
@@ -318,7 +330,7 @@ export function NoteEditor({
               <PinIcon filled={note.pinned} />
             </IconButton>
             <IconButton
-              label={note.archived ? "Sacar del archivo" : "Archivar"}
+              label={note.archived ? t("Sacar del archivo") : t("Archivar")}
               aria-pressed={note.archived}
               onClick={() =>
                 void setFields(
@@ -334,7 +346,7 @@ export function NoteEditor({
         ) : null}
         {access.canDelete ? (
           <IconButton
-            label="Borrar la nota"
+            label={t("Borrar la nota")}
             onClick={() => setConfirming(true)}
           >
             <TrashIcon />
@@ -349,14 +361,14 @@ export function NoteEditor({
         {canWrite ? (
           <>
             <label htmlFor={titleId} className="sr-only">
-              Título
+              {t("Título")}
             </label>
             <input
               id={titleId}
               defaultValue={note.title}
               key={note.title}
               maxLength={NOTE_TITLE_MAX}
-              placeholder="Título"
+              placeholder={t("Título")}
               onBlur={(event) => {
                 const title = event.target.value.trim();
                 if (title !== note.title) void setFields({ title });
@@ -369,7 +381,7 @@ export function NoteEditor({
           </>
         ) : (
           <h1 className="text-2xl font-semibold text-ink">
-            {note.title || "Sin título"}
+            {note.title || t("Sin título")}
           </h1>
         )}
 
@@ -387,20 +399,22 @@ export function NoteEditor({
         ) : null}
         {note.calendarName && !access.canMove ? (
           <p className="text-sm text-muted">
-            Compartida en {note.calendarName}
+            {t("Compartida en {calendarName}", {
+              calendarName: note.calendarName,
+            })}
           </p>
         ) : null}
         {note.event ? (
           // The event it was made for (spec 048 RF-10).
           <p className="text-sm text-muted">
-            De:{" "}
+            {t("De:")}{" "}
             <Link
               href={`/dashboard/events/${note.event.id}`}
               prefetch={false}
               className="font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
             >
               {note.event.title} ·{" "}
-              {new Intl.DateTimeFormat("es-ES", {
+              {dateFormat(locale, {
                 day: "numeric",
                 month: "short",
                 timeZone: note.event.allDay ? "UTC" : timeZone,
@@ -434,11 +448,13 @@ export function NoteEditor({
 
       {canWrite ? (
         <section
-          aria-label="Opciones de la nota"
+          aria-label={t("Opciones de la nota")}
           className="flex flex-col gap-4 rounded-card surface p-4"
         >
           <fieldset>
-            <legend className="mb-2 text-sm font-medium text-ink">Color</legend>
+            <legend className="mb-2 text-sm font-medium text-ink">
+              {t("Color")}
+            </legend>
             <div className="flex flex-wrap gap-1">
               <button
                 type="button"
@@ -446,7 +462,7 @@ export function NoteEditor({
                 onClick={() => void setFields({ color: null })}
                 className="flex min-h-11 items-center rounded-full border border-control px-3 text-sm font-semibold text-ink press-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-pressed:border-ink aria-pressed:ring-2 aria-pressed:ring-ink/20"
               >
-                Sin color
+                {t("Sin color")}
               </button>
               {CALENDAR_COLORS.map((color) => (
                 <button
@@ -468,7 +484,7 @@ export function NoteEditor({
           </fieldset>
           <div className="flex flex-col gap-1">
             <label htmlFor={dueId} className="text-sm font-medium text-ink">
-              Fecha límite
+              {t("Fecha límite")}
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -485,14 +501,14 @@ export function NoteEditor({
                   variant="quiet"
                   onClick={() => void setFields({ dueDate: null })}
                 >
-                  Quitar
+                  {t("Quitar")}
                 </Button>
               ) : null}
             </div>
           </div>
           {access.canMove ? (
             <Select
-              label="Dónde se guarda"
+              label={t("Dónde se guarda")}
               name="calendarId"
               value={note.calendarId ?? ""}
               disabled={Boolean(moveReason)}
@@ -505,14 +521,16 @@ export function NoteEditor({
                 void change(
                   (current) => ({ ...current, calendarId, calendarName: name }),
                   () => updateNoteOrQueue(note, { calendarId }),
-                  calendarId ? `Compartida en ${name}` : "Nota personal",
+                  calendarId
+                    ? t("Compartida en {name}", { name: name ?? "" })
+                    : t("Nota personal"),
                 );
               }}
             >
-              <option value="">Personal (solo tú la ves)</option>
+              <option value="">{t("Personal (solo tú la ves)")}</option>
               {calendars.map((calendar) => (
                 <option key={calendar.id} value={calendar.id}>
-                  Compartida en {calendar.name}
+                  {t("Compartida en {name}", { name: calendar.name })}
                 </option>
               ))}
             </Select>
@@ -533,22 +551,25 @@ export function NoteEditor({
       <Sheet
         open={confirming}
         onClose={() => setConfirming(false)}
-        title="¿Borrar esta nota?"
+        title={t("¿Borrar esta nota?")}
         footer={
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setConfirming(false)}>
-              Cancelar
+              {t("Cancelar")}
             </Button>
             <Button variant="danger" onClick={() => void removeNote()}>
-              Borrar la nota
+              {t("Borrar la nota")}
             </Button>
           </div>
         }
       >
         <p className="text-muted">
           {note.calendarName
-            ? `Se borrará para todos los miembros de «${note.calendarName}». No se puede deshacer.`
-            : "Se borrará con todo su contenido. No se puede deshacer."}
+            ? t(
+                "Se borrará para todos los miembros de «{name}». No se puede deshacer.",
+                { name: note.calendarName },
+              )
+            : t("Se borrará con todo su contenido. No se puede deshacer.")}
         </p>
       </Sheet>
     </div>

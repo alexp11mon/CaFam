@@ -1,3 +1,4 @@
+import { useLocale } from "@/components/i18n/locale-provider";
 import Link from "next/link";
 import type { CitedEvent } from "@/lib/assistant/tools";
 import { formatEventWhen } from "@/lib/calendar/format";
@@ -11,6 +12,7 @@ export function CitedEvents({
   events: readonly CitedEvent[];
   timeZone: string;
 }) {
+  const locale = useLocale();
   if (events.length === 0) return null;
   return (
     // They land just after the answer, one after another (spec 021 RF-16, RF-19).
@@ -33,7 +35,8 @@ export function CitedEvents({
             <span className="flex min-w-0 flex-col">
               <span className="truncate font-semibold">{event.title}</span>
               <span className="text-sm text-muted tabular-nums">
-                {formatEventWhen(event, timeZone)} · {event.calendarName}
+                {formatEventWhen(event, timeZone, locale)} ·{" "}
+                {event.calendarName}
               </span>
             </span>
           </Link>

@@ -5,6 +5,7 @@ import { Chip } from "@/components/ui/chip";
 import { Sheet } from "@/components/ui/sheet";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { GroupForm } from "./group-form";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * "Nuevo grupo" among the other ways of "Mis calendarios": the form waits in
@@ -15,6 +16,7 @@ export function NewGroupButton({
 }: {
   action: FormAction<FormState<"name">>;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   // A new form each time it opens: nothing from the last group is left.
   const [round, setRound] = useState(0);
@@ -28,9 +30,13 @@ export function NewGroupButton({
           setOpen(true);
         }}
       >
-        Nuevo grupo
+        {t("Nuevo grupo")}
       </Chip>
-      <Sheet open={open} onClose={() => setOpen(false)} title="Nuevo grupo">
+      <Sheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title={t("Nuevo grupo")}
+      >
         <div className="pt-1 pb-2">
           <GroupForm
             key={round}

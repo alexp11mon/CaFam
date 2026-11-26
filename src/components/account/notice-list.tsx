@@ -6,27 +6,51 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import type { AccountNotice } from "@/lib/account/queries";
 import type { ConfirmState } from "@/lib/forms/form-state";
+import { useT } from "@/components/i18n/locale-provider";
+import type { T } from "@/lib/i18n/translate";
 
 type DismissAction = (noticeId: string) => Promise<ConfirmState>;
 
-function noticeText(notice: AccountNotice): string {
+function noticeText(notice: AccountNotice, t: T): string {
+  const name = notice.calendarName;
   switch (notice.kind) {
     case "orphaned":
-      return `${notice.personName || "Una persona"} ha eliminado su cuenta. El calendario «${notice.calendarName}» se queda sin propietario: decide si lo conservas o sales de él.`;
+      return t(
+        "{person} ha eliminado su cuenta. El calendario «{name}» se queda sin propietario: decide si lo conservas o sales de él.",
+        { person: notice.personName || t("Una persona"), name },
+      );
     case "kept_copy":
-      return `Ya tienes tu copia de «${notice.calendarName}» en tu lista.`;
+      return t("Ya tienes tu copia de «{name}» en tu lista.", { name });
     case "deleted_calendar":
-      return `El calendario «${notice.calendarName}» se ha eliminado porque nadie decidió conservarlo.`;
+      return t(
+        "El calendario «{name}» se ha eliminado porque nadie decidió conservarlo.",
+        { name },
+      );
     case "sync_revoked":
       return notice.provider === "icloud"
-        ? `iCloud ya no acepta la contraseña de la cuenta ${notice.calendarName}. Pasa al cambiar la contraseña del Apple ID o al revocar la contraseña específica de app. Sus calendarios se conservan, pero no se actualizan: vuelve a conectarla con una contraseña nueva.`
-        : `Google ha retirado el permiso de CaFam en la cuenta ${notice.calendarName}. Sus calendarios se conservan, pero no se actualizan.`;
+        ? t(
+            "iCloud ya no acepta la contraseña de la cuenta {name}. Pasa al cambiar la contraseña del Apple ID o al revocar la contraseña específica de app. Sus calendarios se conservan, pero no se actualizan: vuelve a conectarla con una contraseña nueva.",
+            { name },
+          )
+        : t(
+            "Google ha retirado el permiso de CaFam en la cuenta {name}. Sus calendarios se conservan, pero no se actualizan.",
+            { name },
+          );
     case "sync_failing":
-      return `La actualización de «${notice.calendarName}» ha fallado 3 veces seguidas. Se seguirá intentando.`;
+      return t(
+        "La actualización de «{name}» ha fallado 3 veces seguidas. Se seguirá intentando.",
+        { name },
+      );
     case "ics_failing":
-      return `No se pudo actualizar «${notice.calendarName}» desde su enlace.${notice.detail ? ` ${notice.detail}` : ""}`;
+      return (
+        t("No se pudo actualizar «{name}» desde su enlace.", { name }) +
+        (notice.detail ? ` ${t(notice.detail)}` : "")
+      );
     case "transferred":
-      return `${notice.personName || "Su propietario"} te ha traspasado «${notice.calendarName}». Ahora es tuyo: puedes editarlo, compartirlo y decidir quién entra.`;
+      return t(
+        "{person} te ha traspasado «{name}». Ahora es tuyo: puedes editarlo, compartirlo y decidir quién entra.",
+        { person: notice.personName || t("Su propietario"), name },
+      );
   }
 }
 
@@ -51,6 +75,7 @@ function NoticeItem({
   notice: AccountNotice;
   dismissAction: DismissAction;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(
     dismissAction.bind(null, notice.id),
     {},
@@ -59,20 +84,20 @@ function NoticeItem({
     notice.kind === "sync_revoked" && notice.provider === "icloud"
       ? {
           href: `/dashboard/connections/new?provider=icloud${notice.connectionId ? `&reconnect=${notice.connectionId}` : ""}`,
-          label: "Volver a conectar",
+          label: t("Volver a conectar"),
         }
       : NOTICE_LINKS[notice.kind];
 
   return (
     <li className="flex flex-col gap-3 rounded-card bg-paper p-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 flex-col gap-2">
-        <p className="break-words text-ink">{noticeText(notice)}</p>
+        <p className="break-words text-ink">{noticeText(notice, t)}</p>
         {link ? (
           <Link
             href={link.href}
             className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
           >
-            {link.label}
+            {t(link.label)}
           </Link>
         ) : null}
         <FormAlert message={state.formError} />
@@ -82,9 +107,11 @@ function NoticeItem({
           type="submit"
           variant="secondary"
           disabled={pending}
-          aria-label={`Cerrar aviso sobre «${notice.calendarName}»`}
+          aria-label={t("Cerrar aviso sobre «{calendarName}»", {
+            calendarName: notice.calendarName,
+          })}
         >
-          Cerrar
+          {t("Cerrar")}
         </Button>
       </form>
     </li>

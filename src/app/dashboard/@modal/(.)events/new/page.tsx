@@ -4,6 +4,7 @@ import { EventModal } from "@/components/calendar/event-modal";
 import { LinkButton } from "@/components/ui/link-button";
 import { createEvent } from "../../../events/actions";
 import { loadNewEvent } from "../../../events/load-new-event";
+import { T } from "@/components/i18n/locale-provider";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -19,9 +20,11 @@ async function InterceptedNewEvent({
     <EventModal title="Nuevo evento">
       {data.kind === "no-calendar" ? (
         <div className="flex flex-col items-start gap-4 text-ink">
-          <p>No tienes ningún calendario donde puedas crear eventos.</p>
+          <p>
+            <T>{"No tienes ningún calendario donde puedas crear eventos."}</T>
+          </p>
           <LinkButton href="/dashboard/calendars/new">
-            Crear calendario
+            <T>{"Crear calendario"}</T>
           </LinkButton>
         </div>
       ) : (

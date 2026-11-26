@@ -8,6 +8,7 @@ import type { PasswordChangeState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
 import { usePulseOn } from "@/lib/hooks/use-pulse-on";
+import { useT } from "@/components/i18n/locale-provider";
 
 const INITIAL_STATE: PasswordChangeState = {};
 
@@ -17,6 +18,7 @@ export function PasswordForm({
 }: {
   action: FormAction<PasswordChangeState>;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
   const button = useRef<HTMLButtonElement>(null);
   usePulseOn(button, state.saved && state);
@@ -26,22 +28,22 @@ export function PasswordForm({
       <FormAlert message={state.formError} />
       {state.saved ? (
         <p role="status" className="text-sm text-ink">
-          Contraseña cambiada. Se han cerrado tus otras sesiones.
+          {t("Contraseña cambiada. Se han cerrado tus otras sesiones.")}
         </p>
       ) : null}
       <TextField
-        label="Contraseña actual"
+        label={t("Contraseña actual")}
         name="currentPassword"
         type="password"
         autoComplete="current-password"
         error={state.fieldErrors?.currentPassword}
       />
       <TextField
-        label="Nueva contraseña"
+        label={t("Nueva contraseña")}
         name="newPassword"
         type="password"
         autoComplete="new-password"
-        hint="Mínimo 8 caracteres"
+        hint={t("Mínimo 8 caracteres")}
         error={state.fieldErrors?.newPassword}
       />
       <Button
@@ -52,8 +54,8 @@ export function PasswordForm({
       >
         <SwapLabel
           busy={pending}
-          idle="Cambiar contraseña"
-          busyText="Guardando…"
+          idle={t("Cambiar contraseña")}
+          busyText={t("Guardando…")}
         />
       </Button>
     </form>

@@ -5,6 +5,7 @@ import { InviteJoinCard } from "@/components/sharing/invite-join-card";
 import { requireUser } from "@/lib/calendar/queries";
 import { getInvitePreview } from "@/lib/sharing/queries";
 import { acceptInvite } from "./actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Invitación" };
 
@@ -30,7 +31,13 @@ export default function InvitePage({
 }) {
   return (
     <PageShell title="Invitación a un calendario">
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <Invite params={params} />
       </Suspense>
     </PageShell>

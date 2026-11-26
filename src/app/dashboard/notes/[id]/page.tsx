@@ -7,6 +7,7 @@ import { getProfileTimeZone, requireUser } from "@/lib/calendar/queries";
 import { noteAccess } from "@/lib/notes/permissions";
 import { getNote, getNoteRoles } from "@/lib/notes/queries";
 import { noteIdSchema } from "@/lib/notes/schemas";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Nota" };
 
@@ -48,7 +49,7 @@ export default function NotePage({
       <Suspense
         fallback={
           <p role="status" className="text-muted">
-            Cargando la nota…
+            <T>{"Cargando la nota…"}</T>
           </p>
         }
       >

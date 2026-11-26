@@ -48,6 +48,7 @@ import {
   setDefaultReminders,
   setNotificationPrefs,
 } from "./push-actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Ajustes" };
 
@@ -176,8 +177,11 @@ async function EmailSection() {
       {google ? (
         // Spec 050 RF-7: Google keeps entering with its own address.
         <p className="text-sm text-muted">
-          Si cambias el email, «Continuar con Google» seguirá entrando con tu
-          cuenta de Google.
+          <T>
+            {
+              "Si cambias el email, «Continuar con Google» seguirá entrando con tu cuenta de Google."
+            }
+          </T>
         </p>
       ) : null}
       {hasPassword ? (
@@ -188,8 +192,11 @@ async function EmailSection() {
         />
       ) : (
         <p className="text-ink">
-          {email}. Para cambiarlo, crea antes una contraseña en «Formas de
-          entrar».
+          <T vars={{ email }}>
+            {
+              "{email}. Para cambiarlo, crea antes una contraseña en «Formas de entrar»."
+            }
+          </T>
         </p>
       )}
     </>
@@ -222,7 +229,11 @@ async function PasswordSection() {
     <PasswordForm action={changePassword} />
   ) : (
     <p className="text-ink">
-      Tu cuenta entra con Google. Crea una contraseña en «Formas de entrar».
+      <T>
+        {
+          "Tu cuenta entra con Google. Crea una contraseña en «Formas de entrar»."
+        }
+      </T>
     </p>
   );
 }
@@ -259,14 +270,18 @@ function Section({
       className="flex flex-col gap-4 rounded-card surface p-5 sm:p-6"
     >
       <h2 id={id} className="text-lg font-semibold text-ink">
-        {title}
+        <T>{title}</T>
       </h2>
       {children}
     </section>
   );
 }
 
-const LOADING = <p className="text-muted">Cargando…</p>;
+const LOADING = (
+  <p className="text-muted">
+    <T>{"Cargando…"}</T>
+  </p>
+);
 
 /** Ajustes: theme (spec 011), interface accent (spec 005), the account (spec 006) and the assistant (spec 015). */
 export default function SettingsPage({
@@ -277,7 +292,7 @@ export default function SettingsPage({
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
       <h1 className="text-2xl font-semibold text-ink max-tab:sr-only">
-        Ajustes
+        <T>{"Ajustes"}</T>
       </h1>
       <Suspense fallback={null}>
         <ConfirmNotice searchParams={searchParams} />
@@ -331,8 +346,11 @@ export default function SettingsPage({
       </Section>
       <Section id="settings-account" title="Cuenta">
         <p className="text-sm text-muted">
-          Borrar la cuenta es definitivo. Los calendarios que compartes no se
-          borran enseguida: sus miembros tendrán 15 días para conservarlos.
+          <T>
+            {
+              "Borrar la cuenta es definitivo. Los calendarios que compartes no se borran enseguida: sus miembros tendrán 15 días para conservarlos."
+            }
+          </T>
         </p>
         <div>
           <Suspense fallback={LOADING}>

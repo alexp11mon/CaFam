@@ -15,6 +15,7 @@ import type { AccessCodeRecord } from "@/lib/sharing/queries";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
 import type { AccessCodeField } from "@/lib/sharing/schemas";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 export type AccessCodeState = FormState<AccessCodeField>;
 
@@ -29,6 +30,7 @@ function CodeForm({
   submitLabel: string;
   pendingLabel: string;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {
     values: { role: initialRole, pin: "" },
   });
@@ -38,7 +40,7 @@ function CodeForm({
     <form action={formAction} noValidate className="flex flex-col gap-4">
       <FormAlert message={state.formError} />
       <Select
-        label="Rol"
+        label={t("Rol")}
         name="role"
         defaultValue={state.values.role}
         error={errors.role}
@@ -80,19 +82,25 @@ export function AccessCodePanel({
   saveAction: FormAction<AccessCodeState>;
   disableAction: FormAction<ConfirmState>;
 }) {
+  const t = useT();
   if (!code || !code.enabled) {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-ink">
           {code
-            ? `El código ${code.publicCode} está desactivado. Para activarlo de nuevo elige un PIN nuevo (de 6 a 10 dígitos).`
-            : "Quien tenga el ID del calendario y el PIN podrá unirse sin enlace. Elige un PIN de 6 a 10 dígitos."}
+            ? t(
+                "El código {code} está desactivado. Para activarlo de nuevo elige un PIN nuevo (de 6 a 10 dígitos).",
+                { code: code.publicCode },
+              )
+            : t(
+                "Quien tenga el ID del calendario y el PIN podrá unirse sin enlace. Elige un PIN de 6 a 10 dígitos.",
+              )}
         </p>
         <CodeForm
           action={saveAction}
           initialRole={code?.role ?? "viewer"}
-          submitLabel="Activar código"
-          pendingLabel="Activando…"
+          submitLabel={t("Activar código")}
+          pendingLabel={t("Activando…")}
         />
       </div>
     );
@@ -101,30 +109,33 @@ export function AccessCodePanel({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1 rounded-card bg-paper p-4 text-ink">
-        <p className="text-sm text-muted">ID del calendario</p>
+        <p className="text-sm text-muted">{t("ID del calendario")}</p>
         <p className="text-3xl font-bold tracking-[0.2em] tabular-nums select-all">
           {code.publicCode}
         </p>
         <p className="text-sm text-muted">
-          Rol de quien se une: {ROLE_LABELS[code.role]}
+          {t("Rol de quien se une:")} {ROLE_LABELS[code.role]}
         </p>
         <p className="text-sm text-muted">
-          El PIN no se puede consultar: nadie puede volver a verlo. Si lo
-          olvidas, elige uno nuevo.
+          {t(
+            "El PIN no se puede consultar: nadie puede volver a verlo. Si lo olvidas, elige uno nuevo.",
+          )}
         </p>
       </div>
       <CodeForm
         action={saveAction}
         initialRole={code.role}
-        submitLabel="Cambiar PIN"
-        pendingLabel="Guardando…"
+        submitLabel={t("Cambiar PIN")}
+        pendingLabel={t("Guardando…")}
       />
       <div>
         <ConfirmDialog
-          triggerLabel="Desactivar"
-          title="¿Desactivar el ID y el PIN?"
-          description="Nadie podrá unirse con ellos. Quienes ya se unieron mantienen su acceso. Para activarlo de nuevo tendrás que elegir un PIN nuevo."
-          confirmLabel="Sí, desactivar"
+          triggerLabel={t("Desactivar")}
+          title={t("¿Desactivar el ID y el PIN?")}
+          description={t(
+            "Nadie podrá unirse con ellos. Quienes ya se unieron mantienen su acceso. Para activarlo de nuevo tendrás que elegir un PIN nuevo.",
+          )}
+          confirmLabel={t("Sí, desactivar")}
           action={disableAction}
         />
       </div>

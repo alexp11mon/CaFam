@@ -12,6 +12,7 @@ import { sortNotes } from "@/lib/notes/order";
 import { filterNotes, type NoteFilter } from "@/lib/notes/search";
 import type { Note } from "@/lib/notes/types";
 import { NoteCard } from "./note-card";
+import { useT } from "@/components/i18n/locale-provider";
 
 const FILTERS: { id: NoteFilter; label: string }[] = [
   { id: "all", label: "Todas" },
@@ -35,6 +36,7 @@ export function NotesBoard({
   today: string;
   userId: string;
 }) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<NoteFilter>("all");
   const searchId = useId();
@@ -57,7 +59,7 @@ export function NotesBoard({
       <div className="flex flex-col gap-3">
         <div className="relative">
           <label htmlFor={searchId} className="sr-only">
-            Buscar en tus notas
+            {t("Buscar en tus notas")}
           </label>
           <span
             aria-hidden="true"
@@ -70,12 +72,12 @@ export function NotesBoard({
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Buscar en tus notas"
+            placeholder={t("Buscar en tus notas")}
             className="min-h-12 w-full rounded-control border border-control bg-paper py-2.5 pr-4 pl-12 text-base text-ink outline-none placeholder:text-muted focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20"
           />
         </div>
         <ul
-          aria-label="Qué notas se ven"
+          aria-label={t("Qué notas se ven")}
           className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]"
         >
           {FILTERS.map((item) => (
@@ -102,27 +104,30 @@ export function NotesBoard({
 
       {nothingYet ? (
         <EmptyState
-          title="Todavía no tienes notas"
+          title={t("Todavía no tienes notas")}
           action={
-            <LinkButton href="/dashboard/notes/new">Nueva nota</LinkButton>
+            <LinkButton href="/dashboard/notes/new">
+              {t("Nueva nota")}
+            </LinkButton>
           }
         >
-          Apunta aquí la compra, los deberes o lo pendiente del trabajo, y
-          táchalo cuando esté hecho.
+          {t(
+            "Apunta aquí la compra, los deberes o lo pendiente del trabajo, y táchalo cuando esté hecho.",
+          )}
         </EmptyState>
       ) : shown.length === 0 ? (
         <EmptyState
           title={
             query.trim()
-              ? "Ninguna nota con esas palabras"
+              ? t("Ninguna nota con esas palabras")
               : filter === "archived"
-                ? "No hay notas archivadas"
-                : "Ninguna nota de este tipo"
+                ? t("No hay notas archivadas")
+                : t("Ninguna nota de este tipo")
           }
         >
           {query.trim()
-            ? "Prueba con otra palabra o quita el filtro."
-            : "Las notas que archives aparecerán aquí."}
+            ? t("Prueba con otra palabra o quita el filtro.")
+            : t("Las notas que archives aparecerán aquí.")}
         </EmptyState>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

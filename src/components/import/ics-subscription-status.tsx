@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { relativeTime } from "@/lib/comments/relative-time";
 import { useNow } from "@/lib/hooks/use-now";
 import type { IcsSubscriptionInfo } from "@/lib/ics/subscription-queries";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 /**
  * "Actualizado desde un enlace · hace 2 h" in "Mis calendarios", with
@@ -28,6 +29,8 @@ export function IcsSubscriptionStatus({
   canWrite: boolean;
   timeZone: string;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const now = useNow();
   const [message, setMessage] = useState("");
   const [pending, startTransition] = useTransition();
@@ -42,29 +45,45 @@ export function IcsSubscriptionStatus({
     <div className="flex flex-col gap-1">
       <p className="text-sm text-muted tabular-nums">
         {paused
-          ? "La actualización desde un enlace está en pausa."
+          ? t("La actualización desde un enlace está en pausa.")
           : info.lastReadAt && now !== null
-            ? `Actualizado desde un enlace · ${relativeTime(info.lastReadAt, new Date(now), timeZone)}`
-            : "Se actualiza desde un enlace."}
-        {info.lastError ? ` Último fallo: ${info.lastError}` : null}
+            ? t("Actualizado desde un enlace · {when}", {
+                when: relativeTime(
+                  info.lastReadAt,
+                  new Date(now),
+                  timeZone,
+                  locale,
+                ),
+              })
+            : t("Se actualiza desde un enlace.")}
+        {info.lastError
+          ? ` ${t("Último fallo: {error}", { error: t(info.lastError) })}`
+          : null}
       </p>
       {canWrite ? (
         <div className="flex flex-wrap gap-2">
           <Button
             variant="secondary"
             disabled={pending}
-            aria-label={`${paused ? "Reintentar" : "Actualizar ahora"} ${calendarName}`}
+            aria-label={t(
+              paused
+                ? "Reintentar {calendarName}"
+                : "Actualizar ahora {calendarName}",
+              { calendarName },
+            )}
             onClick={() => run(refreshIcsSubscription)}
           >
-            {paused ? "Reintentar" : "Actualizar ahora"}
+            {paused ? t("Reintentar") : "Actualizar ahora"}
           </Button>
           <Button
             variant="quiet"
             disabled={pending}
-            aria-label={`Dejar de actualizar ${calendarName}`}
+            aria-label={t("Dejar de actualizar {calendarName}", {
+              calendarName,
+            })}
             onClick={() => run(stopIcsSubscription)}
           >
-            Dejar de actualizar
+            {t("Dejar de actualizar")}
           </Button>
         </div>
       ) : null}

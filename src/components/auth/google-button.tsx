@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { googleLoginEnabled } from "@/lib/auth/google-login";
 import { NextField } from "./next-field";
+import { useT } from "@/components/i18n/locale-provider";
 
 // Spec 050, T2: "Continuar con Google" in the login and the sign-up (RF-1,
 // RF-9). Hidden until the provider is set up in Supabase (spec "Riesgos").
@@ -32,6 +33,7 @@ export function GoogleButton({
 }: {
   action: (formData: FormData) => Promise<void>;
 }) {
+  const t = useT();
   if (!googleLoginEnabled()) return null;
   return (
     <div className="mb-4 flex flex-col gap-4">
@@ -42,14 +44,14 @@ export function GoogleButton({
         <NextField />
         <Button type="submit" variant="secondary" className="gap-3">
           <GoogleLogo />
-          Continuar con Google
+          {t("Continuar con Google")}
         </Button>
       </form>
       <p
         className="flex items-center gap-3 text-sm text-muted before:h-px before:flex-1 before:bg-line after:h-px after:flex-1 after:bg-line"
         aria-hidden="true"
       >
-        o
+        {t("o")}
       </p>
     </div>
   );

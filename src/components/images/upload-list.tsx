@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import type { UploadItem } from "./use-image-uploads";
+import { useT } from "@/components/i18n/locale-provider";
 
 const STATUS_TEXT: Record<UploadItem["status"], string> = {
   preparing: "Preparando…",
@@ -22,6 +23,7 @@ export function UploadList({
   onCancel: (key: string) => void;
   onRetry: (key: string) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-2">
       <p role="status" className="text-sm text-muted empty:hidden">
@@ -44,7 +46,7 @@ export function UploadList({
                       variant="secondary"
                       onClick={() => onRetry(item.key)}
                     >
-                      Reintentar
+                      {t("Reintentar")}
                     </Button>
                   ) : null
                 ) : (
@@ -57,11 +59,11 @@ export function UploadList({
                   onClick={() => onCancel(item.key)}
                   aria-label={
                     item.status === "failed"
-                      ? "Quitar"
+                      ? t("Quitar")
                       : `Cancelar ${item.name}`
                   }
                 >
-                  {item.status === "failed" ? "Quitar" : "Cancelar"}
+                  {item.status === "failed" ? t("Quitar") : t("Cancelar")}
                 </Button>
               </div>
               {item.status === "failed" ? (
@@ -71,7 +73,7 @@ export function UploadList({
               ) : (
                 <div
                   role="progressbar"
-                  aria-label={`Subiendo ${item.name}`}
+                  aria-label={t("Subiendo {name}", { name: item.name })}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={item.progress}

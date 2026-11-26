@@ -38,6 +38,7 @@ import {
   setGroupVisibility,
 } from "./group-actions";
 import { decideOrphanCalendar, dismissNotice } from "./orphan-actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Mis calendarios" };
 
@@ -99,30 +100,37 @@ async function Calendars() {
           phone instead of a pile of buttons (spec 029 RF-2). */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <LinkButton href="/dashboard/calendars/new">
-          Nuevo calendario
+          <T>{"Nuevo calendario"}</T>
         </LinkButton>
+        <span id="more-ways" hidden>
+          <T>{"Más formas de añadir calendarios"}</T>
+        </span>
         <ul
-          aria-label="Más formas de añadir calendarios"
+          aria-labelledby="more-ways"
           className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
         >
           <li>
             <NewGroupButton action={createGroup} />
           </li>
           <li>
-            <ChipLink href="/dashboard/import">Importar calendario</ChipLink>
+            <ChipLink href="/dashboard/import">
+              <T>{"Importar calendario"}</T>
+            </ChipLink>
           </li>
           <li>
-            <ChipLink href="/dashboard/join">Unirme con código</ChipLink>
+            <ChipLink href="/dashboard/join">
+              <T>{"Unirme con código"}</T>
+            </ChipLink>
           </li>
           <li>
             <ChipLink href="/dashboard/connections">
-              Cuentas conectadas
+              <T>{"Cuentas conectadas"}</T>
             </ChipLink>
           </li>
           {ownedCount >= 2 ? (
             <li>
               <ChipLink href="/dashboard/calendars/merge">
-                Juntar calendarios
+                <T>{"Juntar calendarios"}</T>
               </ChipLink>
             </li>
           ) : null}
@@ -178,7 +186,7 @@ async function AccountNotices() {
   return (
     <section aria-labelledby="account-notices" className="flex flex-col gap-4">
       <h2 id="account-notices" className="text-lg font-semibold text-ink">
-        Avisos
+        <T>{"Avisos"}</T>
       </h2>
       <NoticeList notices={notices} dismissAction={dismissNotice} />
       {orphans.length > 0 ? (
@@ -203,12 +211,18 @@ export default function CalendarsPage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
       <h1 className="text-2xl font-semibold text-ink max-tab:sr-only">
-        Mis calendarios
+        <T>{"Mis calendarios"}</T>
       </h1>
       <Suspense fallback={null}>
         <AccountNotices />
       </Suspense>
-      <Suspense fallback={<p className="text-muted">Cargando calendarios…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando calendarios…"}</T>
+          </p>
+        }
+      >
         <Calendars />
       </Suspense>
     </main>

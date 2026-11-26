@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { eventIcs } from "@/lib/share/event-ics";
 import { shareText, type ShareableEvent } from "@/lib/share/text";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * "Compartir" of an event, for every member (spec 047 RF-1 to RF-4): the
@@ -20,6 +21,7 @@ export function ShareEventButton({
   timeZone: string;
   className?: string;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const { show } = useToast();
@@ -51,7 +53,7 @@ export function ShareEventButton({
       await navigator.clipboard.writeText(value);
       show(done);
     } catch {
-      show("No se pudo copiar");
+      show(t("No se pudo copiar"));
     }
   }
 
@@ -77,7 +79,7 @@ export function ShareEventButton({
         onClick={share}
         className="self-start"
       >
-        Compartir
+        {t("Compartir")}
       </Button>
       {open ? (
         <div
@@ -88,7 +90,7 @@ export function ShareEventButton({
             variant="secondary"
             onClick={() => copy(text, "Texto copiado")}
           >
-            Copiar texto
+            {t("Copiar texto")}
           </Button>
           <Button
             variant="secondary"
@@ -99,13 +101,13 @@ export function ShareEventButton({
               )
             }
           >
-            Copiar enlace
+            {t("Copiar enlace")}
           </Button>
           <Button variant="secondary" onClick={download}>
-            Descargar .ics
+            {t("Descargar .ics")}
           </Button>
           <p className="text-sm text-muted">
-            El enlace solo funciona para quien ya comparte el calendario
+            {t("El enlace solo funciona para quien ya comparte el calendario")}
           </p>
         </div>
       ) : null}

@@ -6,6 +6,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { Select } from "@/components/ui/select";
 import { CloseIcon } from "@/components/shell/icons";
 import { MAX_REMINDERS, reminderOptions, validFor } from "@/lib/push/options";
+import { useT } from "@/components/i18n/locale-provider";
 
 // Personal reminders of an event (spec 040 RF-5 to RF-7).
 
@@ -25,6 +26,7 @@ function ReminderList({
   onChange: (next: number[]) => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   const options = reminderOptions(allDay);
   // A new one starts at the usual choice (10 minutes, the day before).
   const preferred = allDay ? 1440 : 10;
@@ -34,13 +36,13 @@ function ReminderList({
   return (
     <div className="flex flex-col gap-2">
       {value.length === 0 ? (
-        <p className="text-sm text-muted">Sin avisos</p>
+        <p className="text-sm text-muted">{t("Sin avisos")}</p>
       ) : null}
       {value.map((minutes, index) => (
         <div key={index} className="flex items-end gap-2">
           <div className="flex-1">
             <Select
-              label={`Aviso ${index + 1}`}
+              label={t("Aviso {value}", { value: index + 1 })}
               name={`reminder-${index}`}
               value={String(minutes)}
               disabled={disabled}
@@ -61,7 +63,7 @@ function ReminderList({
           </div>
           <Button
             variant="quiet"
-            aria-label={`Quitar el aviso ${index + 1}`}
+            aria-label={t("Quitar el aviso {value}", { value: index + 1 })}
             disabled={disabled}
             onClick={() => onChange(value.filter((_, i) => i !== index))}
           >
@@ -76,7 +78,7 @@ function ReminderList({
           disabled={disabled}
           onClick={() => onChange([...value, unused.minutes])}
         >
-          Añadir aviso
+          {t("Añadir aviso")}
         </Button>
       ) : null}
     </div>
@@ -96,6 +98,7 @@ export function ReminderField({
   initial?: number[];
   defaults?: ReminderDefaults;
 }) {
+  const t = useT();
   const [touched, setTouched] = useState<number[] | null>(initial ?? null);
   const fallback = defaults
     ? [allDay ? defaults.allDay : defaults.timed].filter(
@@ -105,7 +108,9 @@ export function ReminderField({
   const value = validFor(allDay, touched ?? fallback);
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-1 text-sm font-medium text-ink">Avisos</legend>
+      <legend className="mb-1 text-sm font-medium text-ink">
+        {t("Avisos")}
+      </legend>
       <ReminderList allDay={allDay} value={value} onChange={setTouched} />
       <input
         type="hidden"
@@ -128,6 +133,7 @@ export function EventReminders({
   initial: number[];
   save: (eventId: string, minutes: number[]) => Promise<{ error?: string }>;
 }) {
+  const t = useT();
   const [value, setValue] = useState(() => validFor(allDay, initial));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
@@ -143,7 +149,7 @@ export function EventReminders({
     try {
       result = await save(eventId, next);
     } catch {
-      result = { error: "No se han podido guardar los avisos." };
+      result = { error: t("No se han podido guardar los avisos.") };
     }
     setPending(false);
     if (result.error) {
@@ -156,7 +162,9 @@ export function EventReminders({
 
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-1 text-sm font-semibold text-ink">Avisarme</legend>
+      <legend className="mb-1 text-sm font-semibold text-ink">
+        {t("Avisarme")}
+      </legend>
       <ReminderList
         allDay={allDay}
         value={value}
@@ -166,7 +174,7 @@ export function EventReminders({
       <FormAlert message={error} />
       {saved ? (
         <p role="status" className="text-sm text-ink">
-          Guardado.
+          {t("Guardado.")}
         </p>
       ) : null}
     </fieldset>

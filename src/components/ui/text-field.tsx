@@ -1,3 +1,5 @@
+import { T } from "@/components/i18n/locale-provider";
+
 import { useId, type InputHTMLAttributes } from "react";
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -39,12 +41,12 @@ export function TextField({
       />
       {hint ? (
         <p id={hintId} className="text-sm text-muted">
-          {hint}
+          <T>{hint}</T>
         </p>
       ) : null}
       {error ? (
         <p id={errorId} aria-live="polite" className="text-sm text-danger">
-          {error}
+          <T>{error}</T>
         </p>
       ) : null}
     </div>

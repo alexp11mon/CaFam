@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { CONVERSATION_TEXTS } from "@/lib/assistant/conversations";
 import { ConversationList } from "./conversation-list";
+import { useT } from "@/components/i18n/locale-provider";
 
 // Spec 052 RF-9 to RF-12, RF-14: the "⋯" of the chat. Saving conversations
 // and reading answers aloud are both off by default.
@@ -32,6 +33,7 @@ export function ChatMenu({
   /** RF-14: only where the browser can speak. */
   speak?: { on: boolean; onChange: (on: boolean) => void };
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<ConversationItem[] | null>(null);
   // RF-12: turning it off asks whether to forget what was saved.
@@ -78,7 +80,7 @@ export function ChatMenu({
   return (
     <>
       <IconButton
-        label="Más opciones del chat"
+        label={t("Más opciones del chat")}
         onClick={() => {
           setOpen(true);
           void reload();
@@ -92,37 +94,43 @@ export function ChatMenu({
           setOpen(false);
           setAsking(false);
         }}
-        title="Opciones del chat"
+        title={t("Opciones del chat")}
       >
         <div className="flex flex-col gap-5 pt-1">
           <Switch
-            label="Guardar conversaciones"
-            description="Se guardan las 50 últimas durante 90 días y solo las ves tú. Las imágenes no se guardan."
+            label={t("Guardar conversaciones")}
+            description={t(
+              "Se guardan las 50 últimas durante 90 días y solo las ves tú. Las imágenes no se guardan.",
+            )}
             checked={saveChats}
             onCheckedChange={change}
           />
           {asking ? (
             <div className="flex flex-col gap-2 rounded-control border border-line p-3">
               <p className="text-sm">
-                ¿Borrar también las conversaciones que ya están guardadas?
+                {t(
+                  "¿Borrar también las conversaciones que ya están guardadas?",
+                )}
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button variant="danger" onClick={() => void save(false, true)}>
-                  Borrarlas
+                  {t("Borrarlas")}
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={() => void save(false, false)}
                 >
-                  Conservarlas
+                  {t("Conservarlas")}
                 </Button>
               </div>
             </div>
           ) : null}
           {speak ? (
             <Switch
-              label="Leer respuestas en voz alta"
-              description="Solo en este dispositivo. Lee el texto de Venito, no las tarjetas."
+              label={t("Leer respuestas en voz alta")}
+              description={t(
+                "Solo en este dispositivo. Lee el texto de Venito, no las tarjetas.",
+              )}
               checked={speak.on}
               onCheckedChange={speak.onChange}
             />

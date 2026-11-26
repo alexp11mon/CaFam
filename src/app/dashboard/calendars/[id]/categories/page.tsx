@@ -9,6 +9,7 @@ import {
   requireUser,
 } from "@/lib/calendar/queries";
 import { createCategory, deleteCategory, renameCategory } from "./actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Categorías" };
 
@@ -51,7 +52,13 @@ export default function CategoriesPage({
 }) {
   return (
     <PageShell title="Categorías">
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <Categories params={params} />
       </Suspense>
     </PageShell>

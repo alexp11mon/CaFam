@@ -1,3 +1,4 @@
+import { summarizeRRule } from "@/lib/recurrence/summary";
 import type { EventDetailData } from "@/components/calendar/event-detail";
 import type {
   CalendarOption,
@@ -12,6 +13,7 @@ import {
   getCategoriesForCalendars,
   getEvent,
   getMyCalendars,
+  getProfileLocale,
   getProfileTimeZone,
   requireUser,
 } from "@/lib/calendar/queries";
@@ -52,11 +54,12 @@ export async function loadEvent(id: string): Promise<EventData | null> {
   if (!event) return null;
   // Independent reads go together: opening an event was a chain of 7 to 10
   // round trips (spec 023 RF-14).
-  const [calendar, timeZone, members, reminders] = await Promise.all([
+  const [calendar, timeZone, members, reminders, locale] = await Promise.all([
     getCalendar(supabase, userId, event.calendarId),
     getProfileTimeZone(supabase, userId),
     getMembers(supabase, [event.calendarId]),
     readReminders(supabase, userId, id),
+    getProfileLocale(supabase, userId),
   ]);
   if (!calendar) return null;
 
@@ -98,7 +101,10 @@ export async function loadEvent(id: string): Promise<EventData | null> {
       ),
       repeat: event.series
         ? {
-            summary: event.series.summary,
+            summary:
+              locale === "es"
+                ? event.series.summary
+                : summarizeRRule(event.series.recurrence, locale),
             changed: event.series.changed,
             limitReached: !event.rowId && event.series.exceptions >= 100,
           }

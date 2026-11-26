@@ -8,6 +8,7 @@ import { formatDateKeyFull } from "@/lib/calendar/format";
 import { navigate, type CalendarView } from "@/lib/calendar/ranges";
 import { CAL_NEXT, CAL_PREV, CAL_VIEW } from "@/lib/calendar/transition-types";
 import { CalendarLink, useCalendarGo } from "./calendar-nav";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 const VIEWS: {
   view: CalendarView;
@@ -76,6 +77,8 @@ export function CalendarHeading({
   /** Remembers the chosen view in the account (spec 008 RF-25). */
   saveLastView?: (view: CalendarView) => Promise<{ error?: string }>;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const go = useCalendarGo();
   const { state, openSheet } = useCalendarHeader();
   const current = [...VIEWS, ...MORE_VIEWS].find((item) => item.view === view)!;
@@ -85,11 +88,11 @@ export function CalendarHeading({
 
   return (
     <nav
-      aria-label="Calendario" // Stays under the header while the agenda scrolls.
+      aria-label={t("Calendario")} // Stays under the header while the agenda scrolls.
       className="sticky top-[calc(3.25rem+env(safe-area-inset-top))] z-20 -mx-4 flex flex-col gap-1 bg-stone px-4 pb-1 tab:hidden"
     >
       <ul
-        aria-label="Vistas"
+        aria-label={t("Vistas")}
         className="flex gap-1 self-start rounded-full surface p-1"
       >
         {VIEWS.map((item) => (
@@ -123,14 +126,18 @@ export function CalendarHeading({
         >
           <button
             type="button"
-            aria-label={more ? `Más vistas: ${more.label}` : "Más vistas"}
+            aria-label={
+              more
+                ? t("Más vistas: {label}", { label: t(more.label) })
+                : t("Más vistas")
+            }
             aria-expanded={moreOpen}
             aria-controls={moreId}
             aria-current={more ? "page" : undefined}
             onClick={() => setMoreOpen((open) => !open)}
             className={`${TAB} gap-1`}
           >
-            {more?.label ?? "Más"}
+            {more?.label ?? t("Más")}
             <ChevronIcon direction={moreOpen ? "up" : "down"} />
           </button>
           {moreOpen ? (
@@ -167,13 +174,13 @@ export function CalendarHeading({
           className="flex min-h-11 items-center gap-2 rounded-control pr-3 text-sm font-medium text-muted press-quiet hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
           <FiltersIcon />
-          Calendarios
+          {t("Calendarios")}
         </button>
         <div className="flex items-center">
           {/* Spec 039 RF-1: the search, also with "/" on a keyboard. */}
           <Link
             href="/dashboard/search"
-            aria-label="Buscar"
+            aria-label={t("Buscar")}
             aria-keyshortcuts="/"
             className={ICON}
           >
@@ -181,13 +188,15 @@ export function CalendarHeading({
           </Link>
           <button
             type="button"
-            aria-label={`Hoy, ${formatDateKeyFull(today)}`}
+            aria-label={t("Hoy, {value}", {
+              value: formatDateKeyFull(today, locale),
+            })}
             aria-keyshortcuts="T"
             disabled={!state?.onToday}
             onClick={() => state?.onToday?.()}
             className="flex min-h-11 items-center rounded-control px-3 text-sm font-semibold text-accent-ink press-quiet hover:bg-accent-soft focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
           >
-            Hoy
+            {t("Hoy")}
           </button>
           {view === "agenda" ? null : (
             <>

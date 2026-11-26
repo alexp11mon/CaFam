@@ -5,6 +5,7 @@ import { dueLabel, progress } from "@/lib/notes/progress";
 import { dueLabel as itemDueLabel, nextDue } from "@/lib/notes/due";
 import type { Note } from "@/lib/notes/types";
 import { PendingMark } from "@/components/offline/pending-mark";
+import { T, useLocale, useT } from "@/components/i18n/locale-provider";
 
 /** How many pending items a card shows before "y N más". */
 const SHOWN_ITEMS = 3;
@@ -21,14 +22,16 @@ export function NoteCard({
   note: Note & { pending?: boolean };
   today: string;
 }) {
-  const due = dueLabel(note.dueDate, today);
+  const t = useT();
+  const locale = useLocale();
+  const due = dueLabel(note.dueDate, today, t, locale);
   // Without a date of its own, the closest of its pending items (spec 048 RF-2).
   const next = due ? null : nextDue(note.items);
   const done = progress(note.items);
   const pending = sortItems(note.items).filter((item) => !item.done);
   const title =
     note.title ||
-    (note.kind === "list" ? "Lista sin título" : "Nota sin título");
+    t(note.kind === "list" ? "Lista sin título" : "Nota sin título");
 
   return (
     <Link
@@ -49,7 +52,9 @@ export function NoteCard({
         {note.pinned ? (
           <span className="text-accent-ink">
             <PinIcon filled />
-            <span className="sr-only">Fijada</span>
+            <span className="sr-only">
+              <T>{"Fijada"}</T>
+            </span>
           </span>
         ) : null}
       </span>
@@ -68,7 +73,7 @@ export function NoteCard({
               ))}
               {pending.length > SHOWN_ITEMS ? (
                 <li className="text-sm text-muted">
-                  y {pending.length - SHOWN_ITEMS} más
+                  <T>{"y"}</T> {pending.length - SHOWN_ITEMS} <T>{"más"}</T>
                 </li>
               ) : null}
             </ul>
@@ -83,7 +88,9 @@ export function NoteCard({
           {note.body}
         </span>
       ) : (
-        <span className="text-sm text-muted">Nota vacía</span>
+        <span className="text-sm text-muted">
+          <T>{"Nota vacía"}</T>
+        </span>
       )}
       <span className="mt-auto flex flex-wrap gap-x-3 gap-y-1 pt-1 text-sm">
         {due ? (
@@ -99,11 +106,16 @@ export function NoteCard({
               next.date < today ? "font-semibold text-danger" : "text-muted"
             }
           >
-            Próximo: {itemDueLabel(next.date, next.time, today)}
+            <T>{"Próximo:"}</T>{" "}
+            {itemDueLabel(next.date, next.time, today, locale)}
           </span>
         ) : null}
         {note.calendarName ? (
-          <span className="text-muted">Compartida en {note.calendarName}</span>
+          <span className="text-muted">
+            <T vars={{ calendarName: note.calendarName }}>
+              {"Compartida en {calendarName}"}
+            </T>
+          </span>
         ) : null}
       </span>
     </Link>

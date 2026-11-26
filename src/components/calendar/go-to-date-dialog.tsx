@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
+import { useT } from "@/components/i18n/locale-provider";
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -23,6 +24,7 @@ export function GoToDateDialog({
   onGo: (date: string) => void;
   onClose: () => void;
 }) {
+  const t = useT();
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [error, setError] = useState<string>();
@@ -50,17 +52,17 @@ export function GoToDateDialog({
             new FormData(event.currentTarget).get("date") ?? "",
           );
           if (!isDate(value)) {
-            setError("Escribe una fecha válida.");
+            setError(t("Escribe una fecha válida."));
             return;
           }
           onGo(value);
         }}
       >
         <h2 id={titleId} className="text-lg font-semibold">
-          Ir a una fecha
+          {t("Ir a una fecha")}
         </h2>
         <TextField
-          label="Fecha"
+          label={t("Fecha")}
           name="date"
           type="date"
           defaultValue={date}
@@ -68,9 +70,9 @@ export function GoToDateDialog({
         />
         <div className="flex flex-wrap justify-end gap-3">
           <Button variant="secondary" onClick={() => dialog.current?.close()}>
-            Cancelar
+            {t("Cancelar")}
           </Button>
-          <Button type="submit">Ir</Button>
+          <Button type="submit">{t("Ir")}</Button>
         </div>
       </form>
     </dialog>

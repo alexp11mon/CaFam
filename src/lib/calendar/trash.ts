@@ -1,3 +1,4 @@
+import { spanishT, type T } from "@/lib/i18n/translate";
 // The trash screen (spec 046 RF-3 to RF-6): pure texts and grouping.
 
 const DAY = 86_400_000;
@@ -49,32 +50,36 @@ export function groupTrash(
     .filter((group) => group.entries.length > 0);
 }
 
-function daysAgo(instant: string, now: Date): string {
-  const days = Math.floor((now.getTime() - Date.parse(instant)) / DAY);
-  if (days <= 0) return "hoy";
-  if (days === 1) return "ayer";
-  return `hace ${days} días`;
-}
-
 /** "Borrado por Ana hace 2 días"; a deleted account or one who left says so. */
-export function deletedText(entry: TrashEntry, now: Date): string {
-  const who = entry.deletedByName ?? "una cuenta borrada";
-  return `Borrado por ${who} ${daysAgo(entry.createdAt, now)}`;
+export function deletedText(
+  entry: TrashEntry,
+  now: Date,
+  t: T = spanishT,
+): string {
+  const who = entry.deletedByName ?? t("una cuenta borrada");
+  const days = Math.floor((now.getTime() - Date.parse(entry.createdAt)) / DAY);
+  if (days <= 0) return t("Borrado por {who} hoy", { who });
+  if (days === 1) return t("Borrado por {who} ayer", { who });
+  return t("Borrado por {who} hace {days} días", { who, days });
 }
 
 /** "Quedan 28 días" until pg_cron deletes it for good (RF-7). */
-export function remainingText(expiresAt: string, now: Date): string {
+export function remainingText(
+  expiresAt: string,
+  now: Date,
+  t: T = spanishT,
+): string {
   const days = Math.ceil((Date.parse(expiresAt) - now.getTime()) / DAY);
-  if (days <= 1) return "Queda menos de 1 día";
-  return `Quedan ${days} días`;
+  if (days <= 1) return t("Queda menos de 1 día");
+  return t("Quedan {days} días", { days });
 }
 
 /** "serie, 24 repeticiones", "repetición de una serie", or nothing. */
-export function kindText(entry: TrashEntry): string | null {
-  if (entry.kind === "occurrence") return "repetición de una serie";
+export function kindText(entry: TrashEntry, t: T = spanishT): string | null {
+  if (entry.kind === "occurrence") return t("repetición de una serie");
   if (entry.kind !== "series") return null;
-  if (!entry.occurrences) return "serie";
+  if (!entry.occurrences) return t("serie");
   return entry.occurrences === 1
-    ? "serie, 1 repetición"
-    : `serie, ${entry.occurrences} repeticiones`;
+    ? t("serie, 1 repetición")
+    : t("serie, {count} repeticiones", { count: entry.occurrences });
 }

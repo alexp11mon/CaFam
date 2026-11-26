@@ -7,6 +7,7 @@ import {
   loadOfflineSnapshot,
 } from "@/app/dashboard/offline-actions";
 import { useToast } from "@/components/ui/toast";
+import { useT } from "@/components/i18n/locale-provider";
 import { useConnection } from "@/lib/hooks/use-connection";
 import { useOfflineQueue } from "@/lib/hooks/use-offline";
 import { startWatching, withTimeout } from "@/lib/offline/connection";
@@ -53,6 +54,7 @@ export function OfflineProvider({
 }) {
   const router = useRouter();
   const { show } = useToast();
+  const t = useT();
   const online = useConnection();
   const { queue } = useOfflineQueue();
   const [ready, setReady] = useState(false);
@@ -81,7 +83,7 @@ export function OfflineProvider({
         if (background) {
           await db.clearBackgroundSync();
           if (alive && background.applied > 0) {
-            show(OFFLINE_MESSAGES.synced(background.applied));
+            show(OFFLINE_MESSAGES.synced(background.applied, t));
           }
         }
       } catch {
@@ -92,7 +94,7 @@ export function OfflineProvider({
     return () => {
       alive = false;
     };
-  }, [userId, show]);
+  }, [userId, show, t]);
 
   const readCopy = useCallback(
     async (force = false) => {

@@ -12,6 +12,7 @@ import type { NoteItem } from "@/lib/notes/types";
 import { dueLabel, isOverdue } from "@/lib/notes/due";
 import { useNow } from "@/lib/hooks/use-now";
 import { ItemDueMenu, type ItemDue } from "./item-due-menu";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 export interface ChecklistHandlers {
   onAdd: (text: string) => void;
@@ -44,6 +45,8 @@ export function Checklist({
   /** YYYY-MM-DD in the profile's zone, for the due dates (spec 048 RF-2). */
   today?: string;
 } & ChecklistHandlers) {
+  const t = useT();
+  const locale = useLocale();
   const now = useNow();
   // HH:MM on this device: an item due at an hour is late past it.
   const nowTime = now ? new Date(now).toTimeString().slice(0, 5) : "00:00";
@@ -99,9 +102,9 @@ export function Checklist({
         {movable ? (
           <button
             type="button"
-            aria-label={`Mover «${item.text}»`}
+            aria-label={t("Mover «{text}»", { text: item.text })}
             aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
-            title="Arrastra o usa Alt+↑/↓"
+            title={t("Arrastra o usa Alt+↑/↓")}
             onKeyDown={(event) => {
               if (!event.altKey) return;
               const direction =
@@ -141,7 +144,7 @@ export function Checklist({
         <div className="flex min-w-0 flex-1 flex-col">
           {canWrite ? (
             <input
-              aria-label={`Texto de «${item.text}»`}
+              aria-label={t("Texto de «{text}»", { text: item.text })}
               defaultValue={item.text}
               // A change that comes from outside replaces what is shown.
               key={item.text}
@@ -172,8 +175,8 @@ export function Checklist({
                   : "text-muted"
               }`}
             >
-              <span className="sr-only">Fecha límite: </span>
-              {dueLabel(item.dueDate, item.dueTime, today)}
+              <span className="sr-only">{t("Fecha límite:")} </span>
+              {dueLabel(item.dueDate, item.dueTime, today, locale)}
             </span>
           ) : null}
         </div>
@@ -188,7 +191,7 @@ export function Checklist({
         ) : null}
         {canWrite ? (
           <IconButton
-            label={`Borrar «${item.text}»`}
+            label={t("Borrar «{text}»", { text: item.text })}
             onClick={() => handlers.onDelete(item)}
             className="text-muted"
           >
@@ -204,7 +207,7 @@ export function Checklist({
       {canWrite ? (
         <div className="flex items-center gap-2">
           <label className="sr-only" htmlFor={adderId}>
-            Añadir elemento
+            {t("Añadir elemento")}
           </label>
           <input
             id={adderId}
@@ -212,7 +215,9 @@ export function Checklist({
             value={draft}
             maxLength={ITEM_TEXT_MAX}
             placeholder={
-              full ? "La lista está llena" : "Añadir elemento y pulsar Intro"
+              full
+                ? t("La lista está llena")
+                : t("Añadir elemento y pulsar Intro")
             }
             disabled={full}
             enterKeyHint="done"
@@ -221,7 +226,7 @@ export function Checklist({
             className="min-h-12 min-w-0 flex-1 rounded-control border border-control bg-paper px-4 text-base text-ink outline-none placeholder:text-muted focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/20"
           />
           <Button onClick={add} disabled={!draft.trim() || full}>
-            Añadir
+            {t("Añadir")}
           </Button>
         </div>
       ) : null}
@@ -229,13 +234,17 @@ export function Checklist({
       {items.length === 0 ? (
         <p className="py-4 text-center text-muted">
           {canWrite
-            ? "La lista está vacía. Escribe el primer elemento arriba."
-            : "La lista está vacía."}
+            ? t("La lista está vacía. Escribe el primer elemento arriba.")
+            : t("La lista está vacía.")}
         </p>
       ) : null}
 
       {pending.length > 0 ? (
-        <ul ref={pendingList} aria-label="Pendientes" className="flex flex-col">
+        <ul
+          ref={pendingList}
+          aria-label={t("Pendientes")}
+          className="flex flex-col"
+        >
           {pending.map(row)}
         </ul>
       ) : null}
@@ -244,21 +253,21 @@ export function Checklist({
         <section className="flex flex-col gap-1 border-t border-line pt-3">
           <div className="flex flex-wrap items-center justify-between gap-x-3">
             <h2 className="text-sm font-semibold text-muted tabular-nums">
-              Completadas: {count.label}
+              {t("Completadas: {label}", { label: count.label })}
             </h2>
             {canWrite ? (
               <Button variant="quiet" onClick={handlers.onClearDone}>
-                Borrar los completados
+                {t("Borrar los completados")}
               </Button>
             ) : null}
           </div>
-          <ul aria-label="Completadas" className="flex flex-col">
+          <ul aria-label={t("Completadas")} className="flex flex-col">
             {done.map(row)}
           </ul>
         </section>
       ) : items.length > 0 ? (
         <p className="text-sm font-semibold text-muted tabular-nums">
-          Completadas: {count.label}
+          {t("Completadas: {label}", { label: count.label })}
         </p>
       ) : null}
     </div>

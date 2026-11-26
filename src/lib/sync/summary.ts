@@ -1,5 +1,6 @@
 import { providerName } from "./provider-labels";
 import type { FailureKind, ProviderName } from "./providers/types";
+import { spanishT, type T } from "@/lib/i18n/translate";
 
 // Spanish texts of an update (RF-18, RF-19, RF-23) and of its failures (RF-13,
 // RF-31, RF-33).
@@ -12,22 +13,31 @@ export interface UpdateSummary {
   omitted?: number;
 }
 
-function count(n: number, singular: string, plural: string) {
-  return `${n} ${n === 1 ? singular : plural}`;
-}
-
-export function summaryText(summary: UpdateSummary): string {
+export function summaryText(summary: UpdateSummary, t: T = spanishT): string {
+  const n = (count: number, one: string, many: string) =>
+    count === 1 ? t(one) : t(many, { count });
   const parts = [
-    `${count(summary.added, "añadido", "añadidos")}, ${count(summary.changed, "cambiado", "cambiados")} y ${count(summary.removed, "quitado", "quitados")}.`,
+    t("{added}, {changed} y {removed}.", {
+      added: n(summary.added, "1 añadido", "{count} añadidos"),
+      changed: n(summary.changed, "1 cambiado", "{count} cambiados"),
+      removed: n(summary.removed, "1 quitado", "{count} quitados"),
+    }),
   ];
   if (summary.skipped) {
     parts.push(
-      `${count(summary.skipped, "omitido", "omitidos")} por no ser válidos.`,
+      n(
+        summary.skipped,
+        "1 omitido por no ser válido.",
+        "{count} omitidos por no ser válidos.",
+      ),
     );
   }
   if (summary.omitted) {
     parts.push(
-      `${summary.omitted} más lejanos no se han traído por el límite de 2.000 eventos.`,
+      t(
+        "{count} más lejanos no se han traído por el límite de 2.000 eventos.",
+        { count: summary.omitted },
+      ),
     );
   }
   return parts.join(" ");
@@ -46,13 +56,18 @@ export const SYNC_ERRORS: Record<Exclude<FailureKind, "rejected">, string> = {
 export function syncErrorText(
   kind: Exclude<FailureKind, "rejected">,
   provider: ProviderName,
+  t: T = spanishT,
 ): string {
-  if (provider === "google") return SYNC_ERRORS[kind];
+  if (provider === "google") return t(SYNC_ERRORS[kind]);
   if (kind === "revoked") {
-    return "iCloud ya no acepta la contraseña de esta cuenta. Pasa al cambiar la contraseña del Apple ID o al revocarla: vuelve a conectarla con una contraseña específica de app nueva.";
+    return t(
+      "iCloud ya no acepta la contraseña de esta cuenta. Pasa al cambiar la contraseña del Apple ID o al revocarla: vuelve a conectarla con una contraseña específica de app nueva.",
+    );
   }
   if (kind === "missing") {
-    return `Este calendario ya no existe en la cuenta de ${providerName(provider)}.`;
+    return t("Este calendario ya no existe en la cuenta de {provider}.", {
+      provider: providerName(provider),
+    });
   }
-  return SYNC_ERRORS.transient;
+  return t(SYNC_ERRORS.transient);
 }

@@ -1,3 +1,4 @@
+import { spanishT, type T } from "@/lib/i18n/translate";
 // What POST /api/assistant sends while it works (spec 024 RF-16, plan D7):
 // one JSON object per line. Pure, shared by the route and the chat.
 import type { AssistantAction } from "./actions";
@@ -63,7 +64,7 @@ function firstTitle(args: string): string {
 }
 
 /** The step a tool call stands for, in the user's words. */
-export function statusFor(tool: string, args: string): string {
+export function statusFor(tool: string, args: string, t: T = spanishT): string {
   if (tool === "search_events") {
     let query = "";
     try {
@@ -79,23 +80,25 @@ export function statusFor(tool: string, args: string): string {
     } catch {
       // A malformed call: the tool will say so; the status stays generic.
     }
-    return query ? `Buscando «${query}»…` : "Buscando en tus eventos…";
+    return query
+      ? t("Buscando «{query}»…", { query })
+      : t("Buscando en tus eventos…");
   }
   if (tool === "create_events") {
     const title = firstTitle(args);
-    return title ? `Creando «${title}»…` : STATUS.creating;
+    return title ? t("Creando «{title}»…", { title }) : t(STATUS.creating);
   }
-  if (tool === "propose_changes") return STATUS.change;
+  if (tool === "propose_changes") return t(STATUS.change);
   // Spec 052 RF-1, RF-5.
-  if (tool === "propose_deletes") return "Preparando el borrado…";
-  if (tool === "propose_series") return "Preparando la serie…";
-  if (tool === "find_free_time") return STATUS.free;
-  if (tool === "get_comments") return STATUS.comments;
+  if (tool === "propose_deletes") return t("Preparando el borrado…");
+  if (tool === "propose_series") return t("Preparando la serie…");
+  if (tool === "find_free_time") return t(STATUS.free);
+  if (tool === "get_comments") return t(STATUS.comments);
   // Spec 048 RF-12, RF-14.
-  if (tool === "list_notes") return "Mirando tus notas…";
+  if (tool === "list_notes") return t("Mirando tus notas…");
   if (tool === "create_notes" || tool === "add_note_items")
-    return "Apuntando en tus notas…";
-  return STATUS.events;
+    return t("Apuntando en tus notas…");
+  return t(STATUS.events);
 }
 
 export function encodeLine(line: StreamLine): string {

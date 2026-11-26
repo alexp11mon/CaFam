@@ -8,6 +8,7 @@ import type { EmailChangeState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
 import { usePulseOn } from "@/lib/hooks/use-pulse-on";
+import { useT } from "@/components/i18n/locale-provider";
 
 const INITIAL_STATE: EmailChangeState = { values: { newEmail: "" } };
 
@@ -21,6 +22,7 @@ export function EmailForm({
   email: string;
   pendingEmail: string | null;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
   const waiting = state.pendingEmail ?? pendingEmail;
   const button = useRef<HTMLButtonElement>(null);
@@ -29,17 +31,20 @@ export function EmailForm({
   return (
     <form action={formAction} noValidate className="flex flex-col gap-4">
       <p className="text-sm text-muted">
-        Email actual: <span className="font-medium text-ink">{email}</span>
+        {t("Email actual:")}{" "}
+        <span className="font-medium text-ink">{email}</span>
       </p>
       {waiting ? (
         <p role="status" className="text-sm text-ink">
-          Cambio pendiente de confirmar: {waiting}. Abre el correo que te hemos
-          enviado a esa dirección y pulsa el enlace.
+          {t(
+            "Cambio pendiente de confirmar: {waiting}. Abre el correo que te hemos enviado a esa dirección y pulsa el enlace.",
+            { waiting },
+          )}
         </p>
       ) : null}
       <FormAlert message={state.formError} />
       <TextField
-        label="Nuevo email"
+        label={t("Nuevo email")}
         name="newEmail"
         type="email"
         autoComplete="email"
@@ -48,7 +53,7 @@ export function EmailForm({
         error={state.fieldErrors?.newEmail}
       />
       <TextField
-        label="Contraseña actual"
+        label={t("Contraseña actual")}
         name="currentPassword"
         type="password"
         autoComplete="current-password"
@@ -60,7 +65,11 @@ export function EmailForm({
         disabled={pending}
         className="self-start"
       >
-        <SwapLabel busy={pending} idle="Cambiar email" busyText="Enviando…" />
+        <SwapLabel
+          busy={pending}
+          idle="Cambiar email"
+          busyText={t("Enviando…")}
+        />
       </Button>
     </form>
   );

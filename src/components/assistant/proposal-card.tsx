@@ -1,4 +1,5 @@
 "use client";
+import type { T } from "@/lib/i18n/translate";
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
@@ -18,6 +19,7 @@ import {
 import type { ProposalRow } from "@/lib/assistant/schemas";
 import { startOptions } from "@/lib/calendar/time-options";
 import type { ChatCalendar, ChatProposal } from "./assistant-chat";
+import { useT } from "@/components/i18n/locale-provider";
 
 // The proposal in the thread (spec 022 plan "proposal-card"). Nothing is
 // written until "Crear" (RF-40); the rows live in the chat so a correction
@@ -27,10 +29,12 @@ export const DUPLICATE_TEXT = "Ya existe un evento a esta hora";
 const CHECK_DELAY_MS = 500;
 const OPTIONS = startOptions();
 
-const createdText = (n: number) =>
-  n === 1 ? "Se ha creado 1 evento." : `Se han creado ${n} eventos.`;
-const creatingText = (n: number) =>
-  n === 1 ? "Creando 1 evento…" : `Creando ${n} eventos…`;
+const createdText = (n: number, t: T) =>
+  n === 1
+    ? t("Se ha creado 1 evento.")
+    : t("Se han creado {n} eventos.", { n });
+const creatingText = (n: number, t: T) =>
+  n === 1 ? t("Creando 1 evento…") : t("Creando {n} eventos…", { n });
 
 export function ProposalCard({
   proposal,
@@ -41,6 +45,7 @@ export function ProposalCard({
   calendars: readonly ChatCalendar[];
   onChange: (next: ChatProposal) => void;
 }) {
+  const t = useT();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string>();
   const [creating, setCreating] = useState(false);
@@ -119,12 +124,12 @@ export function ProposalCard({
 
   return (
     <section
-      aria-label="Propuesta de eventos"
+      aria-label={t("Propuesta de eventos")}
       className="mt-3 flex flex-col gap-3"
     >
       {proposal.status !== "pending" ? (
         <p className="self-start rounded-full border border-control px-3 py-1 text-sm font-semibold text-muted">
-          {proposal.status === "created" ? "Creada" : "Sustituida"}
+          {proposal.status === "created" ? t("Creada") : t("Sustituida")}
         </p>
       ) : null}
 
@@ -145,7 +150,7 @@ export function ProposalCard({
       {proposal.created?.length ? (
         <div className="flex flex-col gap-1">
           <p className="font-semibold">
-            {createdText(proposal.created.length)}
+            {createdText(proposal.created.length, t)}
           </p>
           <ul className="flex flex-col gap-1">
             {proposal.created.map((event) => (
@@ -177,7 +182,7 @@ export function ProposalCard({
             {createLabel(selected)}
           </Button>
           <p role="status" className="text-sm text-muted">
-            {creating ? creatingText(selected) : ""}
+            {creating ? creatingText(selected, t) : ""}
           </p>
         </div>
       ) : null}
@@ -200,6 +205,7 @@ function RowFields({
   error: string | null | undefined;
   onEdit: (change: Partial<ProposalRow>, recheck: boolean) => void;
 }) {
+  const t = useT();
   const id = useId();
   const errorId = `${id}-error`;
   const duplicateId = `${id}-duplicate`;
@@ -224,7 +230,7 @@ function RowFields({
             }
             className="size-5 accent-ink"
           />
-          Crear este evento
+          {t("Crear este evento")}
         </label>
         <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
           <input
@@ -244,11 +250,11 @@ function RowFields({
             }
             className="size-5 accent-ink"
           />
-          Todo el día
+          {t("Todo el día")}
         </label>
       </div>
       <TextField
-        label="Título"
+        label={t("Título")}
         name={`${row.key}-title`}
         value={row.title}
         maxLength={100}
@@ -256,7 +262,7 @@ function RowFields({
       />
       <div className="grid grid-cols-2 gap-3">
         <TextField
-          label="Fecha de inicio"
+          label={t("Fecha de inicio")}
           name={`${row.key}-start-date`}
           type="date"
           value={row.startDate}
@@ -267,7 +273,7 @@ function RowFields({
         />
         {row.allDay ? null : (
           <TimeField
-            label="Hora de inicio"
+            label={t("Hora de inicio")}
             name={`${row.key}-start`}
             value={row.start ?? ""}
             options={OPTIONS}
@@ -275,7 +281,7 @@ function RowFields({
           />
         )}
         <TextField
-          label="Fecha de fin"
+          label={t("Fecha de fin")}
           name={`${row.key}-end-date`}
           type="date"
           value={row.endDate}
@@ -285,7 +291,7 @@ function RowFields({
         />
         {row.allDay ? null : (
           <TimeField
-            label="Hora de fin"
+            label={t("Hora de fin")}
             name={`${row.key}-end`}
             value={row.end ?? ""}
             options={OPTIONS}
@@ -294,7 +300,7 @@ function RowFields({
         )}
       </div>
       <Select
-        label="Calendario"
+        label={t("Calendario")}
         name={`${row.key}-calendar`}
         value={row.calendarId}
         onChange={(event) => onEdit({ calendarId: event.target.value }, true)}

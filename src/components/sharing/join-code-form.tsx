@@ -7,6 +7,7 @@ import { TextField } from "@/components/ui/text-field";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import type { JoinCodeField } from "@/lib/sharing/schemas";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 export type JoinCodeState = FormState<JoinCodeField>;
 
@@ -18,6 +19,7 @@ export function JoinCodeForm({
 }: {
   action: FormAction<JoinCodeState>;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
   const errors = state.fieldErrors ?? {};
 
@@ -26,7 +28,7 @@ export function JoinCodeForm({
     <form action={formAction} noValidate className="flex flex-col gap-4">
       <FormAlert message={state.formError} />
       <TextField
-        label="ID del calendario"
+        label={t("ID del calendario")}
         name="code"
         autoComplete="off"
         autoCapitalize="characters"
@@ -48,7 +50,11 @@ export function JoinCodeForm({
       />
       <div>
         <Button type="submit" disabled={pending}>
-          <SwapLabel busy={pending} idle="Unirme" busyText="Uniéndote…" />
+          <SwapLabel
+            busy={pending}
+            idle={t("Unirme")}
+            busyText={t("Uniéndote…")}
+          />
         </Button>
       </div>
     </form>

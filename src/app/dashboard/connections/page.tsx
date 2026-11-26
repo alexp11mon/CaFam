@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { ConnectionList } from "@/components/connections/connection-list";
 import { requireUser } from "@/lib/calendar/queries";
 import { getConnections } from "@/lib/sync/queries";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Cuentas conectadas" };
 
@@ -34,14 +35,23 @@ export default function ConnectionsPage({
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-ink max-tab:sr-only">
-          Cuentas conectadas
+          <T>{"Cuentas conectadas"}</T>
         </h1>
         <p className="max-w-prose text-muted">
-          Trae tus calendarios de Google o iCloud y mantenlos al día. Lo que
-          crees, cambies o borres en ellos en CaFam también cambia en tu cuenta.
+          <T>
+            {
+              "Trae tus calendarios de Google o iCloud y mantenlos al día. Lo que crees, cambies o borres en ellos en CaFam también cambia en tu cuenta."
+            }
+          </T>
         </p>
       </header>
-      <Suspense fallback={<p className="text-muted">Cargando cuentas…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando cuentas…"}</T>
+          </p>
+        }
+      >
         <Connections searchParams={searchParams} />
       </Suspense>
     </main>

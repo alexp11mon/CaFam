@@ -14,6 +14,7 @@ import {
   readShared,
   type SharedItem,
 } from "@/lib/share/inbox";
+import { useT } from "@/components/i18n/locale-provider";
 
 type State =
   | { kind: "loading" }
@@ -27,6 +28,7 @@ type State =
  * Nothing is saved until the person confirms there.
  */
 export function ShareInbox({ id }: { id: string | null }) {
+  const t = useT();
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: "loading" });
 
@@ -60,7 +62,7 @@ export function ShareInbox({ id }: { id: string | null }) {
   if (state.kind === "loading")
     return (
       <p role="status" className="text-muted">
-        Abriendo lo compartido…
+        {t("Abriendo lo compartido…")}
       </p>
     );
 
@@ -69,17 +71,17 @@ export function ShareInbox({ id }: { id: string | null }) {
       <EmptyState
         title={
           state.kind === "gone"
-            ? "Lo compartido ya no está"
-            : "No sabemos qué hacer con esto"
+            ? t("Lo compartido ya no está")
+            : t("No sabemos qué hacer con esto")
         }
         action={
           <LinkButton href="/dashboard/calendar" variant="secondary">
-            Ir al calendario
+            {t("Ir al calendario")}
           </LinkButton>
         }
       >
         {state.kind === "gone"
-          ? "Se guarda en este dispositivo 10 minutos. Vuelve a compartirlo."
+          ? t("Se guarda en este dispositivo 10 minutos. Vuelve a compartirlo.")
           : "CaFam recibe archivos .ics, imágenes y texto."}
       </EmptyState>
     );
@@ -88,12 +90,14 @@ export function ShareInbox({ id }: { id: string | null }) {
   return (
     <Card className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold text-ink">
-        {one ? "¿Qué hago con esta imagen?" : "¿Qué hago con estas imágenes?"}
+        {one
+          ? t("¿Qué hago con esta imagen?")
+          : t("¿Qué hago con estas imágenes?")}
       </h2>
       <Button
         onClick={() => router.replace(`/dashboard/assistant?shared=${id}`)}
       >
-        Preguntar a Venito
+        {t("Preguntar a Venito")}
       </Button>
       <Button
         variant="secondary"
@@ -105,11 +109,11 @@ export function ShareInbox({ id }: { id: string | null }) {
           router.push("/dashboard/search");
         }}
       >
-        Añadir a un evento
+        {t("Añadir a un evento")}
       </Button>
       <p className="text-sm text-muted">
-        {one ? "La imagen sigue" : "Las imágenes siguen"} solo en este
-        dispositivo hasta que elijas.
+        {one ? t("La imagen sigue") : t("Las imágenes siguen")}{" "}
+        {t("solo en este dispositivo hasta que elijas.")}
       </p>
     </Card>
   );

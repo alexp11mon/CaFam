@@ -1,4 +1,6 @@
 "use client";
+import type { Locale } from "@/lib/i18n/locale";
+import { dateFormat } from "@/lib/i18n/format";
 
 import { Button } from "@/components/ui/button";
 import { visibleMarks } from "@/lib/calendar/month-marks";
@@ -9,20 +11,17 @@ import { useYearMarks, type LoadYearMarks } from "@/lib/hooks/use-year-marks";
 import type { DayRange } from "@/lib/calendar/event-window";
 import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 import { CalendarLink } from "./calendar-nav";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
 
 // One formatter for the 365 labels, as formatDateKeyFull writes them: a new
 // one per day cost tens of ms with a slow CPU (RNF-1).
-const fullDay = new Intl.DateTimeFormat("es-ES", {
-  dateStyle: "full",
-  timeZone: "UTC",
-});
+const fullDay = (locale: Locale) =>
+  dateFormat(locale, { dateStyle: "full", timeZone: "UTC" });
 
-const monthName = new Intl.DateTimeFormat("es-ES", {
-  month: "long",
-  timeZone: "UTC",
-});
+const monthName = (locale: Locale) =>
+  dateFormat(locale, { month: "long", timeZone: "UTC" });
 
 /**
  * The 12 months of the year, with a dot per calendar on the days with events;
@@ -44,6 +43,8 @@ export function YearView({
   /** Offline, the months out of the copy are dimmed with a note (RF-13). */
   availableRange?: DayRange;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const { marks, failed, retry } = useYearMarks(yearOf(date), loadYearMarks);
   const shown = visibleMarks(marks ?? {}, visibleCalendarIds);
 
@@ -54,9 +55,9 @@ export function YearView({
           role="alert"
           className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-danger bg-paper px-4 py-3 text-danger"
         >
-          <span>No se han podido cargar los días con eventos.</span>
+          <span>{t("No se han podido cargar los días con eventos.")}</span>
           <Button variant="secondary" onClick={retry}>
-            Reintentar
+            {t("Reintentar")}
           </Button>
         </div>
       ) : null}
@@ -70,7 +71,9 @@ export function YearView({
           const weeks = Array.from({ length: days.length / 7 }, (_, index) =>
             days.slice(index * 7, index * 7 + 7),
           );
-          const name = monthName.format(new Date(`${month}-01T00:00:00Z`));
+          const name = monthName(locale).format(
+            new Date(`${month}-01T00:00:00Z`),
+          );
           // Keys compare as text: "-31" is past any day of the month.
           const away =
             availableRange !== undefined &&
@@ -94,7 +97,7 @@ export function YearView({
               </h2>
               {away ? (
                 <p className="px-2 text-sm text-muted">
-                  {OFFLINE_MESSAGES.outOfRange}
+                  {t(OFFLINE_MESSAGES.outOfRange)}
                 </p>
               ) : null}
               <table className="w-full table-fixed text-center">
@@ -126,7 +129,13 @@ export function YearView({
                             <CalendarLink
                               view="day"
                               date={day}
-                              aria-label={`${fullDay.format(new Date(`${day}T00:00:00Z`))}${isToday ? ", hoy" : ""}${dots.length > 0 ? ", con eventos" : ""}`}
+                              aria-label={
+                                fullDay(locale).format(
+                                  new Date(`${day}T00:00:00Z`),
+                                ) +
+                                (isToday ? t(", hoy") : "") +
+                                (dots.length > 0 ? t(", con eventos") : "")
+                              }
                               aria-current={isToday ? "date" : undefined}
                               className={`press-quiet mx-auto flex aspect-square w-full max-w-11 flex-col items-center justify-center rounded-control text-sm tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
                                 isToday

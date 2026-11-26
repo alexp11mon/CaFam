@@ -6,6 +6,7 @@ import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import { applyTheme, centreOf } from "@/lib/theme/apply-theme";
 import { SelectionRing } from "./selection-ring";
 import { THEME_OPTIONS, type ThemeId } from "@/lib/theme/theme";
+import { useT } from "@/components/i18n/locale-provider";
 
 type Result = { error?: string };
 
@@ -21,6 +22,7 @@ export function ThemePicker({
   current: ThemeId;
   setTheme: (theme: ThemeId) => Promise<Result>;
 }) {
+  const t = useT();
   const [selected, setSelected] = useState(current);
   const [error, setError] = useState<string>();
 
@@ -45,13 +47,15 @@ export function ThemePicker({
 
   return (
     <fieldset className="flex flex-col gap-4">
-      <legend className="mb-1 text-lg font-semibold text-ink">Tema</legend>
+      <legend className="mb-1 text-lg font-semibold text-ink">
+        {t("Tema")}
+      </legend>
       <p className="text-muted">
-        &ldquo;Como el sistema&rdquo; cambia solo cuando cambia tu dispositivo.
+        {t("“Como el sistema” cambia solo cuando cambia tu dispositivo.")}
       </p>
       <div
         role="radiogroup"
-        aria-label="Tema"
+        aria-label={t("Tema")}
         className="relative grid grid-cols-1 gap-3 sm:grid-cols-3"
       >
         {THEME_OPTIONS.map((option) => (

@@ -41,6 +41,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("@/lib/calendar/queries", () => ({
   getProfileTimeZone: async () => "Europe/Madrid",
+  getProfileLocale: async () => "es",
   getMyCalendars,
   getEventsInRange,
 }));

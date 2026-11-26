@@ -9,6 +9,7 @@ import { MAX_CALENDARS_PER_ACCOUNT } from "@/lib/sync/limits";
 import { providerName } from "@/lib/sync/provider-labels";
 import type { ProviderAccess, ProviderName } from "@/lib/sync/providers/types";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 export interface PickerCalendar {
   id: string;
@@ -40,6 +41,7 @@ export function CalendarPicker({
   calendars: PickerCalendar[];
   action: FormAction<PickerState>;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {});
   // Controlled: the count and the keep-or-delete question depend on it.
   const [checked, setChecked] = useState(
@@ -68,7 +70,7 @@ export function CalendarPicker({
         className="stagger flex flex-col gap-1"
       >
         <legend className="mb-2 font-semibold text-ink">
-          Calendarios que quieres traer
+          {t("Calendarios que quieres traer")}
         </legend>
         {calendars.map((calendar) => {
           const isChecked = checked.has(calendar.id);
@@ -100,7 +102,7 @@ export function CalendarPicker({
               <span className="min-w-0 truncate">{calendar.name}</span>
               {calendar.access === "reader" ? (
                 <span className="ml-auto shrink-0 text-sm text-muted">
-                  Solo lectura en {providerName(provider)}
+                  {t("Solo lectura en")} {providerName(provider)}
                 </span>
               ) : null}
             </label>
@@ -109,8 +111,10 @@ export function CalendarPicker({
       </fieldset>
       {full ? (
         <p id={limitId} className="text-sm text-muted">
-          Has llegado al máximo de {MAX_CALENDARS_PER_ACCOUNT} calendarios por
-          cuenta. Desmarca uno para elegir otro.
+          {t(
+            "Has llegado al máximo de {MAX_CALENDARS_PER_ACCOUNT} calendarios por cuenta. Desmarca uno para elegir otro.",
+            { MAX_CALENDARS_PER_ACCOUNT },
+          )}
         </p>
       ) : null}
 
@@ -122,7 +126,7 @@ export function CalendarPicker({
           }
         >
           <legend className="px-1 font-semibold text-ink">
-            ¿Qué hacemos con los calendarios que dejas de traer?
+            {t("¿Qué hacemos con los calendarios que dejas de traer?")}
           </legend>
           <label className="flex min-h-11 items-center gap-3 text-ink">
             <input
@@ -132,7 +136,7 @@ export function CalendarPicker({
               required
               className="size-5 shrink-0 accent-ink"
             />
-            Conservarlos como calendarios normales y editables
+            {t("Conservarlos como calendarios normales y editables")}
           </label>
           <label className="flex min-h-11 items-center gap-3 text-ink">
             <input
@@ -142,7 +146,7 @@ export function CalendarPicker({
               required
               className="size-5 shrink-0 accent-ink"
             />
-            Borrarlos con sus eventos, también para quien los comparte
+            {t("Borrarlos con sus eventos, también para quien los comparte")}
           </label>
           {state.fieldErrors?.decision ? (
             <p id={decisionError} role="alert" className="text-sm text-danger">
@@ -157,7 +161,11 @@ export function CalendarPicker({
         {state.message}
       </p>
       <Button type="submit" disabled={pending} className="self-start">
-        <SwapLabel busy={pending} idle="Guardar" busyText="Guardando…" />
+        <SwapLabel
+          busy={pending}
+          idle={t("Guardar")}
+          busyText={t("Guardando…")}
+        />
       </Button>
     </form>
   );

@@ -6,6 +6,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { TextField } from "@/components/ui/text-field";
 import type { FormAction, FormState } from "@/lib/forms/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 type IcloudState = FormState<"appleId" | "password">;
 
@@ -20,6 +21,7 @@ export function IcloudConnectForm({
   action: FormAction<IcloudState>;
   appleId?: string;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {
     values: { appleId, password: "" },
   });
@@ -32,7 +34,7 @@ export function IcloudConnectForm({
     >
       <FormAlert message={state.formError} />
       <TextField
-        label="Apple ID"
+        label={t("Apple ID")}
         name="appleId"
         type="email"
         inputMode="email"
@@ -43,7 +45,7 @@ export function IcloudConnectForm({
         error={state.fieldErrors?.appleId}
       />
       <TextField
-        label="Contraseña específica de app"
+        label={t("Contraseña específica de app")}
         name="password"
         type="password"
         autoComplete="off"
@@ -57,7 +59,7 @@ export function IcloudConnectForm({
           <SwapLabel
             busy={pending}
             idle="Conectar iCloud"
-            busyText="Conectando…"
+            busyText={t("Conectando…")}
           />
         </Button>
       </div>

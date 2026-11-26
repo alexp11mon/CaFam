@@ -1,3 +1,4 @@
+import { spanishT, type T } from "@/lib/i18n/translate";
 import type { Database } from "@/types/database";
 import { providerName } from "./provider-labels";
 import type { ProviderAccess, ProviderName } from "./providers/types";
@@ -70,20 +71,34 @@ export type ReadOnlyReason = NonNullable<ReturnType<typeof readOnlyReason>>;
 export function readOnlyEventText(
   reason: ReadOnlyReason,
   provider: ProviderName,
+  t: T = spanishT,
 ): string {
   const name = providerName(provider);
   return reason === "provider"
-    ? `La cuenta de ${name} solo puede ver este calendario, así que este evento solo se puede cambiar en ${name}.`
-    : `Este evento viene de ${name}. Para cambiarlo desde CaFam, el propietario tiene que volver a conectar la cuenta.`;
+    ? t(
+        "La cuenta de {name} solo puede ver este calendario, así que este evento solo se puede cambiar en {name}.",
+        { name },
+      )
+    : t(
+        "Este evento viene de {name}. Para cambiarlo desde CaFam, el propietario tiene que volver a conectar la cuenta.",
+        { name },
+      );
 }
 
 /** Why an event cannot be pasted in a synced calendar (spec 017). */
 export function readOnlyPasteText(
   reason: ReadOnlyReason,
   provider: ProviderName,
+  t: T = spanishT,
 ): string {
   const name = providerName(provider);
   return reason === "provider"
-    ? `La cuenta de ${name} solo puede ver este calendario, así que no se puede pegar en él.`
-    : `Para pegar en este calendario, el propietario tiene que volver a conectar la cuenta de ${name}.`;
+    ? t(
+        "La cuenta de {name} solo puede ver este calendario, así que no se puede pegar en él.",
+        { name },
+      )
+    : t(
+        "Para pegar en este calendario, el propietario tiene que volver a conectar la cuenta de {name}.",
+        { name },
+      );
 }

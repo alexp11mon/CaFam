@@ -1,4 +1,5 @@
 "use client";
+import { dateFormat } from "@/lib/i18n/format";
 
 import { usePathname } from "next/navigation";
 import {
@@ -96,6 +97,7 @@ import { WeekView } from "./week-view";
 import { YearView } from "./year-view";
 import type { LoadYearMarks } from "@/lib/hooks/use-year-marks";
 import type { DayRange } from "@/lib/calendar/event-window";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 export interface PanelCalendar extends GroupableCalendar {
   color: string;
@@ -262,6 +264,8 @@ export function CalendarWorkspace({
   busyIntervals?: BusyInput[];
   setShowBusy?: (personId: string, show: boolean) => Promise<Result>;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [keyDialog, setKeyDialog] = useState<"goto" | "help" | null>(null);
   useCalendarShortcuts({
     view,
@@ -280,7 +284,14 @@ export function CalendarWorkspace({
   const [liveNotice, setLiveNotice] = useState("");
   useLiveCalendar(userId, () =>
     setLiveNotice(
-      `Calendario actualizado a las ${new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone }).format(new Date())}`,
+      t("Calendario actualizado a las {time}", {
+        time: dateFormat(locale, {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          timeZone,
+        }).format(new Date()),
+      }),
     ),
   );
   const [groups, setGroups] = useState(initialGroups);
@@ -699,7 +710,7 @@ export function CalendarWorkspace({
           <div
             id="calendar-date-picker"
             role="dialog"
-            aria-label="Elegir fecha"
+            aria-label={t("Elegir fecha")}
             data-leaving={sidebarPicker.leaving || undefined}
             aria-hidden={sidebarPicker.leaving || undefined}
             inert={sidebarPicker.leaving}
@@ -796,7 +807,7 @@ export function CalendarWorkspace({
             onClick={() => setPanelOpen((open) => !open)}
             className="inline-flex min-h-11 items-center justify-center rounded-control border border-control bg-paper px-4 text-base font-semibold text-ink transition-colors hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink lg:hidden"
           >
-            Calendarios y filtros
+            {t("Calendarios y filtros")}
           </button>
           <div
             id={panelId}

@@ -10,6 +10,7 @@ import { SHARING_MESSAGES } from "@/lib/sharing/error-messages";
 import type { InvitePreview } from "@/lib/sharing/queries";
 import { ROLE_LABELS } from "@/lib/sharing/roles";
 import { SwapLabel } from "@/components/ui/swap-label";
+import { useT } from "@/components/i18n/locale-provider";
 
 /** Preview of an invite and the "Unirme" button (RF-5, RF-6, RF-8, RF-9). */
 export function InviteJoinCard({
@@ -19,6 +20,7 @@ export function InviteJoinCard({
   preview: InvitePreview | null;
   acceptAction: FormAction<ConfirmState>;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(acceptAction, {});
 
   if (!preview) {
@@ -31,7 +33,7 @@ export function InviteJoinCard({
           href="/dashboard/calendar"
           className="inline-flex min-h-11 items-center font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
         >
-          Ir al calendario
+          {t("Ir al calendario")}
         </Link>
       </div>
     );
@@ -41,29 +43,33 @@ export function InviteJoinCard({
     <div className="flex flex-col gap-4 text-ink">
       <dl className="flex flex-col gap-3 rounded-card bg-paper p-4">
         <div>
-          <dt className="text-sm text-muted">Calendario</dt>
+          <dt className="text-sm text-muted">{t("Calendario")}</dt>
           <dd className="min-w-0 break-words text-lg font-semibold">
             {preview.calendarName}
           </dd>
         </div>
         <div>
-          <dt className="text-sm text-muted">Propietario</dt>
+          <dt className="text-sm text-muted">{t("Propietario")}</dt>
           <dd className="min-w-0 break-words font-semibold">
             {preview.ownerName}
           </dd>
         </div>
         <div>
-          <dt className="text-sm text-muted">Tu rol</dt>
+          <dt className="text-sm text-muted">{t("Tu rol")}</dt>
           <dd className="font-semibold">{ROLE_LABELS[preview.role]}</dd>
         </div>
       </dl>
       {preview.alreadyMember ? (
         <>
           <p>
-            Ya eres miembro de este calendario. No se ha gastado ningún uso.
+            {t(
+              "Ya eres miembro de este calendario. No se ha gastado ningún uso.",
+            )}
           </p>
           <div>
-            <LinkButton href="/dashboard/calendar">Ir al calendario</LinkButton>
+            <LinkButton href="/dashboard/calendar">
+              {t("Ir al calendario")}
+            </LinkButton>
           </div>
         </>
       ) : (
@@ -71,7 +77,11 @@ export function InviteJoinCard({
           <FormAlert message={state.formError} />
           <div>
             <Button type="submit" disabled={pending}>
-              <SwapLabel busy={pending} idle="Unirme" busyText="Uniéndote…" />
+              <SwapLabel
+                busy={pending}
+                idle={t("Unirme")}
+                busyText={t("Uniéndote…")}
+              />
             </Button>
           </div>
         </form>

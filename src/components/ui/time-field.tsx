@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { normalizeTime, type TimeOption } from "@/lib/calendar/time-options";
+import { useT } from "@/components/i18n/locale-provider";
 
 /** Index of the option to start from: the value itself, or the first one after it. */
 function activeIndexFor(options: TimeOption[], value: string): number {
@@ -31,6 +32,7 @@ export function TimeField({
   options: TimeOption[];
   error?: string;
 }) {
+  const t = useT();
   // useId, not the name: Next keeps the previous page hidden in the DOM (cacheComponents).
   const id = useId();
   const listId = `${id}-list`;
@@ -133,7 +135,7 @@ export function TimeField({
         ref={list}
         id={listId}
         role="listbox"
-        aria-label={`${label}: opciones`}
+        aria-label={t("{label}: opciones", { label })}
         hidden={!open}
         // It hangs from the field, so it grows from its top edge (spec 021
         // RF-8), and its options land one after another each time (RF-16).
@@ -157,7 +159,7 @@ export function TimeField({
       </ul>
       {error ? (
         <p id={errorId} aria-live="polite" className="text-sm text-danger">
-          {error}
+          {t(error)}
         </p>
       ) : null}
     </div>

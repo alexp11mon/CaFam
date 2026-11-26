@@ -42,6 +42,7 @@ import {
 import { loadBusy, loadCalendarWindow } from "./window-actions";
 import { loadTasks } from "./task-actions";
 import { setShowTasks } from "../settings/actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Calendario" };
 
@@ -121,12 +122,15 @@ async function CalendarContent({
           title="Todavía no tienes calendarios"
           action={
             <LinkButton href="/dashboard/calendars/new">
-              Crear calendario
+              <T>{"Crear calendario"}</T>
             </LinkButton>
           }
         >
-          Crea el primero para empezar a apuntar eventos, o únete al de otra
-          persona desde «Más».
+          <T>
+            {
+              "Crea el primero para empezar a apuntar eventos, o únete al de otra persona desde «Más»."
+            }
+          </T>
         </EmptyState>
       </Card>
     );
@@ -203,7 +207,7 @@ export default function CalendarPage({
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 max-tab:gap-2 max-tab:pt-1 max-tab:pb-0 sm:px-6">
       {/* The phone header already names the month (spec 016 RF-8). */}
       <h1 className="text-2xl font-semibold text-ink max-tab:sr-only">
-        Calendario
+        <T>{"Calendario"}</T>
       </h1>
       <Suspense fallback={<CalendarSkeleton view="agenda" />}>
         <ShapedLoading searchParams={searchParams} />

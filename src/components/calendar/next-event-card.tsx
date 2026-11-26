@@ -1,4 +1,5 @@
 "use client";
+import { dateFormat } from "@/lib/i18n/format";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -6,6 +7,7 @@ import { useEffect } from "react";
 import { formatCountdown, pickNextEvent } from "@/lib/calendar/next-event";
 import { formatTime } from "@/lib/calendar/time-zone";
 import { useNow } from "@/lib/hooks/use-now";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 export interface NextEventItem {
   id: string;
@@ -35,6 +37,8 @@ export function NextEventCard({
   timeZone: string;
   loadedAt: number;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const now = useNow();
   const router = useRouter();
 
@@ -62,7 +66,7 @@ export function NextEventCard({
     now === null
       ? null
       : Number(
-          new Intl.DateTimeFormat("es-ES", {
+          dateFormat(locale, {
             hour: "numeric",
             hourCycle: "h23",
             timeZone,
@@ -74,14 +78,14 @@ export function NextEventCard({
       : hour < 6
         ? "Buenas noches"
         : hour < 13
-          ? "Buenos días"
+          ? t("Buenos días")
           : hour < 21
             ? "Buenas tardes"
             : "Buenas noches";
   const day =
     now === null
       ? ""
-      : new Intl.DateTimeFormat("es-ES", {
+      : dateFormat(locale, {
           weekday: "long",
           day: "numeric",
           month: "long",
@@ -114,12 +118,14 @@ export function NextEventCard({
 
   if (now === null || !next) {
     return (
-      <section aria-label="Próximo evento" className={frame}>
+      <section aria-label={t("Próximo evento")} className={frame}>
         {head}
         <span className="relative flex flex-col">
-          <h2 className="text-xs font-medium">Próximo evento</h2>
+          <h2 className="text-xs font-medium">{t("Próximo evento")}</h2>
           {now === null ? null : (
-            <p className="font-semibold">Nada en las próximas 24 horas</p>
+            <p className="font-semibold">
+              {t("Nada en las próximas 24 horas")}
+            </p>
           )}
         </span>
       </section>
@@ -134,7 +140,7 @@ export function NextEventCard({
       {head}
       <span className="relative flex items-end justify-between gap-3">
         <span className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-xs font-medium">Próximo evento</span>
+          <span className="text-xs font-medium">{t("Próximo evento")}</span>
           <span className="line-clamp-2 text-lg leading-tight font-semibold break-words">
             {next.title}
           </span>

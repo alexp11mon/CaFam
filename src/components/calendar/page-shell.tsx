@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/locale-provider";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ChevronIcon } from "@/components/shell/icons";
@@ -25,12 +26,12 @@ export function PageShell({
           className="inline-flex min-h-11 items-center gap-1 self-start text-sm font-semibold text-muted underline decoration-control underline-offset-4 hover:text-ink"
         >
           <ChevronIcon direction="left" />
-          {backLabel}
+          <T>{backLabel}</T>
         </Link>
         <h1
           className={`text-2xl font-semibold text-ink ${inTopBar ? "max-tab:sr-only" : ""}`}
         >
-          {title}
+          <T>{title}</T>
         </h1>
       </header>
       {children}

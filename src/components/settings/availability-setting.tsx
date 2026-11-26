@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Switch } from "@/components/ui/switch";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
+import { useT } from "@/components/i18n/locale-provider";
 
 type Result = { error?: string };
 
@@ -24,6 +25,7 @@ export function AvailabilitySetting({
   label?: string;
   description?: string;
 }) {
+  const t = useT();
   const [checked, setChecked] = useState(current);
   const [error, setError] = useState<string>();
   // The text that goes with the pulse: never the only sign (spec 021 RF-51).
@@ -51,15 +53,15 @@ export function AvailabilitySetting({
   return (
     <div className="flex flex-col gap-3">
       <Switch
-        label={label}
-        description={description}
+        label={t(label)}
+        description={t(description)}
         checked={checked}
         onCheckedChange={toggle}
       />
       <FormAlert message={error} />
       {saved ? (
         <p role="status" className="text-sm text-ink">
-          Guardado.
+          {t("Guardado.")}
         </p>
       ) : null}
     </div>

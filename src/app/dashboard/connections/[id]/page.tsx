@@ -32,6 +32,7 @@ import {
   saveSelection,
   syncNow,
 } from "../actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Cuenta conectada" };
 
@@ -50,7 +51,10 @@ async function readProviderList(
       error:
         error instanceof ProviderError && error.kind === "revoked"
           ? syncErrorText("revoked", provider)
-          : `No se ha podido leer la lista de calendarios de ${providerName(provider)}. Inténtalo más tarde.`,
+          : // Whole sentences, so FormAlert can translate them (spec 053).
+            provider === "icloud"
+            ? "No se ha podido leer la lista de calendarios de iCloud. Inténtalo más tarde."
+            : "No se ha podido leer la lista de calendarios de Google. Inténtalo más tarde.",
     };
   }
 }
@@ -108,7 +112,7 @@ async function ConnectionDetail({
               }
               className="self-start"
             >
-              Volver a conectar
+              <T>{"Volver a conectar"}</T>
             </LinkButton>
           </div>
         )}
@@ -129,7 +133,7 @@ async function ConnectionDetail({
           className="flex flex-col gap-3"
         >
           <h2 id="synced-heading" className="text-lg font-semibold text-ink">
-            Calendarios traídos
+            <T>{"Calendarios traídos"}</T>
           </h2>
           <SyncStatus
             calendars={synced}
@@ -141,7 +145,7 @@ async function ConnectionDetail({
 
       <section aria-labelledby="pick-heading" className="flex flex-col gap-3">
         <h2 id="pick-heading" className="text-lg font-semibold text-ink">
-          Elegir calendarios
+          <T>{"Elegir calendarios"}</T>
         </h2>
         {"error" in google ? (
           <FormAlert message={google.error} />
@@ -164,11 +168,12 @@ async function ConnectionDetail({
           className="flex flex-col gap-3"
         >
           <h2 id="create-heading" className="text-lg font-semibold text-ink">
-            Crear un calendario en {providerName(connection.provider)}
+            <T>{"Crear un calendario en"}</T>{" "}
+            {providerName(connection.provider)}
           </h2>
           <p className="text-muted">
-            Se crea en esta cuenta de {providerName(connection.provider)} y se
-            trae a CaFam.
+            <T>{"Se crea en esta cuenta de"}</T>{" "}
+            {providerName(connection.provider)} <T>{"y se trae a CaFam."}</T>
           </p>
           <CreateCalendarForm
             provider={connection.provider}
@@ -182,10 +187,10 @@ async function ConnectionDetail({
         className="flex flex-col gap-3 border-t border-line pt-6"
       >
         <h2 id="disconnect-heading" className="text-lg font-semibold text-ink">
-          Desconectar la cuenta
+          <T>{"Desconectar la cuenta"}</T>
         </h2>
         <p className="text-muted">
-          Podrás conservar sus calendarios como normales o borrarlos.
+          <T>{"Podrás conservar sus calendarios como normales o borrarlos."}</T>
         </p>
         <div>
           <DisconnectDialog
@@ -217,7 +222,13 @@ export default function ConnectionPage({
       backHref="/dashboard/connections"
       backLabel="Volver a Cuentas conectadas"
     >
-      <Suspense fallback={<p className="text-muted">Cargando la cuenta…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando la cuenta…"}</T>
+          </p>
+        }
+      >
         <ConnectionDetail params={params} searchParams={searchParams} />
       </Suspense>
     </PageShell>

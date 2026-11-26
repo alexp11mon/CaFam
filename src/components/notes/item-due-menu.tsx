@@ -5,6 +5,7 @@ import { CalendarIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { quickDates } from "@/lib/notes/due";
+import { useT } from "@/components/i18n/locale-provider";
 
 export interface ItemDue {
   dueDate: string | null;
@@ -29,6 +30,7 @@ export function ItemDueMenu({
   today: string;
   onChange: (due: ItemDue) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const dateId = useId();
@@ -52,7 +54,7 @@ export function ItemDueMenu({
       }}
     >
       <IconButton
-        label={`Fecha de «${text}»`}
+        label={t("Fecha de «{text}»", { text })}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         onClick={() => {
@@ -68,29 +70,29 @@ export function ItemDueMenu({
         <div
           id={panelId}
           role="group"
-          aria-label={`Fecha límite de «${text}»`}
+          aria-label={t("Fecha límite de «{text}»", { text })}
           className="pop absolute top-full right-0 z-20 mt-1 flex w-64 flex-col gap-2 rounded-card surface-float p-3"
         >
           <Button
             variant="secondary"
             onClick={() => choose({ dueDate: quick.today, dueTime: null })}
           >
-            Hoy
+            {t("Hoy")}
           </Button>
           <Button
             variant="secondary"
             onClick={() => choose({ dueDate: quick.tomorrow, dueTime: null })}
           >
-            Mañana
+            {t("Mañana")}
           </Button>
           <Button
             variant="secondary"
             onClick={() => choose({ dueDate: quick.nextWeek, dueTime: null })}
           >
-            Próxima semana
+            {t("Próxima semana")}
           </Button>
           <label htmlFor={dateId} className="text-sm font-medium text-ink">
-            Otra fecha
+            {t("Otra fecha")}
           </label>
           <input
             id={dateId}
@@ -100,7 +102,7 @@ export function ItemDueMenu({
             className={FIELD}
           />
           <label htmlFor={timeId} className="text-sm font-medium text-ink">
-            Hora (opcional)
+            {t("Hora (opcional)")}
           </label>
           <input
             id={timeId}
@@ -114,14 +116,14 @@ export function ItemDueMenu({
             disabled={!date}
             onClick={() => choose({ dueDate: date, dueTime: time || null })}
           >
-            Guardar fecha
+            {t("Guardar fecha")}
           </Button>
           {dueDate ? (
             <Button
               variant="quiet"
               onClick={() => choose({ dueDate: null, dueTime: null })}
             >
-              Quitar fecha
+              {t("Quitar fecha")}
             </Button>
           ) : null}
         </div>

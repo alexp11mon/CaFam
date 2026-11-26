@@ -7,6 +7,7 @@ import type { UndoToken } from "@/lib/calendar/undo";
 import type { ConfirmState, Done, FormAction } from "@/lib/forms/form-state";
 import type { SeriesScope } from "@/lib/recurrence/series-write";
 import { SeriesScopeDialog } from "./series-scope-dialog";
+import { useT } from "@/components/i18n/locale-provider";
 
 /** "Borrar evento" of an occurrence: asks the scope first (spec 013 RF-20, RF-24b). */
 export function SeriesDelete({
@@ -18,6 +19,7 @@ export function SeriesDelete({
   limitReached: boolean;
   onDone?: (done: Done, undo?: UndoToken) => void;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {});
   const [asking, setAsking] = useState(false);
   const [scope, setScope] = useState<SeriesScope | null>(null);
@@ -46,7 +48,7 @@ export function SeriesDelete({
         // Supr in the detail presses it (spec 017 RF-55).
         data-delete-event=""
       >
-        Borrar evento
+        {t("Borrar evento")}
       </Button>
       <form action={formAction} className="contents">
         <SeriesScopeDialog

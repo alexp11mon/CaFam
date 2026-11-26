@@ -11,6 +11,7 @@ import type { CommentView } from "@/lib/comments/queries";
 import { fullDateTime, relativeTime } from "@/lib/comments/relative-time";
 import type { ConfirmState } from "@/lib/forms/form-state";
 import { CommentText } from "./comment-text";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 type Outcome = Pick<CommentResult, "ok"> & {
   error?: string;
@@ -42,6 +43,8 @@ export function CommentItem({
   /** "Pendiente de enviar" of a comment made offline (spec 035 RF-20). */
   mark?: ReactNode;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [editing, setEditingState] = useState(false);
   const setEditing = (value: boolean) => {
     setEditingState(value);
@@ -76,7 +79,7 @@ export function CommentItem({
     return result.ok ? { done: "deleted" } : { formError: result.error };
   }
 
-  const full = fullDateTime(comment.createdAt, timeZone);
+  const full = fullDateTime(comment.createdAt, timeZone, locale);
   return (
     <li className={`flex gap-3 ${arrived ? "row-in" : ""}`}>
       <Avatar name={comment.author} tint={tint} />
@@ -88,18 +91,18 @@ export function CommentItem({
             title={full}
             className="text-muted tabular-nums"
           >
-            {relativeTime(comment.createdAt, new Date(now), timeZone)}
+            {relativeTime(comment.createdAt, new Date(now), timeZone, locale)}
             <span className="sr-only">, {full}</span>
           </time>
           {comment.edited ? (
-            <span className="text-muted">(editado)</span>
+            <span className="text-muted">{t("(editado)")}</span>
           ) : null}
           {mark}
         </p>
         {editing ? (
           <form onSubmit={save} noValidate className="flex flex-col gap-2">
             <TextArea
-              label="Editar comentario"
+              label={t("Editar comentario")}
               name="body"
               defaultValue={comment.body}
               error={error.field}
@@ -108,7 +111,7 @@ export function CommentItem({
             <FormAlert message={error.form} />
             <div className="flex flex-wrap gap-2">
               <Button type="submit" disabled={pending}>
-                Guardar
+                {t("Guardar")}
               </Button>
               <Button
                 variant="secondary"
@@ -117,7 +120,7 @@ export function CommentItem({
                   setError({});
                 }}
               >
-                Cancelar
+                {t("Cancelar")}
               </Button>
             </div>
           </form>
@@ -130,18 +133,22 @@ export function CommentItem({
               <Button
                 variant="secondary"
                 onClick={() => setEditing(true)}
-                aria-label={`Editar el comentario de ${comment.author}`}
+                aria-label={t("Editar el comentario de {author}", {
+                  author: comment.author,
+                })}
               >
-                Editar
+                {t("Editar")}
               </Button>
             ) : null}
             {comment.canDelete ? (
               <ConfirmDialog
-                triggerLabel="Borrar"
-                triggerAriaLabel={`Borrar el comentario de ${comment.author}`}
-                title="¿Borrar este comentario?"
-                description="Nadie podrá volver a verlo."
-                confirmLabel="Borrar comentario"
+                triggerLabel={t("Borrar")}
+                triggerAriaLabel={t("Borrar el comentario de {author}", {
+                  author: comment.author,
+                })}
+                title={t("¿Borrar este comentario?")}
+                description={t("Nadie podrá volver a verlo.")}
+                confirmLabel={t("Borrar comentario")}
                 action={remove}
               />
             ) : null}

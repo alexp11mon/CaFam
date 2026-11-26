@@ -6,6 +6,7 @@ import { addDays, parseDateKey, weekdayIndex } from "@/lib/calendar/time-zone";
 import { fromRRule, toRRule, type Weekday } from "@/lib/recurrence/rule";
 import { recurrenceRuleSchema, WEEKDAYS } from "@/lib/recurrence/schemas";
 import { summarizeRule, WEEKDAY_NAMES } from "@/lib/recurrence/summary";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 type Freq = "daily" | "weekly" | "monthly" | "yearly";
 type MonthlyMode = "day" | "pos" | "last";
@@ -60,6 +61,8 @@ function Editor({
   onSave,
   onCancel,
 }: Omit<Parameters<typeof RecurrenceEditor>[0], "open">) {
+  const t = useT();
+  const locale = useLocale();
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const id = useId();
@@ -153,13 +156,13 @@ function Editor({
     >
       <div className="flex flex-col gap-5">
         <h2 id={titleId} className="text-lg font-semibold">
-          Repetición personalizada
+          {t("Repetición personalizada")}
         </h2>
 
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1">
             <label htmlFor={`${id}-interval`} className="text-sm font-medium">
-              Repetir cada
+              {t("Repetir cada")}
             </label>
             <input
               id={`${id}-interval`}
@@ -174,7 +177,7 @@ function Editor({
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor={`${id}-unit`} className="sr-only">
-              Unidad
+              {t("Unidad")}
             </label>
             <select
               id={`${id}-unit`}
@@ -194,7 +197,7 @@ function Editor({
         {freq === "weekly" ? (
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2 text-sm font-medium">
-              Días de la semana
+              {t("Días de la semana")}
             </legend>
             <div className="flex flex-wrap gap-2">
               {WEEKDAYS.map((day, index) => (
@@ -218,17 +221,22 @@ function Editor({
 
         {freq === "monthly" ? (
           <fieldset className="flex flex-col gap-1">
-            <legend className="mb-1 text-sm font-medium">Cada mes</legend>
+            <legend className="mb-1 text-sm font-medium">
+              {t("Cada mes")}
+            </legend>
             <Choice
               name={`${id}-monthly`}
-              label={`El día ${date.day}`}
+              label={t("El día {day}", { day: date.day })}
               checked={monthly === "day"}
               onChange={() => setMonthly("day")}
             />
             {position <= 4 ? (
               <Choice
                 name={`${id}-monthly`}
-                label={`El ${position}.º ${weekdayName}`}
+                label={t("El {position}.º {weekdayName}", {
+                  position,
+                  weekdayName,
+                })}
                 checked={monthly === "pos"}
                 onChange={() => setMonthly("pos")}
               />
@@ -236,7 +244,7 @@ function Editor({
             {isLast ? (
               <Choice
                 name={`${id}-monthly`}
-                label={`El último ${weekdayName}`}
+                label={t("El último {weekdayName}", { weekdayName })}
                 checked={monthly === "last"}
                 onChange={() => setMonthly("last")}
               />
@@ -245,22 +253,22 @@ function Editor({
         ) : null}
 
         <fieldset className="flex flex-col gap-1">
-          <legend className="mb-1 text-sm font-medium">Termina</legend>
+          <legend className="mb-1 text-sm font-medium">{t("Termina")}</legend>
           <Choice
             name={`${id}-end`}
-            label="Nunca"
+            label={t("Nunca")}
             checked={endKind === "never"}
             onChange={() => setEndKind("never")}
           />
           <div className="flex flex-wrap items-center gap-3">
             <Choice
               name={`${id}-end`}
-              label="El"
+              label={t("El")}
               checked={endKind === "until"}
               onChange={() => setEndKind("until")}
             />
             <label htmlFor={`${id}-until`} className="sr-only">
-              Fecha de fin de la repetición
+              {t("Fecha de fin de la repetición")}
             </label>
             <input
               id={`${id}-until`}
@@ -274,12 +282,12 @@ function Editor({
           <div className="flex flex-wrap items-center gap-3">
             <Choice
               name={`${id}-end`}
-              label="Tras"
+              label={t("Tras")}
               checked={endKind === "count"}
               onChange={() => setEndKind("count")}
             />
             <label htmlFor={`${id}-count`} className="sr-only">
-              Número de repeticiones
+              {t("Número de repeticiones")}
             </label>
             <input
               id={`${id}-count`}
@@ -292,22 +300,22 @@ function Editor({
               onChange={(event) => setCount(event.target.value)}
               className={`${FIELD} min-h-11 w-24 tabular-nums disabled:opacity-60`}
             />
-            <span aria-hidden="true">repeticiones</span>
+            <span aria-hidden="true">{t("repeticiones")}</span>
           </div>
         </fieldset>
 
         <p role="status" aria-live="polite" className="font-semibold">
-          {parsed.success ? summarizeRule(parsed.data) : ""}
+          {parsed.success ? summarizeRule(parsed.data, locale) : ""}
         </p>
         {numbersOk ? null : (
           <p className="text-sm text-danger">
-            Revisa la repetición: cada 1 a 99, de 1 a 999 veces.
+            {t("Revisa la repetición: cada 1 a 99, de 1 a 999 veces.")}
           </p>
         )}
 
         <div className="flex flex-wrap justify-end gap-3">
           <Button variant="secondary" onClick={onCancel}>
-            Cancelar
+            {t("Cancelar")}
           </Button>
           <Button
             disabled={!parsed.success || !numbersOk}
@@ -315,7 +323,7 @@ function Editor({
               if (parsed.success) onSave(toRRule(parsed.data, allDay));
             }}
           >
-            Hecho
+            {t("Hecho")}
           </Button>
         </div>
       </div>

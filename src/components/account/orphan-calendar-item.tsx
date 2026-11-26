@@ -1,4 +1,5 @@
 "use client";
+import type { T } from "@/lib/i18n/translate";
 
 import { useActionState } from "react";
 import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
@@ -6,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import type { OrphanCalendar } from "@/lib/account/queries";
 import type { ConfirmState, FormAction } from "@/lib/forms/form-state";
+import { useT } from "@/components/i18n/locale-provider";
 
-function daysLeftText(days: number): string {
-  if (days > 1) return `Quedan ${days} días para decidir.`;
-  if (days === 1) return "Queda 1 día para decidir.";
-  return "El plazo termina hoy.";
+function daysLeftText(days: number, t: T): string {
+  if (days > 1) return t("Quedan {days} días para decidir.", { days });
+  if (days === 1) return t("Queda 1 día para decidir.");
+  return t("El plazo termina hoy.");
 }
 
 /** A calendar whose owner left: keep it or leave it before the deadline (RF-24 to RF-26). */
@@ -25,6 +27,7 @@ export function OrphanCalendarItem({
   keepAction: FormAction<ConfirmState>;
   leaveAction: FormAction<ConfirmState>;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(keepAction, {});
 
   return (
@@ -37,14 +40,17 @@ export function OrphanCalendarItem({
         />
         <span className="min-w-0 break-words">{calendar.name}</span>
       </p>
-      <p className="text-sm text-muted">Su propietario borró su cuenta.</p>
+      <p className="text-sm text-muted">
+        {t("Su propietario borró su cuenta.")}
+      </p>
       <p className="text-sm font-medium text-ink tabular-nums">
-        {daysLeftText(daysLeft)}
+        {daysLeftText(daysLeft, t)}
       </p>
       {calendar.decision ? (
         <p className="text-sm text-ink">
-          Has decidido conservarlo. Si nadie más lo conserva, pasará a ser tuyo;
-          si otros también lo conservan, cada uno tendrá una copia.
+          {t(
+            "Has decidido conservarlo. Si nadie más lo conserva, pasará a ser tuyo; si otros también lo conservan, cada uno tendrá una copia.",
+          )}
         </p>
       ) : null}
       <FormAlert message={state.formError} />
@@ -52,16 +58,18 @@ export function OrphanCalendarItem({
         {calendar.decision ? null : (
           <form action={formAction}>
             <Button type="submit" disabled={pending}>
-              Conservar
+              {t("Conservar")}
             </Button>
           </form>
         )}
         <ConfirmDialog
-          triggerLabel="Salir"
-          triggerAriaLabel={`Salir de «${calendar.name}»`}
-          title={`Salir de «${calendar.name}»`}
-          description="Dejarás de ver este calendario y sus eventos, y no podrás volver a decidir."
-          confirmLabel="Salir del calendario"
+          triggerLabel={t("Salir")}
+          triggerAriaLabel={t("Salir de «{name}»", { name: calendar.name })}
+          title={t("Salir de «{name}»", { name: calendar.name })}
+          description={t(
+            "Dejarás de ver este calendario y sus eventos, y no podrás volver a decidir.",
+          )}
+          confirmLabel={t("Salir del calendario")}
           action={leaveAction}
         />
       </div>

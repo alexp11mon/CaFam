@@ -28,10 +28,13 @@ import { runTool, type CitedEvent } from "@/lib/assistant/tools";
 import {
   getEventsInRange,
   getMyCalendars,
+  getProfileLocale,
   getProfileTimeZone,
 } from "@/lib/calendar/queries";
 import { canWriteEvents } from "@/lib/sync/read-only";
 import { createClient } from "@/lib/supabase/server";
+import { translator } from "@/i18n/translator";
+import type { T } from "@/lib/i18n/translate";
 
 // Spec 015 plan assistant-route (D3): one question of the chat. The thread is
 // not stored (RF-6); only answered questions count for the quota (D9).
@@ -46,6 +49,7 @@ async function proposalDeps(
   supabase: Supabase,
   userId: string,
   timeZone: string,
+  t: T,
 ): Promise<ProposalDeps> {
   const calendars = await getMyCalendars(supabase, userId);
   return {
@@ -55,6 +59,7 @@ async function proposalDeps(
       canWrite: canWriteEvents(calendar),
     })),
     timeZone,
+    t,
     loadEvents: async (from, to) =>
       (await getEventsInRange(supabase, from, to)).map((event) => ({
         calendarId: event.calendarId,
@@ -82,7 +87,12 @@ export async function POST(request: Request) {
     return Response.json({ error: message ?? INVALID_TEXT }, { status: 400 });
   }
 
-  const timeZone = await getProfileTimeZone(supabase, userId);
+  const [timeZone, locale] = await Promise.all([
+    getProfileTimeZone(supabase, userId),
+    getProfileLocale(supabase, userId),
+  ]);
+  // Spec 053 RF-6 (plan D11): statuses and proposals in the profile's language.
+  const t = translator(locale);
   const now = new Date();
   // Spec 051 RF-4: the slot is reserved atomically before calling the model,
   // so parallel questions never pass the 30 of the day.
@@ -136,11 +146,13 @@ export async function POST(request: Request) {
           },
         }));
       status(
-        !proposing
-          ? STATUS.start
-          : last?.role === "user" && (last.images?.length ?? 0) > 0
-            ? STATUS.image
-            : STATUS.proposal,
+        t(
+          !proposing
+            ? STATUS.start
+            : last?.role === "user" && (last.images?.length ?? 0) > 0
+              ? STATUS.image
+              : STATUS.proposal,
+        ),
       );
       try {
         const result = proposing
@@ -152,9 +164,10 @@ export async function POST(request: Request) {
                   vision
                     ? visionChat(input, signal)
                     : jsonChat(input, undefined, signal),
-                proposal: await proposalDeps(supabase, userId, timeZone),
+                proposal: await proposalDeps(supabase, userId, timeZone, t),
                 now,
                 timeZone,
+                locale,
               },
               request.signal,
             )
@@ -175,6 +188,8 @@ export async function POST(request: Request) {
                   }),
                 now,
                 timeZone,
+                locale,
+                t,
                 onStatus: status,
                 // Spec 036 RF-18: where the user can create, for the prompt.
                 write: {

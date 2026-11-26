@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/locale-provider";
 import type { ReactNode } from "react";
 import { Venito } from "@/components/brand/venito";
 
@@ -20,7 +21,9 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
       {art ? <div aria-hidden="true">{art}</div> : null}
-      <p className="text-lg font-semibold text-ink">{title}</p>
+      <p className="text-lg font-semibold text-ink">
+        <T>{title}</T>
+      </p>
       {children ? <div className="max-w-sm text-muted">{children}</div> : null}
       {action ? <div className="pt-2">{action}</div> : null}
     </div>

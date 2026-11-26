@@ -1,14 +1,21 @@
+import { useId } from "react";
+import { T } from "@/components/i18n/locale-provider";
 const BLOCK = "rounded-control bg-stone motion-safe:animate-pulse";
 
 /** Shape of the section while its comments load; the detail does not wait (RNF rendimiento). */
 export function CommentsSkeleton() {
+  // aria-label must be a string; the label is a translated hidden span (spec 053).
+  const id = useId();
   return (
     <div
       role="status"
       aria-busy="true"
-      aria-label="Cargando comentarios…"
+      aria-labelledby={id}
       className="flex flex-col gap-4"
     >
+      <span id={id} hidden>
+        <T>{"Cargando comentarios…"}</T>
+      </span>
       {Array.from({ length: 2 }, (_, index) => (
         <div key={index} aria-hidden="true" className="flex gap-3">
           <div className={`size-8 shrink-0 rounded-full ${BLOCK}`} />

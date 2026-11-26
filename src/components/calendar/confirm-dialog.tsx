@@ -4,6 +4,7 @@ import { useActionState, useEffect, useId, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import type { ConfirmState, Done, FormAction } from "@/lib/forms/form-state";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * Explicit confirmation before a destructive action (RF-6, RF-24, RF-52).
@@ -13,6 +14,7 @@ export function ConfirmDialog({
   triggerLabel,
   triggerAriaLabel,
   title,
+  vars,
   description,
   confirmLabel,
   action,
@@ -24,6 +26,8 @@ export function ConfirmDialog({
   /** Longer accessible name when several triggers share the same visible label. */
   triggerAriaLabel?: string;
   title: string;
+  /** Values for `{name}` placeholders in title, description and aria label (spec 053). */
+  vars?: Readonly<Record<string, string | number>>;
   description: string;
   confirmLabel: string;
   action: FormAction<ConfirmState>;
@@ -33,6 +37,7 @@ export function ConfirmDialog({
   /** The action succeeded without redirecting, e.g. inside the event window (spec 008 RF-8). */
   onDone?: (done: Done) => void;
 }) {
+  const t = useT();
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [state, formAction, pending] = useActionState(action, {});
@@ -52,9 +57,9 @@ export function ConfirmDialog({
         variant="danger"
         onClick={() => dialog.current?.showModal()}
         aria-haspopup="dialog"
-        aria-label={triggerAriaLabel}
+        aria-label={triggerAriaLabel && t(triggerAriaLabel, vars)}
       >
-        {triggerLabel}
+        {t(triggerLabel)}
       </Button>
       <dialog
         ref={dialog}
@@ -63,21 +68,21 @@ export function ConfirmDialog({
       >
         <form action={formAction} className="flex flex-col gap-4">
           <h2 id={titleId} className="text-lg font-semibold">
-            {title}
+            {t(title, vars)}
           </h2>
-          <p>{description}</p>
+          <p>{t(description, vars)}</p>
           {children}
           <FormAlert message={state.formError} />
           <div className="flex flex-wrap justify-end gap-3">
             <Button variant="secondary" onClick={() => dialog.current?.close()}>
-              Cancelar
+              {t("Cancelar")}
             </Button>
             <Button
               type="submit"
               variant="danger"
               disabled={pending || confirmDisabled}
             >
-              {confirmLabel}
+              {t(confirmLabel)}
             </Button>
           </div>
         </form>

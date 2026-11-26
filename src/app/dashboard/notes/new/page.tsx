@@ -7,6 +7,7 @@ import { getProfileTimeZone, requireUser } from "@/lib/calendar/queries";
 import { getNoteRoles } from "@/lib/notes/queries";
 import { parseEventId } from "@/lib/recurrence/occurrence-id";
 import { createNote } from "../actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Nueva nota" };
 
@@ -74,7 +75,13 @@ export default function NewNotePage({
       backHref="/dashboard/notes"
       backLabel="Volver a Notas"
     >
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <Form searchParams={searchParams} />
       </Suspense>
     </PageShell>

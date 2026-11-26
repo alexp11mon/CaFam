@@ -10,6 +10,7 @@ import { getMembers } from "@/lib/sharing/queries";
 import { TRANSFER_TEXTS } from "@/lib/sharing/transfer-texts";
 import { deleteCalendar, updateCalendar } from "../../actions";
 import { transferCalendar } from "../../transfer-actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Editar calendario" };
 
@@ -45,7 +46,7 @@ async function EditCalendar({ params }: { params: Promise<{ id: string }> }) {
         className="flex flex-col gap-3 border-t border-line pt-6"
       >
         <h2 id="transfer-heading" className="text-lg font-semibold text-ink">
-          Traspasar el calendario
+          <T>{"Traspasar el calendario"}</T>
         </h2>
         {calendar.synced ? (
           // RF-9: the connected account is the owner's.
@@ -53,8 +54,11 @@ async function EditCalendar({ params }: { params: Promise<{ id: string }> }) {
         ) : others.length ? (
           <>
             <p className="text-ink">
-              Otra persona del calendario pasa a tener su propiedad y tú te
-              quedas como Editor.
+              <T>
+                {
+                  "Otra persona del calendario pasa a tener su propiedad y tú te quedas como Editor."
+                }
+              </T>
             </p>
             <div>
               <TransferDialog
@@ -66,7 +70,7 @@ async function EditCalendar({ params }: { params: Promise<{ id: string }> }) {
           </>
         ) : (
           <p className="text-muted">
-            Invita a alguien al calendario para poder traspasárselo.
+            <T>{"Invita a alguien al calendario para poder traspasárselo."}</T>
           </p>
         )}
       </section>
@@ -75,15 +79,16 @@ async function EditCalendar({ params }: { params: Promise<{ id: string }> }) {
         className="flex flex-col gap-3 border-t border-line pt-6"
       >
         <h2 id="danger-heading" className="text-lg font-semibold text-ink">
-          Borrar calendario
+          <T>{"Borrar calendario"}</T>
         </h2>
         <p className="text-ink">
-          Se borrarán también sus eventos y sus categorías.
+          <T>{"Se borrarán también sus eventos y sus categorías."}</T>
         </p>
         <div>
           <ConfirmDialog
             triggerLabel="Borrar calendario"
-            title={`¿Borrar «${calendar.name}»?`}
+            title="¿Borrar «{name}»?"
+            vars={{ name: calendar.name }}
             description="Se borrarán también todos sus eventos y sus categorías. No se puede deshacer."
             confirmLabel="Sí, borrar"
             action={deleteCalendar.bind(null, id)}
@@ -101,7 +106,13 @@ export default function EditCalendarPage({
 }) {
   return (
     <PageShell title="Editar calendario">
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <EditCalendar params={params} />
       </Suspense>
     </PageShell>

@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { CloseIcon } from "@/components/shell/icons";
 import { IconButton } from "./icon-button";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * A window from the bottom of the screen, where the thumb is (constitution,
@@ -24,6 +25,7 @@ export function Sheet({
   /** Stays at the bottom while the content scrolls: the main action. */
   footer?: ReactNode;
 }) {
+  const t = useT();
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -56,7 +58,7 @@ export function Sheet({
           <h2 id={titleId} className="text-lg font-semibold">
             {title}
           </h2>
-          <IconButton label="Cerrar" onClick={onClose}>
+          <IconButton label={t("Cerrar")} onClick={onClose}>
             <CloseIcon />
           </IconButton>
         </div>

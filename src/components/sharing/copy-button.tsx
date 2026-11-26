@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { pulse } from "@/lib/motion/play";
+import { useT } from "@/components/i18n/locale-provider";
 
 type Status = "idle" | "copied" | "failed";
 
@@ -12,6 +13,7 @@ type Status = "idle" | "copied" | "failed";
  * (plan R6).
  */
 export function CopyButton({ text }: { text: string }) {
+  const t = useT();
   const [status, setStatus] = useState<Status>("idle");
   const field = useRef<HTMLInputElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -34,7 +36,7 @@ export function CopyButton({ text }: { text: string }) {
     <div className="flex flex-col gap-2">
       <div>
         <Button ref={button} variant="secondary" onClick={copy}>
-          Copiar enlace
+          {t("Copiar enlace")}
         </Button>
       </div>
       {status === "failed" ? (
@@ -42,7 +44,7 @@ export function CopyButton({ text }: { text: string }) {
           ref={field}
           readOnly
           value={text}
-          aria-label="Enlace"
+          aria-label={t("Enlace")}
           onFocus={(event) => event.currentTarget.select()}
           className="w-full rounded-control border border-control bg-paper px-3 py-2 text-base text-ink"
         />
@@ -50,7 +52,7 @@ export function CopyButton({ text }: { text: string }) {
       <p role="status" className="text-sm text-ink">
         {status === "copied" ? "Enlace copiado." : null}
         {status === "failed"
-          ? "No se ha podido copiar. Copia el enlace seleccionado."
+          ? t("No se ha podido copiar. Copia el enlace seleccionado.")
           : null}
       </p>
     </div>

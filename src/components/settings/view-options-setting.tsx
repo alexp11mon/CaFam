@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import { DURATIONS, durationLabel } from "@/lib/calendar/view-options";
 import { pulse } from "@/lib/motion/play";
+import { useT } from "@/components/i18n/locale-provider";
 
 type Result = { error?: string };
 
@@ -38,6 +39,7 @@ export function ViewOptionsSetting({
   saveWeekends: (show: boolean) => Promise<Result>;
   saveDuration: (minutes: number) => Promise<Result>;
 }) {
+  const t = useT();
   const [weekends, setWeekends] = useState(showWeekends);
   const [minutes, setMinutes] = useState(duration);
   const [badge, setBadge] = useState(badgeSaved ?? true);
@@ -95,14 +97,14 @@ export function ViewOptionsSetting({
   return (
     <div className="flex flex-col gap-4">
       <Switch
-        label="Mostrar fines de semana"
+        label={t("Mostrar fines de semana")}
         checked={weekends}
         onCheckedChange={toggle}
       />
       <div className="sm:max-w-60">
         <Select
           ref={select}
-          label="Duración de un evento nuevo"
+          label={t("Duración de un evento nuevo")}
           name="defaultDuration"
           value={minutes}
           onChange={(event) => void choose(Number(event.target.value))}
@@ -116,7 +118,7 @@ export function ViewOptionsSetting({
       </div>
       {saveBadge ? (
         <Switch
-          label="Número de eventos de hoy en el icono"
+          label={t("Número de eventos de hoy en el icono")}
           checked={badge}
           onCheckedChange={toggleBadge}
         />
@@ -124,7 +126,7 @@ export function ViewOptionsSetting({
       <FormAlert message={error} />
       {saved ? (
         <p role="status" className="text-sm text-ink">
-          Guardado.
+          {t("Guardado.")}
         </p>
       ) : null}
     </div>

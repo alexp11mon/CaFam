@@ -7,6 +7,7 @@ import { MoreIcon, SECTION_ICONS, SignOutIcon } from "./icons";
 import { ThemeToggle } from "./theme-toggle";
 import { NavLink } from "./nav-link";
 import { SignOutGuard } from "@/components/offline/sign-out-guard";
+import { useT } from "@/components/i18n/locale-provider";
 
 const ROW =
   "press-quiet flex min-h-12 w-full items-center gap-3 rounded-control px-3 text-base font-medium text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink aria-[current=page]:bg-stone";
@@ -26,6 +27,7 @@ export function MoreSheet({
   /** In the phone's floating bar, or as a tab of the desktop navigation. */
   variant?: "bar" | "tab";
 }) {
+  const t = useT();
   const sheet = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const titleId = useId();
@@ -47,7 +49,7 @@ export function MoreSheet({
           <MoreIcon />
         </span>
         <span className={variant === "tab" ? "max-lg:sr-only" : undefined}>
-          Más
+          {t("Más")}
         </span>
       </button>
       <dialog
@@ -59,14 +61,14 @@ export function MoreSheet({
       >
         <div className="mb-2 flex items-center justify-between gap-3 px-3">
           <h2 id={titleId} className="text-lg font-semibold">
-            Más
+            {t("Más")}
           </h2>
           <button
             type="button"
             onClick={close}
             className="min-h-11 rounded-control px-4 font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
-            Cerrar
+            {t("Cerrar")}
           </button>
         </div>
         {/* The destinations land one after another each time it opens (spec 021 RF-16). */}
@@ -96,7 +98,7 @@ export function MoreSheet({
           <li>
             <SignOutGuard action={signOutAction} className={ROW}>
               <SignOutIcon />
-              Cerrar sesión
+              {t("Cerrar sesión")}
             </SignOutGuard>
           </li>
         </ul>

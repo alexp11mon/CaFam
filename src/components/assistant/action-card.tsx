@@ -20,6 +20,7 @@ import {
   type AssistantUndo,
   type ChangeScope,
 } from "@/lib/assistant/actions";
+import { useT } from "@/components/i18n/locale-provider";
 
 // Spec 036: a card in the chat for what Venito created or proposes to change
 // (RF-17, RF-24 to RF-24d, RF-30, RF-32 to RF-37; plan D4, D8).
@@ -181,6 +182,7 @@ export function ActionCard({
   /** Something was written: the calendar behind must refresh (RF-38). */
   onChanged?: () => void;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const { action, status } = card;
 
@@ -194,7 +196,7 @@ export function ActionCard({
     } catch {
       onChange({
         ...card,
-        error: "No se ha podido conectar. Inténtalo de nuevo.",
+        error: t("No se ha podido conectar. Inténtalo de nuevo."),
       });
     } finally {
       setBusy(false);
@@ -248,8 +250,8 @@ export function ActionCard({
             <p className="text-sm text-muted">
               {Date.parse(action.anchor.endsAt) <=
               Date.parse(action.event.startsAt)
-                ? "Al acabar"
-                : "Antes de"}{" "}
+                ? t("Al acabar")
+                : t("Antes de")}{" "}
               {action.anchor.title} ({whenText(action.anchor, timeZone)})
             </p>
           ) : null}
@@ -257,7 +259,9 @@ export function ActionCard({
       ) : action.kind === "note" ? (
         // Spec 048 RF-12: the note and what was written in it.
         <div className="flex flex-col gap-1">
-          <p className="font-semibold">{action.note.title || "(Sin título)"}</p>
+          <p className="font-semibold">
+            {action.note.title || t("(Sin título)")}
+          </p>
           {action.note.items.length ? (
             <ul className="list-disc pl-5 text-sm">
               {action.note.items.map((item, index) => (
@@ -267,8 +271,10 @@ export function ActionCard({
           ) : null}
           <p className="text-sm text-muted">
             {action.note.calendarName
-              ? `Compartida en ${action.note.calendarName}`
-              : "Personal"}
+              ? t("Compartida en {calendarName}", {
+                  calendarName: action.note.calendarName,
+                })
+              : t("Personal")}
           </p>
         </div>
       ) : action.kind === "delete" ? (
@@ -289,7 +295,7 @@ export function ActionCard({
           <p className="text-sm font-semibold">{action.summary}</p>
           <div className="flex flex-col gap-1">
             <span className="text-xs font-semibold tracking-wide text-muted uppercase">
-              Primeras fechas
+              {t("Primeras fechas")}
             </span>
             <ul className="text-sm text-muted tabular-nums">
               {action.dates.map((start) => (
@@ -318,7 +324,9 @@ export function ActionCard({
             event={action.before}
             timeZone={timeZone}
             label={
-              status === "pending" || status === "failed" ? "Ahora" : "Antes"
+              status === "pending" || status === "failed"
+                ? t("Ahora")
+                : t("Antes")
             }
           />
           <EventLines
@@ -326,8 +334,8 @@ export function ActionCard({
             timeZone={timeZone}
             label={
               status === "pending" || status === "failed"
-                ? "Quedará"
-                : "Después"
+                ? t("Quedará")
+                : t("Después")
             }
           />
           {action.scope ? (
@@ -338,7 +346,7 @@ export function ActionCard({
           ) : null}
           {status === "applied" && !card.undo ? (
             <p className="text-sm text-muted">
-              Este cambio afecta a varios eventos y no se puede deshacer.
+              {t("Este cambio afecta a varios eventos y no se puede deshacer.")}
             </p>
           ) : null}
         </>
@@ -359,14 +367,14 @@ export function ActionCard({
           >
             {action.kind === "delete" || action.kind === "series"
               ? KIND_LABELS[action.kind].button
-              : "Confirmar"}
+              : t("Confirmar")}
           </Button>
           <Button
             variant="quiet"
             disabled={busy}
             onClick={() => void step("cancel")}
           >
-            Cancelar
+            {t("Cancelar")}
           </Button>
         </div>
       ) : null}
@@ -378,9 +386,9 @@ export function ActionCard({
               variant="secondary"
               href={open.href}
               prefetch={false}
-              aria-label={`Abrir ${open.title}`}
+              aria-label={t("Abrir {title}", { title: open.title })}
             >
-              Abrir
+              {t("Abrir")}
             </LinkButton>
           ) : null}
           {canUndo ? (
@@ -389,7 +397,7 @@ export function ActionCard({
               disabled={busy}
               onClick={() => void step("undo")}
             >
-              Deshacer
+              {t("Deshacer")}
             </Button>
           ) : null}
         </div>

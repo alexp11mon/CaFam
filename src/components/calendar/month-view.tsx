@@ -9,6 +9,7 @@ import { boxOf, type Box } from "@/lib/calendar/popover";
 import { weekdayIndex } from "@/lib/calendar/time-zone";
 import { DraggableEvent } from "./draggable-event";
 import { DayTasks } from "./task-block";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 const INITIALS = ["L", "M", "X", "J", "V", "S", "D"];
 // A lane is an 18 px block and a 2 px gap (EventBlock "line", gap-y-0.5).
@@ -60,6 +61,8 @@ export function MonthView({
   /** The event being created, shown in its day (spec 008 RF-40). */
   draft?: { day: string; title: string } | null;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [area, lanes] = useLanes();
   const month = date.slice(0, 7);
   // Five columns when the weekends are hidden (spec 019 RF-26).
@@ -112,7 +115,9 @@ export function MonthView({
                   // The whole empty space creates; the number and the events sit above it (spec 008 RF-19, RF-22).
                   <button
                     type="button"
-                    aria-label={`Crear evento el ${formatDateKeyFull(day)}`}
+                    aria-label={t("Crear evento el {value}", {
+                      value: formatDateKeyFull(day, locale),
+                    })}
                     onClick={(event) =>
                       onCreate(day, boxOf(event.currentTarget))
                     }
@@ -122,7 +127,7 @@ export function MonthView({
                 <CalendarLink
                   view="day"
                   date={day}
-                  aria-label={formatDateKeyFull(day)}
+                  aria-label={formatDateKeyFull(day, locale)}
                   aria-current={day === today ? "date" : undefined}
                   className={`relative inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums ${day === today ? "border border-accent-edge bg-accent text-on-accent" : day.slice(0, 7) === month ? "text-ink" : "text-muted"}`}
                 >
@@ -139,7 +144,7 @@ export function MonthView({
                     aria-hidden="true"
                     className="absolute inset-x-0.5 bottom-0.5 z-10 truncate rounded-block border border-dashed border-ink bg-paper px-1 text-xs font-semibold text-ink"
                   >
-                    {draft.title || "(Sin título)"}
+                    {draft.title || t("(Sin título)")}
                   </span>
                 ) : null}
               </div>
@@ -172,7 +177,10 @@ export function MonthView({
                     key={column}
                     view="day"
                     date={week.days[column]!}
-                    aria-label={`+${count} más, ${formatDateKeyFull(week.days[column]!)}`}
+                    aria-label={t("+{count} más, {value}", {
+                      count,
+                      value: formatDateKeyFull(week.days[column]!, locale),
+                    })}
                     style={{ gridColumn: column + 1, gridRow: lanes }}
                     className="pointer-events-auto mx-0.5 truncate rounded-block px-1 text-xs leading-[18px] font-semibold text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink"
                   >
@@ -184,7 +192,9 @@ export function MonthView({
           </li>
         ))}
       </ol>
-      {events.length === 0 ? <p className="sr-only">No hay eventos</p> : null}
+      {events.length === 0 ? (
+        <p className="sr-only">{t("No hay eventos")}</p>
+      ) : null}
     </div>
   );
 }

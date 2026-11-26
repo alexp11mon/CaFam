@@ -16,6 +16,7 @@ import {
   remainingText,
   type TrashEntry,
 } from "@/lib/calendar/trash";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 /** One deleted event: what it was, who deleted it and its two actions (RF-3, RF-5, RF-6). */
 export function TrashItem({
@@ -27,11 +28,13 @@ export function TrashItem({
   timeZone: string;
   now: Date;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const { show } = useToast();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const kind = kindText(entry);
+  const kind = kindText(entry, t);
 
   function restore() {
     setError(null);
@@ -41,7 +44,7 @@ export function TrashItem({
         setError(result.error);
         return;
       }
-      show(`«${entry.title}» restaurado`);
+      show(t("«{title}» restaurado", { title: entry.title }));
       router.refresh();
     });
   }
@@ -56,12 +59,12 @@ export function TrashItem({
           ) : null}
         </p>
         <p className="text-sm text-ink tabular-nums">
-          {formatEventWhen(entry, timeZone)}
+          {formatEventWhen(entry, timeZone, locale)}
         </p>
         <p className="text-sm text-muted">
-          {deletedText(entry, now)} ·{" "}
+          {deletedText(entry, now, t)} ·{" "}
           <span className="tabular-nums">
-            {remainingText(entry.expiresAt, now)}
+            {remainingText(entry.expiresAt, now, t)}
           </span>
         </p>
         {error ? (
@@ -75,19 +78,24 @@ export function TrashItem({
           variant="secondary"
           onClick={restore}
           disabled={pending}
-          aria-label={`Restaurar «${entry.title}»`}
+          aria-label={t("Restaurar «{title}»", { title: entry.title })}
         >
-          {pending ? "Restaurando…" : "Restaurar"}
+          {pending ? t("Restaurando…") : t("Restaurar")}
         </Button>
         <ConfirmDialog
-          triggerLabel="Borrar para siempre"
-          triggerAriaLabel={`Borrar para siempre «${entry.title}»`}
-          title="¿Borrar para siempre?"
-          description={`«${entry.title}» se borrará con sus imágenes y comentarios. No se puede deshacer.`}
-          confirmLabel="Borrar para siempre"
+          triggerLabel={t("Borrar para siempre")}
+          triggerAriaLabel={t("Borrar para siempre «{title}»", {
+            title: entry.title,
+          })}
+          title={t("¿Borrar para siempre?")}
+          description={t(
+            "«{title}» se borrará con sus imágenes y comentarios. No se puede deshacer.",
+            { title: entry.title },
+          )}
+          confirmLabel={t("Borrar para siempre")}
           action={() => purgeFromTrash(entry.id)}
           onDone={() => {
-            show(`«${entry.title}» borrado para siempre`);
+            show(t("«{title}» borrado para siempre", { title: entry.title }));
             router.refresh();
           }}
         />

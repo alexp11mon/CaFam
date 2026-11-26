@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/select";
 import { SwapLabel } from "@/components/ui/swap-label";
 import { TextField } from "@/components/ui/text-field";
 import { NOTE_TITLE_MAX } from "@/lib/notes/limits";
+import { useT } from "@/components/i18n/locale-provider";
 
 const KINDS = [
   {
@@ -36,6 +37,7 @@ export function NoteForm({
   event?: { id: string; label: string };
   defaultCalendarId?: string;
 }) {
+  const t = useT();
   // Offline the note waits on the device (spec 034 RF-31).
   const [queued] = useState(
     () => (state: NewNoteState, data: FormData) =>
@@ -50,11 +52,14 @@ export function NoteForm({
       {event ? (
         <p className="text-sm text-muted">
           <input type="hidden" name="eventId" value={event.id} />
-          De: <span className="font-semibold text-ink">{event.label}</span>
+          {t("De:")}{" "}
+          <span className="font-semibold text-ink">{event.label}</span>
         </p>
       ) : null}
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-medium text-ink">Tipo</legend>
+        <legend className="mb-2 text-sm font-medium text-ink">
+          {t("Tipo")}
+        </legend>
         {KINDS.map((kind) => (
           <label
             key={kind.id}
@@ -75,7 +80,7 @@ export function NoteForm({
         ))}
       </fieldset>
       <TextField
-        label="Título (opcional)"
+        label={t("Título (opcional)")}
         name="title"
         maxLength={NOTE_TITLE_MAX}
         defaultValue={values?.title ?? ""}
@@ -83,19 +88,19 @@ export function NoteForm({
         data-autofocus=""
       />
       <Select
-        label="Dónde se guarda"
+        label={t("Dónde se guarda")}
         name="calendarId"
         defaultValue={values?.calendarId ?? defaultCalendarId}
       >
-        <option value="">Personal (solo tú la ves)</option>
+        <option value="">{t("Personal (solo tú la ves)")}</option>
         {calendars.map((calendar) => (
           <option key={calendar.id} value={calendar.id}>
-            Compartida en {calendar.name}
+            {t("Compartida en {name}", { name: calendar.name })}
           </option>
         ))}
       </Select>
       <Button type="submit" disabled={pending} className="self-start">
-        <SwapLabel busy={pending} idle="Crear nota" busyText="Creando…" />
+        <SwapLabel busy={pending} idle="Crear nota" busyText={t("Creando…")} />
       </Button>
     </form>
   );

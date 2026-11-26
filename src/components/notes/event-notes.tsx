@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import type { EventNote } from "@/app/dashboard/notes/actions";
 import { LinkButton } from "@/components/ui/link-button";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * "Notas" of an event's detail: the linked notes the user sees, with their
@@ -19,6 +20,7 @@ export function EventNotes({
     eventId: string,
   ) => Promise<{ notes: EventNote[] } | { error: string }>;
 }) {
+  const t = useT();
   const headingId = useId();
   const [state, setState] = useState<{
     eventId: string;
@@ -36,25 +38,25 @@ export function EventNotes({
       })
       .catch(() => {
         if (!dropped)
-          setState({ eventId, error: "No se han podido cargar las notas." });
+          setState({ eventId, error: t("No se han podido cargar las notas.") });
       });
     return () => {
       dropped = true;
     };
-  }, [eventId, loadNotes]);
+  }, [eventId, loadNotes, t]);
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <h2 id={headingId} className="text-base font-semibold text-ink">
-          Notas
+          {t("Notas")}
         </h2>
         <LinkButton
           href={`/dashboard/notes/new?event=${encodeURIComponent(eventId)}`}
           variant="quiet"
           className="min-h-11 px-3 text-sm"
         >
-          Añadir nota
+          {t("Añadir nota")}
         </LinkButton>
       </div>
       {state.error ? (
@@ -62,9 +64,9 @@ export function EventNotes({
           {state.error}
         </p>
       ) : state.notes === undefined ? (
-        <p className="text-sm text-muted">Cargando…</p>
+        <p className="text-sm text-muted">{t("Cargando…")}</p>
       ) : state.notes.length === 0 ? (
-        <p className="text-sm text-muted">Sin notas</p>
+        <p className="text-sm text-muted">{t("Sin notas")}</p>
       ) : (
         <ul className="flex flex-col gap-1">
           {state.notes.map((note) => (
@@ -75,7 +77,7 @@ export function EventNotes({
                 className="flex min-h-11 items-center justify-between gap-3 rounded-control px-2 text-ink hover:bg-stone focus-visible:outline-2 focus-visible:outline-ink"
               >
                 <span className="min-w-0 truncate">
-                  {note.title || "(Sin título)"}
+                  {note.title || t("(Sin título)")}
                 </span>
                 {note.done?.total ? (
                   <span className="shrink-0 text-sm text-muted tabular-nums">

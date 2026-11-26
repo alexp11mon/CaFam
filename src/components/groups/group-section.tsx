@@ -13,6 +13,7 @@ import { foldId } from "@/lib/calendar/folded";
 import type { GroupVisibility } from "@/lib/calendar/organize-groups";
 import { useFolded } from "@/lib/hooks/use-folded";
 import type { ConfirmState, FormState } from "@/lib/forms/form-state";
+import { useT } from "@/components/i18n/locale-provider";
 
 type GroupState = FormState<"name">;
 type Result = { error?: string };
@@ -52,6 +53,7 @@ export function GroupSection({
   onMove: (direction: "up" | "down") => void;
   children: React.ReactNode;
 }) {
+  const t = useT();
   const headingId = useId();
   const stateId = useId();
   const listId = useId();
@@ -75,7 +77,9 @@ export function GroupSection({
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
       <div className="flex items-center gap-1">
         <IconButton
-          label={`${folded ? "Desplegar" : "Plegar"} ${group.name}`}
+          label={t(folded ? "Desplegar {name}" : "Plegar {name}", {
+            name: group.name,
+          })}
           aria-expanded={!folded}
           aria-controls={listId}
           onClick={() => setFolded(!folded)}
@@ -114,7 +118,7 @@ export function GroupSection({
                 className="size-5 shrink-0 accent-ink"
               />
               <span className="sr-only">
-                Mostrar «{group.name}» en el calendario
+                {t("Mostrar «{name}» en el calendario", { name: group.name })}
               </span>
               {/* Said, not shown: the box already says it (spec 032 RF-11). */}
               <span id={stateId} className="sr-only">
@@ -123,7 +127,7 @@ export function GroupSection({
             </label>
           ) : null}
           <IconButton
-            label={`Opciones de ${group.name}`}
+            label={t("Opciones de {name}", { name: group.name })}
             aria-expanded={options}
             aria-controls={optionsId}
             onClick={() => setOptions(!options)}
@@ -139,25 +143,27 @@ export function GroupSection({
       >
         <Button
           variant="secondary"
-          aria-label={`Renombrar ${group.name}`}
+          aria-label={t("Renombrar {name}", { name: group.name })}
           onClick={() => {
             setEditing(true);
             setOptions(false);
           }}
         >
-          Renombrar
+          {t("Renombrar")}
         </Button>
         <ConfirmDialog
-          triggerLabel="Borrar"
+          triggerLabel={t("Borrar")}
           triggerAriaLabel={`Borrar ${group.name}`}
-          title={`¿Borrar el grupo «${group.name}»?`}
-          description="No se borra ningún calendario ni evento: sus calendarios quedarán sin grupo."
-          confirmLabel="Sí, borrar"
+          title={t("¿Borrar el grupo «{name}»?", { name: group.name })}
+          description={t(
+            "No se borra ningún calendario ni evento: sus calendarios quedarán sin grupo.",
+          )}
+          confirmLabel={t("Sí, borrar")}
           action={deleteAction}
         />
         <Button
           variant="secondary"
-          aria-label={`Subir ${group.name}`}
+          aria-label={t("Subir {name}", { name: group.name })}
           disabled={index === 0}
           onClick={() => onMove("up")}
           className="min-w-11 px-2"
@@ -166,7 +172,7 @@ export function GroupSection({
         </Button>
         <Button
           variant="secondary"
-          aria-label={`Bajar ${group.name}`}
+          aria-label={t("Bajar {name}", { name: group.name })}
           disabled={index === count - 1}
           onClick={() => onMove("down")}
           className="min-w-11 px-2"
@@ -184,7 +190,7 @@ export function GroupSection({
           <div className="flex-1 sm:max-w-sm">
             <FormAlert message={state.formError} />
             <TextField
-              label={`Nuevo nombre de «${group.name}»`}
+              label={t("Nuevo nombre de «{name}»", { name: group.name })}
               name="name"
               maxLength={40}
               defaultValue={state.values.name}
@@ -196,11 +202,11 @@ export function GroupSection({
               <SwapLabel
                 busy={renaming}
                 idle="Guardar nombre"
-                busyText="Guardando…"
+                busyText={t("Guardando…")}
               />
             </Button>
             <Button variant="secondary" onClick={() => setEditing(false)}>
-              Cancelar
+              {t("Cancelar")}
             </Button>
           </div>
         </form>
@@ -208,8 +214,9 @@ export function GroupSection({
       <div id={listId} hidden={folded}>
         {calendarCount === 0 ? (
           <p className="rounded-card bg-paper px-4 py-6 text-center text-ink">
-            Este grupo aún no tiene calendarios. Elige el grupo en la ficha de
-            un calendario.
+            {t(
+              "Este grupo aún no tiene calendarios. Elige el grupo en la ficha de un calendario.",
+            )}
           </p>
         ) : (
           children

@@ -37,6 +37,7 @@ import {
   dropConflict,
   dropRejected,
 } from "@/lib/offline/queue-store";
+import { useT } from "@/components/i18n/locale-provider";
 
 const M = OFFLINE_MESSAGES;
 
@@ -112,6 +113,7 @@ function ConflictItem({
   timeZone: string;
   onResolve: (conflict: Conflict, keepMine: boolean) => Promise<void>;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const kind = conflictKind(conflict.change, conflict.server);
   const choices = conflictChoices(kind);
@@ -133,7 +135,8 @@ function ConflictItem({
       {kind !== "gone" ? (
         <>
           <p className="text-xs text-muted">
-            {M.mine} arriba · {M.theirs.toLowerCase()} debajo
+            {t("{mine} arriba ·", { mine: M.mine })} {M.theirs.toLowerCase()}{" "}
+            {t("debajo")}
           </p>
           <Versions
             rows={conflictRows(conflict.change, conflict.server, timeZone)}
@@ -214,6 +217,7 @@ export function ChangesSheet({
   open: boolean;
   onClose: () => void;
 }) {
+  const t = useT();
   const router = useRouter();
   const { show } = useToast();
   const online = useConnection();
@@ -263,14 +267,14 @@ export function ChangesSheet({
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title="Cambios">
+    <Sheet open={open} onClose={onClose} title={t("Cambios")}>
       <div className="flex flex-col gap-6">
         {queue.length > 0 ? (
           <p className="text-sm text-muted">
             {M.pendingCount(queue.length)}:{" "}
             {online
-              ? "se están enviando."
-              : "se enviarán al volver la conexión."}
+              ? t("se están enviando.")
+              : t("se enviarán al volver la conexión.")}
           </p>
         ) : null}
         {heldAccounts.length > 0 ? (
@@ -335,7 +339,9 @@ export function ChangesSheet({
           </section>
         ) : null}
         {queue.length + conflicts.length + rejected.length === 0 ? (
-          <p className="text-sm text-muted">No hay cambios pendientes.</p>
+          <p className="text-sm text-muted">
+            {t("No hay cambios pendientes.")}
+          </p>
         ) : null}
       </div>
     </Sheet>

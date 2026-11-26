@@ -1,7 +1,14 @@
 import { addDays, parseDateKey, weekdayIndex } from "@/lib/calendar/time-zone";
 import { fromRRule, type RecurrenceRule, type Weekday } from "./rule";
 import { WEEKDAYS } from "./schemas";
-import { MONTH_NAMES, WEEKDAY_NAMES } from "./summary";
+import {
+  MONTH_NAMES,
+  MONTH_NAMES_EN,
+  WEEKDAY_NAMES,
+  WEEKDAY_NAMES_EN,
+  ordinalEn,
+} from "./summary";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locale";
 
 // "Repetir" quick options, worked out from the start date (RF-1, RF-2). The
 // field keeps the kind of option and the server resolves it with the date it
@@ -37,7 +44,46 @@ function isLastOfMonth(dateKey: string): boolean {
   );
 }
 
-export function repeatOptions(dateKey: string): RepeatOption[] {
+/** Spec 053 RF-4: the quick options in English. */
+function repeatOptionsEn(dateKey: string): RepeatOption[] {
+  const date = parseDateKey(dateKey);
+  if (!date) return [{ value: "none", label: "Does not repeat" }];
+  const weekday = WEEKDAY_NAMES_EN[weekdayIndex(dateKey)];
+  const position = weekOfMonth(date.day);
+  const options: RepeatOption[] = [
+    { value: "none", label: "Does not repeat" },
+    { value: "daily", label: "Every day" },
+    { value: "weekly", label: `Every week on ${weekday}` },
+    { value: "monthly-day", label: `Every month on day ${date.day}` },
+  ];
+  if (position <= 4) {
+    options.push({
+      value: "monthly-pos",
+      label: `Every month on the ${ordinalEn(position)} ${weekday}`,
+    });
+  }
+  if (isLastOfMonth(dateKey)) {
+    options.push({
+      value: "monthly-last",
+      label: `Every month on the last ${weekday}`,
+    });
+  }
+  options.push(
+    {
+      value: "yearly",
+      label: `Every year on ${MONTH_NAMES_EN[date.month - 1]} ${date.day}`,
+    },
+    { value: "weekdays", label: "Every weekday (Monday to Friday)" },
+    { value: "custom", label: "Custom…" },
+  );
+  return options;
+}
+
+export function repeatOptions(
+  dateKey: string,
+  locale: Locale = DEFAULT_LOCALE,
+): RepeatOption[] {
+  if (locale === "en") return repeatOptionsEn(dateKey);
   const date = parseDateKey(dateKey);
   if (!date) return [{ value: "none", label: "No se repite" }];
   const weekday = WEEKDAY_NAMES[weekdayIndex(dateKey)];

@@ -17,6 +17,7 @@ import {
   PENDING_IMAGES_KEY,
   readShared,
 } from "@/lib/share/inbox";
+import { useT } from "@/components/i18n/locale-provider";
 
 /** Images another app shared, waiting in this tab for an event (spec 047 RF-7). */
 function usePendingShare() {
@@ -63,6 +64,7 @@ export function ImageUploader({
   /** The images the event shows now, for the limit of 10 offline. */
   saved?: number;
 }) {
+  const t = useT();
   const router = useRouter();
   const uploads = useImageUploads(router.refresh);
   const online = useConnection();
@@ -74,7 +76,7 @@ export function ImageUploader({
     if (!online) {
       const result = await addImagesOffline(eventId, files, saved);
       setNotice(result.notice);
-      if (result.added > 0) show(OFFLINE_MESSAGES.imagesKept(result.added));
+      if (result.added > 0) show(OFFLINE_MESSAGES.imagesKept(result.added, t));
       return;
     }
     await uploads.add(files);
@@ -82,15 +84,19 @@ export function ImageUploader({
   }
 
   return (
-    <section aria-label="Añadir imágenes" className="flex flex-col gap-2">
+    <section aria-label={t("Añadir imágenes")} className="flex flex-col gap-2">
       {shared.files ? (
         <div className="flex flex-wrap items-center gap-3 rounded-control bg-accent-soft p-3 text-accent-ink">
           <p className="flex-1 text-sm">
             {shared.files.length === 1
-              ? "1 imagen compartida espera un evento"
-              : `${shared.files.length} imágenes compartidas esperan un evento`}
+              ? t("1 imagen compartida espera un evento")
+              : t("{n} imágenes compartidas esperan un evento", {
+                  n: shared.files.length,
+                })}
           </p>
-          <Button onClick={() => void add(shared.take())}>Añadir aquí</Button>
+          <Button onClick={() => void add(shared.take())}>
+            {t("Añadir aquí")}
+          </Button>
         </div>
       ) : null}
       <ImagePicker onPick={add} />

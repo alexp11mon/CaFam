@@ -1,3 +1,4 @@
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 import type { ReactNode } from "react";
 import type { ProviderName } from "@/lib/sync/providers/types";
 import { readOnlyEventText, type ReadOnlyReason } from "@/lib/sync/read-only";
@@ -9,6 +10,7 @@ import { DeleteEventButton } from "./delete-event-button";
 import { PendingMark } from "@/components/offline/pending-mark";
 import { StaleCopyNote } from "./stale-copy-note";
 import { ShareEventButton } from "./share-event-button";
+import { T } from "@/components/i18n/locale-provider";
 
 export interface EventDetailData {
   id: string;
@@ -46,7 +48,9 @@ function Row({
 }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <dt className="text-sm font-medium text-muted">{label}</dt>
+      <dt className="text-sm font-medium text-muted">
+        <T>{label}</T>
+      </dt>
       <dd className="min-w-0 break-words text-ink">{children}</dd>
     </div>
   );
@@ -76,6 +80,8 @@ export function EventDetail({
   /** "Comentarios", for any member (spec 014 RF-1, RF-7). */
   comments?: ReactNode;
 }) {
+  const locale = useLocale();
+  const t = useT();
   return (
     <article className="flex flex-col gap-4">
       <header className="flex items-start gap-3">
@@ -93,7 +99,7 @@ export function EventDetail({
       <dl className="flex flex-col gap-3">
         <Row label="Cuándo">
           <span data-testid="event-when">
-            {formatEventWhen(event, timeZone)}
+            {formatEventWhen(event, timeZone, locale)}
           </span>
           {event.originalTime ? (
             <span
@@ -109,7 +115,7 @@ export function EventDetail({
             {event.repeat.summary}
             {event.repeat.changed ? (
               <span className="block text-sm text-muted">
-                Cambiado solo en este evento
+                <T>{"Cambiado solo en este evento"}</T>
               </span>
             ) : null}
           </Row>
@@ -120,7 +126,9 @@ export function EventDetail({
             <span className="whitespace-pre-line">{event.description}</span>
           </Row>
         ) : null}
-        <Row label="Categoría">{event.categoryName ?? "Sin categoría"}</Row>
+        <Row label="Categoría">
+          {event.categoryName ?? <T>{"Sin categoría"}</T>}
+        </Row>
         <Row label="Calendario">{event.calendarName}</Row>
         <Row label="Creado por">{event.author}</Row>
       </dl>
@@ -130,7 +138,7 @@ export function EventDetail({
       ) : null}
       {event.readOnly ? (
         <p className="text-sm text-muted">
-          {readOnlyEventText(event.readOnly, event.provider ?? "google")}
+          {readOnlyEventText(event.readOnly, event.provider ?? "google", t)}
         </p>
       ) : null}
       <div className="flex flex-wrap items-start gap-3">

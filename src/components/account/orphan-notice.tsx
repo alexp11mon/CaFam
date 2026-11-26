@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/locale-provider";
 /** Members page of a calendar without owner: who decides and until when (RF-22, RF-24). */
 export function OrphanNotice({
   deadline,
@@ -14,8 +15,11 @@ export function OrphanNotice({
 
   return (
     <p role="status" className="rounded-control bg-paper p-4 text-ink">
-      Este calendario no tiene propietario. Sus miembros pueden decidir hasta el{" "}
-      {day} si lo conservan.
+      <T vars={{ day }}>
+        {
+          "Este calendario no tiene propietario. Sus miembros pueden decidir hasta el {day} si lo conservan."
+        }
+      </T>
     </p>
   );
 }

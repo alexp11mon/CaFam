@@ -2,15 +2,12 @@ import { ConfirmDialog } from "@/components/calendar/confirm-dialog";
 import type { ConfirmState, FormAction } from "@/lib/forms/form-state";
 import { providerName } from "@/lib/sync/provider-labels";
 import type { ProviderName } from "@/lib/sync/providers/types";
+import { T } from "@/components/i18n/locale-provider";
 
 export interface DisconnectCalendar {
   name: string;
   /** People other than the owner who see it. */
   sharedWith: number;
-}
-
-function people(n: number) {
-  return `${n} ${n === 1 ? "persona" : "personas"}`;
 }
 
 /**
@@ -32,31 +29,43 @@ export function DisconnectDialog({
   const count = calendars.length;
   const description =
     count === 0
-      ? `La cuenta ${email} no trae ningún calendario a CaFam.`
-      : `La cuenta ${email} trae ${count} ${count === 1 ? "calendario" : "calendarios"} a CaFam.`;
+      ? "La cuenta {email} no trae ningún calendario a CaFam. CaFam dejará de tener permiso en tu cuenta de {provider}."
+      : count === 1
+        ? "La cuenta {email} trae 1 calendario a CaFam. CaFam dejará de tener permiso en tu cuenta de {provider}."
+        : "La cuenta {email} trae {count} calendarios a CaFam. CaFam dejará de tener permiso en tu cuenta de {provider}.";
+  const name = providerName(provider);
 
   return (
     <ConfirmDialog
       triggerLabel="Desconectar"
-      title={`¿Desconectar la cuenta de ${providerName(provider)}?`}
-      description={`${description} CaFam dejará de tener permiso en tu cuenta de ${providerName(provider)}.`}
+      title="¿Desconectar la cuenta de {provider}?"
+      description={description}
+      vars={{ email, count, provider: name }}
       confirmLabel="Sí, desconectar"
       action={action}
     >
       {provider === "icloud" ? (
         <p>
-          En iCloud no se borra nada. CaFam no puede retirar su acceso por ti:
-          cuando termines, revoca la contraseña específica de app en
-          account.apple.com.
+          <T>
+            {
+              "En iCloud no se borra nada. CaFam no puede retirar su acceso por ti: cuando termines, revoca la contraseña específica de app en account.apple.com."
+            }
+          </T>
         </p>
       ) : null}
       {shared.length > 0 ? (
         <div className="flex flex-col gap-1">
-          <p>Están compartidos:</p>
+          <p>
+            <T>{"Están compartidos:"}</T>
+          </p>
           <ul className="list-disc pl-5">
             {shared.map((calendar) => (
               <li key={calendar.name}>
-                «{calendar.name}», con {people(calendar.sharedWith)}
+                <T vars={{ name: calendar.name, count: calendar.sharedWith }}>
+                  {calendar.sharedWith === 1
+                    ? "«{name}», con 1 persona"
+                    : "«{name}», con {count} personas"}
+                </T>
               </li>
             ))}
           </ul>
@@ -65,7 +74,7 @@ export function DisconnectDialog({
       {count > 0 ? (
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 font-semibold">
-            ¿Qué hacemos con sus calendarios?
+            <T>{"¿Qué hacemos con sus calendarios?"}</T>
           </legend>
           <label className="flex min-h-11 items-center gap-3">
             <input
@@ -75,7 +84,7 @@ export function DisconnectDialog({
               required
               className="size-5 shrink-0 accent-ink"
             />
-            Conservarlos como calendarios normales y editables
+            <T>{"Conservarlos como calendarios normales y editables"}</T>
           </label>
           <label className="flex min-h-11 items-center gap-3">
             <input
@@ -85,7 +94,9 @@ export function DisconnectDialog({
               required
               className="size-5 shrink-0 accent-ink"
             />
-            Borrarlos con sus eventos, también para quien los comparte
+            <T>
+              {"Borrarlos con sus eventos, también para quien los comparte"}
+            </T>
           </label>
         </fieldset>
       ) : null}

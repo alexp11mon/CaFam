@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { Loss } from "@/lib/forms/form-state";
 import { RECURRENCE_MESSAGES } from "@/lib/recurrence/error-messages";
 import type { SeriesScope } from "@/lib/recurrence/series-write";
+import { useT } from "@/components/i18n/locale-provider";
 
 const SCOPES: { value: SeriesScope; label: string }[] = [
   { value: "this", label: "Solo este evento" },
@@ -60,6 +61,7 @@ export function SeriesScopeDialog({
   onChoose: (scope: SeriesScope) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -96,7 +98,7 @@ export function SeriesScopeDialog({
             <input type="hidden" name="confirmLoss" value="1" />
             <div className="flex flex-wrap justify-end gap-3">
               <Button variant="secondary" onClick={onCancel}>
-                Cancelar
+                {t("Cancelar")}
               </Button>
               <Button
                 type="submit"
@@ -137,7 +139,7 @@ export function SeriesScopeDialog({
             ) : null}
             <div className="flex justify-end">
               <Button variant="secondary" onClick={onCancel}>
-                Cancelar
+                {t("Cancelar")}
               </Button>
             </div>
           </>

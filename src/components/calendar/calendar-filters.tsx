@@ -1,4 +1,5 @@
 "use client";
+import type { T } from "@/lib/i18n/translate";
 
 import { useId, useState, type ReactNode } from "react";
 import { Avatar } from "@/components/people/avatar";
@@ -14,6 +15,7 @@ import { assignTints } from "@/lib/people/avatar";
 import type { FilterSection } from "./calendar-workspace";
 import { useCalendarTasks } from "./task-block";
 import { Switch } from "@/components/ui/switch";
+import { useT } from "@/components/i18n/locale-provider";
 
 export interface FilterCategory {
   id: string;
@@ -42,12 +44,13 @@ function MoveButtons({
     direction: Direction,
   ) => void;
 }) {
+  const t = useT();
   return (
     <span className="flex shrink-0 gap-1">
       <Button
         variant="secondary"
         data-move={`${kind}:${id}:up`}
-        aria-label={`Subir ${name}`}
+        aria-label={t("Subir {name}", { name })}
         disabled={index === 0}
         onClick={() => onMove(kind, id, "up")}
         className="min-w-11 px-2"
@@ -57,7 +60,7 @@ function MoveButtons({
       <Button
         variant="secondary"
         data-move={`${kind}:${id}:down`}
-        aria-label={`Bajar ${name}`}
+        aria-label={t("Bajar {name}", { name })}
         disabled={index === count - 1}
         onClick={() => onMove(kind, id, "down")}
         className="min-w-11 px-2"
@@ -113,9 +116,10 @@ function FoldButton({
   controls: string;
   onToggle: () => void;
 }) {
+  const t = useT();
   return (
     <IconButton
-      label={`${open ? "Plegar" : "Desplegar"} ${name}`}
+      label={t(open ? "Plegar {name}" : "Desplegar {name}", { name })}
       aria-expanded={open}
       aria-controls={controls}
       onClick={onToggle}
@@ -126,8 +130,10 @@ function FoldButton({
   );
 }
 
-function hiddenCategoriesText(count: number) {
-  return count === 1 ? "1 categoría oculta" : `${count} categorías ocultas`;
+function hiddenCategoriesText(count: number, t: T) {
+  return count === 1
+    ? t("1 categoría oculta")
+    : t("{count} categorías ocultas", { count });
 }
 
 function CalendarRow({
@@ -155,6 +161,7 @@ function CalendarRow({
     direction: Direction,
   ) => void;
 }) {
+  const t = useT();
   const listId = useId();
   // Categories start folded: most of the time only the calendar matters (RF-5).
   const [folded, setFolded] = useFolded(foldId.categories(calendar.id), true);
@@ -181,7 +188,7 @@ function CalendarRow({
             <span className="min-w-0 break-words">{calendar.name}</span>
             {hidden > 0 ? (
               <span className="text-xs text-muted">
-                {hiddenCategoriesText(hidden)}
+                {hiddenCategoriesText(hidden, t)}
               </span>
             ) : null}
           </span>
@@ -197,7 +204,12 @@ function CalendarRow({
           />
         ) : categories.length > 0 ? (
           <IconButton
-            label={`${folded ? "Mostrar" : "Ocultar"} las categorías de ${calendar.name}`}
+            label={t(
+              folded
+                ? "Mostrar las categorías de {name}"
+                : "Ocultar las categorías de {name}",
+              { name: calendar.name },
+            )}
             aria-expanded={!folded}
             aria-controls={listId}
             onClick={() => setFolded(!folded)}
@@ -248,6 +260,7 @@ function SectionItem({
   children: ReactNode;
   onTogglePerson: (personId: string, visible: boolean) => void;
 }) {
+  const t = useT();
   const listId = useId();
   const [folded, setFolded] = useFolded(
     group.groupId
@@ -286,7 +299,10 @@ function SectionItem({
                 {visible}/{group.calendars.length}
               </span>
               <span className="sr-only">
-                {visible} de {group.calendars.length} visibles
+                {t("{visible} de {length} visibles", {
+                  visible,
+                  length: group.calendars.length,
+                })}
               </span>
             </span>
           )}
@@ -332,6 +348,7 @@ export function CalendarFilters({
   /** Tints shared with the busy blocks (spec 020 RF-9). */
   tints?: ReadonlyMap<string, string>;
 }) {
+  const t = useT();
   const headingId = useId();
   const listId = useId();
   const [folded, setFolded] = useFolded(foldId.calendars);
@@ -377,12 +394,15 @@ export function CalendarFilters({
             <span className="text-muted">
               <FoldChevron open={!folded} />
             </span>
-            Calendarios
+            {t("Calendarios")}
           </button>
         </h2>
         {folded || !canOrder ? (
           <span className="text-sm text-muted tabular-nums">
-            {visible} de {all.length} visibles
+            {t("{visible} de {length} visibles", {
+              visible,
+              length: all.length,
+            })}
           </span>
         ) : (
           <Button
@@ -390,7 +410,7 @@ export function CalendarFilters({
             onClick={() => setOrdering(!ordering)}
             className="min-h-11 px-3 text-sm"
           >
-            {ordering ? "Hecho" : "Ordenar"}
+            {ordering ? t("Hecho") : t("Ordenar")}
           </Button>
         )}
       </div>
@@ -442,8 +462,8 @@ export function CalendarFilters({
           <Switch
             checked={tasks.shown}
             onCheckedChange={tasks.setShown}
-            label="Tareas con fecha"
-            description="Lo pendiente de tus notas, el día que vence"
+            label={t("Tareas con fecha")}
+            description={t("Lo pendiente de tus notas, el día que vence")}
           />
         </div>
       ) : null}
@@ -453,7 +473,7 @@ export function CalendarFilters({
           download
           className="inline-flex min-h-11 items-center self-start px-1 text-sm font-semibold text-ink underline decoration-control underline-offset-4 hover:decoration-ink"
         >
-          Exportar los visibles
+          {t("Exportar los visibles")}
         </a>
       )}
     </section>

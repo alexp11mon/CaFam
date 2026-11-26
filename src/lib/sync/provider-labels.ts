@@ -1,3 +1,4 @@
+import { spanishT, type T } from "@/lib/i18n/translate";
 import type { ProviderName } from "./providers/types";
 
 // How each provider is named on screen (spec 018 plan "Textos", R7). Pure, so
@@ -29,6 +30,8 @@ export function isGoneDone(value: unknown): value is GoneDone {
 }
 
 /** The detail's note on an old synced event (spec 038 RF-6). */
-export function staleCopyText(provider: ProviderName): string {
-  return `Copia antigua: ya no se actualiza desde ${NAMES[provider]}`;
+export function staleCopyText(provider: ProviderName, t: T = spanishT): string {
+  return t("Copia antigua: ya no se actualiza desde {name}", {
+    name: NAMES[provider],
+  });
 }

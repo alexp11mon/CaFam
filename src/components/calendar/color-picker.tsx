@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { CALENDAR_COLORS } from "@/lib/calendar/palette";
+import { T } from "@/components/i18n/locale-provider";
 
 /** Radio group of the closed palette; native radios give arrow-key navigation (RF-2, RNF-7). */
 export function ColorPicker({
@@ -40,7 +41,7 @@ export function ColorPicker({
               aria-hidden="true"
               className="grid size-11 place-items-center rounded-full border-2 border-dashed border-control bg-paper text-xs font-semibold text-ink peer-checked:border-solid peer-checked:border-ink peer-checked:ring-2 peer-checked:ring-ink peer-checked:ring-offset-2 peer-checked:ring-offset-paper peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink"
             >
-              Auto
+              <T>{"Auto"}</T>
             </span>
             <span className="sr-only">{emptyLabel}</span>
           </label>

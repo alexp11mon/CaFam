@@ -15,6 +15,7 @@ import { removePendingImage } from "@/lib/offline/image-actions";
 import { OFFLINE_MESSAGES } from "@/lib/offline/messages";
 import { ImageViewer } from "./image-viewer";
 import { useImageBlob, type DeviceImage } from "./use-image-blob";
+import { useT } from "@/components/i18n/locale-provider";
 
 const TILE =
   "flex aspect-square w-full items-center justify-center overflow-hidden rounded-control bg-stone";
@@ -32,6 +33,7 @@ function Picture({
   width: number;
   height: number;
 }) {
+  const t = useT();
   const blob = useImageBlob(path, local);
   const size = fitWithin(width, height, THUMB_SIDE);
   if (blob.status === "ready") {
@@ -48,7 +50,9 @@ function Picture({
     );
   }
   return blob.status === "denied" ? (
-    <span className="px-2 text-center text-xs text-muted">No disponible</span>
+    <span className="px-2 text-center text-xs text-muted">
+      {t("No disponible")}
+    </span>
   ) : null;
 }
 
@@ -61,12 +65,13 @@ function Thumb({
   alt: string;
   onOpen: () => void;
 }) {
+  const t = useT();
   return (
     <li>
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`Ver ${alt}`}
+        aria-label={t("Ver {alt}", { alt })}
         className={`${TILE} press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink`}
       >
         <Picture
@@ -91,6 +96,7 @@ function PendingThumb({
   localId: string;
   alt: string;
 }) {
+  const t = useT();
   const { show } = useToast();
   return (
     <li className="flex flex-col gap-1">
@@ -106,13 +112,16 @@ function PendingThumb({
       <PendingMark pending label />
       <Button
         variant="quiet"
-        aria-label={`${OFFLINE_MESSAGES.remove} ${alt}`}
+        aria-label={t("{remove} {alt}", {
+          remove: t(OFFLINE_MESSAGES.remove),
+          alt,
+        })}
         onClick={async () => {
           await removePendingImage(eventId, localId);
-          show(OFFLINE_MESSAGES.imageRemoved);
+          show(t(OFFLINE_MESSAGES.imageRemoved));
         }}
       >
-        {OFFLINE_MESSAGES.remove}
+        {t(OFFLINE_MESSAGES.remove)}
       </Button>
     </li>
   );
@@ -135,6 +144,7 @@ export function EventImages({
   /** For the queued changes of this event. */
   eventId?: string;
 }) {
+  const t = useT();
   const [open, setOpen] = useState<number | null>(null);
   const { queue } = useOfflineQueue();
   const deleted = new Set(
@@ -152,7 +162,7 @@ export function EventImages({
   if (total === 0) return null;
 
   return (
-    <section aria-label="Imágenes" className="flex flex-col gap-2">
+    <section aria-label={t("Imágenes")} className="flex flex-col gap-2">
       <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {images.map((image, index) => (
           <Thumb

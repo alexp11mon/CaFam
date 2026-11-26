@@ -72,6 +72,8 @@ import {
   type Attachment,
 } from "./image-attach";
 import { ProposalCard } from "./proposal-card";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
+import { dateFormat } from "@/lib/i18n/format";
 
 // The chat of the assistant (spec 015 plan assistant-ui). The thread lives
 // only in this component: leaving the page or "Nueva conversación" forgets it
@@ -173,6 +175,8 @@ export function AssistantChat({
    */
   loadContext?: () => Promise<ChatContext>;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [loaded, setLoaded] = useState<ChatContext | null>(null);
   useEffect(() => {
     if (!loadContext) return;
@@ -360,7 +364,7 @@ export function AssistantChat({
           ...current,
           {
             role: "assistant",
-            content: "He parado. Esto ya estaba hecho:",
+            content: t("He parado. Esto ya estaba hecho:"),
             at: clock(),
             actions: arrived,
           },
@@ -532,9 +536,11 @@ export function AssistantChat({
           role: "assistant",
           content:
             step === "cancel"
-              ? "Vale, no lo cambio."
+              ? t("Vale, no lo cambio.")
               : failed
-                ? `No he podido aplicar el cambio: ${failed}`
+                ? t("No he podido aplicar el cambio: {failed}", {
+                    failed: t(failed),
+                  })
                 : doneText(
                     done
                       .map(({ card }) => card)
@@ -614,7 +620,7 @@ export function AssistantChat({
   const hour = (at: number | undefined) =>
     at === undefined
       ? null
-      : new Intl.DateTimeFormat("es-ES", {
+      : dateFormat(locale, {
           hour: "2-digit",
           minute: "2-digit",
           timeZone,
@@ -630,7 +636,7 @@ export function AssistantChat({
       picker.current?.click();
     } else if (suggestion.kind === "fill") {
       // What needs a name or a date: written, with the cursor after it.
-      const text = suggestionText(suggestion);
+      const text = t(suggestionText(suggestion));
       setDraft(text);
       setFieldError(undefined);
       const input = field.current;
@@ -641,7 +647,7 @@ export function AssistantChat({
         );
       }
     } else {
-      void send(suggestionText(suggestion));
+      void send(t(suggestionText(suggestion)));
     }
   }
 
@@ -665,18 +671,18 @@ export function AssistantChat({
           </h1>
           <p className="truncate text-sm text-muted">
             {quotaReached
-              ? "descansando hasta mañana"
+              ? t("descansando hasta mañana")
               : pending
-                ? "escribiendo…"
-                : "en línea"}
+                ? t("escribiendo…")
+                : t("en línea")}
           </p>
         </div>
         {speech.speaking ? (
-          <IconButton label="Parar la lectura" onClick={speech.stop}>
+          <IconButton label={t("Parar la lectura")} onClick={speech.stop}>
             <StopSpeakingIcon />
           </IconButton>
         ) : null}
-        <IconButton label="Nueva conversación" onClick={restart}>
+        <IconButton label={t("Nueva conversación")} onClick={restart}>
           <NewChatIcon />
         </IconButton>
         <ChatMenu
@@ -690,7 +696,7 @@ export function AssistantChat({
           }
         />
         {onClose ? (
-          <IconButton label="Cerrar el chat" onClick={onClose}>
+          <IconButton label={t("Cerrar el chat")} onClick={onClose}>
             <CloseIcon />
           </IconButton>
         ) : null}
@@ -700,18 +706,19 @@ export function AssistantChat({
         {empty ? (
           <section className="mx-auto flex max-w-sm flex-col items-center gap-3 rounded-card surface px-5 py-6 text-center">
             <Venito mood="wave" className="size-24" />
-            <p className="text-lg font-semibold text-ink">¡Hola! Soy Venito</p>
+            <p className="text-lg font-semibold text-ink">
+              {t("¡Hola! Soy Venito")}
+            </p>
             {/* RF-33 of spec 015: say where the data goes before the first question. */}
             <p className="text-sm text-muted">
-              Pregúntame por tus eventos o por cuándo estáis libres, o pídeme
-              que cree o cambie uno. Tus preguntas y los eventos necesarios para
-              responderlas se envían a Groq, que no los usa para entrenar. Más
-              detalles en la{" "}
+              {t(
+                "Pregúntame por tus eventos o por cuándo estáis libres, o pídeme que cree o cambie uno. Tus preguntas y los eventos necesarios para responderlas se envían a Groq, que no los usa para entrenar. Más detalles en la",
+              )}{" "}
               <Link
                 href="/privacy"
                 className="font-semibold text-ink underline decoration-control underline-offset-4"
               >
-                política de privacidad
+                {t("política de privacidad")}
               </Link>
               .
             </p>
@@ -721,7 +728,7 @@ export function AssistantChat({
         <div
           role="log"
           aria-live="polite"
-          aria-label="Conversación"
+          aria-label={t("Conversación")}
           className="flex flex-col gap-3"
         >
           {messages.map((message, index) =>
@@ -731,7 +738,7 @@ export function AssistantChat({
                 className="flex max-w-[85%] flex-col items-end gap-1 self-end"
               >
                 <p className="rounded-card rounded-br-block border border-accent-edge bg-accent px-4 py-2 whitespace-pre-line text-on-accent">
-                  <span className="sr-only">Tú: </span>
+                  <span className="sr-only">{t("Tú:")} </span>
                   {message.content}
                   {message.imageCount && !message.images?.length ? (
                     <span className="mt-1 block text-sm opacity-90">
@@ -746,7 +753,7 @@ export function AssistantChat({
                         <img
                           key={i}
                           src={url}
-                          alt={`Imagen adjunta ${i + 1}`}
+                          alt={t("Imagen adjunta {value}", { value: i + 1 })}
                           className="size-20 rounded-control object-cover"
                         />
                       ))}
@@ -762,7 +769,7 @@ export function AssistantChat({
                 <Venito className="mt-1 size-8" compact />
                 <div className="flex min-w-0 flex-col items-start gap-1">
                   <div className="rounded-card rounded-bl-block surface px-4 py-3 text-ink">
-                    <span className="sr-only">Venito: </span>
+                    <span className="sr-only">{t("Venito:")} </span>
                     <p className="whitespace-pre-line">{message.content}</p>
                     <CitedEvents
                       events={message.events ?? []}
@@ -830,13 +837,13 @@ export function AssistantChat({
                   <span className="size-1.5 rounded-full bg-muted" />
                   <span className="size-1.5 rounded-full bg-muted" />
                 </span>
-                <span className="text-sm text-muted">{status}</span>
+                <span className="text-sm text-muted">{t(status)}</span>
               </div>
               <Button
                 variant="quiet"
                 onClick={() => controller.current?.abort()}
               >
-                Cancelar
+                {t("Cancelar")}
               </Button>
             </>
           ) : null}
@@ -852,10 +859,10 @@ export function AssistantChat({
               className="size-10"
               compact
             />
-            <span className="min-w-0 flex-1">{error.text}</span>
+            <span className="min-w-0 flex-1">{t(error.text)}</span>
             {error.retry ? (
               <Button variant="secondary" onClick={() => void send(draft)}>
-                Reintentar
+                {t("Reintentar")}
               </Button>
             ) : null}
           </div>
@@ -873,7 +880,7 @@ export function AssistantChat({
         }}
       >
         <ul
-          aria-label="Sugerencias"
+          aria-label={t("Sugerencias")}
           className="-mx-3 flex gap-2 overflow-x-auto px-3 [scrollbar-width:none]"
         >
           {chips.map((suggestion) => (
@@ -882,7 +889,7 @@ export function AssistantChat({
                 disabled={pending || quotaReached}
                 onClick={() => pick(suggestion)}
               >
-                {suggestion.label}
+                {t(suggestion.label)}
               </Chip>
             </li>
           ))}
@@ -920,7 +927,7 @@ export function AssistantChat({
           />
           <div className="flex min-w-0 flex-1 flex-col">
             <label htmlFor={fieldId} className="sr-only">
-              Tu pregunta
+              {t("Tu pregunta")}
             </label>
             <textarea
               id={fieldId}
@@ -928,7 +935,9 @@ export function AssistantChat({
               name="question"
               rows={Math.min(4, Math.max(1, draft.split("\n").length))}
               value={draft}
-              placeholder={listening ? "Escuchando…" : "Escribe a Venito…"}
+              placeholder={
+                listening ? t("Escuchando…") : t("Escribe a Venito…")
+              }
               disabled={quotaReached}
               aria-invalid={Boolean(fieldError)}
               aria-describedby={fieldError ? `${fieldId}-error` : undefined}
@@ -941,7 +950,7 @@ export function AssistantChat({
           </div>
           <button
             type="submit"
-            aria-label="Enviar"
+            aria-label={t("Enviar")}
             disabled={pending || quotaReached}
             className="flex size-11 shrink-0 items-center justify-center rounded-full border border-accent-edge bg-accent text-on-accent press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60"
           >

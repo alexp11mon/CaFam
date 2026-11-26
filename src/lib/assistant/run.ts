@@ -13,6 +13,8 @@ import type { ChatMessage, ProposalRow } from "./schemas";
 import { STATUS, statusFor } from "./stream";
 import { TOOL_DEFINITIONS, WRITE_TOOL_DEFINITIONS } from "./tool-definitions";
 import { wantsWrite } from "./write-intent";
+import type { Locale } from "@/lib/i18n/locale";
+import { spanishT, type T } from "@/lib/i18n/translate";
 import type { CitedEvent } from "./tools";
 
 // The model-tools loop of one question (spec 015 plan assistant-run, D2).
@@ -34,6 +36,9 @@ export interface RunDeps {
   ) => Promise<object>;
   now: Date;
   timeZone: string;
+  /** Spec 053: the language of the answer and of the statuses. */
+  locale?: Locale;
+  t?: T;
   /** Told what is being done, step by step, for the person waiting (spec 024 RF-16). */
   onStatus?: (text: string) => void;
   /**
@@ -91,6 +96,7 @@ export async function runAssistant(
         dateContext(deps.now, deps.timeZone),
         deps.timeZone,
         writing ? { calendars: await deps.write!.calendars() } : undefined,
+        deps.locale,
       ),
     },
     ...thread,
@@ -116,7 +122,7 @@ export async function runAssistant(
     }
     messages.push(reply.message);
     for (const call of reply.toolCalls) {
-      deps.onStatus?.(statusFor(call.name, call.arguments));
+      deps.onStatus?.(statusFor(call.name, call.arguments, deps.t ?? spanishT));
     }
     // Reading tools run all at once, answered in the order they were asked
     // (spec 024 RF-18, plan D8); a round that writes goes one by one, so
@@ -163,6 +169,7 @@ export interface ProposalRunDeps {
   proposal: ProposalDeps;
   now: Date;
   timeZone: string;
+  locale?: Locale;
 }
 
 /** RF-12: images sent without text still need a user text part. */
@@ -187,6 +194,7 @@ export async function runProposal(
       content: proposalPrompt(
         dateContext(deps.now, deps.timeZone),
         deps.timeZone,
+        deps.locale,
       ),
     },
   ];

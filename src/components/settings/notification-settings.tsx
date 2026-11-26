@@ -13,6 +13,7 @@ import {
   type DeviceSubscription,
 } from "@/lib/push/browser";
 import { REMINDER_OPTIONS } from "@/lib/push/options";
+import { useT } from "@/components/i18n/locale-provider";
 
 // "Notificaciones" in Ajustes (spec 040 RF-1 to RF-4, RF-6, RF-14).
 
@@ -55,6 +56,7 @@ function ThisDevice({
   subscribed: string | null;
   actions: NotificationActions;
 }) {
+  const t = useT();
   const support = useBrowserSupport();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string>();
@@ -63,10 +65,11 @@ function ThisDevice({
   if (support === "ios-install") {
     return (
       <p className="text-sm text-muted">
-        En el iPhone los avisos solo funcionan con CaFam añadida a la pantalla
-        de inicio.{" "}
+        {t(
+          "En el iPhone los avisos solo funcionan con CaFam añadida a la pantalla de inicio.",
+        )}{" "}
         <Link href="/" className="font-medium text-accent-ink underline">
-          Cómo añadirla
+          {t("Cómo añadirla")}
         </Link>
       </p>
     );
@@ -74,16 +77,16 @@ function ThisDevice({
   if (support === "unsupported" || !publicKey) {
     return (
       <p className="text-sm text-muted">
-        Este navegador no puede recibir avisos.
+        {t("Este navegador no puede recibir avisos.")}
       </p>
     );
   }
   if (support === "denied") {
     return (
       <p className="text-sm text-muted">
-        Has bloqueado los avisos de CaFam en este navegador. Para activarlos,
-        permite las notificaciones en los ajustes del sitio (el candado junto a
-        la dirección) y vuelve aquí.
+        {t(
+          "Has bloqueado los avisos de CaFam en este navegador. Para activarlos, permite las notificaciones en los ajustes del sitio (el candado junto a la dirección) y vuelve aquí.",
+        )}
       </p>
     );
   }
@@ -96,7 +99,7 @@ function ThisDevice({
     try {
       result = await work();
     } catch {
-      result = { error: "No se ha podido conectar. Inténtalo de nuevo." };
+      result = { error: t("No se ha podido conectar. Inténtalo de nuevo.") };
     }
     setPending(false);
     if (result.error) setError(result.error);
@@ -107,7 +110,9 @@ function ThisDevice({
     <div className="flex flex-col gap-3">
       {subscribed ? (
         <>
-          <p className="text-sm text-ink">Este dispositivo recibe avisos.</p>
+          <p className="text-sm text-ink">
+            {t("Este dispositivo recibe avisos.")}
+          </p>
           <Button
             variant="secondary"
             className="self-start"
@@ -116,7 +121,7 @@ function ThisDevice({
               void run(() => actions.test(subscribed), "Aviso enviado.")
             }
           >
-            Enviar un aviso de prueba
+            {t("Enviar un aviso de prueba")}
           </Button>
         </>
       ) : (
@@ -128,15 +133,16 @@ function ThisDevice({
               const subscription = await subscribeDevice(publicKey);
               if (!subscription) {
                 return {
-                  error:
+                  error: t(
                     "No se han activado los avisos. Revisa el permiso del navegador.",
+                  ),
                 };
               }
               return actions.save(subscription);
             })
           }
         >
-          Activar en este dispositivo
+          {t("Activar en este dispositivo")}
         </Button>
       )}
       <FormAlert message={error} />
@@ -156,6 +162,7 @@ function Defaults({
   defaults: { timed: number | null; allDay: number | null };
   save: NotificationActions["setDefaults"];
 }) {
+  const t = useT();
   const [value, setValue] = useState(defaults);
   const [error, setError] = useState<string>();
 
@@ -164,7 +171,7 @@ function Defaults({
     setValue(next);
     setError(undefined);
     const result = await save(next).catch(() => ({
-      error: "No se ha podido guardar. Inténtalo de nuevo.",
+      error: t("No se ha podido guardar. Inténtalo de nuevo."),
     }));
     if (result.error) {
       setValue(before);
@@ -175,17 +182,19 @@ function Defaults({
   const read = (raw: string) => (raw === "none" ? null : Number(raw));
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="text-base font-semibold text-ink">Aviso por defecto</h3>
+      <h3 className="text-base font-semibold text-ink">
+        {t("Aviso por defecto")}
+      </h3>
       <p className="text-sm text-muted">
-        Se pone en los eventos que creas; puedes cambiarlo en cada uno.
+        {t("Se pone en los eventos que creas; puedes cambiarlo en cada uno.")}
       </p>
       <Select
-        label="Eventos con hora"
+        label={t("Eventos con hora")}
         name="reminder-timed"
         value={value.timed === null ? "none" : String(value.timed)}
         onChange={(e) => void change({ ...value, timed: read(e.target.value) })}
       >
-        <option value="none">Ninguno</option>
+        <option value="none">{t("Ninguno")}</option>
         {REMINDER_OPTIONS.timed.map((o) => (
           <option key={o.minutes} value={o.minutes}>
             {o.label}
@@ -193,14 +202,14 @@ function Defaults({
         ))}
       </Select>
       <Select
-        label="Eventos de todo el día"
+        label={t("Eventos de todo el día")}
         name="reminder-all-day"
         value={value.allDay === null ? "none" : String(value.allDay)}
         onChange={(e) =>
           void change({ ...value, allDay: read(e.target.value) })
         }
       >
-        <option value="none">Ninguno</option>
+        <option value="none">{t("Ninguno")}</option>
         {REMINDER_OPTIONS.allDay.map((o) => (
           <option key={o.minutes} value={o.minutes}>
             {o.label}
@@ -219,6 +228,7 @@ function Kinds({
   notify: NotifyPrefs;
   save: NotificationActions["setNotify"];
 }) {
+  const t = useT();
   const [value, setValue] = useState(notify);
   const [error, setError] = useState<string>();
 
@@ -228,7 +238,7 @@ function Kinds({
     setValue(updated);
     setError(undefined);
     const result = await save(updated).catch(() => ({
-      error: "No se ha podido guardar. Inténtalo de nuevo.",
+      error: t("No se ha podido guardar. Inténtalo de nuevo."),
     }));
     if (result.error) {
       setValue(before);
@@ -240,7 +250,9 @@ function Kinds({
 
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="text-base font-semibold text-ink">Avisarme cuando…</h3>
+      <h3 className="text-base font-semibold text-ink">
+        {t("Avisarme cuando…")}
+      </h3>
       {KINDS.map(({ key, label }) => (
         <Switch
           key={key}
@@ -267,6 +279,7 @@ export function NotificationSettings({
   notify: NotifyPrefs;
   actions: NotificationActions;
 }) {
+  const t = useT();
   const [endpoint, setEndpoint] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
@@ -292,11 +305,11 @@ export function NotificationSettings({
       />
       <div className="flex flex-col gap-2">
         <h3 className="text-base font-semibold text-ink">
-          Dispositivos con avisos
+          {t("Dispositivos con avisos")}
         </h3>
         {devices.length === 0 ? (
           <p className="text-sm text-muted">
-            Ningún dispositivo recibe avisos.
+            {t("Ningún dispositivo recibe avisos.")}
           </p>
         ) : (
           <ul className="flex flex-col divide-y divide-line">
@@ -308,15 +321,15 @@ export function NotificationSettings({
                 <span className="text-ink">
                   {d.device}
                   {d.endpoint === endpoint ? (
-                    <span className="text-sm text-muted"> · este</span>
+                    <span className="text-sm text-muted"> {t("· este")}</span>
                   ) : null}
                 </span>
                 <Button
                   variant="quiet"
-                  aria-label={`Quitar ${d.device}`}
+                  aria-label={t("Quitar {device}", { device: d.device })}
                   onClick={() => void actions.remove(d.id)}
                 >
-                  Quitar
+                  {t("Quitar")}
                 </Button>
               </li>
             ))}

@@ -13,6 +13,7 @@ import {
 import { zipStore } from "@/lib/export/zip-store";
 import { downloadImage } from "@/lib/images/download-image";
 import { objectPath } from "@/lib/images/paths";
+import { useT } from "@/components/i18n/locale-provider";
 
 // Spec 049, T5: "Descargar mis datos" builds the .zip in the browser, with
 // progress and "Cancelar" (RF-12, RF-15; plan D1).
@@ -51,6 +52,7 @@ export function ExportData({
   image = downloadImage,
   save = saveBlob,
 }: ExportDeps) {
+  const t = useT();
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const run = useRef(0);
 
@@ -73,7 +75,10 @@ export function ExportData({
       for (const [index, item] of data.images.entries()) {
         setPhase({
           kind: "busy",
-          text: `Imágenes: ${index + 1} de ${data.images.length}`,
+          text: t("Imágenes: {n} de {total}", {
+            n: index + 1,
+            total: data.images.length,
+          }),
         });
         const blob = await image(objectPath(item.objectId, "full"));
         if (!live()) return;
@@ -95,7 +100,7 @@ export function ExportData({
 
   async function start() {
     const id = ++run.current;
-    setPhase({ kind: "busy", text: "Leyendo tus datos…" });
+    setPhase({ kind: "busy", text: t("Leyendo tus datos…") });
     const data = await load();
     if (run.current !== id) return;
     if (!data) return setPhase({ kind: "error" });
@@ -118,8 +123,9 @@ export function ExportData({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-muted">
-        Un archivo .zip con tu perfil, tus calendarios (.ics), tus comentarios,
-        tus notas y las imágenes que subiste. Se prepara en este dispositivo.
+        {t(
+          "Un archivo .zip con tu perfil, tus calendarios (.ics), tus comentarios, tus notas y las imágenes que subiste. Se prepara en este dispositivo.",
+        )}
       </p>
       {phase.kind === "error" ? (
         <FormAlert message={EXPORT_TEXTS.failed} />
@@ -130,24 +136,26 @@ export function ExportData({
             {phase.text}
           </p>
           <Button variant="secondary" onClick={cancel}>
-            Cancelar
+            {t("Cancelar")}
           </Button>
         </div>
       ) : phase.kind === "ask" ? (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-ink">
-            Has subido {phase.data.images.length} imágenes: el archivo puede
-            pasar de 500 MB. ¿Las incluyo?
+            {t(
+              "Has subido {length} imágenes: el archivo puede pasar de 500 MB. ¿Las incluyo?",
+              { length: phase.data.images.length },
+            )}
           </p>
           <div className="flex flex-wrap gap-3">
             <Button onClick={() => choose(phase.data, true)}>
-              Incluir imágenes
+              {t("Incluir imágenes")}
             </Button>
             <Button
               variant="secondary"
               onClick={() => choose(phase.data, false)}
             >
-              Sin imágenes
+              {t("Sin imágenes")}
             </Button>
           </div>
         </div>
@@ -160,7 +168,7 @@ export function ExportData({
           ) : null}
           <div>
             <Button variant="secondary" onClick={start}>
-              Descargar mis datos
+              {t("Descargar mis datos")}
             </Button>
           </div>
         </div>

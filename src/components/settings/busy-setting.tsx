@@ -1,6 +1,7 @@
 "use client";
 
 import { AvailabilitySetting } from "./availability-setting";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * Consent to show my busy times in the grid of people who share a calendar
@@ -11,11 +12,14 @@ export function BusySetting(props: {
   current: boolean;
   save: (share: boolean) => Promise<{ error?: string }>;
 }) {
+  const t = useT();
   return (
     <AvailabilitySetting
       {...props}
-      label="Mostrar a los demás cuándo estoy ocupado en su calendario"
-      description="En su semana y su día verán bloques «Ocupado» con tu nombre, sin título, lugar, descripción ni calendario. Lo ven solo las personas con las que compartes algún calendario y que elijan verlo."
+      label={t("Mostrar a los demás cuándo estoy ocupado en su calendario")}
+      description={t(
+        "En su semana y su día verán bloques «Ocupado» con tu nombre, sin título, lugar, descripción ni calendario. Lo ven solo las personas con las que compartes algún calendario y que elijan verlo.",
+      )}
     />
   );
 }

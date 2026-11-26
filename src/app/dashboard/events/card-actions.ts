@@ -1,11 +1,14 @@
 "use server";
 
+import { summarizeRRule } from "@/lib/recurrence/summary";
+
 import type { EventDetailData } from "@/components/calendar/event-detail";
 import { authorLabel } from "@/lib/account/author-label";
 import { originalLabel } from "@/lib/calendar/event-zone";
 import {
   getCalendar,
   getEvent,
+  getProfileLocale,
   getProfileTimeZone,
   requireActionUser,
 } from "@/lib/calendar/queries";
@@ -40,10 +43,11 @@ export async function loadEventCard(
   const { supabase, userId } = await requireActionUser();
   const event = await getEvent(supabase, id);
   if (!event) return { gone: true };
-  const [calendar, members, timeZone] = await Promise.all([
+  const [calendar, members, timeZone, locale] = await Promise.all([
     getCalendar(supabase, userId, event.calendarId),
     getMembers(supabase, [event.calendarId]),
     getProfileTimeZone(supabase, userId),
+    getProfileLocale(supabase, userId),
   ]);
   if (!calendar) return { gone: true };
   return {
@@ -51,7 +55,10 @@ export async function loadEventCard(
     author: authorLabel(event.createdBy, members),
     repeat: event.series
       ? {
-          summary: event.series.summary,
+          summary:
+            locale === "es"
+              ? event.series.summary
+              : summarizeRRule(event.series.recurrence, locale),
           changed: event.series.changed,
           limitReached: !event.rowId && event.series.exceptions >= 100,
         }

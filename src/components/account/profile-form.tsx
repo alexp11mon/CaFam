@@ -9,6 +9,7 @@ import type { ProfileState } from "@/lib/account/form-state";
 import type { FormAction } from "@/lib/auth/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
 import { usePulseOn } from "@/lib/hooks/use-pulse-on";
+import { useT } from "@/components/i18n/locale-provider";
 
 /** Name and time zone of the own profile (spec 006, RF-13 to RF-15). */
 export function ProfileForm({
@@ -20,6 +21,7 @@ export function ProfileForm({
   initial: { displayName: string; timeZone: string };
   timeZones: readonly string[];
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {
     values: initial,
   });
@@ -35,11 +37,11 @@ export function ProfileForm({
       <FormAlert message={state.formError} />
       {state.saved ? (
         <p role="status" className="text-sm text-ink">
-          Perfil guardado.
+          {t("Perfil guardado.")}
         </p>
       ) : null}
       <TextField
-        label="Nombre"
+        label={t("Nombre")}
         name="displayName"
         autoComplete="name"
         maxLength={50}
@@ -47,7 +49,7 @@ export function ProfileForm({
         error={state.fieldErrors?.displayName}
       />
       <Select
-        label="Zona horaria"
+        label={t("Zona horaria")}
         name="timeZone"
         defaultValue={state.values.timeZone}
         error={state.fieldErrors?.timeZone}
@@ -64,7 +66,11 @@ export function ProfileForm({
         disabled={pending}
         className="self-start"
       >
-        <SwapLabel busy={pending} idle="Guardar perfil" busyText="Guardando…" />
+        <SwapLabel
+          busy={pending}
+          idle="Guardar perfil"
+          busyText={t("Guardando…")}
+        />
       </Button>
     </form>
   );

@@ -13,6 +13,7 @@ import {
 } from "@/lib/calendar/queries";
 import { getMembers } from "@/lib/sharing/queries";
 import { changeMemberRole, expelMember, leaveCalendar } from "./actions";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Miembros" };
 
@@ -67,7 +68,13 @@ export default function MembersPage({
 }) {
   return (
     <PageShell title="Miembros">
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <Members params={params} />
       </Suspense>
     </PageShell>

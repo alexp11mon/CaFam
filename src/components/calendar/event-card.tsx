@@ -34,6 +34,7 @@ import { POP_OUT_MS } from "@/lib/motion/play";
 import { readOnlyEventText } from "@/lib/sync/read-only";
 import { useEventClipboard } from "./event-clipboard";
 import { ShareEventButton } from "./share-event-button";
+import { useLocale, useT } from "@/components/i18n/locale-provider";
 
 export type CardEvent = CalendarEventItem & {
   location?: string | null;
@@ -69,6 +70,8 @@ export function EventCard({
   onClose: (restoreFocus: boolean) => void;
   onDelete: () => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const { show } = useToast();
   const clipboard = useEventClipboard();
@@ -264,7 +267,7 @@ export function EventCard({
         </h2>
         <button
           type="button"
-          aria-label="Cerrar"
+          aria-label={t("Cerrar")}
           onClick={() => close(true)}
           className="-mt-1 -mr-1 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted press hover:bg-stone hover:text-ink focus-visible:outline-2 focus-visible:outline-ink"
         >
@@ -272,14 +275,14 @@ export function EventCard({
         </button>
       </div>
       <dl className="flex flex-col gap-1.5 text-sm">
-        <dt className="sr-only">Cuándo</dt>
+        <dt className="sr-only">{t("Cuándo")}</dt>
         <dd data-testid="card-when">
-          {event.allDay ? "Todo el día · " : ""}
-          {formatEventWhen(event, timeZone)}
+          {event.allDay ? t("Todo el día · ") : ""}
+          {formatEventWhen(event, timeZone, locale)}
         </dd>
         {data?.originalTime ? (
           <>
-            <dt className="sr-only">Hora original</dt>
+            <dt className="sr-only">{t("Hora original")}</dt>
             <dd className="text-muted" data-testid="card-original-time">
               {data.originalTime}
             </dd>
@@ -287,33 +290,35 @@ export function EventCard({
         ) : null}
         {data?.repeat ? (
           <>
-            <dt className="sr-only">Se repite</dt>
+            <dt className="sr-only">{t("Se repite")}</dt>
             <dd className="text-muted">{data.repeat.summary}</dd>
           </>
         ) : null}
         {event.location ? (
           <>
-            <dt className="sr-only">Lugar</dt>
+            <dt className="sr-only">{t("Lugar")}</dt>
             <dd className="break-words">{event.location}</dd>
           </>
         ) : null}
         {event.calendarName ? (
           <>
-            <dt className="sr-only">Calendario</dt>
+            <dt className="sr-only">{t("Calendario")}</dt>
             <dd className="text-muted">{event.calendarName}</dd>
           </>
         ) : null}
         {data ? (
           <>
-            <dt className="sr-only">Creado por</dt>
-            <dd className="text-muted">Creado por {data.author}</dd>
+            <dt className="sr-only">{t("Creado por")}</dt>
+            <dd className="text-muted">
+              {t("Creado por {author}", { author: data.author })}
+            </dd>
           </>
         ) : (
           <dd aria-hidden="true" className="h-4 w-40 rounded-full bg-line" />
         )}
         {data?.description ? (
           <>
-            <dt className="sr-only">Descripción</dt>
+            <dt className="sr-only">{t("Descripción")}</dt>
             <dd
               data-testid="card-description"
               className="line-clamp-3 whitespace-pre-line break-words"
@@ -324,14 +329,14 @@ export function EventCard({
         ) : null}
         {counts.length ? (
           <>
-            <dt className="sr-only">Imágenes y comentarios</dt>
+            <dt className="sr-only">{t("Imágenes y comentarios")}</dt>
             <dd className="text-muted">{counts.join(" · ")}</dd>
           </>
         ) : null}
       </dl>
       {data?.readOnly ? (
         <p className="text-sm text-muted">
-          {readOnlyEventText(data.readOnly, data.provider ?? "google")}
+          {readOnlyEventText(data.readOnly, data.provider ?? "google", t)}
         </p>
       ) : null}
       {/* The actions land just after the card (spec 021 RF-19). */}
@@ -339,17 +344,17 @@ export function EventCard({
         {editable ? (
           <>
             <Link href={editHref} onClick={toWindow} className={ACTION}>
-              Editar
+              {t("Editar")}
             </Link>
             <Link
               href={`/dashboard/events/new?from=${event.id}`}
               onClick={() => onClose(false)}
               className={ACTION}
             >
-              Duplicar
+              {t("Duplicar")}
             </Link>
             <button type="button" onClick={onDelete} className={ACTION}>
-              Borrar
+              {t("Borrar")}
             </button>
           </>
         ) : null}
@@ -371,7 +376,7 @@ export function EventCard({
           onClick={toWindow}
           className={ACTION}
         >
-          Abrir
+          {t("Abrir")}
         </Link>
       </div>
     </dialog>

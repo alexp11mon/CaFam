@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Select } from "@/components/ui/select";
+import { useT } from "@/components/i18n/locale-provider";
 
 type Result = { error?: string };
 
@@ -17,12 +18,13 @@ export function AssignGroupSelect({
   groups: { id: string; name: string }[];
   action: (groupId: string | null) => Promise<Result>;
 }) {
+  const t = useT();
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
 
   return (
     <Select
-      label={`Grupo de ${calendarName}`}
+      label={t("Grupo de {calendarName}", { calendarName })}
       name="groupId"
       value={groupId ?? ""}
       disabled={pending}
@@ -34,7 +36,7 @@ export function AssignGroupSelect({
         });
       }}
     >
-      <option value="">Sin grupo</option>
+      <option value="">{t("Sin grupo")}</option>
       {groups.map((group) => (
         <option key={group.id} value={group.id}>
           {group.name}

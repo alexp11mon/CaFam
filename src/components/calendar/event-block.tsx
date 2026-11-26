@@ -10,6 +10,7 @@ import { CommentIcon, ImageIcon, RepeatIcon } from "@/components/shell/icons";
 import { PHONE_QUERY } from "@/lib/hooks/use-is-phone";
 import { useEventInteractions } from "./event-interactions";
 import { PendingMark } from "@/components/offline/pending-mark";
+import { useT } from "@/components/i18n/locale-provider";
 
 /**
  * Mark of an event with images (spec 012 RF-12). The words always reach
@@ -22,6 +23,7 @@ export function ImageMark({
   count?: number;
   icon?: boolean;
 }) {
+  const t = useT();
   if (!count) return null;
   return (
     <>
@@ -31,13 +33,14 @@ export function ImageMark({
           <ImageIcon />
         </>
       ) : null}
-      <span className="sr-only"> Con imágenes</span>
+      <span className="sr-only"> {t("Con imágenes")}</span>
     </>
   );
 }
 
 /** Mark of an occurrence of a series (spec 013 RF-9), as ImageMark. */
 function RepeatMark({ series, icon }: { series: boolean; icon: boolean }) {
+  const t = useT();
   if (!series) return null;
   return (
     <>
@@ -47,7 +50,7 @@ function RepeatMark({ series, icon }: { series: boolean; icon: boolean }) {
           <RepeatIcon />
         </>
       ) : null}
-      <span className="sr-only"> Se repite</span>
+      <span className="sr-only"> {t("Se repite")}</span>
     </>
   );
 }

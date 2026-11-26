@@ -32,6 +32,7 @@ import { banded } from "@/lib/motion/rubber-band";
 import { goneText } from "@/lib/sync/write-errors";
 import { useUndoToast } from "./use-undo-toast";
 import { isOnline } from "@/lib/offline/connection";
+import { useT } from "@/components/i18n/locale-provider";
 
 const ICON_BUTTON =
   "inline-flex size-11 shrink-0 items-center justify-center rounded-full text-ink transition-colors hover:bg-stone focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
@@ -83,6 +84,7 @@ export function EventModal({
   variant?: "window" | "sheet";
   children: ReactNode;
 }) {
+  const t = useT();
   const router = useRouter();
   const show = useUndoToast();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -234,7 +236,7 @@ export function EventModal({
         // The handle: drag it up to fill the screen, down to close (RF-45, RF-46).
         <button
           type="button"
-          aria-label={sheet === "half" ? "Ampliar" : "Reducir"}
+          aria-label={sheet === "half" ? t("Ampliar") : t("Reducir")}
           onClick={() => {
             if (dragged.current) dragged.current = false;
             else setSheetState(sheet === "half" ? "full" : "half");
@@ -272,12 +274,12 @@ export function EventModal({
           id={titleId}
           className="min-w-0 flex-1 truncate text-lg font-semibold text-ink"
         >
-          {title}
+          {t(title)}
         </h2>
         <button
           type="button"
           aria-pressed={fullscreen}
-          aria-label="Pantalla completa"
+          aria-label={t("Pantalla completa")}
           onClick={() => setFullscreen((value) => !value)}
           className={`${ICON_BUTTON} max-[48.0625rem]:hidden`}
         >
@@ -285,7 +287,7 @@ export function EventModal({
         </button>
         <button
           type="button"
-          aria-label="Cerrar"
+          aria-label={t("Cerrar")}
           onClick={requestClose}
           className={ICON_BUTTON}
         >
@@ -299,7 +301,7 @@ export function EventModal({
           className="flex flex-wrap items-center gap-3 border-b border-line bg-stone px-4 py-3 sm:px-6"
         >
           <p id={`${titleId}-discard`} className="flex-1 font-semibold">
-            ¿Descartar los cambios?
+            {t("¿Descartar los cambios?")}
           </p>
           {/* Focused as it appears: an alertdialog nobody focuses is not announced (spec 023 RF-19). */}
           <Button
@@ -307,10 +309,10 @@ export function EventModal({
             autoFocus
             onClick={() => setConfirming(false)}
           >
-            Seguir editando
+            {t("Seguir editando")}
           </Button>
           <Button variant="danger" onClick={leave}>
-            Descartar cambios
+            {t("Descartar cambios")}
           </Button>
         </div>
       ) : null}

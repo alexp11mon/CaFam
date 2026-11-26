@@ -6,6 +6,7 @@ import { PageShell } from "@/components/calendar/page-shell";
 import { updateEvent } from "../actions";
 import { deleteFromDetail } from "../quick-actions";
 import { loadEvent } from "../load-event";
+import { T } from "@/components/i18n/locale-provider";
 
 type SearchParams = Promise<{ edit?: string | string[] }>;
 
@@ -57,7 +58,13 @@ export default function EventPage({
       backHref="/dashboard/calendar"
       backLabel="Volver al calendario"
     >
-      <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando…"}</T>
+          </p>
+        }
+      >
         <Event params={params} searchParams={searchParams} />
       </Suspense>
     </PageShell>

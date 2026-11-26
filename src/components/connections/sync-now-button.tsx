@@ -6,6 +6,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import type { FormAction } from "@/lib/forms/form-state";
 import { SwapLabel } from "@/components/ui/swap-label";
 import { usePulseOn } from "@/lib/hooks/use-pulse-on";
+import { useT } from "@/components/i18n/locale-provider";
 
 interface SyncNowState {
   message?: string;
@@ -20,6 +21,7 @@ export function SyncNowButton({
 }: {
   action: FormAction<SyncNowState>;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(action, {});
   const button = useRef<HTMLButtonElement>(null);
   usePulseOn(button, state.updated && state);
@@ -36,7 +38,7 @@ export function SyncNowButton({
         <SwapLabel
           busy={pending}
           idle="Actualizar ahora"
-          busyText="Actualizando…"
+          busyText={t("Actualizando…")}
         />
       </Button>
       <FormAlert message={state.formError} />

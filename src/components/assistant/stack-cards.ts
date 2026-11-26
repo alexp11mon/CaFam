@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/components/i18n/locale-provider";
 
 import { useEffect, useRef } from "react";
 import { undoAssistantAction } from "@/app/dashboard/assistant/write-actions";
@@ -53,6 +54,7 @@ export function useStackCards(
   onChanged?: () => void,
 ) {
   const stack = useUndoStack();
+  const t = useT();
   const stacked = useRef(new Set<string>());
   useEffect(() => {
     if (!stack) return;
@@ -64,7 +66,7 @@ export function useStackCards(
         if (stacked.current.has(key)) continue;
         stacked.current.add(key);
         stack.record(
-          undoLabel(VERBS[card.action.kind], titleOf(card)),
+          undoLabel(VERBS[card.action.kind], titleOf(card), t),
           null,
           async () => {
             const result = await undoAssistantAction(undo);
@@ -76,5 +78,5 @@ export function useStackCards(
         );
       }
     }
-  }, [messages, stack, onChanged]);
+  }, [messages, stack, onChanged, t]);
 }

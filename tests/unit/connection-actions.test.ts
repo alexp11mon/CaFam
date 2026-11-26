@@ -38,6 +38,7 @@ vi.mock("@/lib/calendar/queries", () => ({
     userId: "user-1",
   }),
   getProfileTimeZone: async () => "Europe/Madrid",
+  getProfileLocale: async () => "es",
 }));
 vi.mock("@/lib/sync/engine", () => ({
   syncConnection,
