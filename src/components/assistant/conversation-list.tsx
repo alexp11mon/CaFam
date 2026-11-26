@@ -5,6 +5,7 @@ import type { ConversationItem } from "@/app/dashboard/assistant/conversation-ac
 import { TrashIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
+import { useT } from "@/components/i18n/locale-provider";
 
 // Spec 052 RF-10: the saved conversations, newest first. Opening one goes on
 // with it; each can be forgotten, or all at once.
@@ -27,6 +28,7 @@ export function ConversationList({
   onDelete: (id: string) => void;
   onDeleteAll: () => void;
 }) {
+  const t = useT();
   const [confirming, setConfirming] = useState(false);
   return (
     <section
@@ -34,12 +36,14 @@ export function ConversationList({
       className="flex flex-col gap-2"
     >
       <h3 id="conversations-title" className="text-base font-semibold">
-        Conversaciones
+        {t("Conversaciones")}
       </h3>
       {items === null ? (
-        <p className="text-sm text-muted">Cargando…</p>
+        <p className="text-sm text-muted">{t("Cargando…")}</p>
       ) : items.length === 0 ? (
-        <p className="text-sm text-muted">No hay conversaciones guardadas.</p>
+        <p className="text-sm text-muted">
+          {t("No hay conversaciones guardadas.")}
+        </p>
       ) : (
         <>
           <ul className="flex flex-col divide-y divide-line">
@@ -58,7 +62,7 @@ export function ConversationList({
                   </span>
                 </button>
                 <IconButton
-                  label={`Borrar «${item.title}»`}
+                  label={t("Borrar «{title}»", { title: item.title })}
                   onClick={() => onDelete(item.id)}
                 >
                   <TrashIcon />
@@ -69,8 +73,9 @@ export function ConversationList({
           {confirming ? (
             <div className="flex flex-col gap-2 rounded-control border border-line p-3">
               <p className="text-sm">
-                ¿Borrar todas las conversaciones guardadas? No se puede
-                deshacer.
+                {t(
+                  "¿Borrar todas las conversaciones guardadas? No se puede deshacer.",
+                )}
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -80,19 +85,19 @@ export function ConversationList({
                     onDeleteAll();
                   }}
                 >
-                  Sí, borrar todas
+                  {t("Sí, borrar todas")}
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={() => setConfirming(false)}
                 >
-                  Cancelar
+                  {t("Cancelar")}
                 </Button>
               </div>
             </div>
           ) : (
             <Button variant="quiet" onClick={() => setConfirming(true)}>
-              Borrar todas
+              {t("Borrar todas")}
             </Button>
           )}
         </>

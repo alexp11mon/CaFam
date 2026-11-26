@@ -7,6 +7,11 @@ import { requireActionUser } from "@/lib/calendar/queries";
 import { durationSchema } from "@/lib/calendar/view-options-schema";
 import { accentSchema, themeSchema } from "@/lib/theme/schemas";
 import { THEME_COOKIE, THEME_COOKIE_OPTIONS } from "@/lib/theme/theme";
+import {
+  LOCALE_COOKIE,
+  LOCALE_COOKIE_OPTIONS,
+  localeSchema,
+} from "@/lib/i18n/locale";
 
 type Result = { error?: string };
 
@@ -54,6 +59,30 @@ export async function setTheme(theme: string): Promise<Result> {
   }
   (await cookies()).set(THEME_COOKIE, parsed.data, THEME_COOKIE_OPTIONS);
   revalidatePath("/dashboard", "layout");
+  return {};
+}
+
+const LOCALE_NOT_SAVED =
+  "No se ha podido guardar el idioma. Inténtalo de nuevo.";
+
+/** Saves the language in the profile and on this device (spec 053 RF-1). */
+export async function setLocale(locale: string): Promise<Result> {
+  const parsed = localeSchema.safeParse(locale);
+  if (!parsed.success) return { error: parsed.error.issues[0]!.message };
+
+  const { supabase, userId } = await requireActionUser();
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ locale: parsed.data })
+      .eq("id", userId)
+      .select("id");
+    if (error || !data?.length) return { error: LOCALE_NOT_SAVED };
+  } catch {
+    return { error: CALENDAR_MESSAGES.connection };
+  }
+  (await cookies()).set(LOCALE_COOKIE, parsed.data, LOCALE_COOKIE_OPTIONS);
+  revalidatePath("/", "layout");
   return {};
 }
 

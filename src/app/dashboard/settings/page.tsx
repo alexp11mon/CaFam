@@ -15,6 +15,7 @@ import { AvailabilitySetting } from "@/components/settings/availability-setting"
 import { BusySetting } from "@/components/settings/busy-setting";
 import { NotificationSettings } from "@/components/settings/notification-settings";
 import { ThemePicker } from "@/components/settings/theme-picker";
+import { LocalePicker } from "@/components/settings/locale-picker";
 import { FormAlert } from "@/components/ui/form-alert";
 import { getConfirmNotice } from "@/lib/account/confirm-type";
 import { getAccountEmails, getProfile } from "@/lib/account/queries";
@@ -31,6 +32,7 @@ import {
   setShareBusy,
   setBadgeToday,
   setShowWeekends,
+  setLocale,
   setTheme,
 } from "./actions";
 import {
@@ -54,9 +56,10 @@ type SearchParams = Promise<{ confirm?: string }>;
 // Each section reads the session, so it streams behind <Suspense> (cacheComponents).
 async function AppearanceSection() {
   const { supabase, userId } = await requireUser();
-  const { accent, theme } = await getAppearance(supabase, userId);
+  const { accent, theme, locale } = await getAppearance(supabase, userId);
   return (
     <>
+      <LocalePicker current={locale} setLocale={setLocale} />
       <ThemePicker current={theme} setTheme={setTheme} />
       <AccentPicker current={accent} setAccent={setAccent} />
     </>

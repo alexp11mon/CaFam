@@ -12,7 +12,12 @@ vi.mock("next/navigation", () => ({
 
 // The theme cookie (spec 011, T6) is covered in theme-boot.test.ts.
 vi.mock("next/headers", () => ({
-  cookies: async () => ({ set: () => {}, delete: () => {} }),
+  headers: async () => new Headers(),
+  cookies: async () => ({
+    get: () => undefined,
+    set: () => {},
+    delete: () => {},
+  }),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({

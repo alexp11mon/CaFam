@@ -7,6 +7,7 @@ import {
   requireUser,
 } from "@/lib/calendar/queries";
 import { readTrash } from "@/lib/calendar/trash-queries";
+import { T } from "@/components/i18n/locale-provider";
 
 export const metadata: Metadata = { title: "Papelera" };
 
@@ -41,14 +42,23 @@ export default function TrashPage() {
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6">
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-ink max-tab:sr-only">
-          Papelera
+          <T>{"Papelera"}</T>
         </h1>
         <p className="max-w-prose text-muted">
-          Los eventos borrados se guardan 30 días con sus imágenes y
-          comentarios. La ven el propietario y los editores de cada calendario.
+          <T>
+            {
+              "Los eventos borrados se guardan 30 días con sus imágenes y comentarios. La ven el propietario y los editores de cada calendario."
+            }
+          </T>
         </p>
       </header>
-      <Suspense fallback={<p className="text-muted">Cargando la papelera…</p>}>
+      <Suspense
+        fallback={
+          <p className="text-muted">
+            <T>{"Cargando la papelera…"}</T>
+          </p>
+        }
+      >
         <Trash />
       </Suspense>
     </main>

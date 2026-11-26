@@ -1,5 +1,6 @@
 // Read access for the spec 002 pages. Everything goes through RLS: a user only
 // ever gets rows of calendars they belong to (P3).
+import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/locale";
 import { parseDuration, type Duration } from "./view-options";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
@@ -210,16 +211,22 @@ export async function getLastView(
 export async function getAppearance(
   supabase: Client,
   userId: string,
-): Promise<{ accent: AccentId; theme: ThemeId; displayName: string }> {
+): Promise<{
+  accent: AccentId;
+  theme: ThemeId;
+  displayName: string;
+  locale: Locale;
+}> {
   const { data } = await supabase
     .from("profiles")
-    .select("accent, theme, display_name")
+    .select("accent, theme, display_name, locale")
     .eq("id", userId)
     .maybeSingle();
   return {
     accent: isAccent(data?.accent) ? data.accent : DEFAULT_ACCENT,
     theme: parseTheme(data?.theme),
     displayName: data?.display_name ?? "",
+    locale: isLocale(data?.locale) ? data.locale : DEFAULT_LOCALE,
   };
 }
 

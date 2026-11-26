@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import { THEME_COLOR, THEME_SCRIPT } from "@/lib/theme/theme";
+import { BrowserLocale } from "@/components/i18n/locale-provider";
+import { LOCALE_SCRIPT } from "@/lib/i18n/locale";
 import "./globals.css";
 
 // Inter, with tabular figures, for every screen (constitution, amendment 11;
@@ -43,9 +45,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         {/* Before the first paint, so the theme never flashes (spec 011 RF-7). */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {/* <html lang> from the language cookie (spec 053 RF-6). */}
+        <script dangerouslySetInnerHTML={{ __html: LOCALE_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        {children}
+        <BrowserLocale>{children}</BrowserLocale>
         <ServiceWorkerRegister />
       </body>
     </html>

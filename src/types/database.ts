@@ -572,6 +572,7 @@ export type Database = {
           body: string
           created_at: string
           id: number
+          locale: string
           request_id: number | null
           sent_at: string | null
           subject: string
@@ -582,6 +583,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: never
+          locale?: string
           request_id?: number | null
           sent_at?: string | null
           subject: string
@@ -592,6 +594,7 @@ export type Database = {
           body?: string
           created_at?: string
           id?: never
+          locale?: string
           request_id?: number | null
           sent_at?: string | null
           subject?: string
@@ -1222,6 +1225,7 @@ export type Database = {
           default_event_minutes: number
           display_name: string
           id: string
+          locale: string
           last_view: string | null
           notify: Json
           reminder_all_day_minutes: number | null
@@ -1242,6 +1246,7 @@ export type Database = {
           default_event_minutes?: number
           display_name: string
           id: string
+          locale?: string
           last_view?: string | null
           notify?: Json
           reminder_all_day_minutes?: number | null
@@ -1262,6 +1267,7 @@ export type Database = {
           default_event_minutes?: number
           display_name?: string
           id?: string
+          locale?: string
           last_view?: string | null
           notify?: Json
           reminder_all_day_minutes?: number | null

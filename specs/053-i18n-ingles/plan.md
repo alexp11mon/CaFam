@@ -36,6 +36,15 @@ Spec: `specs/053-i18n-ingles/spec.md`.
 - D5: Por áreas y con el test de literales (RF-8) como red: permite integrar área a área sin dejar la app a medias, porque el español sigue completo en todo momento.
 - D6: Condición del usuario (RNF-1, RNF-3): si la medida empeora, la spec no se integra.
 
+### Ajustes durante la implementación (2026-11-26)
+
+Cambian el "cómo" de los diccionarios para cumplir RNF-1 sin tocar los requisitos:
+
+- D7: **El texto español es la clave** (estilo *gettext*): solo existe el catálogo inglés (`src/i18n/en/<área>.ts`, `Record<string, string>`). El español no envía diccionario ni claves al navegador; `t("Guardar")` devuelve el propio texto en español. Las variables van como `{nombre}` (`t("Hola, {name}", { name })`) y los plurales eligen la forma española con `plural()`, que es a su vez la clave de la inglesa. El test de completitud (RF-8) comprueba que cada texto español de la interfaz tiene su traducción y que no sobran.
+- D8: **Se traduce en el cliente**: `useT()` en los componentes de cliente y `<T>` (hoja de cliente) en los de servidor, así ninguna parte estática del PPR pasa a leer cookies. Las Server Actions siguen devolviendo español y el componente lo traduce al mostrarlo.
+- D9: **El idioma llega al cliente** por `LocaleProvider`: en el marco dinámico del panel (que ya lee la sesión) con el idioma del perfil y el catálogo inglés como prop, de modo que el servidor pinta ya en inglés; en las páginas sin sesión, el proveedor raíz lee la cookie o el navegador y carga el catálogo con `import()` (en inglés, el primer pintado de esas páginas puede salir en español; en español no cambia nada). `<html lang>` lo pone un script de arranque como el del tema.
+- D10: Las fechas usan `intlLocale(locale)` (`es-ES` o `en-GB`, 24 h) con `useLocale()` en el cliente.
+
 ## Pasos de producción (los ejecuta el usuario)
 
 ```

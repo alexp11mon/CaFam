@@ -18,6 +18,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ "accept-language": "es-ES" }),
   cookies: async () => ({
     get: (name: string) =>
       jar.has(name) ? { value: jar.get(name) } : undefined,
@@ -69,6 +70,17 @@ describe("signUp without a session (RF-1, RF-5)", () => {
       "REDIRECT:/dashboard/calendar",
     );
     expect(jar.has(PENDING_COOKIE)).toBe(false);
+  });
+});
+
+// Spec 053 RF-7: the profile and "Mi calendario" take the sign-up language.
+describe("signUp and the language", () => {
+  it("sends the language of the cookie, else of the browser", async () => {
+    await expect(signUp(empty, form(SIGN_UP))).rejects.toThrow("REDIRECT");
+    expect(auth.signUp.mock.lastCall?.[0].options.data.locale).toBe("es");
+    jar.set("cafam-locale", "en");
+    await expect(signUp(empty, form(SIGN_UP))).rejects.toThrow("REDIRECT");
+    expect(auth.signUp.mock.lastCall?.[0].options.data.locale).toBe("en");
   });
 });
 

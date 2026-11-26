@@ -19,7 +19,12 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/headers", () => ({
-  cookies: async () => ({ set: state.set, delete: state.delete }),
+  headers: async () => new Headers(),
+  cookies: async () => ({
+    get: () => undefined,
+    set: state.set,
+    delete: state.delete,
+  }),
 }));
 
 vi.mock("next/font/google", () => ({

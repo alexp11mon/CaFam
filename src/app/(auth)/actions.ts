@@ -1,6 +1,7 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { LOCALE_COOKIE, pickLocale } from "@/lib/i18n/locale";
 import { redirect } from "next/navigation";
 import { AUTH_MESSAGES, getAuthErrorMessage } from "@/lib/auth/error-messages";
 import {
@@ -59,10 +60,17 @@ export async function signUp(
   let confirmed = true;
   try {
     const supabase = await createClient();
+    // "Mi calendario" and the profile take the language of the sign-up (spec 053 RF-7).
+    const locale = pickLocale({
+      cookie: (await cookies()).get(LOCALE_COOKIE)?.value,
+      acceptLanguage: (await headers()).get("accept-language"),
+    });
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName, time_zone: timeZone } },
+      options: {
+        data: { display_name: displayName, time_zone: timeZone, locale },
+      },
     });
     if (error) {
       return { formError: getAuthErrorMessage(error), values };

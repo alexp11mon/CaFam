@@ -107,8 +107,13 @@ async function proxyStats(reset = false) {
 
 async function main() {
   const user = await seed();
-  const browser = await chromium.launch();
-  const context = await browser.newContext({ ...devices["iPhone 13"] });
+  // PERF_CHANNEL=msedge where Playwright has no Chromium of its own.
+  const browser = await chromium.launch({ channel: process.env.PERF_CHANNEL });
+  // The CSP (spec 051) forbids the string predicates of waitForFunction.
+  const context = await browser.newContext({
+    ...devices["iPhone 13"],
+    bypassCSP: true,
+  });
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   const out = {
