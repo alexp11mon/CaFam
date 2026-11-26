@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Lo imprescindible para trabajar en el proyecto. El bloque de arriba lo gestiona `next dev`: no lo edites. El detalle de cada funcionalidad está en su spec (`specs/NNN-nombre/spec.md`, `plan.md`, `tasks.md`) y en el grafo de graphify; la fuente de verdad de las reglas es [`docs/constitution.md`](docs/constitution.md). Ante una contradicción manda la spec más reciente.
 
-> Última actualización: 2026-11-25 (resumido). Specs cerradas hasta la 049 y la 051; la 050 hecha salvo su prueba real (047–051 en sus ramas, cada una sobre la anterior; `main` aún no las contiene).
+> Última actualización: 2026-11-26 (resumido). Specs cerradas hasta la 049, la 051, la 052 y la 053; la 050 hecha salvo su prueba real (047–053 en sus ramas, cada una sobre la anterior; `main` aún no las contiene).
 
 ## 0. Mapa del proyecto: graphify (obligatorio, enmienda 13)
 
@@ -37,7 +37,7 @@ python -m graphify hook status
 
 - Nombre único **CaFam** en todas partes (los nombres antiguos los impide `tests/unit/project-name.test.ts`; solo se conservan la URL de Vercel y migraciones ya aplicadas).
 - Producción: <https://calendario-familia-five.vercel.app> · Repo privado: <https://github.com/alexp11mon/CaFam>
-- Idioma: **español** en la interfaz, docs, specs y commits; **inglés** en identificadores, archivos y comentarios técnicos.
+- Idioma: **español** en la interfaz, docs, specs y commits; **inglés** en identificadores, archivos y comentarios técnicos. La interfaz también está en **inglés** (053, enmienda 15): ver §9 "Textos e idioma".
 
 ## 2. Funcionalidades (por spec)
 
@@ -93,11 +93,12 @@ Todas cerradas salvo la 036 (hecha; falta `EVAL_PART=write npm run eval:assistan
 | 049 | Confirmar el email al registrarse, traspasar un calendario (`transfer_calendar`, solo no traídos, revoca invitaciones/código/feed/suscripción) y "Descargar mis datos" (`.zip` *store* hecho a mano en `lib/export/`, en el navegador) |
 | 050 | "Continuar con Google" con Supabase Auth (PKCE, `/auth/callback`), "Formas de entrar" en Ajustes; falta la prueba real (T5) |
 | 052 | Venito propone borrar (papelera, "Deshacer") y crear series por campos (`ruleFromFields`), siempre con tarjeta que confirmar; conversaciones guardadas opcionales (`profiles.save_chats`, `assistant_conversations`: 50, 90 días, sin imágenes; menú del chat); dictado y lectura en voz alta con la Web Speech API del navegador (`lib/speech/`) |
+| 053 | Interfaz en inglés: `profiles.locale` (Ajustes → Idioma, cookie y navegador sin sesión), catálogo `src/i18n/en/`, fechas con `dateFormat(locale)`, Venito responde en el idioma del perfil, correos por idioma (`email_outbox.locale`) |
 | 051 | Diferidos de la 023: autor impuesto (trigger `events_author`, `convert_keep_author`), cuota del asistente reservada (`assistant_reserve`/`answered`/`release`), CSP completa + *Report-Only* (`lib/security/csp.ts`, `/api/csp-report`), plazo y reintento en los helpers de `test:db`, medida de la lectura por rango |
 
 ### Pendiente del usuario (comprueba antes si ya está hecho)
 
-1. `supabase db push` a **prod antes de desplegar** de las migraciones aplicadas solo en dev: las de la 023 (`restore_event_guard`, `assistant_busy_scope`, `join_code_lock`), 028 (`notes`, `notes_calendar_functions`), 038 (`sync_apply_window`), 039 (`event_search`), 040 (`push`), 042 (`views_year`), 043 (`ics_feeds`), 044 (`ics_import_into`, `ics_subscriptions`), 045 (`event_time_zone`, `event_time_zone_keep`, `ics_feed_zone`), 046 (`trash_30_days`), 047 (`profile_badge`), 048 (`notes_more`), 049 (`account_more`), 050 (`oauth_profile_name`), 052 (`assistant_conversations`; en dev tampoco está aplicada: `npm run db:push`, `npm run db:types` y `npm run test:db -- assistant-conversations`) y 051 (`event_author`, `assistant_quota_reserve`; **antes de desplegar**: la ruta del asistente llama a `assistant_reserve`).
+1. `supabase db push` a **prod antes de desplegar** de las migraciones aplicadas solo en dev: las de la 023 (`restore_event_guard`, `assistant_busy_scope`, `join_code_lock`), 028 (`notes`, `notes_calendar_functions`), 038 (`sync_apply_window`), 039 (`event_search`), 040 (`push`), 042 (`views_year`), 043 (`ics_feeds`), 044 (`ics_import_into`, `ics_subscriptions`), 045 (`event_time_zone`, `event_time_zone_keep`, `ics_feed_zone`), 046 (`trash_30_days`), 047 (`profile_badge`), 048 (`notes_more`), 049 (`account_more`), 050 (`oauth_profile_name`), 052 (`assistant_conversations`) y 053 (`profile_locale`) —en dev tampoco están aplicadas: `npm run db:push`, `npm run db:types` y `npm run test:db -- assistant-conversations profile-locale`— y 051 (`event_author`, `assistant_quota_reserve`; **antes de desplegar**: la ruta del asistente llama a `assistant_reserve`).
 2. Claves VAPID (`node scripts/make-vapid-keys.mjs`) en Vercel y `sync_app_url` en el Vault de prod.
 3. Pruebas en iPhone/Android: push, sin conexión, Google/iCloud reales, papelera, zona horaria; eval y cierre de la 036.
 
@@ -248,6 +249,7 @@ npm run eval:schedule  # 12 horarios al modelo con visión (~12 min, gasta cuota
 - **Autor y cuota (051):** `events.created_by` lo pone el trigger `events_author` en las escrituras directas del cliente (rol `authenticated`); las funciones `SECURITY DEFINER` conservan el autor que elijan. La cuota del asistente se reserva con `assistant_reserve()` (CF429) y se confirma (`assistant_answered`) o libera (`assistant_release`); el cliente ya no inserta en `assistant_questions`.
 - **Escrituras de eventos/notas desde la interfaz:** pasan por `lib/offline/event-actions.ts` o `note-actions.ts` (`withOutbox`) y necesitan su tipo en `OfflineChange`, `describe.ts`, `applyOfflineChange`/`offline-writes.ts` **y** su caso en `sw.js` (con caso en `tests/unit/offline-flush-cases.ts`). Red: `useConnection()`, nunca `navigator.onLine` a secas.
 - **Interacciones con eventos:** `useEventInteractions()` (optimista, "Deshacer", menú); deshacer apila con `useUndoToast()`; refrescos ajenos en pausa con `useHoldLive`. Pantallas con datos ajenos: `useLiveCalendar(userId)`.
+- **Textos e idioma (053):** el texto español es la clave; su inglés va en `src/i18n/en/<área>.ts` (sin él falla `i18n-complete`). Cliente: `const t = useT()` → `t("Guardar")`, `t("Hola, {name}", { name })`, plurales con `plural()`; `useLocale()` para fechas con `dateFormat(locale, opciones)` (`lib/i18n/format.ts`, nunca `toLocaleString` ni `Intl.DateTimeFormat("es-ES")` a mano). Server Component: `<T>{"Texto"}</T>` o `<T vars={{ n }}>{"{n} eventos"}</T>`; para un atributo DOM, `aria-labelledby` a un `<span hidden><T>…</T></span>`. Props de título de `PageShell`, `Section`, `Row`, `EmptyState`, `ErrorScreen`, `AuthCard`, `EventModal`, `FoldSection`, `ConfirmDialog` (con `vars`) se pasan en español: el componente traduce (lista en `TRANSLATED_PROPS` de `tests/unit/i18n-scan.ts`). Funciones puras que componen textos: últimos parámetros `t: T = spanishT`, `locale: Locale = DEFAULT_LOCALE`. Servidor que compone textos con valores (asistente, acciones): `translator(await getProfileLocale(supabase, userId))`. Las Server Actions devuelven español y el componente lo traduce al mostrarlo. Nunca una plantilla `` `…${x}…` `` con texto visible: usa `{x}`. El catálogo inglés no debe llegar al JS en español (solo `layout.tsx` del panel, `translator.ts` y el `import()` de `BrowserLocale`).
 - **Atajos:** en `SHORTCUTS` (`lib/calendar/shortcuts.ts`), que alimenta teclas y ayuda (?).
 - **Movimiento:** duraciones y curvas de los tokens (`motionMs`, `motionToken`); animaciones de script con `play()`.
 - **Hora actual:** `useNow()` en cliente; nada de `Date.now()` en el cuerpo de un Server Component. Valores solo del navegador con `useSyncExternalStore`.
@@ -294,4 +296,4 @@ npm run eval:schedule  # 12 horarios al modelo con visión (~12 min, gasta cuota
 
 ## 11. Fuera de alcance hasta su spec
 
-Sincronizar en dos direcciones un calendario importado, importar el `.zip` exportado o traspasar con aceptación, entrar con Apple (de pago), GitHub u otros proveedores, Microsoft (exige tarjeta), avisos por correo o de notas, i18n, lo excluido en las specs 034/035; en el asistente: borrar varios eventos a la vez (más de 3), cambiar la regla de una serie existente, voz propia (servidor) o sincronizar conversaciones con otros miembros; en notas: gesto de deslizar en un elemento, avisos de tareas y la sección "Notas" de un evento sin conexión.
+Otros idiomas además de español e inglés, el manifest y los títulos de pestaña traducidos; sincronizar en dos direcciones un calendario importado, importar el `.zip` exportado o traspasar con aceptación, entrar con Apple (de pago), GitHub u otros proveedores, Microsoft (exige tarjeta), avisos por correo o de notas, lo excluido en las specs 034/035; en el asistente: borrar varios eventos a la vez (más de 3), cambiar la regla de una serie existente, voz propia (servidor) o sincronizar conversaciones con otros miembros; en notas: gesto de deslizar en un elemento, avisos de tareas y la sección "Notas" de un evento sin conexión.

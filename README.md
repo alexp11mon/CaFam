@@ -54,12 +54,12 @@ Cada usuario se registra, ve sus calendarios en un panel, crea eventos, los comp
 
 ### Pilares del proyecto
 
-| Pilar                     | Descripción                                                                                                                            |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| **Sin ánimo de lucro**    | Sin publicidad, sin analítica ni tracking de ningún tipo.                                                                              |
-| **Coste cero**            | Solo capas gratuitas: Supabase Free, Vercel Hobby, GitHub Free, Brevo (300 correos/día) y un proveedor LLM gratuito para el asistente. |
-| **Privado por defecto**   | Toda tabla de la base de datos tiene RLS (Row Level Security). La base de datos es la frontera de seguridad.                           |
-| **Español en toda la UI** | Todo lo visible para el usuario está en español; inglés solo en identificadores, nombres de archivos y comentarios técnicos.           |
+| Pilar                   | Descripción                                                                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Sin ánimo de lucro**  | Sin publicidad, sin analítica ni tracking de ningún tipo.                                                                              |
+| **Coste cero**          | Solo capas gratuitas: Supabase Free, Vercel Hobby, GitHub Free, Brevo (300 correos/día) y un proveedor LLM gratuito para el asistente. |
+| **Privado por defecto** | Toda tabla de la base de datos tiene RLS (Row Level Security). La base de datos es la frontera de seguridad.                           |
+| **Español (e inglés)**  | La interfaz está en español y también en inglés (Ajustes → Idioma, spec 053); docs y código siguen las reglas de la constitución.      |
 
 - **Producción:** <https://calendario-familia-five.vercel.app>
 - **Repositorio (privado):** <https://github.com/alexp11mon/CaFam>
