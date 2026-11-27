@@ -45,7 +45,12 @@ import {
   type GroupableCalendar,
   type PersonGroup,
 } from "@/lib/calendar/grouping";
-import { navigate, type CalendarView } from "@/lib/calendar/ranges";
+import {
+  navigate,
+  onlyVisible,
+  parseOnly,
+  type CalendarView,
+} from "@/lib/calendar/ranges";
 import {
   CAL_FILTER,
   periodType,
@@ -212,6 +217,7 @@ export function CalendarWorkspace({
   busyPeople = [],
   busyIntervals = [],
   setShowBusy,
+  only: initialOnly,
 }: {
   view: CalendarView;
   date: string;
@@ -263,6 +269,8 @@ export function CalendarWorkspace({
   /** Their busy times in the week or day shown, times only (spec 020 RF-8, RF-10). */
   busyIntervals?: BusyInput[];
   setShowBusy?: (personId: string, show: boolean) => Promise<Result>;
+  /** `only=<personId>` of the address, from "Ahora" (spec 054 RF-17). */
+  only?: string | string[];
 }) {
   const t = useT();
   const locale = useLocale();
@@ -295,6 +303,30 @@ export function CalendarWorkspace({
     ),
   );
   const [groups, setGroups] = useState(initialGroups);
+  // One person only, for this visit and unsaved (spec 054 RF-17, plan D7).
+  const [only, setOnly] = useState(() =>
+    parseOnly(initialOnly, [
+      ...initialGroups.flatMap((group) =>
+        group.calendars.flatMap((c) => (c.ownerId ? [c.ownerId] : [])),
+      ),
+      ...busyPeople.filter((p) => p.shown).map((p) => p.id),
+    ]),
+  );
+  const viewGroups =
+    only === null
+      ? groups
+      : groups.map((group) => ({
+          ...group,
+          calendars: onlyVisible(group.calendars, only),
+        }));
+  // Any change of filters goes back to the saved ones first (plan D7).
+  function clearOnly() {
+    if (only === null) return;
+    setOnly(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("only");
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }
   const online = useConnection();
   const [hiddenCategories, setHiddenCategories] = useState<ReadonlySet<string>>(
     new Set(),
@@ -481,6 +513,7 @@ export function CalendarWorkspace({
     persist: () => Promise<Result>,
     fade = false,
   ) {
+    clearOnly();
     const previous = groups;
     if (fade) fadeFilters(() => setGroups(next));
     else setGroups(next);
@@ -553,6 +586,7 @@ export function CalendarWorkspace({
   }
 
   function toggleCategory(categoryId: string, visible: boolean) {
+    clearOnly();
     fadeFilters(() =>
       setHiddenCategories((current) => {
         const next = new Set(current);
@@ -585,7 +619,7 @@ export function CalendarWorkspace({
   }
 
   const visibleCalendars = new Set(
-    groups.flatMap((group) =>
+    viewGroups.flatMap((group) =>
       group.calendars.filter((c) => c.visible).map((c) => c.id),
     ),
   );
@@ -600,7 +634,7 @@ export function CalendarWorkspace({
 
   // New events go to the first visible calendar of the panel the user can write
   // to, or to the first writable one (plan workspace).
-  const panelOrder = groups.flatMap((group) => group.calendars);
+  const panelOrder = viewGroups.flatMap((group) => group.calendars);
   const defaultCalendarId =
     panelOrder.find(
       (c) => c.visible && editableCalendars.some((e) => e.id === c.id),
@@ -635,7 +669,9 @@ export function CalendarWorkspace({
   // Busy blocks without what the filters already show, merged per person
   // (spec 020 RF-12, RF-13, plan D3); an unmarked person goes at once (RF-6).
   const busyNames = new Map(
-    shownBusyPeople.filter((p) => p.shown).map((p) => [p.id, p.name]),
+    shownBusyPeople
+      .filter((p) => p.shown && (only === null || p.id === only))
+      .map((p) => [p.id, p.name]),
   );
   const busyTimes = busyBlocks(
     busyIntervals.filter((b) => busyNames.has(b.personId)),
@@ -665,6 +701,7 @@ export function CalendarWorkspace({
 
   async function toggleBusy(personId: string, show: boolean) {
     if (!setShowBusy) return;
+    clearOnly();
     setBusyMarks((marks) => new Map(marks).set(personId, show));
     setError(undefined);
     let result: Result;
@@ -683,7 +720,7 @@ export function CalendarWorkspace({
     <>
       <FormAlert message={error} />
       <CalendarFilters
-        groups={groups}
+        groups={viewGroups}
         categories={categories}
         hiddenCategories={hiddenCategories}
         onToggleCalendar={toggleCalendar}
@@ -700,8 +737,31 @@ export function CalendarWorkspace({
     </>
   );
 
+  const onlyName =
+    only === null
+      ? ""
+      : (groups.find((group) => group.person.id === only)?.person.displayName ??
+        busyPeople.find((p) => p.id === only)?.name ??
+        "");
+
   return (
     <EventInteractionsProvider value={interactive.api}>
+      {only !== null && (
+        <p
+          role="status"
+          className="mb-3 flex flex-wrap items-center gap-x-2 rounded-control bg-accent-soft px-4 py-1 text-sm text-ink"
+        >
+          {t("Viendo solo a {name}", { name: onlyName })}
+          <span aria-hidden="true">·</span>
+          <button
+            type="button"
+            onClick={clearOnly}
+            className="min-h-11 rounded-control font-semibold text-accent-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
+          >
+            {t("Ver todos")}
+          </button>
+        </p>
+      )}
       <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
         {sidebarPicker.mounted && monthMarks && loadMonthMarks ? (
           // The folded panel's mini month, under the title; a day closes it

@@ -197,3 +197,32 @@ export function parseViewParams(
 export function calendarHref(view: CalendarView, dateKey: string): string {
   return `/dashboard/calendar?view=${view}&date=${dateKey}`;
 }
+
+/**
+ * `only=<personId>` from "Ahora": valid only for a person the user follows,
+ * ignored otherwise (spec 054 RF-17, plan D7).
+ */
+export function parseOnly(
+  value: SearchParam,
+  followed: Iterable<string>,
+): string | null {
+  return typeof value === "string" && new Set(followed).has(value)
+    ? value
+    : null;
+}
+
+/**
+ * The calendars of that person only, for this visit: by owner, so also those
+ * inside a group (plan R4). The saved filters do not change.
+ */
+export function onlyVisible<T extends { ownerId: string | null }>(
+  calendars: readonly (T & { visible: boolean })[],
+  only: string | null,
+): (T & { visible: boolean })[] {
+  return only === null
+    ? [...calendars]
+    : calendars.map((calendar) => ({
+        ...calendar,
+        visible: calendar.ownerId === only,
+      }));
+}

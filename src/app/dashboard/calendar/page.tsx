@@ -181,6 +181,7 @@ async function CalendarContent({
       defaultDuration={profile.duration}
       busyPeople={busyPeople}
       setShowBusy={setShowBusy}
+      only={query.only}
     />
   );
 }

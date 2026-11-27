@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  onlyVisible,
+  parseOnly,
   calendarHref,
   getVisibleRange,
   navigate,
@@ -179,5 +181,31 @@ describe("parseViewParams with a saved view (spec 008 RF-25 to RF-27)", () => {
       view: "agenda",
       date: TODAY,
     });
+  });
+});
+
+// Spec 054 T6: "only" from "Ahora" (RF-17, plan D7, R4).
+describe("parseOnly and onlyVisible", () => {
+  it("takes only a followed person", () => {
+    expect(parseOnly("son", ["me", "son"])).toBe("son");
+    expect(parseOnly("stranger", ["me", "son"])).toBeNull();
+    expect(parseOnly(["son"], ["son"])).toBeNull();
+    expect(parseOnly(undefined, ["son"])).toBeNull();
+  });
+
+  it("shows the calendars of that owner only, wherever they are", () => {
+    const calendars = [
+      { id: "a", ownerId: "son", visible: false },
+      { id: "b", ownerId: "me", visible: true },
+      { id: "c", ownerId: null, visible: true },
+    ];
+    expect(onlyVisible(calendars, "son").map((c) => [c.id, c.visible])).toEqual(
+      [
+        ["a", true],
+        ["b", false],
+        ["c", false],
+      ],
+    );
+    expect(onlyVisible(calendars, null)).toEqual(calendars);
   });
 });
