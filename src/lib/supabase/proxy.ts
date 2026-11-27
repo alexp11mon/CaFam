@@ -65,13 +65,14 @@ export async function updateSession(request: NextRequest) {
 
   // /dashboard opens the account's home screen with a redirect from here, not
   // one streamed after the page's JS (spec 054 RF-25, plan D5, R2). Only for
-  // a page load: on a client navigation or an action's redirect the address
-  // would stay /dashboard, so the page itself redirects there. An unreadable
+  // a page load: a client navigation or an action posted to /dashboard would
+  // keep that address, so the page itself redirects those. An unreadable
   // profile goes to the calendar. The query goes along (?tzcheck=).
   if (
     hasSession &&
     request.nextUrl.pathname === "/dashboard" &&
-    request.headers.get("sec-fetch-dest") === "document"
+    // Through the service worker a page load comes as dest "empty".
+    request.headers.get("sec-fetch-mode") === "navigate"
   ) {
     const { data: profile } = await supabase
       .from("profiles")

@@ -73,7 +73,7 @@ describe("updateSession redirects (RF-7, plan R7)", () => {
     state.home = home;
     const response = await updateSession(
       new NextRequest("http://localhost/dashboard?tzcheck=UTC", {
-        headers: { "sec-fetch-dest": "document" },
+        headers: { "sec-fetch-mode": "navigate" },
       }),
     );
 
@@ -86,7 +86,7 @@ describe("updateSession redirects (RF-7, plan R7)", () => {
     state.home = "now";
     const response = await updateSession(
       new NextRequest("http://localhost/dashboard", {
-        headers: { rsc: "1", "sec-fetch-dest": "empty" },
+        headers: { rsc: "1", "sec-fetch-mode": "cors" },
       }),
     );
 

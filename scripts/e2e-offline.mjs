@@ -79,12 +79,20 @@ const copySaved = () =>
   });
 
 try {
+  // A confirmed account and the real login form: with "Confirm email" on
+  // (spec 049) signing up does not enter at once.
   await step("registro", async () => {
-    await page.goto(`${BASE}/signup`);
-    await page.getByLabel("Nombre visible").fill("Prueba sin red");
+    const { error } = await admin.auth.admin.createUser({
+      email,
+      password: "test-password-1234",
+      email_confirm: true,
+      user_metadata: { display_name: "Prueba sin red" },
+    });
+    if (error) throw error;
+    await page.goto(`${BASE}/login`);
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Contraseña").fill("test-password-1234");
-    await page.getByRole("button", { name: "Crear cuenta" }).click();
+    await page.getByRole("button", { name: "Entrar" }).click();
     await page.waitForURL("**/dashboard/calendar**");
   });
 
@@ -151,6 +159,18 @@ try {
     return new URL(page.url()).pathname + new URL(page.url()).search;
   });
 
+  await step("vista y periodo sin red", async () => {
+    const views = visible(page.getByRole("list", { name: "Vistas" }));
+    await views.getByRole("link", { name: "Mes" }).click();
+    await visible(page.getByRole("button", { name: "Mes siguiente" })).click();
+    await visible(page.getByRole("button", { name: "Mes siguiente" })).click();
+    const url = new URL(page.url());
+    if (url.searchParams.get("view") !== "month") {
+      throw new Error(`sigue en ${url.search}`);
+    }
+    return url.search;
+  });
+
   // Spec 054 RF-21: "Ahora" from the copy, with the app's offline notice.
   await step("Ahora sin red", async () => {
     await page.goto(`${BASE}/dashboard/now`);
@@ -162,18 +182,6 @@ try {
     await visible(
       page.getByRole("button", { name: /Sin conexión · datos/ }),
     ).waitFor();
-  });
-
-  await step("vista y periodo sin red", async () => {
-    const views = visible(page.getByRole("list", { name: "Vistas" }));
-    await views.getByRole("link", { name: "Mes" }).click();
-    await visible(page.getByRole("button", { name: "Mes siguiente" })).click();
-    await visible(page.getByRole("button", { name: "Mes siguiente" })).click();
-    const url = new URL(page.url());
-    if (url.searchParams.get("view") !== "month") {
-      throw new Error(`sigue en ${url.search}`);
-    }
-    return url.search;
   });
 
   await step("fuera del rango", async () => {
@@ -273,7 +281,12 @@ try {
   });
 
   await step("cerrar sesión no deja nada en el dispositivo", async () => {
-    await visible(page.getByRole("button", { name: "Más" })).click();
+    // The bar's "Más", not the one of the views of the calendar (spec 042).
+    await visible(
+      page
+        .getByRole("navigation", { name: "Principal" })
+        .getByRole("button", { name: "Más" }),
+    ).click();
     await visible(page.getByRole("button", { name: "Cerrar sesión" })).click();
     await page.waitForURL("**/login**");
     const left = await page.evaluate(
