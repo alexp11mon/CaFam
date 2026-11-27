@@ -66,7 +66,7 @@ function listDays(first: string, count: number): string[] {
   return Array.from({ length: count }, (_, index) => addDays(first, index));
 }
 
-function startOfDay(dateKey: string, timeZone: string): Date {
+export function startOfDay(dateKey: string, timeZone: string): Date {
   const { year, month, day } = parseDateKey(dateKey)!;
   return zonedLocalToUtc({ year, month, day, hour: 0, minute: 0 }, timeZone);
 }
