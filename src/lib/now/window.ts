@@ -16,10 +16,14 @@ export interface NowWindow {
   tomorrowEnd: Date;
 }
 
-export function nowWindow(now: number, timeZone: string): NowWindow {
+export function nowWindow(
+  timeZone: string,
+  now: number = Date.now(),
+): NowWindow & { now: number } {
   const day = todayKey(timeZone, new Date(now));
   const tomorrow = addDays(day, 1);
   return {
+    now,
     day,
     ...daysRange(day, tomorrow, timeZone),
     todayEnd: startOfDay(tomorrow, timeZone),

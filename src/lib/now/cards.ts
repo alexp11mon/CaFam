@@ -75,7 +75,7 @@ export interface NowCardData {
 const MAX_SHOWN = 2;
 
 export function buildNowCards(input: NowInput, now: number): NowCardData[] {
-  const { day, todayEnd, tomorrowEnd } = nowWindow(now, input.timeZone);
+  const { day, todayEnd, tomorrowEnd } = nowWindow(input.timeZone, now);
   const visibleOf = new Map(
     input.preferences.calendarPreferences.map((p) => [p.calendarId, p.visible]),
   );
