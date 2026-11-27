@@ -18,6 +18,8 @@ import { MAX_RESULTS, MIN_QUERY } from "@/lib/search/limits";
 import { matchesAll, queryTerms } from "@/lib/search/normalize";
 import type { SearchResult } from "@/lib/search/queries";
 import { canWriteEvents, readOnlyReason } from "@/lib/sync/read-only";
+import type { NowInput } from "@/lib/now/cards";
+import { nowWindow } from "@/lib/now/window";
 import { repeatOfSeries } from "./describe";
 import { canDeleteImage, offlineMoveTargets } from "./gates";
 import { OFFLINE_MESSAGES } from "./messages";
@@ -102,6 +104,36 @@ export function offlineCalendarProps(copy: Snapshot) {
     showWeekends: copy.profile.showWeekends,
     defaultDuration: copy.profile.duration,
     loadedAt: now,
+  };
+}
+
+/**
+ * "Ahora" from the copy (spec 054 RF-21, RF-22, plan D3): no busy times, so
+ * people seen only through availability say there is no data. null when
+ * today is outside the copy: it has nothing to say.
+ */
+export function offlineNowData(
+  copy: Snapshot,
+  now: number = Date.now(),
+): (NowInput & { day: string; readAt: number }) | null {
+  const window = nowWindow(copy.profile.timeZone, now);
+  if (window.day < copy.range.from || window.day >= copy.range.to) return null;
+  return {
+    userId: copy.userId,
+    timeZone: copy.profile.timeZone,
+    day: window.day,
+    readAt: now,
+    calendars: copy.calendars.map(({ id, name, ownerId, color }) => ({
+      id,
+      name,
+      ownerId,
+      color,
+    })),
+    people: copy.people,
+    preferences: copy.preferences,
+    events: eventsInRange(copy.events, window.from, window.to),
+    busy: null,
+    busyPeople: copy.busyPeople ?? [],
   };
 }
 

@@ -1,5 +1,6 @@
 // The copy of the user's data kept on the device (spec 034 RF-1 to RF-6,
 // plan "Modelo de datos", D9). Pure: no storage, no network.
+import type { BusyPerson } from "@/lib/availability/queries";
 import type { DayRange, EventWindow } from "@/lib/calendar/event-window";
 import type {
   CalendarEventRecord,
@@ -105,6 +106,8 @@ export interface Snapshot {
   categories: CategoryOptionRecord[];
   groups: Awaited<ReturnType<typeof getGroups>>;
   people: Awaited<ReturnType<typeof getPeople>>;
+  /** Spec 054: optional, so an older copy stays valid ("Ahora" shows fewer people). */
+  busyPeople?: BusyPerson[];
   preferences: Awaited<ReturnType<typeof getPreferences>>;
   events: OfflineEvent[];
   notes: Note[];

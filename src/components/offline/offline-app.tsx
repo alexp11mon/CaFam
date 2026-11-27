@@ -17,6 +17,7 @@ import { useUndoToast } from "@/components/calendar/use-undo-toast";
 import { NoteEditor } from "@/components/notes/note-editor";
 import { NoteForm } from "@/components/notes/note-form";
 import { NotesBoard } from "@/components/notes/notes-board";
+import { NowBoard } from "@/components/now/now-board";
 import { SearchScreen } from "@/components/search/search-screen";
 import { AppFrame } from "@/components/shell/app-frame";
 import { Card } from "@/components/ui/card";
@@ -34,6 +35,7 @@ import {
   detailFromSnapshot,
   newEventFromSnapshot,
   offlineCalendarProps,
+  offlineNowData,
   OFFLINE_SEARCH_NOTE,
   offlineNotes,
   roleIn,
@@ -42,6 +44,7 @@ import {
 import { loadQueue } from "@/lib/offline/queue-store";
 import type { Snapshot } from "@/lib/offline/snapshot";
 import { setSnapshot } from "@/lib/offline/snapshot-store";
+import { homeHref } from "@/lib/now/home";
 import {
   matchRoute,
   navigateOffline,
@@ -116,7 +119,28 @@ function Calendar({ copy, search }: { copy: Snapshot; search: string }) {
         initialDate={date}
         availableRange={copy.range}
         createAction={createEvent}
+        only={params.get("only") ?? undefined}
       />
+    </main>
+  );
+}
+
+/** "Ahora" from the copy, without live changes (spec 054 RF-21, RF-22). */
+function Now({ copy }: { copy: Snapshot }) {
+  const t = useT();
+  const data = useMemo(() => offlineNowData(copy), [copy]);
+  return (
+    <main className={PAGE}>
+      <h1 className="text-2xl font-semibold text-ink max-tab:sr-only">
+        {t("Ahora")}
+      </h1>
+      {data ? (
+        <NowBoard data={data} live={false} />
+      ) : (
+        <Card>
+          <EmptyState title="Sin datos sin conexión" />
+        </Card>
+      )}
     </main>
   );
 }
@@ -260,6 +284,8 @@ function Screen({ copy }: { copy: Snapshot }) {
   switch (route.kind) {
     case "calendar":
       return <Calendar copy={copy} search={url.search} />;
+    case "now":
+      return <Now copy={copy} />;
     case "event":
       return <EventScreen key={route.id} copy={copy} id={route.id} />;
     case "newEvent":
@@ -322,6 +348,14 @@ export function OfflineApp({ fallback }: { fallback: ReactNode }) {
       try {
         const saved = await db.loadState();
         if (!saved.snapshot) return setState("none");
+        // The account's home screen, as /dashboard does online (spec 054 RF-25).
+        if (window.location.pathname === "/dashboard") {
+          window.history.replaceState(
+            null,
+            "",
+            homeHref(saved.snapshot.profile.home) + window.location.search,
+          );
+        }
         await setSnapshot(saved.snapshot);
         await loadQueue();
         setState("ready");

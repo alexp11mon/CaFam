@@ -151,6 +151,19 @@ try {
     return new URL(page.url()).pathname + new URL(page.url()).search;
   });
 
+  // Spec 054 RF-21: "Ahora" from the copy, with the app's offline notice.
+  await step("Ahora sin red", async () => {
+    await page.goto(`${BASE}/dashboard/now`);
+    const card = visible(
+      page.getByRole("region", { name: "Prueba sin red (tú)" }),
+    );
+    await card.waitFor({ timeout: 15_000 });
+    await card.getByRole("link", { name: "Dentista" }).waitFor();
+    await visible(
+      page.getByRole("button", { name: /Sin conexión · datos/ }),
+    ).waitFor();
+  });
+
   await step("vista y periodo sin red", async () => {
     const views = visible(page.getByRole("list", { name: "Vistas" }));
     await views.getByRole("link", { name: "Mes" }).click();

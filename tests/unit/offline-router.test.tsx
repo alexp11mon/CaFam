@@ -15,6 +15,8 @@ describe("matchRoute", () => {
   it("knows the screens that work offline", () => {
     expect(matchRoute("/dashboard")).toEqual({ kind: "calendar" });
     expect(matchRoute("/dashboard/calendar")).toEqual({ kind: "calendar" });
+    // Spec 054 RF-21.
+    expect(matchRoute("/dashboard/now")).toEqual({ kind: "now" });
     expect(matchRoute("/dashboard/events/new")).toEqual({ kind: "newEvent" });
     expect(matchRoute("/dashboard/events/abc_20261102T080000Z")).toEqual({
       kind: "event",

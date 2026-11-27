@@ -8,6 +8,7 @@ import { useEffect, useSyncExternalStore } from "react";
 
 export type OfflineRoute =
   | { kind: "calendar" }
+  | { kind: "now" }
   | { kind: "event"; id: string }
   | { kind: "newEvent" }
   | { kind: "notes" }
@@ -21,6 +22,7 @@ export function matchRoute(pathname: string): OfflineRoute | null {
   if (pathname === "/dashboard" || pathname === "/dashboard/calendar") {
     return { kind: "calendar" };
   }
+  if (pathname === "/dashboard/now") return { kind: "now" };
   if (pathname === "/dashboard/events/new") return { kind: "newEvent" };
   if (pathname === "/dashboard/notes") return { kind: "notes" };
   if (pathname === "/dashboard/notes/new") return { kind: "newNote" };

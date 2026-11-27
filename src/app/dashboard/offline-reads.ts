@@ -1,3 +1,4 @@
+import { getBusyPeople } from "@/lib/availability/queries";
 import { authorLabel } from "@/lib/account/author-label";
 import { todayKey } from "@/lib/calendar/format";
 import {
@@ -89,6 +90,7 @@ export async function readSnapshot(
     people,
     preferences,
     notes,
+    busyPeople,
   ] = await Promise.all([
     getCalendarProfile(supabase, userId),
     getAppearance(supabase, userId),
@@ -98,6 +100,8 @@ export async function readSnapshot(
     getPeople(supabase),
     getPreferences(supabase, userId),
     getNotes(supabase),
+    // "Ahora" shows them offline with no data (spec 054 RF-22).
+    getBusyPeople(supabase),
   ]);
   const today = todayKey(profile.timeZone, now);
   const range = offlineRange(today);
@@ -163,6 +167,7 @@ export async function readSnapshot(
     categories,
     groups,
     people,
+    busyPeople,
     preferences,
     events,
     notes,
