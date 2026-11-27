@@ -9,6 +9,7 @@ import { limits } from "./en/limits";
 import { lists } from "./en/lists";
 import { modules } from "./en/modules";
 import { notes } from "./en/notes";
+import { now } from "./en/now";
 import { pages } from "./en/pages";
 import { privacy } from "./en/privacy";
 import { settings } from "./en/settings";
@@ -30,6 +31,7 @@ export const EN: Messages = {
   ...modules,
   ...values,
   ...notes,
+  ...now,
   ...pages,
   ...privacy,
   ...settings,
