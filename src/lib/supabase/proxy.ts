@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getRouteAccess } from "@/lib/auth/route-access";
+import { homeHref } from "@/lib/now/home";
 import { THEME_COOKIE } from "@/lib/theme/theme";
 import type { Database } from "@/types/database";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./env";
@@ -48,14 +49,36 @@ export async function updateSession(request: NextRequest) {
     response.cookies.set(THEME_COOKIE, "", { path: "/", maxAge: 0 });
   }
 
-  if (access.type === "redirect") {
-    // The destination carries its own query (`next` for invites), nothing else is kept.
+  const redirectTo = (destination: string) => {
     const redirect = NextResponse.redirect(
-      new URL(access.destination, request.nextUrl),
+      new URL(destination, request.nextUrl),
     );
     // Keep refreshed session cookies on the redirect response.
     response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
     return redirect;
+  };
+
+  if (access.type === "redirect") {
+    // The destination carries its own query (`next` for invites), nothing else is kept.
+    return redirectTo(access.destination);
+  }
+
+  // /dashboard opens the account's home screen with a redirect from here, not
+  // one streamed after the page's JS (spec 054 RF-25, plan D5, R2). Only for
+  // a page load: on a client navigation or an action's redirect the address
+  // would stay /dashboard, so the page itself redirects there. An unreadable
+  // profile goes to the calendar. The query goes along (?tzcheck=).
+  if (
+    hasSession &&
+    request.nextUrl.pathname === "/dashboard" &&
+    request.headers.get("sec-fetch-dest") === "document"
+  ) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("home")
+      .eq("id", String(data?.claims.sub))
+      .maybeSingle();
+    return redirectTo(homeHref(profile?.home) + request.nextUrl.search);
   }
 
   return response;

@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Lo imprescindible para trabajar en el proyecto. El bloque de arriba lo gestiona `next dev`: no lo edites. El detalle de cada funcionalidad está en su spec (`specs/NNN-nombre/spec.md`, `plan.md`, `tasks.md`) y en el grafo de graphify; la fuente de verdad de las reglas es [`docs/constitution.md`](docs/constitution.md). Ante una contradicción manda la spec más reciente.
 
-> Última actualización: 2026-11-26 (resumido). Specs cerradas hasta la 049, la 051, la 052 y la 053; la 050 hecha salvo su prueba real (047–053 en sus ramas, cada una sobre la anterior; `main` aún no las contiene).
+> Última actualización: 2026-11-27 (resumido). Specs cerradas hasta la 049, la 051, la 052 y la 053; la 050 hecha salvo su prueba real; la 054 hecha, pendiente de cierre (rama `054-pantalla-ahora`, sobre `main`).
 
 ## 0. Mapa del proyecto: graphify (obligatorio, enmienda 13)
 
@@ -94,11 +94,12 @@ Todas cerradas salvo la 036 (hecha; falta `EVAL_PART=write npm run eval:assistan
 | 050 | "Continuar con Google" con Supabase Auth (PKCE, `/auth/callback`), "Formas de entrar" en Ajustes; falta la prueba real (T5) |
 | 052 | Venito propone borrar (papelera, "Deshacer") y crear series por campos (`ruleFromFields`), siempre con tarjeta que confirmar; conversaciones guardadas opcionales (`profiles.save_chats`, `assistant_conversations`: 50, 90 días, sin imágenes; menú del chat); dictado y lectura en voz alta con la Web Speech API del navegador (`lib/speech/`) |
 | 053 | Interfaz en inglés: `profiles.locale` (Ajustes → Idioma, cookie y navegador sin sesión), catálogo `src/i18n/en/`, fechas con `dateFormat(locale)`, Venito responde en el idioma del perfil, correos por idioma (`email_outbox.locale`) |
+| 054 | Pantalla **Ahora** (`/dashboard/now`): qué hace cada persona seguida ahora y después (`lib/now/cards.ts`, `NowBoard`, también sin conexión); "Pantalla de inicio" (`profiles.home`, `/dashboard` redirige, en el proxy para cargas de documento); `?only=<persona>` en el calendario; barra inferior "Ahora · Calendario · Notas · Más" |
 | 051 | Diferidos de la 023: autor impuesto (trigger `events_author`, `convert_keep_author`), cuota del asistente reservada (`assistant_reserve`/`answered`/`release`), CSP completa + *Report-Only* (`lib/security/csp.ts`, `/api/csp-report`), plazo y reintento en los helpers de `test:db`, medida de la lectura por rango |
 
 ### Pendiente del usuario (comprueba antes si ya está hecho)
 
-1. `supabase db push` a **prod antes de desplegar** de las migraciones aplicadas solo en dev: las de la 023 (`restore_event_guard`, `assistant_busy_scope`, `join_code_lock`), 028 (`notes`, `notes_calendar_functions`), 038 (`sync_apply_window`), 039 (`event_search`), 040 (`push`), 042 (`views_year`), 043 (`ics_feeds`), 044 (`ics_import_into`, `ics_subscriptions`), 045 (`event_time_zone`, `event_time_zone_keep`, `ics_feed_zone`), 046 (`trash_30_days`), 047 (`profile_badge`), 048 (`notes_more`), 049 (`account_more`), 050 (`oauth_profile_name`), 052 (`assistant_conversations`) y 053 (`profile_locale`) —en dev tampoco están aplicadas: `npm run db:push`, `npm run db:types` y `npm run test:db -- assistant-conversations profile-locale`— y 051 (`event_author`, `assistant_quota_reserve`; **antes de desplegar**: la ruta del asistente llama a `assistant_reserve`).
+1. `supabase db push` a **prod antes de desplegar** de las migraciones aplicadas solo en dev: las de la 023 (`restore_event_guard`, `assistant_busy_scope`, `join_code_lock`), 028 (`notes`, `notes_calendar_functions`), 038 (`sync_apply_window`), 039 (`event_search`), 040 (`push`), 042 (`views_year`), 043 (`ics_feeds`), 044 (`ics_import_into`, `ics_subscriptions`), 045 (`event_time_zone`, `event_time_zone_keep`, `ics_feed_zone`), 046 (`trash_30_days`), 047 (`profile_badge`), 048 (`notes_more`), 049 (`account_more`), 050 (`oauth_profile_name`), 052 (`assistant_conversations`), 053 (`profile_locale`) y 054 (`profile_home`, ya aplicada en dev; **antes de desplegar**: `/dashboard` y el proxy leen `profiles.home`) —en dev tampoco están aplicadas: `npm run db:push`, `npm run db:types` y `npm run test:db -- assistant-conversations profile-locale`— y 051 (`event_author`, `assistant_quota_reserve`; **antes de desplegar**: la ruta del asistente llama a `assistant_reserve`).
 2. Claves VAPID (`node scripts/make-vapid-keys.mjs`) en Vercel y `sync_app_url` en el Vault de prod.
 3. Pruebas en iPhone/Android: push, sin conexión, Google/iCloud reales, papelera, zona horaria; eval y cierre de la 036.
 

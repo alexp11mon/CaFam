@@ -2,11 +2,23 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it, vi } from "vitest";
 
-const state = vi.hoisted(() => ({ claims: null as object | null }));
+const state = vi.hoisted(() => ({
+  claims: null as object | null,
+  home: "calendar" as string | null,
+}));
 
 vi.mock("@supabase/ssr", () => ({
   createServerClient: () => ({
     auth: { getClaims: async () => ({ data: { claims: state.claims } }) },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({
+            data: state.home === null ? null : { home: state.home },
+          }),
+        }),
+      }),
+    }),
   }),
 }));
 
@@ -49,5 +61,35 @@ describe("updateSession redirects (RF-7, plan R7)", () => {
 
     expect(response.headers.get("location")).toBeNull();
     expect(response.status).toBe(200);
+  });
+
+  // Spec 054 RF-25, plan R2: a server redirect, not one after the page's JS.
+  it.each([
+    ["now", "http://localhost/dashboard/now?tzcheck=UTC"],
+    ["calendar", "http://localhost/dashboard/calendar?tzcheck=UTC"],
+    [null, "http://localhost/dashboard/calendar?tzcheck=UTC"],
+  ])("sends /dashboard to the home screen %s", async (home, location) => {
+    state.claims = { sub: "user" };
+    state.home = home;
+    const response = await updateSession(
+      new NextRequest("http://localhost/dashboard?tzcheck=UTC", {
+        headers: { "sec-fetch-dest": "document" },
+      }),
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(location);
+  });
+
+  it("leaves a client navigation or an action's redirect to the page", async () => {
+    state.claims = { sub: "user" };
+    state.home = "now";
+    const response = await updateSession(
+      new NextRequest("http://localhost/dashboard", {
+        headers: { rsc: "1", "sec-fetch-dest": "empty" },
+      }),
+    );
+
+    expect(response.headers.get("location")).toBeNull();
   });
 });
