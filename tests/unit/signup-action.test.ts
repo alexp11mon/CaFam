@@ -67,7 +67,7 @@ describe("signUp without a session (RF-1, RF-5)", () => {
   it("still enters at once while confirmation is off", async () => {
     auth.signUp.mockResolvedValue({ data: { session: {} }, error: null });
     await expect(signUp(empty, form(SIGN_UP))).rejects.toThrow(
-      "REDIRECT:/dashboard/calendar",
+      "REDIRECT:/dashboard",
     );
     expect(jar.has(PENDING_COOKIE)).toBe(false);
   });

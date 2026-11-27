@@ -57,7 +57,7 @@ describe("signInWithGoogle", () => {
   it("never carries another next", async () => {
     await expect(signInWithGoogle(form("https://evil.test"))).rejects.toThrow();
     expect(signInWithOAuth.mock.calls[0]![0].options.redirectTo).toBe(
-      "https://cafam.test/auth/callback?next=%2Fdashboard%2Fcalendar",
+      "https://cafam.test/auth/callback?next=%2Fdashboard",
     );
   });
 
