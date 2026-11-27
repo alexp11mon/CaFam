@@ -145,6 +145,16 @@ export function CalendarIcon() {
   );
 }
 
+/** "Ahora" (spec 054 RF-23): a clock. */
+export function NowIcon() {
+  return (
+    <Icon>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </Icon>
+  );
+}
+
 export function CalendarsIcon() {
   return (
     <Icon>
@@ -385,6 +395,7 @@ export function FiltersIcon() {
 }
 
 export const SECTION_ICONS = {
+  now: NowIcon,
   calendar: CalendarIcon,
   notes: NotesIcon,
   calendars: CalendarsIcon,

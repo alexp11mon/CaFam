@@ -44,14 +44,18 @@ function renderBar(signOut = vi.fn(async () => {})) {
 }
 
 describe("BottomBar (spec 030 RF-5)", () => {
-  it("offers the calendar, the notes, the calendars and more, in that order", () => {
+  it("offers now, the calendar, the notes and more, in that order (spec 054 D6)", () => {
     const { nav } = renderBar();
 
     const names = within(nav)
       .getAllByRole("listitem")
       .slice(0, 4)
       .map((item) => item.querySelector("a, button")?.textContent);
-    expect(names).toEqual(["Calendario", "Notas", "Calendarios", "Más"]);
+    expect(names).toEqual(["Ahora", "Calendario", "Notas", "Más"]);
+    expect(within(nav).getByRole("link", { name: "Ahora" })).toHaveAttribute(
+      "href",
+      "/dashboard/now",
+    );
     expect(
       within(nav).getByRole("link", { name: "Calendario" }),
     ).toHaveAttribute("href", "/dashboard/calendar");

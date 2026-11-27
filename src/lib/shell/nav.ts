@@ -2,6 +2,7 @@
 // (spec 005 RF-16, RF-18, RF-20; plan nav).
 
 export type Section =
+  | "now"
   | "calendar"
   | "notes"
   | "calendars"
@@ -21,6 +22,8 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
+  // Spec 054 (RF-23); it also works offline (RF-21).
+  { section: "now", href: "/dashboard/now", label: "Ahora" },
   { section: "calendar", href: "/dashboard/calendar", label: "Calendario" },
   // Spec 025 RF-8 (the screen itself is spec 028).
   { section: "notes", href: "/dashboard/notes", label: "Notas" },
@@ -72,16 +75,14 @@ export const NAV_ITEMS: readonly NavItem[] = [
 
 /**
  * The bottom bar (up to 1023 px): two destinations on each side of "+"
- * (constitution, amendment 10; spec 025 RF-8, plan D7).
+ * (constitution, amendment 10; spec 025 RF-8, plan D7). "Ahora" took the
+ * place of "Mis calendarios", now first in "Más" (spec 054 plan D6).
  */
-export const BAR_SECTIONS: readonly Section[] = [
-  "calendar",
-  "notes",
-  "calendars",
-];
+export const BAR_SECTIONS: readonly Section[] = ["now", "calendar", "notes"];
 
 /** The rest, in the "Más" sheet. The assistant has its own button. */
 export const SHEET_SECTIONS: readonly Section[] = [
+  "calendars",
   "connections",
   "join",
   "import",
@@ -110,6 +111,7 @@ export function createHref(pathname: string, search = ""): string {
 
 // Events open from the calendar, so they belong to it.
 const PREFIXES: readonly [string, Section][] = [
+  ["/dashboard/now", "now"],
   ["/dashboard/calendar", "calendar"],
   ["/dashboard/events", "calendar"],
   ["/dashboard/notes", "notes"],

@@ -20,7 +20,7 @@ const BAR_ITEMS = BAR_SECTIONS.map(
 
 /**
  * The navigation of the phone (≤ 768 px): a floating pill over the content
- * with Calendario, Notas, Calendarios and "Más" (constitution, amendment 11;
+ * with Ahora, Calendario, Notas and "Más" (spec 054 plan D6) (constitution, amendment 11;
  * spec 030 RF-5). "+" and Venito float above it, on the right.
  */
 export function BottomBar({
@@ -49,7 +49,7 @@ export function BottomBar({
                 <span className={BAR_ICON}>
                   <ItemIcon />
                 </span>
-                {BAR_LABELS[entry.section] ?? entry.label}
+                {t(BAR_LABELS[entry.section] ?? entry.label)}
               </NavLink>
             </li>
           );

@@ -10,8 +10,17 @@ import {
 // Spec 005, T4: destinations of the side rail and the bottom bar, and which
 // one is current (RF-16, RF-18, RF-20; plan nav).
 describe("NAV_ITEMS", () => {
+  it("works offline only in Ahora, Calendario and Notas (spec 054 RF-21)", () => {
+    expect(
+      NAV_ITEMS.filter((item) => !item.needsNetwork).map(
+        (item) => item.section,
+      ),
+    ).toEqual(["now", "calendar", "notes"]);
+  });
+
   it("lists the destinations of the app in Spanish", () => {
     expect(NAV_ITEMS.map(({ label, href }) => [label, href])).toEqual([
+      ["Ahora", "/dashboard/now"],
       ["Calendario", "/dashboard/calendar"],
       ["Notas", "/dashboard/notes"],
       ["Mis calendarios", "/dashboard/calendars"],
@@ -27,6 +36,8 @@ describe("NAV_ITEMS", () => {
 
 describe("activeSection (RF-20)", () => {
   it.each([
+    // Spec 054 (RF-23).
+    ["/dashboard/now", "now"],
     ["/dashboard/calendar", "calendar"],
     ["/dashboard/events/new", "calendar"],
     ["/dashboard/events/0f6c", "calendar"],
@@ -55,8 +66,10 @@ describe("activeSection (RF-20)", () => {
 // Spec 025 (RF-8, plan D7).
 describe("the bottom bar and its +", () => {
   it("splits the destinations between the bar and the Más sheet", () => {
-    expect(BAR_SECTIONS).toEqual(["calendar", "notes", "calendars"]);
+    // Spec 054 plan D6: "Ahora" in the bar, "Mis calendarios" first in Más.
+    expect(BAR_SECTIONS).toEqual(["now", "calendar", "notes"]);
     expect(SHEET_SECTIONS).toEqual([
+      "calendars",
       "connections",
       "join",
       "import",

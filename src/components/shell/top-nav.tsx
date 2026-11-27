@@ -61,14 +61,14 @@ export function TopNav({
                 <li key={entry.section}>
                   <NavLink
                     item={entry}
-                    aria-label={entry.label}
+                    aria-label={t(entry.label)}
                     aria-current={
                       entry.section === current ? "page" : undefined
                     }
                     className={TAB_ITEM}
                   >
                     <ItemIcon />
-                    <span className="max-lg:hidden">{entry.label}</span>
+                    <span className="max-lg:hidden">{t(entry.label)}</span>
                   </NavLink>
                 </li>
               );

@@ -87,7 +87,7 @@ export function MoreSheet({
                   showReason
                 >
                   <ItemIcon />
-                  {item.label}
+                  {t(item.label)}
                 </NavLink>
               </li>
             );
