@@ -15,7 +15,7 @@ async function RedirectIfSignedIn() {
   await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  if (data?.claims) redirect("/dashboard/calendar");
+  if (data?.claims) redirect("/dashboard");
   return null;
 }
 

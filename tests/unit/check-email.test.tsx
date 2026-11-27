@@ -39,7 +39,7 @@ describe("pending sign-up", () => {
   it("only keeps an invite as the next step", () => {
     expect(
       readPending(JSON.stringify({ email: "a@b.es", next: "https://evil" })),
-    ).toEqual({ email: "a@b.es", next: "/dashboard/calendar" });
+    ).toEqual({ email: "a@b.es", next: "/dashboard" });
     expect(readPending("{bad")).toBeNull();
     expect(readPending(undefined)).toBeNull();
   });

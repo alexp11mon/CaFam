@@ -84,7 +84,9 @@ export interface OfflineImage {
   height: number;
 }
 
-export interface OfflineProfile extends CalendarProfile {
+export interface OfflineProfile extends Omit<CalendarProfile, "home"> {
+  /** Spec 054: optional, so a copy from before it stays valid (calendar). */
+  home?: CalendarProfile["home"];
   displayName: string;
   accent: AccentId;
   theme: ThemeId;

@@ -37,13 +37,13 @@ beforeEach(() => {
 
 describe("/auth/callback", () => {
   it("enters the calendar, or the invite of next", async () => {
-    expect(await land("code=abc")).toBe("/dashboard/calendar");
+    expect(await land("code=abc")).toBe("/dashboard");
     expect(exchangeCodeForSession).toHaveBeenCalledWith("abc");
     expect(await land(`code=abc&next=%2Finvite%2F${TOKEN}`)).toBe(
       `/invite/${TOKEN}`,
     );
     expect(await land("code=abc&next=https%3A%2F%2Fevil.test")).toBe(
-      "/dashboard/calendar",
+      "/dashboard",
     );
   });
 
@@ -71,9 +71,7 @@ describe("/auth/callback", () => {
       },
       error: null,
     });
-    expect(await land("code=abc")).toBe(
-      "/dashboard/calendar?tzcheck=Europe%2FMadrid",
-    );
+    expect(await land("code=abc")).toBe("/dashboard?tzcheck=Europe%2FMadrid");
     exchangeCodeForSession.mockResolvedValue({
       data: {
         user: {
@@ -84,6 +82,6 @@ describe("/auth/callback", () => {
       },
       error: null,
     });
-    expect(await land("code=abc")).toBe("/dashboard/calendar");
+    expect(await land("code=abc")).toBe("/dashboard");
   });
 });

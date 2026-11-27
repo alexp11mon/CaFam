@@ -16,6 +16,7 @@ import { BusySetting } from "@/components/settings/busy-setting";
 import { NotificationSettings } from "@/components/settings/notification-settings";
 import { ThemePicker } from "@/components/settings/theme-picker";
 import { LocalePicker } from "@/components/settings/locale-picker";
+import { HomeSetting } from "@/components/settings/home-setting";
 import { FormAlert } from "@/components/ui/form-alert";
 import { getConfirmNotice } from "@/lib/account/confirm-type";
 import { getAccountEmails, getProfile } from "@/lib/account/queries";
@@ -30,6 +31,7 @@ import {
   setDefaultDuration,
   setShareAvailability,
   setShareBusy,
+  saveHome,
   setBadgeToday,
   setShowWeekends,
   setLocale,
@@ -108,19 +110,22 @@ async function BusySection() {
 
 async function CalendarSection() {
   const { supabase, userId } = await requireUser();
-  const { showWeekends, duration, badge } = await getViewOptions(
+  const { showWeekends, duration, badge, home } = await getViewOptions(
     supabase,
     userId,
   );
   return (
-    <ViewOptionsSetting
-      showWeekends={showWeekends}
-      duration={duration}
-      saveWeekends={setShowWeekends}
-      saveDuration={setDefaultDuration}
-      badge={badge}
-      saveBadge={setBadgeToday}
-    />
+    <>
+      <HomeSetting current={home} save={saveHome} />
+      <ViewOptionsSetting
+        showWeekends={showWeekends}
+        duration={duration}
+        saveWeekends={setShowWeekends}
+        saveDuration={setDefaultDuration}
+        badge={badge}
+        saveBadge={setBadgeToday}
+      />
+    </>
   );
 }
 

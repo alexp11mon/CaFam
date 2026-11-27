@@ -1,5 +1,5 @@
-// The calendar is the home screen (spec 005 RF-15).
-const DEFAULT_PATH = "/dashboard/calendar";
+// /dashboard opens the home screen of the account (spec 054 RF-25, plan D5).
+const DEFAULT_PATH = "/dashboard";
 
 // Only an invite link may be a post-login destination (plan D9): accepting any
 // `next` would be an open redirect.

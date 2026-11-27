@@ -15,7 +15,7 @@ describe("web app manifest (RF-21, RNF-9)", () => {
       background_color: "#F3F2FA",
       display: "standalone",
       // Straight to the calendar, the home screen (spec 005 RF-15).
-      start_url: "/dashboard/calendar",
+      start_url: "/dashboard",
       lang: "es",
     });
   });

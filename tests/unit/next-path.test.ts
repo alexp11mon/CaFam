@@ -15,12 +15,8 @@ describe("getSafeNextPath (RF-7, plan D9)", () => {
     expect(getSafeNextPath(`/invite/${"a".repeat(128)}`)).toBe(
       `/invite/${"a".repeat(128)}`,
     );
-    expect(getSafeNextPath(`/invite/${"a".repeat(15)}`)).toBe(
-      "/dashboard/calendar",
-    );
-    expect(getSafeNextPath(`/invite/${"a".repeat(129)}`)).toBe(
-      "/dashboard/calendar",
-    );
+    expect(getSafeNextPath(`/invite/${"a".repeat(15)}`)).toBe("/dashboard");
+    expect(getSafeNextPath(`/invite/${"a".repeat(129)}`)).toBe("/dashboard");
   });
 
   it.each([
@@ -40,7 +36,7 @@ describe("getSafeNextPath (RF-7, plan D9)", () => {
     null,
     42,
   ])("falls back to the calendar for %j (spec 005 RF-15)", (next) => {
-    expect(getSafeNextPath(next)).toBe("/dashboard/calendar");
+    expect(getSafeNextPath(next)).toBe("/dashboard");
   });
 
   it("accepts exactly /dashboard/share?id=<uuid> (spec 047 RF-9, plan D4)", () => {
@@ -54,6 +50,6 @@ describe("getSafeNextPath (RF-7, plan D9)", () => {
       `/dashboard/share/?id=${id}`,
       `//evil.example.com/dashboard/share?id=${id}`,
     ])
-      expect(getSafeNextPath(next)).toBe("/dashboard/calendar");
+      expect(getSafeNextPath(next)).toBe("/dashboard");
   });
 });

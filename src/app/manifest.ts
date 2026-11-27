@@ -16,7 +16,8 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "CaFam",
     description: "Calendario compartido para familia y amigos.",
     lang: "es",
-    start_url: "/dashboard/calendar",
+    // The account picks the home screen (spec 054 RF-25, plan D5).
+    start_url: "/dashboard",
     scope: "/",
     display: "standalone",
     theme_color: NEUTRALS.stone,

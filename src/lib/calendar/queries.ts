@@ -25,6 +25,7 @@ import {
 } from "@/lib/recurrence/read-series";
 import { fromRRule } from "@/lib/recurrence/rule";
 import { summarizeRule } from "@/lib/recurrence/summary";
+import { isHome, type Home } from "@/lib/now/home";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 type CalendarRole = Database["public"]["Enums"]["calendar_role"];
@@ -248,16 +249,22 @@ export async function getAppearance(
 export async function getViewOptions(
   supabase: Client,
   userId: string,
-): Promise<{ showWeekends: boolean; duration: Duration; badge: boolean }> {
+): Promise<{
+  showWeekends: boolean;
+  duration: Duration;
+  badge: boolean;
+  home: Home;
+}> {
   const { data } = await supabase
     .from("profiles")
-    .select("show_weekends, default_event_minutes, badge_today")
+    .select("show_weekends, default_event_minutes, badge_today, home")
     .eq("id", userId)
     .maybeSingle();
   return {
     showWeekends: data?.show_weekends ?? true,
     badge: data?.badge_today ?? true,
     duration: parseDuration(data?.default_event_minutes),
+    home: isHome(data?.home) ? data.home : "calendar",
   };
 }
 
@@ -268,6 +275,8 @@ export interface CalendarProfile {
   duration: Duration;
   /** "Tareas con fecha" (spec 048 RF-6). */
   showTasks: boolean;
+  /** "Pantalla de inicio" (spec 054 RF-24). */
+  home: Home;
 }
 
 /**
@@ -281,7 +290,7 @@ export async function getCalendarProfile(
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "time_zone, last_view, show_weekends, default_event_minutes, show_tasks",
+      "time_zone, last_view, show_weekends, default_event_minutes, show_tasks, home",
     )
     .eq("id", userId)
     .maybeSingle();
@@ -292,6 +301,7 @@ export async function getCalendarProfile(
     showWeekends: data?.show_weekends ?? true,
     duration: parseDuration(data?.default_event_minutes),
     showTasks: data?.show_tasks ?? false,
+    home: isHome(data?.home) ? data.home : "calendar",
   };
 }
 

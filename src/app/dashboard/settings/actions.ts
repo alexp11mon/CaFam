@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { cookies } from "next/headers";
 import { CALENDAR_MESSAGES } from "@/lib/calendar/error-messages";
 import { requireActionUser } from "@/lib/calendar/queries";
 import { durationSchema } from "@/lib/calendar/view-options-schema";
+import { HOMES, type Home } from "@/lib/now/home";
 import { accentSchema, themeSchema } from "@/lib/theme/schemas";
 import { THEME_COOKIE, THEME_COOKIE_OPTIONS } from "@/lib/theme/theme";
 import {
@@ -133,7 +135,8 @@ type ViewOptionsUpdate =
   | { show_weekends: boolean }
   | { default_event_minutes: number }
   | { badge_today: boolean }
-  | { show_tasks: boolean };
+  | { show_tasks: boolean }
+  | { home: Home };
 
 async function saveViewOption(update: ViewOptionsUpdate): Promise<Result> {
   const { supabase, userId } = await requireActionUser();
@@ -174,4 +177,15 @@ export async function setDefaultDuration(minutes: number): Promise<Result> {
 export async function setShowTasks(show: boolean): Promise<Result> {
   if (typeof show !== "boolean") return { error: VIEW_NOT_SAVED };
   return saveViewOption({ show_tasks: show });
+}
+
+const homeSchema = z.enum(HOMES, {
+  error: "Elige una de las pantallas disponibles.",
+});
+
+/** "Pantalla de inicio", for every device of the account (spec 054 RF-24, RF-26). */
+export async function saveHome(home: Home): Promise<Result> {
+  const parsed = homeSchema.safeParse(home);
+  if (!parsed.success) return { error: parsed.error.issues[0]!.message };
+  return saveViewOption({ home: parsed.data });
 }

@@ -18,4 +18,7 @@ export const now = {
     "Join someone's calendar with its ID and PIN, or ask them to share it with you by link. You will see them here.",
   "Viendo solo a {name}": "Showing only {name}",
   "Ver todos": "Show everyone",
+  "Pantalla de inicio": "Home screen",
+  "Elige una de las pantallas disponibles.":
+    "Choose one of the available screens.",
 };
