@@ -2,7 +2,7 @@
 
 Spec: `specs/054-pantalla-ahora/spec.md`.
 
-> Estado: **Aprobado** por el usuario el 2026-11-27, con la spec y las tareas. D6 resuelve la duda de la barra inferior de la spec.
+> Estado: **Aprobado** por el usuario el 2026-11-27, con la spec y las tareas. Implementado y cerrado el 2026-11-27. D6 resuelve la duda de la barra inferior de la spec.
 
 ## Resumen de arquitectura
 

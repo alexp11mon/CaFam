@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Lo imprescindible para trabajar en el proyecto. El bloque de arriba lo gestiona `next dev`: no lo edites. El detalle de cada funcionalidad está en su spec (`specs/NNN-nombre/spec.md`, `plan.md`, `tasks.md`) y en el grafo de graphify; la fuente de verdad de las reglas es [`docs/constitution.md`](docs/constitution.md). Ante una contradicción manda la spec más reciente.
 
-> Última actualización: 2026-11-27 (resumido). Specs cerradas hasta la 049, la 051, la 052 y la 053; la 050 hecha salvo su prueba real; la 054 hecha, pendiente de cierre (rama `054-pantalla-ahora`, sobre `main`).
+> Última actualización: 2026-11-27 (resumido). Specs cerradas hasta la 049, la 051, la 052 y la 053; la 050 hecha salvo su prueba real; la 054 cerrada (rama `054-pantalla-ahora`, sobre `main`, sin fusionar).
 
 ## 0. Mapa del proyecto: graphify (obligatorio, enmienda 13)
 

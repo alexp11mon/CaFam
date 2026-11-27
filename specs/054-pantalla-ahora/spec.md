@@ -1,6 +1,6 @@
 # Spec 054 — Pantalla "Ahora"
 
-> Estado: **Aprobada** por el usuario el 2026-11-27, junto con el plan y las tareas ("Apruebo los tres"); la barra inferior queda como en el plan (D6). Implementada el 2026-11-27 (rama `054-pantalla-ahora`); pendiente de cierre. Origen: `docs/exploracion-proposito-familiar.md` (propuesta 1). Primera de la serie 054–059, que vuelve a centrar CaFam en coordinar a la familia.
+> Estado: **Aprobada** por el usuario el 2026-11-27, junto con el plan y las tareas ("Apruebo los tres"); la barra inferior queda como en el plan (D6). Implementada y **cerrada** con la aprobación del usuario el 2026-11-27 (rama `054-pantalla-ahora`). Origen: `docs/exploracion-proposito-familiar.md` (propuesta 1). Primera de la serie 054–059, que vuelve a centrar CaFam en coordinar a la familia.
 
 ## Contexto y objetivo
 

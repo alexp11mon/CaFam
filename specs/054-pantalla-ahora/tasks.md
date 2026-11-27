@@ -2,7 +2,7 @@
 
 Spec: `specs/054-pantalla-ahora/spec.md`. Plan: `specs/054-pantalla-ahora/plan.md`.
 
-> Estado: **Aprobadas** por el usuario el 2026-11-27, con la spec y el plan. **Hechas** el 2026-11-27 en la rama `054-pantalla-ahora`; falta la aprobación del usuario para cerrar la spec.
+> Estado: **Aprobadas** por el usuario el 2026-11-27, con la spec y el plan. **Hechas** el 2026-11-27 en la rama `054-pantalla-ahora`; spec **cerrada** con la aprobación del usuario el 2026-11-27.
 
 Cada tarea se hace sola, **test primero** (rojo → verde), con su commit que la cite (`feat: … (T3)`). Al cerrar cada una, P8 en verde con su salida; `npm run test:db` en la T1. Textos nuevos con su inglés en `src/i18n/en/now.ts` (`i18n-complete`).
 
