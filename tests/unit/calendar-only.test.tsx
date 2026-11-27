@@ -65,7 +65,7 @@ const event = (id: string, calendarId: string, title: string): AgendaEvent =>
     startsAt: `${DAY}T00:00:00Z`,
     endsAt: "2026-11-03T00:00:00Z",
     allDay: true,
-    color: null,
+    color: "#A0C4FF",
     categoryId: null,
     location: null,
     imageCount: 0,
