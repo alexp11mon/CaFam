@@ -1224,6 +1224,7 @@ export type Database = {
           created_at: string
           default_event_minutes: number
           display_name: string
+          home: string
           id: string
           last_view: string | null
           locale: string
@@ -1245,6 +1246,7 @@ export type Database = {
           created_at?: string
           default_event_minutes?: number
           display_name: string
+          home?: string
           id: string
           last_view?: string | null
           locale?: string
@@ -1266,6 +1268,7 @@ export type Database = {
           created_at?: string
           default_event_minutes?: number
           display_name?: string
+          home?: string
           id?: string
           last_view?: string | null
           locale?: string
